@@ -1,0 +1,1 @@
+#include "ESP8266Audio/src/AudioFileSourceSD.h"
