@@ -132,12 +132,22 @@ public:
 };
 class GUI {
 public:
+	//main menu GUI
   uint8_t drawCursor(uint8_t xoffset, uint8_t yoffset, uint8_t xelements, uint8_t yelements, uint8_t xstart, uint8_t ystart);
   int8_t drawBigIconsCursor(uint8_t xoffset, uint8_t yoffset, uint8_t xelements, uint8_t yelements, uint8_t xstart, uint8_t ystart);
+  //generic menu GUI
   void menuDrawBox(String text, uint8_t i, int32_t y);
   void menuDrawCursor(uint8_t i, int32_t y);
   int8_t menu(const char* title, String* items, uint8_t length);
-  void drawNotificationWindow(uint8_t x, uint8_t y, uint8_t width, uint8_t height, String text);
+  //lock screen notifications
+  void drawNotificationWindow(uint8_t x, uint8_t y, uint8_t width, uint8_t height, String text); 
+  //popup GUI
+  void popup(String text, uint8_t duration);
+  void updatePopup();
+  String popupText;
+  uint8_t popupTimeLeft;
+  uint8_t popupTotalTime;
+
 private:
   uint8_t cursorX = 0;
   uint8_t cursorY = 0;
@@ -198,12 +208,13 @@ public:
 	void vibration(int duration);
 	void ledcAnalogWrite(uint8_t channel, uint32_t value, uint32_t valueMax = 255);
 	bool update();
-  void splashScreen();
-  void lockScreen();
-  void mainMenu();
-  void bigIconsMainMenu();
-  void listDir(fs::FS &fs, const char * dirname, uint8_t levels);
-  void sleep();
+	void splashScreen();
+	void lockScreen();
+	void mainMenu();
+	void bigIconsMainMenu();
+	void listDir(fs::FS &fs, const char * dirname, uint8_t levels);
+	void sleep();
+	void checkSMS();
   
   //SMS functions
   uint8_t countSubstring(String string, String substring);
@@ -215,6 +226,7 @@ public:
   void smsMenuDrawCursor(uint8_t i, int32_t y);
   int16_t smsMenu(const char* title, String* contact, String *date, String *content, uint8_t length);
   void messagesApp();
+  void incomingMessagePopup();
   
   void updateFromFS(fs::FS &fs, String FilePath);
 
@@ -355,6 +367,7 @@ public:
   bool blinkState;
   int frameSpeed = 40;
   int lastFrameCount2 = 0;
+  int smsRefresh = 0;
    /////////////////////////////////////////
   ///////////////COLLISION//////////////////
   //////////////////////////////////////////
@@ -364,7 +377,8 @@ public:
   bool collidePointCircle(int16_t pointX, int16_t pointY, int16_t centerX, int16_t centerY, int16_t r);  // Returns TRUE if the point overlaps the circle
 private:
 	
-  
+	bool newMessage = 0;
+	uint8_t currentMessageNumber;
   void performUpdate(Stream &updateSource, size_t updateSize);
 	uint8_t coverWidth = 45;
 	uint8_t coverHeight = 45;

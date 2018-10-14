@@ -138,6 +138,30 @@ void MAKERphone::begin() {
 
 }
 bool MAKERphone::update() {
+	Serial.println(millis());
+	if (digitalRead(INTERRUPT_PIN) == 0) //message is received or incoming call
+	{
+		Serial.println("INTERRUPTED");
+		delay(1000);
+		Serial.println(readSerial());
+		if (readSerial().indexOf("CMT") != -1 || readSerial().indexOf("CMTI") != -1)//it's a message!
+		{
+
+			gui.popup("Sample text", 50);
+			Serial.println("SMS received");
+
+			display.setCursor(18, 35);
+			display.println("MESSAGE RECEIVED");
+			Serial.println("received");
+			delay(5000);
+		}
+		else if (readSerial().indexOf("RING") != -1)//it's a call!
+		{
+			Serial.println("CALL");
+			handleCall();
+		}
+
+	}
 	for (int y = 0; y < BUFHEIGHT; y++) {
 		for (int x = 0; x < BUFWIDTH; x++) {
 			buf.fillRect(x * 2, y * 2, 2, 2, display.readPixel(x, y));
@@ -146,8 +170,11 @@ bool MAKERphone::update() {
 	//buf2.invertDisplay(1);
 	if (millis() - lastFrameCount2 >= frameSpeed) {
 		lastFrameCount2 = millis();
+		
 		buf.pushSprite(0, 0);
 		buttons.update();
+		gui.updatePopup();
+
 		return true;
 	}
 	else
@@ -771,6 +798,23 @@ void MAKERphone::bigIconsMainMenu() {
 		update();
 	}
 }
+void MAKERphone::checkSMS() {
+
+
+}
+String MAKERphone::readSerial() {
+	uint8_t _timeout = 0;
+	while (!Serial1.available() && _timeout < 1200)
+	{
+		delay(13);
+		_timeout++;
+
+
+	}
+	if (Serial1.available()) {
+		return Serial1.readString();
+	}
+}
 
 //Messages app
 void MAKERphone::messagesApp() {
@@ -793,7 +837,7 @@ void MAKERphone::messagesApp() {
 	}
 
 	Serial.println(input);
-	//smsNumber = countSubstring(input, "CMGL:");
+	currentMessageNumber = countSubstring(input, "CMGL:");
 	Serial.println(smsNumber);
 
 
@@ -875,19 +919,6 @@ uint8_t MAKERphone::countSubstring(String string, String substring) {
 		count++;
 	}
 	return count;
-}
-String MAKERphone::readSerial() {
-	uint8_t _timeout = 0;
-	while (!Serial1.available() && _timeout < 12000)
-	{
-		delay(13);
-		_timeout++;
-
-
-	}
-	if (Serial1.available()) {
-		return Serial1.readString();
-	}
 }
 String MAKERphone::readSms(uint8_t index) {
 	String buffer;
@@ -2386,6 +2417,8 @@ void MAKERphone::securityMenu() {
 		update();
 	}
 }
+
+//Buttons class
 bool Buttons::pressed(uint8_t button) {
 	return states[(uint8_t)button] == 1;
 }
@@ -2458,7 +2491,6 @@ uint16_t Buttons::timeHeld(uint8_t button) {
 	}
 }
 
-
 //Collision
 bool MAKERphone::collideRectRect(int16_t x1, int16_t y1, int16_t w1, int16_t h1, int16_t x2, int16_t y2, int16_t w2, int16_t h2) {
 	return (x2 < x1 + w1 && x2 + w2 > x1
@@ -2483,104 +2515,8 @@ bool MAKERphone::collidePointCircle(int16_t pointX, int16_t pointY, int16_t cent
 	r = abs(r);
 	return (((pointX - centerX) * (pointX - centerX) + (pointY - centerY) * (pointY - centerY)) < r * r);
 }
-//tft_espi klasa
-//void Display::drawBitmap(int8_t x, int8_t y, const byte *bitmap, uint16_t color) {
-//  uint8_t w = *(bitmap++);
-//  uint8_t h = *(bitmap++);
-//
-//  uint8_t byteWidth = (w + 7) / 8;
-//  uint8_t _x = x;
-//  uint8_t dw = 8 - (w % 8);
-//  for (uint8_t j = 0; j < h; j++) {
-//    x = _x;
-//    for (uint8_t i = 0; i < byteWidth;) {
-//      uint8_t b = *(bitmap++);
-//      i++;
-//      for (uint8_t k = 0; k < 8; k++) {
-//        if (i == byteWidth && k == dw) {
-//          x += (w % 8);
-//          break;
-//        }
-//        if (b & 0x80) {
-//          drawPixel(x, y, color);
-//        }
-//        b <<= 1;
-//        x++;
-//      }
-//    }
-//    y++;
-//  }
-//}
-//void Display::drawBitmap(int8_t x, int8_t y, const byte *bitmap) {
-//  uint8_t w = *(bitmap++);
-//  uint8_t h = *(bitmap++);
-//
-//  uint8_t byteWidth = (w + 7) / 8;
-//  uint8_t _x = x;
-//  uint8_t dw = 8 - (w % 8);
-//  for (uint8_t j = 0; j < h; j++) {
-//    x = _x;
-//    for (uint8_t i = 0; i < byteWidth;) {
-//      uint8_t b = *(bitmap++);
-//      i++;
-//      for (uint8_t k = 0; k < 8; k++) {
-//        if (i == byteWidth && k == dw) {
-//          x += (w % 8);
-//          break;
-//        }
-//        if (b & 0x80) {
-//          drawPixel(x, y, TFT_BLACK);
-//        }
-//        b <<= 1;
-//        x++;
-//      }
-//    }
-//    y++;
-//  }
-//}
-//void Display::begin() {
-//  tft.init();
-//
-//  tft.invertDisplay(1);
-//  tft.setRotation(1);
-//
-//  setColorDepth(8); // Set colour depth of Sprite to 8 (or 16) bits
-//  createSprite(BUFWIDTH, BUFHEIGHT); // Create the sprite and clear background to black
-//  setTextWrap(0);             //setRotation(1);
-//  setTextSize(1); // landscape
-//
-//  buf2.setColorDepth(8); // Set colour depth of Sprite to 8 (or 16) bits
-//  buf2.createSprite(BUF2WIDTH, BUF2HEIGHT); // Create the sprite and clear background to black
-//  //buf2.setRotation(1);
-//  buf2.setTextSize(1);
-//  fillScreen(TFT_RED);
-//}
-//bool Display::update() {
-//  for (int y = 0; y < BUFHEIGHT; y++) {
-//    for (int x = 0; x < BUFWIDTH; x++) {
-//      buf2.fillRect(x * 2, y * 2, 2, 2, readPixel(x, y));
-//    }
-//  }
-//  //buf2.invertDisplay(1);
-//  if (millis() - lastFrameCount2 > frameSpeed) {
-//    lastFrameCount2 = millis();
-//    buf2.pushSprite(0, 0);
-//
-//    return true;
-//  }
-//  else
-//    return false;
-//}
-//void Display::drawIcon(const unsigned short* icon, int16_t x, int16_t y, uint16_t width, uint16_t height) {
-//
-//  // Fill and send "nb" buffers to TFT
-//  for (int i = 0; i < width; i++) {
-//    for (int j = 0; j < height; j++) {
-//      drawPixel(x + i, y + j, pgm_read_word(&icon[j * width + i]));
-//    }
-//  }
-//}
-//GUI klasa
+
+//GUI class
 void GUI::drawNotificationWindow(uint8_t x, uint8_t y, uint8_t width, uint8_t height, String text) {
 	mp.display.fillRoundRect(x - 1, y + 1, width, height, 1, TFT_DARKGREY);
 	mp.display.fillRoundRect(x, y, width, height, 1, TFT_WHITE);
@@ -2986,5 +2922,28 @@ int8_t GUI::drawBigIconsCursor(uint8_t xoffset, uint8_t yoffset, uint8_t xelemen
 		}
 		while (!mp.update());
 	}
+}
+void GUI::popup(String text, uint8_t duration) {
+	popupText = text;
+	popupTotalTime = popupTimeLeft = duration + 16;
+}
+void GUI::updatePopup() {
+	if (!popupTimeLeft) {
+		return;
+	}
+	uint8_t scale = mp.display.textsize;
+	uint8_t yOffset = 0;
+	if (popupTimeLeft >= popupTotalTime - 8) {
+		yOffset = (8 - (popupTotalTime - popupTimeLeft))*scale;
+	}
+	if (popupTimeLeft < 8) {
+		yOffset = (8 - popupTimeLeft)*scale;
+	}
+
+	mp.display.fillRect(0, BUFHEIGHT - (7 * scale) + yOffset,BUFWIDTH, 7 * scale, TFT_DARKGREY);
+	mp.display.fillRect(0, BUFHEIGHT - (8 * scale) + yOffset, BUFWIDTH, scale, TFT_BLACK);
+	mp.display.setCursor(1, BUFHEIGHT - (6 * scale) + yOffset, TFT_WHITE);
+	mp.display.print(popupText);
+	popupTimeLeft--;
 }
 
