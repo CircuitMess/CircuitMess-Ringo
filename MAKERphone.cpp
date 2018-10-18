@@ -1297,44 +1297,120 @@ void MAKERphone::callNumber(String number) {
 	Serial1.print(";\r\n");
 	display.setFreeFont(TT1);
 	display.setTextColor(TFT_BLACK);
-	while (!buttons.pressed(BTN_B))
+	bool firstPass = 1;
+	uint32_t timeOffset = 0;
+
+	while (1)
 	{
 		display.fillScreen(TFT_WHITE);
 		if (Serial1.available())
 			localBuffer = Serial1.readString();
-		Serial.print("local: ");
-		Serial.println(localBuffer);
-		if (localBuffer.indexOf("CLCC") != -1)
+		if (localBuffer.indexOf("CLCC:") != -1)
 		{
-			if (localBuffer.indexOf("1,0,0,") != -1)
+			if (localBuffer.indexOf(",0,0,0,0") != -1)
 			{
-				Serial.println("CALL ACTIVE");
-				display.drawBitmap(24, 52, letterB, TFT_GREEN);
-			}
-				
+				if (firstPass == 1)
+				{
+					timeOffset = millis();
+					firstPass = 0;
+				}
 
-			else if (localBuffer.indexOf(",3,") != -1)
+				display.setCursor(32, 9);
+				if ((int((millis() - timeOffset) / 1000) / 60) > 9)
+					display.print(int((millis() - timeOffset) / 1000) / 60);
+				else
+				{
+					display.print("0");
+					display.print(int((millis() - timeOffset) / 1000) / 60);
+				}
+				display.print(":");
+				if (int((millis() - timeOffset) / 1000) % 60 > 9)
+					display.print(int((millis() - timeOffset) / 1000) % 60);
+				else
+				{
+					display.print("0");
+					display.print(int((millis() - timeOffset) / 1000) % 60);
+				}
+				Serial.println("CALL ACTIVE");
+				display.drawBitmap(29, 24, call_icon, TFT_GREEN);
+			}
+
+			else if (localBuffer.indexOf(",0,3,") != -1)
 			{
 				display.setCursor(25, 9);
+				Serial.println("ringing");
 				display.println("Ringing...");
 				display.drawBitmap(29, 24, call_icon, TFT_DARKGREY);
 			}
-			else
+			else if (localBuffer.indexOf(",0,2,") != -1)
 			{
 				display.setCursor(25, 9);
 				display.println("Calling...");
 				display.drawBitmap(29, 24, call_icon, TFT_DARKGREY);
 			}
+			else if (localBuffer.indexOf(",0,6,") != -1)
+				break;
+			display.setCursor(11, 20);
+			display.println(number);
+			display.fillRect(0, 51, 80, 13, TFT_RED);
+			display.setCursor(2, 62);
+			display.print("press");
+			display.drawBitmap(24, 52, letterB, TFT_BLACK);
+			display.setCursor(35, 62);
+			display.print("to hang up");
+			
 		}
-		display.setCursor(11, 20);
-		display.println(number);
-		
-		display.fillRect(0, 51, 80, 13, TFT_RED);
-		display.setCursor(2, 62);
-		display.print("press");
-		display.drawBitmap(24, 52, letterB, TFT_BLACK);
-		display.setCursor(35, 62);
-		display.print("to hang up");
+		else if (localBuffer.indexOf("CLCC:") == -1)
+		{
+			display.setCursor(25, 9);
+			display.println("Calling...");
+			display.drawBitmap(29, 24, call_icon, TFT_DARKGREY);
+			display.setCursor(11, 20);
+			display.println(number);
+			display.fillRect(0, 51, 80, 13, TFT_RED);
+			display.setCursor(2, 62);
+			display.print("press");
+			display.drawBitmap(24, 52, letterB, TFT_BLACK);
+			display.setCursor(35, 62);
+			display.print("to hang up");
+		}
+		Serial.println(buttons.pressed(BTN_B));
+		if (buttons.pressed(BTN_B)) // hanging up
+		{
+			Serial.println("B PRESSED");
+			Serial1.println("ATH");
+			while (readSerial().indexOf(",0,6,") == -1)
+			{
+				Serial1.println("ATH");
+				Serial.println(readSerial());
+			}
+			Serial.println("EXITED");
+			tft.fillScreen(TFT_WHITE);
+			display.setCursor(32, 9);
+			if ((int((millis() - timeOffset) / 1000) / 60) > 9)
+				display.print(int((millis() - timeOffset) / 1000) / 60);
+			else
+			{
+				display.print("0");
+				display.print(int((millis() - timeOffset) / 1000) / 60);
+			}
+			if ((int((millis() - timeOffset) / 1000) % 60) > 9)
+				display.print(int((millis() - timeOffset) / 1000) % 60);
+			else
+			{
+				display.print("0");
+				display.print(int((millis() - timeOffset) / 1000) % 60);
+			}
+			display.drawBitmap(29, 24, call_icon, TFT_RED);
+			display.setCursor(11, 20);
+			display.println(number);
+			display.fillRect(0, 51, 80, 13, TFT_RED);
+			display.setCursor(2, 62);
+			display.print("Call ended");
+			Serial.println("ENDED");
+			while (!update());
+			break;	
+		}
 		update();
 	}
 }

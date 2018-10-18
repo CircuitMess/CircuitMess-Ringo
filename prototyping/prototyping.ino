@@ -1,15 +1,21 @@
-/*
- Name:		prototyping.ino
- Created:	18-Oct-18 16:10:20
- Author:	Emil
-*/
+#include <MAKERphone.h>
 
-// the setup function runs once when you press reset or power the board
+MAKERphone mp;
+
 void setup() {
-
+	mp.display.invertDisplay(1);
+	mp.begin();
+	Serial.begin(115200);
+	mp.callNumber("+385 92 381 8897");
 }
 
-// the loop function runs over and over again until power down or reset
 void loop() {
-  
+	mp.display.fillScreen(TFT_BLACK);
+	mp.update();
+	//mp.callNumber("+385 92 151 8476");
+	
+
+
+	/*mp.lockScreen();
+	mp.bigIconsMainMenu();*/
 }
