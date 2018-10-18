@@ -277,7 +277,7 @@ public:
   void contactsApp();
   String readAllContacts();
   void callNumber(String number);
-  String callBuffer = "";
+
 
   //Phone app
   void phoneApp();

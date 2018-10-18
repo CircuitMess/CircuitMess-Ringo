@@ -128,6 +128,7 @@ void MAKERphone::begin() {
 	Serial1.println(F("AT+CNMI=1,1,0,0,0"));
 	Serial1.println(F("AT+CLTS=1")); //Enable local Timestamp mode (used for syncrhonising RTC with GSM time
 	Serial1.println(F("AT+CPMS=\"SM\",\"SM\",\"SM\""));
+	Serial1.println(F("AT+CLCC=1"));
 	//  while(1){
 	//    if(Serial1.available())
 	//      Serial.println(Serial1.read());
@@ -138,30 +139,29 @@ void MAKERphone::begin() {
 
 }
 bool MAKERphone::update() {
-	Serial.println(millis());
-	if (digitalRead(INTERRUPT_PIN) == 0) //message is received or incoming call
-	{
-		Serial.println("INTERRUPTED");
-		delay(1000);
-		Serial.println(readSerial());
-		if (readSerial().indexOf("CMT") != -1 || readSerial().indexOf("CMTI") != -1)//it's a message!
-		{
+	//Serial.println(millis());
+	//if (digitalRead(INTERRUPT_PIN) == 0) //message is received or incoming call
+	//{
+	//	Serial.println("INTERRUPTED");
+	//	Serial.println(readSerial());
+	//	if (readSerial().indexOf("CMT") != -1 || readSerial().indexOf("CMTI") != -1)//it's a message!
+	//	{
 
-			gui.popup("Sample text", 50);
-			Serial.println("SMS received");
+	//		gui.popup("Sample text", 50);
+	//		Serial.println("SMS received");
 
-			display.setCursor(18, 35);
-			display.println("MESSAGE RECEIVED");
-			Serial.println("received");
-			delay(5000);
-		}
-		else if (readSerial().indexOf("RING") != -1)//it's a call!
-		{
-			Serial.println("CALL");
-			handleCall();
-		}
+	//		display.setCursor(18, 35);
+	//		display.println("MESSAGE RECEIVED");
+	//		Serial.println("received");
+	//		delay(5000);
+	//	}
+	//	else if (readSerial().indexOf("RING") != -1)//it's a call!
+	//	{
+	//		Serial.println("CALL");
+	//		//handleCall();
+	//	}
 
-	}
+	//}
 	for (int y = 0; y < BUFHEIGHT; y++) {
 		for (int x = 0; x < BUFWIDTH; x++) {
 			buf.fillRect(x * 2, y * 2, 2, 2, display.readPixel(x, y));
@@ -1291,14 +1291,52 @@ void MAKERphone::contactsApp() {
 
 }
 void MAKERphone::callNumber(String number) {
-	display.setTextSize(1);
-	display.fillScreen(TFT_BLACK);
-	display.setCursor(1, 5);
-	display.println("Now dialing: ");
-	display.println(callBuffer);
+	String localBuffer = "";
 	Serial1.print(F("ATD"));
 	Serial1.print(number);
 	Serial1.print(";\r\n");
+	display.setFreeFont(TT1);
+	display.setTextColor(TFT_BLACK);
+	while (!buttons.pressed(BTN_B))
+	{
+		display.fillScreen(TFT_WHITE);
+		if (Serial1.available())
+			localBuffer = Serial1.readString();
+		Serial.print("local: ");
+		Serial.println(localBuffer);
+		if (localBuffer.indexOf("CLCC") != -1)
+		{
+			if (localBuffer.indexOf("1,0,0,") != -1)
+			{
+				Serial.println("CALL ACTIVE");
+				display.drawBitmap(24, 52, letterB, TFT_GREEN);
+			}
+				
+
+			else if (localBuffer.indexOf(",3,") != -1)
+			{
+				display.setCursor(25, 9);
+				display.println("Ringing...");
+				display.drawBitmap(29, 24, call_icon, TFT_DARKGREY);
+			}
+			else
+			{
+				display.setCursor(25, 9);
+				display.println("Calling...");
+				display.drawBitmap(29, 24, call_icon, TFT_DARKGREY);
+			}
+		}
+		display.setCursor(11, 20);
+		display.println(number);
+		
+		display.fillRect(0, 51, 80, 13, TFT_RED);
+		display.setCursor(2, 62);
+		display.print("press");
+		display.drawBitmap(24, 52, letterB, TFT_BLACK);
+		display.setCursor(35, 62);
+		display.print("to hang up");
+		update();
+	}
 }
 String MAKERphone::readAllContacts() {
 	String buffer;
@@ -1317,7 +1355,7 @@ void MAKERphone::phoneApp() {
 	update();
 }
 void MAKERphone::dialer() {
-	callBuffer = "";
+	String callBuffer = "";
 	char key = NO_KEY;
 	display.setTextWrap(0);
 	display.fillScreen(TFT_BLACK);
