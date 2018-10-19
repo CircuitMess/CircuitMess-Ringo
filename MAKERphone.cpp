@@ -337,7 +337,7 @@ void MAKERphone::lockScreen() {
 			display.setTextSize(1);
 			display.setTextColor(TFT_BLACK);
 			display.setCursor(1, 63);
-			display.print("Hold \"#\" to unlock");
+			display.print("Hold \"A\" to unlock");
 			display.setTextSize(3);
 			display.setTextColor(TFT_DARKGREY);
 			display.setCursor(29, 28);
@@ -1299,7 +1299,7 @@ void MAKERphone::callNumber(String number) {
 	display.setTextColor(TFT_BLACK);
 	bool firstPass = 1;
 	uint32_t timeOffset = 0;
-
+	display.setTextSize(1);
 	while (1)
 	{
 		display.fillScreen(TFT_WHITE);
@@ -1349,7 +1349,40 @@ void MAKERphone::callNumber(String number) {
 				display.drawBitmap(29, 24, call_icon, TFT_DARKGREY);
 			}
 			else if (localBuffer.indexOf(",0,6,") != -1)
+			{
+				display.fillScreen(TFT_WHITE);
+				display.setCursor(32, 9);
+				if (timeOffset == 0)
+					display.print("00:00");
+				else
+				{
+					if ((int((millis() - timeOffset) / 1000) / 60) > 9)
+						display.print(int((millis() - timeOffset) / 1000) / 60);
+					else
+					{
+						display.print("0");
+						display.print(int((millis() - timeOffset) / 1000) / 60);
+					}
+					display.print(":");
+					if ((int((millis() - timeOffset) / 1000) % 60) > 9)
+						display.print(int((millis() - timeOffset) / 1000) % 60);
+					else
+					{
+						display.print("0");
+						display.print(int((millis() - timeOffset) / 1000) % 60);
+					}
+				}
+				display.drawBitmap(29, 24, call_icon, TFT_RED);
+				display.setCursor(11, 20);
+				display.println(number);
+				display.fillRect(0, 51, 80, 13, TFT_RED);
+				display.setCursor(2, 62);
+				display.print("Call ended");
+				Serial.println("ENDED");
+				while (!update());
+				delay(1000);
 				break;
+			}
 			display.setCursor(11, 20);
 			display.println(number);
 			display.fillRect(0, 51, 80, 13, TFT_RED);
@@ -1374,7 +1407,6 @@ void MAKERphone::callNumber(String number) {
 			display.setCursor(35, 62);
 			display.print("to hang up");
 		}
-		Serial.println(buttons.pressed(BTN_B));
 		if (buttons.pressed(BTN_B)) // hanging up
 		{
 			Serial.println("B PRESSED");
@@ -1382,24 +1414,29 @@ void MAKERphone::callNumber(String number) {
 			while (readSerial().indexOf(",0,6,") == -1)
 			{
 				Serial1.println("ATH");
-				Serial.println(readSerial());
 			}
 			Serial.println("EXITED");
-			tft.fillScreen(TFT_WHITE);
+			display.fillScreen(TFT_WHITE);
 			display.setCursor(32, 9);
-			if ((int((millis() - timeOffset) / 1000) / 60) > 9)
-				display.print(int((millis() - timeOffset) / 1000) / 60);
+			if(timeOffset == 0)
+				display.print("00:00");
 			else
 			{
-				display.print("0");
-				display.print(int((millis() - timeOffset) / 1000) / 60);
-			}
-			if ((int((millis() - timeOffset) / 1000) % 60) > 9)
-				display.print(int((millis() - timeOffset) / 1000) % 60);
-			else
-			{
-				display.print("0");
-				display.print(int((millis() - timeOffset) / 1000) % 60);
+				if ((int((millis() - timeOffset) / 1000) / 60) > 9)
+					display.print(int((millis() - timeOffset) / 1000) / 60);
+				else
+				{
+					display.print("0");
+					display.print(int((millis() - timeOffset) / 1000) / 60);
+				}
+				display.print(":");
+				if ((int((millis() - timeOffset) / 1000) % 60) > 9)
+					display.print(int((millis() - timeOffset) / 1000) % 60);
+				else
+				{
+					display.print("0");
+					display.print(int((millis() - timeOffset) / 1000) % 60);
+				}
 			}
 			display.drawBitmap(29, 24, call_icon, TFT_RED);
 			display.setCursor(11, 20);
@@ -1409,6 +1446,7 @@ void MAKERphone::callNumber(String number) {
 			display.print("Call ended");
 			Serial.println("ENDED");
 			while (!update());
+			delay(1000);
 			break;	
 		}
 		update();
@@ -1434,9 +1472,10 @@ void MAKERphone::dialer() {
 	String callBuffer = "";
 	char key = NO_KEY;
 	display.setTextWrap(0);
-	display.fillScreen(TFT_BLACK);
+	
 	while (1)
 	{
+		display.fillScreen(TFT_BLACK);
 		display.fillRect(0, 42, BUFWIDTH, 14, TFT_DARKGREY);
 		display.setTextSize(1);
 		display.setCursor(1, 62);
@@ -1448,8 +1487,11 @@ void MAKERphone::dialer() {
 
 
 		key = buttons.kpdNum.getKey();
-		Serial.println(key);
-		if (key != NO_KEY)
+		if (key == 'A') //clear number
+			callBuffer = "";
+		else if (key == 'C')
+			callBuffer.remove(callBuffer.length()-1);
+		if (key != NO_KEY && key!= 'A' && key != 'C')
 			callBuffer += key;
 		display.setCursor(1, 53);
 		display.setTextSize(2);
@@ -1461,11 +1503,14 @@ void MAKERphone::dialer() {
 			display.setCursor(BUFWIDTH - display.cursor_x, 53);
 			display.print(callBuffer);
 		}
-		if (key == 'A') //clear number
-			callBuffer = "";
+		
 
-		if (buttons.kpd.pin_read(BTN_A) == 0)  //initate call
+		if (buttons.kpd.pin_read(BTN_A) == 0)//initate call
+		{
 			callNumber(callBuffer);
+			while (!update());
+			callBuffer = "";
+		}
 		if (buttons.released(BTN_B) == 1) //BACK BUTTON
 			break;
 
