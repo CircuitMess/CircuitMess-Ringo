@@ -360,15 +360,20 @@ void showtitle() {
 	mp.display.cursor_y = 56;
 	mp.display.setTextColor(TFT_RED);
 	mp.display.print(" A:PLAY   MENU:QUIT");
-	if (mp.buttons.pressed(BTN_A)) {
+	if (mp.buttons.released(BTN_A)) {
+    Serial.println("NEW GAME");
 		gamestatus = "newgame";
 		//gb.sound.playOK();
 	}
-  if (mp.buttons.pressed(BTN_B)) {
-    mp.bigIconsMainMenu();  
-    gamestatus="title";
-    
-  }
+  if (mp.buttons.released(BTN_B))
+      {
+      while (!mp.update());
+      while(1)
+      {
+         mp.bigIconsMainMenu();
+         mp.lockScreen();// title
+      }
+    }
     
 	//if (buttonsPressed(BUTTON_MENU)) {
 	//	// Menu: Pause / Retour � l'�cran de titre

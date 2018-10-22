@@ -74,7 +74,7 @@ extern const int soundfx[8][8];
 //----------------------------------------------------------------------------
 */
 void setup() {
-  
+  Serial.begin(115200);
 	 mp.begin();
 	 mp.display.fillScreen(TFT_BLACK);
 	 mp.display.setFreeFont(TT1);
@@ -97,10 +97,11 @@ void loop() {
 		if (gamestatus == "running") { // game running loop
 			mp.display.fillScreen(TFT_BLACK);
       mp.update();
-      if(mp.buttons.released(JOYSTICK_B))
-        mp.bigIconsMainMenu();
-      if(mp.buttons.released(JOYSTICK_D))
-        gamestatus="title";
+      if (mp.buttons.released(BTN_B))
+      {
+        gamestatus = "title";
+        while(!mp.update());
+        }
 			showscore();
 			checkbuttons(); // check buttons and move playership
 			drawplayership(); // draw player ship
@@ -114,21 +115,11 @@ void loop() {
 			movesaucer(); // move saucer
 			drawsaucer(); // draw saucer & remove if hit
 			showscore(); // show lives, score, level
-      if (mp.buttons.released(BTN_B))
-        gamestatus = "title";
-		} // end of: gamestatus = running
-
+       // end of: gamestatus = running
+		}
+   
 		if (gamestatus == "title") { 
 		  showtitle();
-		  if (mp.buttons.released(BTN_B))
-		  {
-			  while (!mp.update());
-			while(1)
-			{
-			   mp.bigIconsMainMenu();
-			   mp.lockScreen();// title
-			}
-		}
 		}
 
 		if (gamestatus == "gameover") { // game over
@@ -144,13 +135,14 @@ void loop() {
 		  mp.display.setTextColor(TFT_BLACK);
 		  mp.display.print("GAME OVER");
 		  mp.display.setTextSize(1);
+      if(mp.buttons.pressed(BTN_B))
+        gamestatus="title";
+        
  
 		
-		  mp.update();
 		  
 			
 			//saveHighscore(score);
 		}
-		Serial.println(gamestatus);
 	} // end of update
 }
