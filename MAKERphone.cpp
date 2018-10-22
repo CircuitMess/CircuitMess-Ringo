@@ -44,6 +44,7 @@ void MAKERphone::begin() {
 			
 		}
 	}
+	pixels.clear();
 	for (uint8_t x = 0; x < NUMPIXELS;x++)
 		pixels.setPixelColor(x, 0, 0, 0);
 
@@ -89,7 +90,6 @@ void MAKERphone::begin() {
 
 
 	update();
-	delay(3000);
 
 
 	ledcAnalogWrite(LEDC_CHANNEL, 255);
@@ -167,8 +167,7 @@ bool MAKERphone::update() {
 		gui.updatePopup();
 		delay(1);
 		pixels.show();
-		for (uint8_t x = 0; x < NUMPIXELS; x++)
-			pixels.setPixelColor(x, 0, 0, 0);
+		pixels.clear();
 		/*if (pixelUpdate == 0)
 			pixelUpdate = 1;
 		if (pixelUpdate == 1)
@@ -201,7 +200,6 @@ void MAKERphone::splashScreen() {
 	display.setCursor(19, 54);
 	display.print("CircuitMess");
 	update();
-	delay(3000);
 
 	
 }
