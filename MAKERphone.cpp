@@ -28,26 +28,30 @@ void MAKERphone::begin() {
 
 	//Initialize and start with the NeoPixels
 	pixels.begin();
-	mp.pixels.show();
 	for (uint8_t i = 0; i < NUMPIXELS; i++) {
 		for (uint8_t x = 0; x < 128; x += 2) {
 			mp.pixels.setPixelColor(i, x, 0, 0);
-			mp.pixels.show(); // This sends the updated pixel color to the hardware.
 			delay(1);
+			mp.pixels.show(); // This sends the updated pixel color to the hardware.
+			
 		}
 	}
 	for (uint8_t i = 0; i < NUMPIXELS; i++) {
 		for (uint8_t x = 128; x > 0; x -= 2) {
 			mp.pixels.setPixelColor(i, x, 0, 0);
-			mp.pixels.show(); // This sends the updated pixel color to the hardware.M
 			delay(1);
+			mp.pixels.show(); // This sends the updated pixel color to the hardware.M
+			
 		}
 	}
+	for (uint8_t x = 0; x < NUMPIXELS;x++)
+		pixels.setPixelColor(x, 0, 0, 0);
 
 
-	for (uint8_t i = 0; i < NUMPIXELS; i++)
+	/*for (uint8_t i = 0; i < NUMPIXELS; i++)
 		mp.pixels.setPixelColor(i, hslBlack);
-	mp.pixels.show();
+	delay(2);
+	mp.pixels.show();*/
 
 	//Startup sounds
 	tone2(soundPin, 2000, 10);
@@ -85,7 +89,7 @@ void MAKERphone::begin() {
 
 
 	update();
-
+	delay(3000);
 
 
 	ledcAnalogWrite(LEDC_CHANNEL, 255);
@@ -95,23 +99,10 @@ void MAKERphone::begin() {
 	}
 
 	//ledcAnalogWrite(LEDC_CHANNEL, 0);
-
 	splashScreen(); //Show the main splash screen
    /* vibration(200);
 	delay(200);
 	vibration(200);*/
-
-	////###########################################
-	//Serial.print("key test");
-	//while (1){
-	//	kpd.pin_write(VIBRATION_MOTOR, !kpd.pin_read(BTN_A));
-	//
-	//	for (int i = 0; i < 8; i++) {
-	//		Serial.print(kpd.pin_read(i));
-	//	}
-	//	Serial.print("\n");
-	//}
-	////###########################################
 
 
 	Serial1.begin(9600, SERIAL_8N1, 17, 16);
@@ -174,13 +165,29 @@ bool MAKERphone::update() {
 		buf.pushSprite(0, 0);
 		buttons.update();
 		gui.updatePopup();
-
+		delay(1);
+		pixels.show();
+		for (uint8_t x = 0; x < NUMPIXELS; x++)
+			pixels.setPixelColor(x, 0, 0, 0);
+		/*if (pixelUpdate == 0)
+			pixelUpdate = 1;
+		if (pixelUpdate == 1)
+			pixelUpdate = 2;
+		if (pixelUpdate == 2)
+			pixelUpdate = 3;
+		if (pixelUpdate == 3)
+		{
+			pixelUpdate = 0;
+			
+		}
+			*/
 		return true;
 	}
 	else
 		return false;
 }
 void MAKERphone::splashScreen() {
+
 	display.setFreeFont(TT1);
 	for (int y = -49; y < 1; y++)
 	{
@@ -194,6 +201,9 @@ void MAKERphone::splashScreen() {
 	display.setCursor(19, 54);
 	display.print("CircuitMess");
 	update();
+	delay(3000);
+
+	
 }
 void MAKERphone::tone2(int pin, int freq, int duration) {
 	ledcWriteTone(0, freq);
@@ -215,9 +225,9 @@ void MAKERphone::sleep() {
 	digitalWrite(SIM800_DTR, 1);
 	Serial1.println(F("AT+CSCLK=1"));
 
-	for (uint8_t i = 0; i < NUMPIXELS; i++)
-		mp.pixels.setPixelColor(i, hslBlack);
-	mp.pixels.show();
+	/*for (uint8_t i = 0; i < NUMPIXELS; i++)
+		pixels.setPixelColor(i, hslBlack);
+	pixels.show();*/
 
 	ledcAnalogWrite(LEDC_CHANNEL, 255);
 	for (uint8_t i = 0; i < 255; i++) {
@@ -239,16 +249,23 @@ void MAKERphone::sleep() {
 	Serial1.println(F("AT"));
 	Serial1.println(F("AT+CSCLK=0"));
 
-	for (uint8_t i = 0; i < NUMPIXELS; i++)
-		mp.pixels.setPixelColor(i, hslBlack);
-	mp.pixels.show();
+	pixels.clear();
+	delay(2);
+	pixels.show();
 
-	while (buttons.kpd.pin_read(BTN_B) == 0); //wait for lock button's release
+	while (buttons.pressed(BTN_B))
+		update(); //wait for lock button's release
 }
 void MAKERphone::lockScreen() {
 	Serial.begin(115200);
 	bool goOut = 0;
-	uint8_t updatePixels = 0;
+	uint8_t updatePixels = 0;	
+	//pixels.clear();
+	//delay(1);
+	//pixels.show();
+	//pixels.clear();
+	//delay(1);
+	//pixels.show();
 	while (1)
 	{
 		if (clockHour = 0 && clockMinute == 0)
@@ -346,7 +363,6 @@ void MAKERphone::lockScreen() {
 			display.setCursor(28, 27);
 			display.print(":");
 		}
-
 		update();
 
 		display.setTextSize(1);
@@ -359,7 +375,6 @@ void MAKERphone::lockScreen() {
 			display.setCursor(1, 63);
 			display.print("Unlocking");
 			update();
-
 			buttonHeld = millis();
 			pixelState = 0;
 			while (buttons.kpd.pin_read(BTN_A) == 0)
@@ -368,65 +383,72 @@ void MAKERphone::lockScreen() {
 					display.fillRect(0, 64, BUFWIDTH, 7, TFT_CYAN);
 					display.setCursor(1, 63);
 					display.print("Unlocking *");
+					pixels.setPixelColor(0, hslRed);
+					pixels.setPixelColor(7, hslRed);
 
-
-					if (updatePixels == 0) {
-						pixels.setPixelColor(0, hslRed);
-						pixels.setPixelColor(7, hslRed);
+					/*if (updatePixels == 0) {
+						pixels.clear();
+						
+						delay(1);
 						pixels.show();
 						Serial.println("Pixels.show()");
 						updatePixels = 1;
-					}
+					}*/
 				}
 				else if (millis() - buttonHeld > 500 && millis() - buttonHeld < 750)
 				{
 					display.fillRect(0, 64, BUFWIDTH, 7, TFT_CYAN);
 					display.setCursor(1, 63);
 					display.print("Unlocking * *");
-
-					if (updatePixels == 1) {
-						pixels.setPixelColor(0, hslRed);
-						pixels.setPixelColor(7, hslRed);
-						pixels.setPixelColor(1, hslRed);
-						pixels.setPixelColor(6, hslRed);
+					pixels.setPixelColor(0, hslRed);
+					pixels.setPixelColor(7, hslRed);
+					pixels.setPixelColor(1, hslRed);
+					pixels.setPixelColor(6, hslRed);
+					/*if (updatePixels == 1) {
+						
+						delay(1);
 						pixels.show();
 						Serial.println("Pixels.show()");
 						updatePixels = 2;
-					}
+					}*/
 				}
 				else if (millis() - buttonHeld > 750 && millis() - buttonHeld < 1000)
 				{
 					display.fillRect(0, 64, BUFWIDTH, 7, TFT_CYAN);
 					display.setCursor(1, 63);
 					display.print("Unlocking * * *");
-					if (updatePixels == 2) {
-						pixels.setPixelColor(0, hslRed);
-						pixels.setPixelColor(7, hslRed);
-						pixels.setPixelColor(1, hslRed);
-						pixels.setPixelColor(6, hslRed);
-						pixels.setPixelColor(2, hslRed);
-						pixels.setPixelColor(5, hslRed);
+					pixels.setPixelColor(0, hslRed);
+					pixels.setPixelColor(7, hslRed);
+					pixels.setPixelColor(1, hslRed);
+					pixels.setPixelColor(6, hslRed);
+					pixels.setPixelColor(2, hslRed);
+					pixels.setPixelColor(5, hslRed);
+					/*if (updatePixels == 2) {
+						
+						delay(1);
 						pixels.show();
 						Serial.println("Pixels.show()");
 						updatePixels = 3;
-					}
+					}*/
 				}
 				else if (millis() - buttonHeld > 1000)
 				{
-					if (updatePixels == 3) {
-						pixels.setPixelColor(0, hslRed);
-						pixels.setPixelColor(7, hslRed);
-						pixels.setPixelColor(1, hslRed);
-						pixels.setPixelColor(6, hslRed);
-						pixels.setPixelColor(2, hslRed);
-						pixels.setPixelColor(5, hslRed);
-						pixels.setPixelColor(3, hslRed);
-						pixels.setPixelColor(4, hslRed);
+					pixels.setPixelColor(0, hslRed);
+					pixels.setPixelColor(7, hslRed);
+					pixels.setPixelColor(1, hslRed);
+					pixels.setPixelColor(6, hslRed);
+					pixels.setPixelColor(2, hslRed);
+					pixels.setPixelColor(5, hslRed);
+					pixels.setPixelColor(3, hslRed);
+					pixels.setPixelColor(4, hslRed);
+					/*if (updatePixels == 3) {
+						
+						delay(1);
 						pixels.show();
 						Serial.println("Pixels.show()");
 						updatePixels = 4;
-					}
-
+					}*/
+					update();
 
 					vibration(200);
 					Serial.println(millis() - buttonHeld);
@@ -434,6 +456,7 @@ void MAKERphone::lockScreen() {
 					delay(10);
 					for (uint8_t i = 0; i < NUMPIXELS; i++)
 						pixels.setPixelColor(i, hslBlack);
+					delay(1);
 					pixels.show();
 					delay(10);
 					break;
@@ -441,18 +464,21 @@ void MAKERphone::lockScreen() {
 				update();
 			}
 		}
-		if (buttons.released(BTN_A) == 1)
+		if (buttons.released(BTN_A))
 		{
 			mp.pixels.clear();
+			delay(2);
 			mp.pixels.show();
+
 			updatePixels = 0;
 		}
-		if (buttons.kpd.pin_read(BTN_B) == 0) {
+		if (buttons.pressed(BTN_B)) {
 			while (buttons.kpd.pin_read(BTN_B) == 0);
 			sleep();
+
 		}
 
-		if (buttons.kpd.pin_read(JOYSTICK_B) == 0) {
+		if (buttons.pressed(JOYSTICK_B)) {
 			while (buttons.kpd.pin_read(JOYSTICK_B) == 0);
 			digitalWrite(SIM800_DTR, 1);
 			Serial1.println(F("AT+CSCLK=1"));
@@ -467,7 +493,8 @@ void MAKERphone::updateTimeGSM() {
 	//Serial1.flush();
 	//delay(500);
 	String reply;
-	while (!Serial1.available());
+	while (!Serial1.available())
+		update();
 	while (Serial1.available()) {
 		reply += (char)Serial1.read();
 
