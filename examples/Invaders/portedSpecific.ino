@@ -102,7 +102,7 @@ void invaderlogic() {
 		}
 
 		// determine screen border hit -> go down, then change direction
-		if (invaderx[invaderctr] > 75 and invaderxr > 0) {
+		if (invaderx[invaderctr] > 70 and invaderxr > 0) {
 			nextxdir = -2;
 			nextydir = 2;
 		}
@@ -173,6 +173,7 @@ void drawinvaders() {
 void invadershot() {
 	// handle invadershoot timer & framecounter
 	invadershottimer = --invadershottimer;
+  
 	invadershotframe = ++invadershotframe % 2;
 
 	// move invadershots, draw & check collission

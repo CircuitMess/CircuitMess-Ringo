@@ -15,7 +15,7 @@
 //#include "portedNonstandard.ino"
 //#include "portedSpecific.ino"
 MAKERphone mp;
-# define Maxwhidth 80
+# define Maxwhidth 74
 uint32_t pixelsTimer=0;
 bool pixelsState=0;
 String gamestatus;
@@ -101,7 +101,7 @@ void loop() {
       {
         gamestatus = "title";
         while(!mp.update());
-        }
+      }
 			showscore();
 			checkbuttons(); // check buttons and move playership
 			drawplayership(); // draw player ship
@@ -135,8 +135,11 @@ void loop() {
 		  mp.display.setTextColor(TFT_BLACK);
 		  mp.display.print("GAME OVER");
 		  mp.display.setTextSize(1);
-      if(mp.buttons.pressed(BTN_B))
+      if(mp.buttons.released(BTN_B) || mp.buttons.released(BTN_A))
+      {
+        while(!mp.update());
         gamestatus="title";
+      }
         
  
 		

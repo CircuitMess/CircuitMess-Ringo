@@ -215,6 +215,7 @@ public:
 	void listDir(fs::FS &fs, const char * dirname, uint8_t levels);
 	void sleep();
 	void checkSMS();
+	void incomingCall();
   
   //SMS functions
   uint8_t countSubstring(String string, String substring);
