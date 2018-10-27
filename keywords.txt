@@ -1,0 +1,134 @@
+/*
+ * (C) Copyright 2014 Aurélien Rodot. All rights reserved.
+ *
+ * This file is part of the Gamebuino Library (http://gamebuino.com)
+ *
+ * The Gamebuino Library is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>
+ */
+
+gb 	KEYWORD3
+display	KEYWORD1
+tft	KEYWORD1
+sound	KEYWORD1
+buttons	KEYWORD1
+lights	KEYWORD1
+save	KEYWORD1
+language	KEYWORD1
+gui KEYWORD1
+
+////////////////////////core
+begin	KEYWORD1
+update	KEYWORD1
+frameCount	KEYWORD1
+getDefaultName KEYWORD1
+menu	KEYWORD1
+keyboard	KEYWORD1
+popup	KEYWORD1
+pickRandomSeed	KEYWORD1
+getCpuLoad	KEYWORD1
+getfreeRam	KEYWORD1
+
+////////////////////////buttons
+pressed	KEYWORD1
+released	KEYWORD1
+held	KEYWORD1
+repeat	KEYWORD1
+timeHeld	KEYWORD1
+BUTTON_A 	LITERAL1
+BUTTON_B 	LITERAL1
+BUTTON_MENU 	LITERAL1
+BUTTON_HOME 	LITERAL1
+BUTTON_UP 	LITERAL1
+BUTTON_RIGHT 	LITERAL1
+BUTTON_DOWN 	LITERAL1
+BUTTON_LEFT 	LITERAL1
+
+////////////////////////sound
+play	 KEYWORD1
+tone	 KEYWORD1
+playOK	 KEYWORD1
+playCancel	 KEYWORD1
+playTick	 KEYWORD1
+isPlaying	 KEYWORD1
+stop	 KEYWORD1
+
+////////////////////////Display
+//general
+drawImage	 KEYWORD1
+drawBitmap	 KEYWORD1
+drawPixel	 KEYWORD1
+getPixelColor	 KEYWORD1
+getPixelIndex	 KEYWORD1
+fill	 KEYWORD1
+clear	 KEYWORD1
+clearTextVars	 KEYWORD1
+setColor	 KEYWORD1
+setTransparentColor	 KEYWORD1
+clearTransparentColor	 KEYWORD1
+getBitmapPixel	 KEYWORD1
+height	 KEYWORD1
+width	 KEYWORD1
+
+//text
+print	 KEYWORD1
+println	 KEYWORD1
+printf	 KEYWORD1
+drawChar	 KEYWORD1
+setFontSize	 KEYWORD1
+setTextWrap	 KEYWORD1
+setFont	 KEYWORD1
+setCursor	 KEYWORD1
+setCursorX	 KEYWORD1
+setCursorY	 KEYWORD1
+getTextBounds	 KEYWORD1
+getCursorX	 KEYWORD1
+getCursorY	 KEYWORD1
+getFontWidth	 KEYWORD1
+getFontHeight	 KEYWORD1
+
+//shapes
+drawLine	 KEYWORD1
+drawFastVLine	 KEYWORD1
+drawFastHLine	 KEYWORD1
+drawRect	 KEYWORD1
+fillRect	 KEYWORD1
+drawCircle	 KEYWORD1
+fillCircle	 KEYWORD1
+drawTriangle	 KEYWORD1
+fillTriangle	 KEYWORD1
+drawRoundRect	 KEYWORD1
+fillRoundRect	 KEYWORD1
+
+//colors
+WHITE	LITERAL1
+GRAY	LITERAL1
+DARKGRAY	LITERAL1
+BLACK	LITERAL1
+PURPLE	LITERAL1
+PINK	LITERAL1
+RED	LITERAL1
+ORANGE	LITERAL1
+BROWN	LITERAL1
+BEIGE	LITERAL1
+YELLOW	LITERAL1
+LIGHTGREEN	LITERAL1
+GREEN	LITERAL1
+DARKBLUE	LITERAL1
+BLUE	LITERAL1
+LIGHTBLUE	LITERAL1
+
+//gui
+keyboard	KEYWORD1
+menu	KEYWORD1
+popup	KEYWORD1
