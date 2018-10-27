@@ -652,9 +652,11 @@ class TFT_eSPI : public Print {
   void drawBitmap(int8_t x, int8_t y, const byte *bitmap, uint16_t color);
   void drawBitmap(int8_t x, int8_t y, const byte *bitmap);
   void drawIcon(const unsigned short* icon, int16_t x, int16_t y, uint16_t width, uint16_t height);
+  void printCenter(const char* text);
 
  private:
 
+	 void printCenter(const char* text);
   inline void spi_begin() __attribute__((always_inline));
   inline void spi_end()   __attribute__((always_inline));
 

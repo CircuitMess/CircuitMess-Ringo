@@ -17,9 +17,9 @@
 #include "TFT_eSPI.h"
 
 #include <pgmspace.h>
-extern TFT_eSPI tft = TFT_eSPI();  // Invoke library, pins defined in User_Setup.h
-extern TFT_eSprite buf = TFT_eSprite(&tft);
-extern TFT_eSprite buf2 = TFT_eSprite(&tft);
+//extern TFT_eSPI tft = TFT_eSPI();  // Invoke library, pins defined in User_Setup.h
+//extern TFT_eSprite buf = TFT_eSprite(&tft);
+//extern TFT_eSprite buf2 = TFT_eSprite(&tft);
 #ifndef ESP32_PARALLEL
   #include <SPI.h>
 #endif
@@ -4814,4 +4814,13 @@ void TFT_eSPI::drawIcon(const unsigned short* icon, int16_t x, int16_t y, uint16
 			drawPixel(x + i, y + j, pgm_read_word(&icon[j * width + i]));
 		}
 	}
+}
+void TFT_eSPI::printCenter(const char* text)
+{
+	int8_t cursorBuffer = cursor_y;
+	setCursor(-10, -10);
+	uint16_t textLength = cursor_x;
+	print(number);
+	textLength = cursor_x - textLength;
+	setCursor(cursorBuffer, int((_W-textLength)/2));
 }

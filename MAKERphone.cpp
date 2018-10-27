@@ -976,7 +976,6 @@ void MAKERphone::callNumber(String number) {
 			{
 				Serial1.println("ATH");
 			}
-			Serial.println("EXITED");
 			display.fillScreen(TFT_WHITE);
 			display.setCursor(32, 9);
 			if (timeOffset == 0)
@@ -1013,7 +1012,6 @@ void MAKERphone::callNumber(String number) {
 		update();
 	}
 }
-
 void MAKERphone::checkSMS() {
 
 
@@ -1206,14 +1204,18 @@ void MAKERphone::messagesApp() {
 	  input += (char)sim800.read();*/
 
 	input = readAllSms();
-	Serial.println("entered messages");
 	while (input == "")
-	{
 		input = readAllSms();
-		Serial.print("Input:");
-		Serial.println(input);
-	}
 
+	if (input == "ERROR")
+	{
+		display.fillScreen(TFT_BLACK);
+		display.setTextDatum(C_BASELINE);
+		display.setCursor(29, 5);
+		//display.printCenter("test");
+		while (buttons.released(BTN_A) || buttons.released(BTN_B))
+			update();
+	}
 	Serial.println(input);
 	currentMessageNumber = countSubstring(input, "CMGL:");
 	Serial.println(smsNumber);
@@ -1315,21 +1317,16 @@ String MAKERphone::readSms(uint8_t index) {
 		return "";
 }
 String MAKERphone::readAllSms() {
-	Serial.begin(115200);
-	Serial.print("entered readAllSms");
 	Serial1.print(F("AT+CMGF=1\r"));
-	if ((readSerial().indexOf("ER")) == -1) {
-		Serial1.print(F("AT+CMGL=\"ALL\"\r"));
-		buffer = readSerial();
-		if (buffer.indexOf("CMGL:") != -1) {
-			return buffer;
-		}
-		else return "";
+	Serial1.print(F("AT+CMGL=\"ALL\"\r"));
+	buffer = readSerial();
+	if (buffer.indexOf("CMGL:") != -1) {
+		return buffer;
 	}
-	else {
-		Serial.print("entered else");
+	else if (buffer.indexOf("ERROR") != -1)
+		return "ERROR";
+	else
 		return "";
-	}
 
 	Serial.println(buffer);
 }
