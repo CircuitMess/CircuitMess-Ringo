@@ -89,7 +89,7 @@ void MAKERphone::begin() {
 
 
 
-	update();
+	while(!update());
 
 
 	ledcAnalogWrite(LEDC_CHANNEL, 255);
@@ -823,6 +823,197 @@ void MAKERphone::bigIconsMainMenu() {
 		update();
 	}
 }
+void MAKERphone::callNumber(String number) {
+	Serial.begin(115200);
+	String localBuffer = "";
+	Serial1.print(F("ATD"));
+	Serial1.print(number);
+	Serial1.print(";\r\n");
+	display.setFreeFont(TT1);
+	display.setTextColor(TFT_BLACK);
+	bool firstPass = 1;
+	uint32_t timeOffset = 0;
+	uint16_t textLength;
+	display.setTextSize(1);
+	//centering the on-screen number
+	display.setCursor(11, -20);
+	textLength = display.cursor_x;
+	Serial.println(textLength);
+	display.print(number);
+	textLength = display.cursor_x - textLength;
+	while (1)
+	{
+		display.fillScreen(TFT_WHITE);
+		if (Serial1.available())
+			localBuffer = Serial1.readString();
+		if (localBuffer.indexOf("CLCC:") != -1)
+		{
+			if (localBuffer.indexOf(",0,0,0,0") != -1)
+			{
+				if (firstPass == 1)
+				{
+					timeOffset = millis();
+					firstPass = 0;
+				}
+
+				display.setCursor(32, 9);
+				if ((int((millis() - timeOffset) / 1000) / 60) > 9)
+					display.print(int((millis() - timeOffset) / 1000) / 60);
+				else
+				{
+					display.print("0");
+					display.print(int((millis() - timeOffset) / 1000) / 60);
+				}
+				display.print(":");
+				if (int((millis() - timeOffset) / 1000) % 60 > 9)
+					display.print(int((millis() - timeOffset) / 1000) % 60);
+				else
+				{
+					display.print("0");
+					display.print(int((millis() - timeOffset) / 1000) % 60);
+				}
+				Serial.println("CALL ACTIVE");
+				display.drawBitmap(29, 24, call_icon, TFT_GREEN);
+			}
+
+			else if (localBuffer.indexOf(",0,3,") != -1)
+			{
+				display.setCursor(25, 9);
+				Serial.println("ringing");
+				display.println("Ringing...");
+				display.drawBitmap(29, 24, call_icon, TFT_DARKGREY);
+			}
+			else if (localBuffer.indexOf(",0,2,") != -1)
+			{
+				display.setCursor(25, 9);
+				display.println("Calling...");
+				display.drawBitmap(29, 24, call_icon, TFT_DARKGREY);
+			}
+			else if (localBuffer.indexOf(",0,6,") != -1)
+			{
+				display.fillScreen(TFT_WHITE);
+				display.setCursor(32, 9);
+				if (timeOffset == 0)
+					display.print("00:00");
+				else
+				{
+					if ((int((millis() - timeOffset) / 1000) / 60) > 9)
+						display.print(int((millis() - timeOffset) / 1000) / 60);
+					else
+					{
+						display.print("0");
+						display.print(int((millis() - timeOffset) / 1000) / 60);
+					}
+					display.print(":");
+					if ((int((millis() - timeOffset) / 1000) % 60) > 9)
+						display.print(int((millis() - timeOffset) / 1000) % 60);
+					else
+					{
+						display.print("0");
+						display.print(int((millis() - timeOffset) / 1000) % 60);
+					}
+				}
+				display.drawBitmap(29, 24, call_icon, TFT_RED);
+				display.setCursor(11, 20);
+				display.println(number);
+				display.fillRect(0, 51, 80, 13, TFT_RED);
+				display.setCursor(2, 62);
+				display.print("Call ended");
+				Serial.println("ENDED");
+				while (!update());
+				delay(1000);
+				break;
+			}
+			display.setCursor(int((80 - textLength) / 2), 20);
+			display.println(number);
+			display.fillRect(0, 51, 80, 13, TFT_RED);
+			display.setCursor(2, 62);
+			display.print("press");
+			display.drawBitmap(24, 52, letterB, TFT_BLACK);
+			display.setCursor(35, 62);
+			display.print("to hang up");
+
+		}
+		else if (localBuffer.indexOf("CLCC:") == -1)
+		{
+			if (localBuffer.indexOf("ERROR") != -1)
+			{
+				
+				display.setCursor(3, 9);
+				display.println("Couldn't dial number!");
+				display.drawBitmap(29, 24, call_icon, TFT_RED);
+				display.setCursor(int((80-textLength)/2), 20);
+				display.print(number);
+				display.fillRect(0, 51, 80, 13, TFT_RED);
+				display.setCursor(2, 57);
+				display.print("Invalid number or");
+				display.setCursor(2, 63);
+				display.print("SIM card missing!");
+				while (!buttons.released(BTN_B))
+					update();
+				break;
+			}
+			else
+			{
+				display.setCursor(25, 9);
+				display.println("Calling...");
+				display.drawBitmap(29, 24, call_icon, TFT_DARKGREY);
+				display.setCursor(int((80 - textLength) / 2), 20);
+				display.println(number);
+				display.fillRect(0, 51, 80, 13, TFT_RED);
+				display.setCursor(2, 62);
+				display.print("press");
+				display.drawBitmap(24, 52, letterB, TFT_BLACK);
+				display.setCursor(35, 62);
+				display.print("to hang up");
+			}
+		}
+		if (buttons.pressed(BTN_B)) // hanging up
+		{
+			Serial.println("B PRESSED");
+			Serial1.println("ATH");
+			while (readSerial().indexOf(",0,6,") == -1)
+			{
+				Serial1.println("ATH");
+			}
+			Serial.println("EXITED");
+			display.fillScreen(TFT_WHITE);
+			display.setCursor(32, 9);
+			if (timeOffset == 0)
+				display.print("00:00");
+			else
+			{
+				if ((int((millis() - timeOffset) / 1000) / 60) > 9)
+					display.print(int((millis() - timeOffset) / 1000) / 60);
+				else
+				{
+					display.print("0");
+					display.print(int((millis() - timeOffset) / 1000) / 60);
+				}
+				display.print(":");
+				if ((int((millis() - timeOffset) / 1000) % 60) > 9)
+					display.print(int((millis() - timeOffset) / 1000) % 60);
+				else
+				{
+					display.print("0");
+					display.print(int((millis() - timeOffset) / 1000) % 60);
+				}
+			}
+			display.drawBitmap(29, 24, call_icon, TFT_RED);
+			display.setCursor(11, 20);
+			display.println(number);
+			display.fillRect(0, 51, 80, 13, TFT_RED);
+			display.setCursor(2, 62);
+			display.print("Call ended");
+			Serial.println("ENDED");
+			while (!update());
+			delay(1000);
+			break;
+		}
+		update();
+	}
+}
+
 void MAKERphone::checkSMS() {
 
 
@@ -1476,168 +1667,6 @@ void MAKERphone::contactsApp() {
 		update();
 	}
 
-}
-void MAKERphone::callNumber(String number) {
-	String localBuffer = "";
-	Serial1.print(F("ATD"));
-	Serial1.print(number);
-	Serial1.print(";\r\n");
-	display.setFreeFont(TT1);
-	display.setTextColor(TFT_BLACK);
-	bool firstPass = 1;
-	uint32_t timeOffset = 0;
-	display.setTextSize(1);
-	while (1)
-	{
-		display.fillScreen(TFT_WHITE);
-		if (Serial1.available())
-			localBuffer = Serial1.readString();
-		if (localBuffer.indexOf("CLCC:") != -1)
-		{
-			if (localBuffer.indexOf(",0,0,0,0") != -1)
-			{
-				if (firstPass == 1)
-				{
-					timeOffset = millis();
-					firstPass = 0;
-				}
-
-				display.setCursor(32, 9);
-				if ((int((millis() - timeOffset) / 1000) / 60) > 9)
-					display.print(int((millis() - timeOffset) / 1000) / 60);
-				else
-				{
-					display.print("0");
-					display.print(int((millis() - timeOffset) / 1000) / 60);
-				}
-				display.print(":");
-				if (int((millis() - timeOffset) / 1000) % 60 > 9)
-					display.print(int((millis() - timeOffset) / 1000) % 60);
-				else
-				{
-					display.print("0");
-					display.print(int((millis() - timeOffset) / 1000) % 60);
-				}
-				Serial.println("CALL ACTIVE");
-				display.drawBitmap(29, 24, call_icon, TFT_GREEN);
-			}
-
-			else if (localBuffer.indexOf(",0,3,") != -1)
-			{
-				display.setCursor(25, 9);
-				Serial.println("ringing");
-				display.println("Ringing...");
-				display.drawBitmap(29, 24, call_icon, TFT_DARKGREY);
-			}
-			else if (localBuffer.indexOf(",0,2,") != -1)
-			{
-				display.setCursor(25, 9);
-				display.println("Calling...");
-				display.drawBitmap(29, 24, call_icon, TFT_DARKGREY);
-			}
-			else if (localBuffer.indexOf(",0,6,") != -1)
-			{
-				display.fillScreen(TFT_WHITE);
-				display.setCursor(32, 9);
-				if (timeOffset == 0)
-					display.print("00:00");
-				else
-				{
-					if ((int((millis() - timeOffset) / 1000) / 60) > 9)
-						display.print(int((millis() - timeOffset) / 1000) / 60);
-					else
-					{
-						display.print("0");
-						display.print(int((millis() - timeOffset) / 1000) / 60);
-					}
-					display.print(":");
-					if ((int((millis() - timeOffset) / 1000) % 60) > 9)
-						display.print(int((millis() - timeOffset) / 1000) % 60);
-					else
-					{
-						display.print("0");
-						display.print(int((millis() - timeOffset) / 1000) % 60);
-					}
-				}
-				display.drawBitmap(29, 24, call_icon, TFT_RED);
-				display.setCursor(11, 20);
-				display.println(number);
-				display.fillRect(0, 51, 80, 13, TFT_RED);
-				display.setCursor(2, 62);
-				display.print("Call ended");
-				Serial.println("ENDED");
-				while (!update());
-				delay(1000);
-				break;
-			}
-			display.setCursor(11, 20);
-			display.println(number);
-			display.fillRect(0, 51, 80, 13, TFT_RED);
-			display.setCursor(2, 62);
-			display.print("press");
-			display.drawBitmap(24, 52, letterB, TFT_BLACK);
-			display.setCursor(35, 62);
-			display.print("to hang up");
-			
-		}
-		else if (localBuffer.indexOf("CLCC:") == -1)
-		{
-			display.setCursor(25, 9);
-			display.println("Calling...");
-			display.drawBitmap(29, 24, call_icon, TFT_DARKGREY);
-			display.setCursor(11, 20);
-			display.println(number);
-			display.fillRect(0, 51, 80, 13, TFT_RED);
-			display.setCursor(2, 62);
-			display.print("press");
-			display.drawBitmap(24, 52, letterB, TFT_BLACK);
-			display.setCursor(35, 62);
-			display.print("to hang up");
-		}
-		if (buttons.pressed(BTN_B)) // hanging up
-		{
-			Serial.println("B PRESSED");
-			Serial1.println("ATH");
-			while (readSerial().indexOf(",0,6,") == -1)
-			{
-				Serial1.println("ATH");
-			}
-			Serial.println("EXITED");
-			display.fillScreen(TFT_WHITE);
-			display.setCursor(32, 9);
-			if(timeOffset == 0)
-				display.print("00:00");
-			else
-			{
-				if ((int((millis() - timeOffset) / 1000) / 60) > 9)
-					display.print(int((millis() - timeOffset) / 1000) / 60);
-				else
-				{
-					display.print("0");
-					display.print(int((millis() - timeOffset) / 1000) / 60);
-				}
-				display.print(":");
-				if ((int((millis() - timeOffset) / 1000) % 60) > 9)
-					display.print(int((millis() - timeOffset) / 1000) % 60);
-				else
-				{
-					display.print("0");
-					display.print(int((millis() - timeOffset) / 1000) % 60);
-				}
-			}
-			display.drawBitmap(29, 24, call_icon, TFT_RED);
-			display.setCursor(11, 20);
-			display.println(number);
-			display.fillRect(0, 51, 80, 13, TFT_RED);
-			display.setCursor(2, 62);
-			display.print("Call ended");
-			Serial.println("ENDED");
-			while (!update());
-			delay(1000);
-			break;	
-		}
-		update();
-	}
 }
 String MAKERphone::readAllContacts() {
 	String buffer;
@@ -2924,11 +2953,11 @@ int8_t GUI::menu(const char* title, String* items, uint8_t length) {
 		if (mp.buttons.kpd.pin_read(JOYSTICK_D) == 0) {  //BUTTON DOWN
 			mp.pixels.setPixelColor(3, mp.hslBlue);
 			mp.pixels.setPixelColor(4, mp.hslBlue);
-			mp.update();
+			while(!mp.update());
 			mp.vibration(200);
 			for (uint8_t i = 0; i < NUMPIXELS; i++)
 				mp.pixels.setPixelColor(i, mp.hslBlack);
-			mp.update();
+			while (!mp.update());
 
 			while (mp.buttons.kpd.pin_read(JOYSTICK_D) == 0);
 			if (cursor == 0) {
@@ -2948,11 +2977,11 @@ int8_t GUI::menu(const char* title, String* items, uint8_t length) {
 		if (mp.buttons.kpd.pin_read(JOYSTICK_B) == 0) { //BUTTON UP
 			mp.pixels.setPixelColor(0, mp.hslBlue);
 			mp.pixels.setPixelColor(7, mp.hslBlue);
-			mp.pixels.show();
+			while (!mp.update());
 			mp.vibration(200);
 			for (uint8_t i = 0; i < NUMPIXELS; i++)
 				mp.pixels.setPixelColor(i, mp.hslBlack);
-			mp.pixels.show();
+			while (!mp.update());
 
 			while (mp.buttons.kpd.pin_read(JOYSTICK_B) == 0);
 
