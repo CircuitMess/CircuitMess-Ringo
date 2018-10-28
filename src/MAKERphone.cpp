@@ -23,9 +23,8 @@ void MAKERphone::begin(bool splash) {
 	pinMode(SIM800_DTR, OUTPUT);
 	digitalWrite(SIM800_DTR, 0);
 	pinMode(INTERRUPT_PIN, INPUT_PULLUP);
-	applySettings();
 	esp_sleep_enable_ext0_wakeup(GPIO_NUM_35, 0); //1 = High, 0 = Low
-
+	Serial.println("Stigo");
 	//Initialize and start with the NeoPixels
 	pixels.begin();
 	
@@ -70,6 +69,8 @@ void MAKERphone::begin(bool splash) {
 	ledcSetup(LEDC_CHANNEL, LEDC_BASE_FREQ, LEDC_TIMER);
 	ledcAttachPin(LCD_BL_PIN, LEDC_CHANNEL);
 	ledcAnalogWrite(LEDC_CHANNEL, 255);
+
+	applySettings();
 
 	Serial.begin(115200);
 
@@ -232,7 +233,7 @@ void MAKERphone::sleep() {
 	pixels.show();*/
 
 	ledcAnalogWrite(LEDC_CHANNEL, 255);
-	for (uint8_t i = 0; i < 255; i++) {
+	for (uint8_t i = actualBrightness; i < 255; i++) {
 		ledcAnalogWrite(LEDC_CHANNEL, i);
 		delay(1);
 	}
@@ -245,7 +246,7 @@ void MAKERphone::sleep() {
 
 	Serial.println("stay woke fam");
 	tft.writecommand(17);
-	ledcAnalogWrite(LEDC_CHANNEL, 0);
+	ledcAnalogWrite(LEDC_CHANNEL, actualBrightness);
 
 	digitalWrite(SIM800_DTR, 0);
 	Serial1.println(F("AT"));
@@ -277,7 +278,7 @@ void MAKERphone::lockScreen() {
 		}
 		updateTimeRTC();
 
-		display.fillScreen(TFT_CYAN);
+		display.fillScreen(backgroundColors[backgroundIndex]);
 
 		display.setFreeFont(TT1);
 		display.setTextSize(3);//
@@ -373,7 +374,7 @@ void MAKERphone::lockScreen() {
 
 			vibration(200);
 
-			display.fillRect(0, 57, BUFWIDTH, 7, TFT_CYAN);
+			display.fillRect(0, 57, BUFWIDTH, 7, backgroundColors[backgroundIndex]);
 			display.setCursor(1, 63);
 			display.print("Unlocking");
 			update();
@@ -746,7 +747,13 @@ void MAKERphone::mainMenu() {
 	if (titles[index] == "Contacts")
 		contactsApp();
 	if (titles[index] == "Settings")
+	{
 		settingsApp();
+		Serial.println(brightness);
+		applySettings();
+		
+	}
+
 
 
 }
@@ -760,8 +767,6 @@ void MAKERphone::bigIconsMainMenu() {
 
 		//Serial.println(index);
 		int8_t index = gui.drawBigIconsCursor(width + 2, bigIconHeight + 1, 3, 2, 1, 8);
-		Serial.println("Index");
-		Serial.println(index);
 		Serial.flush();
 		delay(10);
 		if (titles[index] == "Apps")
@@ -1195,32 +1200,6 @@ void MAKERphone::incomingCall()
 	//	}
 	//	update();
 	//}
-}
-void MAKERphone::applySettings()
-{
-	switch (wifi)
-	{
-	case 0:
-		WiFi.disconnect(true); delay(1); // disable WIFI altogether
-		WiFi.mode(WIFI_MODE_NULL); delay(1);
-		break;
-
-	case 1:
-		WiFi.begin();
-		delay(1);
-		break;
-	}
-
-	switch (bt)
-	{
-	case 0:
-		btStop();
-		break;
-	case 1:
-		btStart();
-	}
-
-
 }
 
 //Messages app
@@ -2101,6 +2080,7 @@ int8_t MAKERphone::settingsMenu(String* title, uint8_t length) {
 			return -1;
 		}
 	}
+	
 	return cursor;
 
 }
@@ -2151,10 +2131,7 @@ void MAKERphone::settingsApp() {
 	{
 		int8_t input = settingsMenu(settingsItems, 4);
 		if (input == -1) //BUTTON BACK
-		{
-			Serial.println("Broken");
 			break;
-		}
 		if (input == 0)
 			networkMenu();
 		if (input == 1)
@@ -2164,7 +2141,7 @@ void MAKERphone::settingsApp() {
 		if (input == 3)
 			securityMenu();
 	}
-
+	applySettings();
 }
 void MAKERphone::networkMenu() {
 	uint8_t cursor = 0;
@@ -2284,11 +2261,8 @@ void MAKERphone::networkMenu() {
 				cursor++;
 
 		}
-		if (buttons.kpd.pin_read(BTN_B) == 0) //BUTTON BACK
-		{
-			while (buttons.kpd.pin_read(BTN_B) == 0);
+		if (buttons.released(BTN_B)) //BUTTON BACK
 			break;
-		}
 
 		update();
 	}
@@ -2462,12 +2436,10 @@ void MAKERphone::displayMenu() {
 			sleepTimeActual = 1800;
 			break;
 		}
-		if (buttons.kpd.pin_read(BTN_B) == 0) //BUTTON BACK
-		{
-			while (buttons.kpd.pin_read(BTN_B) == 0);
+		if (buttons.released(BTN_B)) //BUTTON BACK
 			break;
-		}
 		update();
+		applySettings();
 	}
 }
 void MAKERphone::soundMenu() {
@@ -2820,15 +2792,76 @@ void MAKERphone::securityMenu() {
 				cursor++;
 
 		}
-		if (buttons.kpd.pin_read(BTN_B) == 0) //BUTTON BACK
-		{
-			while (buttons.kpd.pin_read(BTN_B) == 0);
+		if (buttons.released(BTN_B)) //BUTTON BACK
 			break;
-		}
 
 		update();
 	}
 }
+void MAKERphone::applySettings()
+{
+	switch (wifi)
+	{
+	case 0:
+		WiFi.disconnect(true); delay(1); // disable WIFI altogether
+		WiFi.mode(WIFI_MODE_NULL); delay(1);
+		break;
+
+	case 1:
+		WiFi.begin();
+		delay(1);
+		break;
+	}
+
+	switch (bt)
+	{
+	case 0:
+		btStop();
+		break;
+	case 1:
+		btStart();
+		break;
+	}
+
+	switch (airplaneMode)
+	{
+	case 0:
+		break;
+
+	case 1:
+		break;
+	}
+	if (brightness == 0)
+		actualBrightness = 230;
+	else
+		actualBrightness = (5 - brightness) * 51;
+	ledcAnalogWrite(LEDC_CHANNEL, actualBrightness);
+	switch (sleepTime) { //interpreting value into actual numbers
+	case 0:
+		sleepTimeActual = 0;
+		break;
+	case 1:
+		sleepTimeActual = 10;
+		break;
+	case 2:
+		sleepTimeActual = 30;
+		break;
+	case 3:
+		sleepTimeActual = 60;
+		break;
+	case 4:
+		sleepTimeActual = 600;
+		break;
+	case 5:
+		sleepTimeActual = 1800;
+		break;
+	}
+
+
+
+
+}
+
 
 //Buttons class
 bool Buttons::pressed(uint8_t button) {
