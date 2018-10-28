@@ -23,7 +23,7 @@ void MAKERphone::begin(bool splash) {
 	pinMode(SIM800_DTR, OUTPUT);
 	digitalWrite(SIM800_DTR, 0);
 	pinMode(INTERRUPT_PIN, INPUT_PULLUP);
-
+	applySettings();
 	esp_sleep_enable_ext0_wakeup(GPIO_NUM_35, 0); //1 = High, 0 = Low
 
 	//Initialize and start with the NeoPixels
@@ -929,7 +929,7 @@ void MAKERphone::callNumber(String number) {
 				break;
 			}
 			display.setCursor(int((80 - textLength) / 2), 20);
-			display.println(number);
+			display.printCenter(number);
 			display.fillRect(0, 51, 80, 13, TFT_RED);
 			display.setCursor(2, 62);
 			display.print("press");
@@ -947,7 +947,7 @@ void MAKERphone::callNumber(String number) {
 				display.println("Couldn't dial number!");
 				display.drawBitmap(29, 24, call_icon, TFT_RED);
 				display.setCursor(int((80-textLength)/2), 20);
-				display.print(number);
+				display.printCenter(number);
 				display.fillRect(0, 51, 80, 13, TFT_RED);
 				display.setCursor(2, 57);
 				display.print("Invalid number or");
@@ -963,7 +963,7 @@ void MAKERphone::callNumber(String number) {
 				display.println("Calling...");
 				display.drawBitmap(29, 24, call_icon, TFT_DARKGREY);
 				display.setCursor(int((80 - textLength) / 2), 20);
-				display.println(number);
+				display.printCenter(number);
 				display.fillRect(0, 51, 80, 13, TFT_RED);
 				display.setCursor(2, 62);
 				display.print("press");
@@ -1004,7 +1004,7 @@ void MAKERphone::callNumber(String number) {
 			}
 			display.drawBitmap(29, 24, call_icon, TFT_RED);
 			display.setCursor(11, 20);
-			display.println(number);
+			display.printCenter(number);
 			display.fillRect(0, 51, 80, 13, TFT_RED);
 			display.setCursor(2, 62);
 			display.print("Call ended");
@@ -1196,6 +1196,33 @@ void MAKERphone::incomingCall()
 	//	update();
 	//}
 }
+void MAKERphone::applySettings()
+{
+	switch (wifi)
+	{
+	case 0:
+		WiFi.disconnect(true); delay(1); // disable WIFI altogether
+		WiFi.mode(WIFI_MODE_NULL); delay(1);
+		break;
+
+	case 1:
+		WiFi.begin();
+		delay(1);
+		break;
+	}
+
+	switch (bt)
+	{
+	case 0:
+		btStop();
+		break;
+	case 1:
+		btStart();
+	}
+
+
+}
+
 //Messages app
 void MAKERphone::messagesApp() {
 	Serial.begin(115200);
@@ -1208,13 +1235,23 @@ void MAKERphone::messagesApp() {
 	input = readAllSms();
 	while (input == "")
 		input = readAllSms();
+	Serial.println(input);
 	if (input == "ERROR")
 	{
-		Serial.println("Entered");
 		display.fillScreen(TFT_BLACK);
 		display.setCursor(5, 34);
 		display.setTextColor(TFT_WHITE);
 		display.printCenter("Error loading SMS!");
+		while (!update());
+		while (!buttons.released(BTN_A) && !buttons.released(BTN_B))
+			update();
+	}
+	else if (input == "OK")
+	{
+		display.fillScreen(TFT_BLACK);
+		display.setCursor(5, 34);
+		display.setTextColor(TFT_WHITE);
+		display.printCenter("No messages :(");
 		while (!update());
 		while (!buttons.released(BTN_A) && !buttons.released(BTN_B))
 			update();
@@ -1329,6 +1366,8 @@ String MAKERphone::readAllSms() {
 	}
 	else if (buffer.indexOf("ERROR") != -1)
 		return "ERROR";
+	else if (buffer.indexOf("CMGL:") == -1 && buffer.indexOf("OK") != -1)
+		return "OK";
 	else
 		return "";
 
@@ -2571,11 +2610,8 @@ void MAKERphone::soundMenu() {
 			else
 				cursor++;
 		}
-		if (buttons.kpd.pin_read(BTN_B) == 0) //BUTTON BACK
-		{
-			while (buttons.kpd.pin_read(BTN_B) == 0);
+		if (buttons.released(BTN_B)) //BUTTON BACK
 			break;
-		}
 		update();
 	}
 }

@@ -13,14 +13,15 @@ You should have received a copy of the GNU Lesser General Public
 License (LGPL) along with the library.
 If not, see <http://www.gnu.org/licenses/>.
 Authors:
- - Albert Gaj�ak
- - Emil Gaj�ak
+ - Albert Gajsak
+ - Emil Gajsak
 */
 
 #ifndef MAKERphone_h
 #define MAKERphone_h
 
-
+#include <WiFi.h>
+#include <esp32-hal-bt.h>
 #include <stdint.h>
 //#include <Arduino.h>
 //#include "included/Adafruit_NeoPixel.h"
@@ -238,9 +239,8 @@ public:
   
   void updateFromFS(fs::FS &fs, String FilePath);
 
-  ////////////////////////////////
+
   //variables used for parsing SMS
-  ///////////////////////////////
   int16_t y;
   String smsContent[smsNumber];
   String phoneNumber[smsNumber];
@@ -291,15 +291,20 @@ public:
   void phoneApp();
   void dialer();
 
-  //Settings app
-  uint8_t sleepTime = 2;
+  //Settings variables
+  void applySettings();
   uint16_t sleepTimeActual;
-  uint8_t brightness = 5; //brightness 0-4
   bool wifi = 1;
   bool bt = 0;
   bool airplaneMode = 0;
-  uint8_t backgroundIndex=0;
+  uint8_t brightness = 5;  //brightness 0-5
+  uint8_t backgroundIndex = 0;
   uint8_t volume = 10; //volume 0-14
+  bool pinLock = 0;
+  uint16_t pinNumber = 1234;
+
+  //Settings app
+  uint8_t sleepTime = 2;
   String ringtone = "/ringtones/chiptune.mp3";
   String notification = "/notifications/to-the-point.mp3";
   uint8_t ringtoneCount=0;
@@ -324,8 +329,7 @@ public:
   "Orange",
   "Pink"
   };
-  bool pinLock=0;
-  uint16_t pinNumber=1234;
+  
   void settingsApp();
   int8_t settingsMenu(String* title, uint8_t length);
   void settingsMenuDrawBox(String title, uint8_t i, int32_t y);
@@ -342,12 +346,12 @@ public:
   void listRingtones(fs::FS &fs, const char * dirname, uint8_t levels);
   void listNotifications(fs::FS &fs, const char * dirname, uint8_t levels);
   
-  GUI gui;
+	GUI gui;
 	Buttons buttons;
   //Display display;
 
     ////////////////////////////////Main_menu.ino variables
-  String titles[6] = {
+	String titles[6] = {
     "Messages",
     "Media",
     "Contacts",
@@ -368,7 +372,8 @@ public:
     "Arhn.eu",
     "Fast_as_fuck_boi"
   };
-  /////////////////////////////////////////////////////////
+
+  //random junkerino
 
   unsigned long buttonHeld;
   unsigned long elapsedMillis;
@@ -376,6 +381,7 @@ public:
   int frameSpeed = 40;
   int lastFrameCount2 = 0;
   int smsRefresh = 0;
+
    /////////////////////////////////////////
   ///////////////COLLISION//////////////////
   //////////////////////////////////////////
