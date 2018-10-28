@@ -33,7 +33,7 @@
 #define KEYPAD_I2C_H
 
 #include "../Keypad.h"
-#include "../Wire2.h"
+#include "Wire2.h"
 
 //TwoWire i2c = TwoWire(0);
 
