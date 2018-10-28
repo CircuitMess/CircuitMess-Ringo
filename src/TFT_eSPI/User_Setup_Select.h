@@ -19,7 +19,7 @@
 
 // Only ONE line below should be uncommented.  Add extra lines and files as needed.
 
-#include <User_Setup.h>           // Default setup is root library folder
+#include "User_Setup.h"           // Default setup is root library folder
 
 //#include <User_Setups/Setup1_ILI9341.h>  // Setup file configured for my ILI9341
 //#include <User_Setups/Setup2_ST7735.h>   // Setup file configured for my ST7735
@@ -59,7 +59,7 @@
      #include <TFT_Drivers/ILI9341_Defines.h>
      #define  TFT_DRIVER 0x9341
 #elif defined (ST7735_DRIVER)
-     #include <TFT_Drivers/ST7735_Defines.h>
+     #include "TFT_Drivers/ST7735_Defines.h"
      #define  TFT_DRIVER 0x7735
 #elif defined (ILI9163_DRIVER)
      #include <TFT_Drivers/ILI9163_Defines.h>

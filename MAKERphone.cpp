@@ -19,7 +19,7 @@ Authors:
 
 #include "MAKERphone.h"
 extern MAKERphone mp;
-void MAKERphone::begin() {
+void MAKERphone::begin(bool splash) {
 	pinMode(SIM800_DTR, OUTPUT);
 	digitalWrite(SIM800_DTR, 0);
 	pinMode(INTERRUPT_PIN, INPUT_PULLUP);
@@ -28,26 +28,29 @@ void MAKERphone::begin() {
 
 	//Initialize and start with the NeoPixels
 	pixels.begin();
-	for (uint8_t i = 0; i < NUMPIXELS; i++) {
-		for (uint8_t x = 0; x < 128; x += 2) {
-			mp.pixels.setPixelColor(i, x, 0, 0);
-			delay(1);
-			mp.pixels.show(); // This sends the updated pixel color to the hardware.
-			
+	
+	if (splash == 1) {
+		for (uint8_t i = 0; i < NUMPIXELS; i++) {
+			for (uint8_t x = 0; x < 128; x += 2) {
+				mp.pixels.setPixelColor(i, x, 0, 0);
+				delay(1);
+				mp.pixels.show(); // This sends the updated pixel color to the hardware.
+
+			}
 		}
-	}
-	for (uint8_t i = 0; i < NUMPIXELS; i++) {
-		for (uint8_t x = 128; x > 0; x -= 2) {
-			mp.pixels.setPixelColor(i, x, 0, 0);
-			delay(1);
-			mp.pixels.show(); // This sends the updated pixel color to the hardware.M
-			
+		for (uint8_t i = 0; i < NUMPIXELS; i++) {
+			for (uint8_t x = 128; x > 0; x -= 2) {
+				mp.pixels.setPixelColor(i, x, 0, 0);
+				delay(1);
+				mp.pixels.show(); // This sends the updated pixel color to the hardware.M
+
+			}
 		}
-	}
+
+	}	
 	pixels.clear();
 	for (uint8_t x = 0; x < NUMPIXELS;x++)
 		pixels.setPixelColor(x, 0, 0, 0);
-
 
 	/*for (uint8_t i = 0; i < NUMPIXELS; i++)
 		mp.pixels.setPixelColor(i, hslBlack);
@@ -85,13 +88,16 @@ void MAKERphone::begin() {
 	buf.createSprite(BUF2WIDTH, BUF2HEIGHT); // Create the sprite and clear background to black
 	//buf2.setRotation(1);
 	buf.setTextSize(1);
-	display.fillScreen(TFT_RED);
 
-
-
-	while(!update());
-
-
+	if (splash == 1)
+	{
+		display.fillScreen(TFT_RED);
+		while (!update());
+	}
+	else {
+		display.fillScreen(TFT_BLACK);
+		while (!update());
+	}
 	ledcAnalogWrite(LEDC_CHANNEL, 255);
 	for (uint8_t i = 255; i > 0; i--) {
 		ledcAnalogWrite(LEDC_CHANNEL, i);
@@ -99,10 +105,8 @@ void MAKERphone::begin() {
 	}
 
 	//ledcAnalogWrite(LEDC_CHANNEL, 0);
-	splashScreen(); //Show the main splash screen
-   /* vibration(200);
-	delay(200);
-	vibration(200);*/
+	if(splash == 1)
+		splashScreen(); //Show the main splash screen
 
 
 	Serial1.begin(9600, SERIAL_8N1, 17, 16);
@@ -199,7 +203,7 @@ void MAKERphone::splashScreen() {
 	display.setTextColor(TFT_WHITE);
 	display.setCursor(19, 54);
 	display.print("CircuitMess");
-	update();
+	while(!update());
 
 	
 }
@@ -1196,8 +1200,6 @@ void MAKERphone::incomingCall()
 void MAKERphone::messagesApp() {
 	Serial.begin(115200);
 
-	display.setCursor(0, 5);
-
 	//sim800.println("AT+CMGL=\"REC READ\"");
 	//sim800.flush();
 	/*while (sim800.available())
@@ -1206,88 +1208,90 @@ void MAKERphone::messagesApp() {
 	input = readAllSms();
 	while (input == "")
 		input = readAllSms();
-
 	if (input == "ERROR")
 	{
+		Serial.println("Entered");
 		display.fillScreen(TFT_BLACK);
-		display.setTextDatum(C_BASELINE);
-		display.setCursor(29, 5);
-		//display.printCenter("test");
-		while (buttons.released(BTN_A) || buttons.released(BTN_B))
+		display.setCursor(5, 34);
+		display.setTextColor(TFT_WHITE);
+		display.printCenter("Error loading SMS!");
+		while (!update());
+		while (!buttons.released(BTN_A) && !buttons.released(BTN_B))
 			update();
 	}
-	Serial.println(input);
-	currentMessageNumber = countSubstring(input, "CMGL:");
-	Serial.println(smsNumber);
-
-
-	/////////////////////////////////////////////////////
-	//parsing the raw data input for contact number,
-	//date and text content
-	////////////////////////////////////////////////////
-	for (uint8_t i = 0; i < smsNumber; i++)
+	else
 	{
-		start = input.indexOf("\n", input.indexOf("CMGL:", end));
-		end = input.indexOf("\n", start + 1);
-		smsContent[i] = input.substring(start + 1, end);
-	}
+		currentMessageNumber = countSubstring(input, "CMGL:");
 
 
-	end = 0;
-	for (uint8_t i = 0; i < smsNumber; i++)
-	{
-		start = input.indexOf("D\",\"", input.indexOf("CMGL:", end));
-		end = input.indexOf("\"", start + 4);
-		phoneNumber[i] = input.substring(start + 4, end);
-	}
-	//////////////////////////////////////////
-	//Parsing for date and time of sending
-	////////////////////////////
-	end = 0;
-	for (uint8_t i = 0; i < smsNumber; i++)
-	{
-		start = input.indexOf("\"\",\"", input.indexOf("CMGL:", end));
-		end = input.indexOf("\"", start + 4);
-		tempDate[i] = input.substring(start + 4, end);
-	}
+		/////////////////////////////////////////////////////
+		//parsing the raw data input for contact number,
+		//date and text content
+		////////////////////////////////////////////////////
+		for (uint8_t i = 0; i < smsNumber; i++)
+		{
+			start = input.indexOf("\n", input.indexOf("CMGL:", end));
+			end = input.indexOf("\n", start + 1);
+			smsContent[i] = input.substring(start + 1, end);
+		}
 
-	int8_t index = -8;
-	for (uint8_t i = 0; i < smsNumber; i++)
-	{
 
-		char c1, c2; //buffer for saving date and time numerals in form of characters
-		c1 = tempDate[i].charAt(index + 8);
-		c2 = tempDate[i].charAt(index + 9);
-		smsYear = 2000 + ((c1 - '0') * 10) + (c2 - '0');
+		end = 0;
+		for (uint8_t i = 0; i < smsNumber; i++)
+		{
+			start = input.indexOf("D\",\"", input.indexOf("CMGL:", end));
+			end = input.indexOf("\"", start + 4);
+			phoneNumber[i] = input.substring(start + 4, end);
+		}
+		//////////////////////////////////////////
+		//Parsing for date and time of sending
+		////////////////////////////
+		end = 0;
+		for (uint8_t i = 0; i < smsNumber; i++)
+		{
+			start = input.indexOf("\"\",\"", input.indexOf("CMGL:", end));
+			end = input.indexOf("\"", start + 4);
+			tempDate[i] = input.substring(start + 4, end);
+		}
 
-		c1 = tempDate[i].charAt(index + 11);
-		c2 = tempDate[i].charAt(index + 12);
-		smsMonth = ((c1 - '0') * 10) + (c2 - '0');
+		int8_t index = -8;
+		for (uint8_t i = 0; i < smsNumber; i++)
+		{
 
-		c1 = tempDate[i].charAt(index + 14);
-		c2 = tempDate[i].charAt(index + 15);
-		smsDay = ((c1 - '0') * 10) + (c2 - '0');
+			char c1, c2; //buffer for saving date and time numerals in form of characters
+			c1 = tempDate[i].charAt(index + 8);
+			c2 = tempDate[i].charAt(index + 9);
+			smsYear = 2000 + ((c1 - '0') * 10) + (c2 - '0');
 
-		c1 = tempDate[i].charAt(index + 17);
-		c2 = tempDate[i].charAt(index + 18);
-		smsHour = ((c1 - '0') * 10) + (c2 - '0');
+			c1 = tempDate[i].charAt(index + 11);
+			c2 = tempDate[i].charAt(index + 12);
+			smsMonth = ((c1 - '0') * 10) + (c2 - '0');
 
-		c1 = tempDate[i].charAt(index + 20);
-		c2 = tempDate[i].charAt(index + 21);
-		smsMinute = ((c1 - '0') * 10) + (c2 - '0');
+			c1 = tempDate[i].charAt(index + 14);
+			c2 = tempDate[i].charAt(index + 15);
+			smsDay = ((c1 - '0') * 10) + (c2 - '0');
 
-		c1 = tempDate[i].charAt(index + 23);
-		c2 = tempDate[i].charAt(index + 24);
-		smsSecond = ((c1 - '0') * 10) + (c2 - '0');
-	}
+			c1 = tempDate[i].charAt(index + 17);
+			c2 = tempDate[i].charAt(index + 18);
+			smsHour = ((c1 - '0') * 10) + (c2 - '0');
 
-	while (1)
-	{
-		int16_t menuChoice = smsMenu("Messages", phoneNumber, tempDate, smsContent, smsNumber);
-		Serial.println(menuChoice);
-		if (menuChoice == -1)
-			break;
-		viewSms(smsContent[menuChoice], phoneNumber[menuChoice], tempDate[menuChoice]);
+			c1 = tempDate[i].charAt(index + 20);
+			c2 = tempDate[i].charAt(index + 21);
+			smsMinute = ((c1 - '0') * 10) + (c2 - '0');
+
+			c1 = tempDate[i].charAt(index + 23);
+			c2 = tempDate[i].charAt(index + 24);
+			smsSecond = ((c1 - '0') * 10) + (c2 - '0');
+		}
+
+		while (1)
+		{
+			int16_t menuChoice = smsMenu("Messages", phoneNumber, tempDate, smsContent, smsNumber);
+			Serial.println(menuChoice);
+			if (menuChoice == -1)
+				break;
+			viewSms(smsContent[menuChoice], phoneNumber[menuChoice], tempDate[menuChoice]);
+		}
 	}
 }
 uint8_t MAKERphone::countSubstring(String string, String substring) {

@@ -13,8 +13,8 @@ You should have received a copy of the GNU Lesser General Public
 License (LGPL) along with the library.
 If not, see <http://www.gnu.org/licenses/>.
 Authors:
- - Albert Gajšak
- - Emil Gajšak
+ - Albert Gajï¿½ak
+ - Emil Gajï¿½ak
 */
 
 #ifndef MAKERphone_h
@@ -22,11 +22,11 @@ Authors:
 
 
 #include <stdint.h>
-#include <Arduino.h>
+//#include <Arduino.h>
 //#include "included/Adafruit_NeoPixel.h"
 #include "Adafruit_NeoPixel.h"
 extern HardwareSerial Serial1;
-#include "TFT_eSPI.h" // Graphics and font library for ST7735 driver chip
+#include "TFT_eSPI/TFT_eSPI.h" // Graphics and font library for ST7735 driver chip
 #include <SPI.h>
 
 //Includes for SD firmware update
@@ -35,9 +35,9 @@ extern HardwareSerial Serial1;
 #include <Update.h>
 
 //Keypad setup
-#include "Keypad_I2C.h"
-#include "Keypad.h"
-#include "Wire2.h"
+#include "utility/Keypad_I2C.h"
+#include "utility/Keypad.h"
+//#include "utility/Wire2.h"
 
 //Fonts and sprites to use
 #include "src/Free_Fonts.h"
@@ -45,13 +45,20 @@ extern HardwareSerial Serial1;
 
 
 //Setup for MP3 playback
+
+#include <AudioFileSource.h>
+#include <AudioFileSourceID3.h>
+#include <AudioGeneratorMP3.h>
+#include <AudioOutputI2S.h>
+#include <AudioFileSourceSD.h>
+#include <AudioFileSourceBuffer.h>
 //#include "src/ESP8266Audio.h"
-#include "AudioFileSource.h"
-#include "AudioFileSourceID3.h"
-#include "AudioGeneratorMP3.h"
-#include "AudioOutputI2S.h"
-#include "AudioFileSourceSD.h"
-#include "AudioFileSourceBuffer.h"
+//#include "utility/AudioFileSource.h"
+//#include "utility/AudioFileSourceID3.h"
+//#include "utility/AudioGeneratorMP3.h"
+//#include "utility/AudioOutputI2S.h"
+//#include "utility/AudioFileSourceSD.h"
+//#include "utility/AudioFileSourceBuffer.h"
 
 //PCF8574 0x21 defines (keys) 
 #define JOYSTICK_A 0
@@ -203,7 +210,7 @@ public:
   TFT_eSPI tft = TFT_eSPI();  // Invoke library, pins defined in User_Setup.h
   TFT_eSprite display = TFT_eSprite(&tft);
   TFT_eSprite buf = TFT_eSprite(&tft);
-	void begin();
+	void begin(bool splash = 1);
 	void tone2(int pin, int freq, int duration);
 	void vibration(int duration);
 	void ledcAnalogWrite(uint8_t channel, uint32_t value, uint32_t valueMax = 255);
