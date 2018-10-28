@@ -293,11 +293,12 @@ public:
 
   //Settings variables
   void applySettings();
-  uint16_t sleepTimeActual;
   bool wifi = 1;
   bool bt = 0;
   bool airplaneMode = 0;
   uint8_t brightness = 5;  //brightness 0-5
+  uint8_t actualBrightness = 0; //value from 0 (brightest) to 255 (backlight off)
+  uint16_t sleepTimeActual = 30; //in seconds
   uint8_t backgroundIndex = 0;
   uint8_t volume = 10; //volume 0-14
   bool pinLock = 0;
