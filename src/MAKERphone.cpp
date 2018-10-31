@@ -24,7 +24,6 @@ void MAKERphone::begin(bool splash) {
 	digitalWrite(SIM800_DTR, 0);
 	pinMode(INTERRUPT_PIN, INPUT_PULLUP);
 	esp_sleep_enable_ext0_wakeup(GPIO_NUM_35, 0); //1 = High, 0 = Low
-	Serial.println("Stigo");
 	//Initialize and start with the NeoPixels
 	pixels.begin();
 	
@@ -111,11 +110,14 @@ void MAKERphone::begin(bool splash) {
 
 
 	Serial1.begin(9600, SERIAL_8N1, 17, 16);
-
 	//delay(7000);
 
 	updateTimeGSM();
 
+	checkSim();
+	Serial.print("Sim inserted:");
+	Serial.println(simInserted);
+	delay(5);
 	Serial1.println(F("AT+CFUN=1")); //enable full functionality
 	Serial1.println(F("AT+CLVL=100"));
 	Serial1.println(F("AT+CRSL=100"));
@@ -1201,7 +1203,41 @@ void MAKERphone::incomingCall()
 	//	update();
 	//}
 }
+void MAKERphone::checkSim()
+{
+	String input = "";
+	Serial1.println(F("AT+CFUN=1,1"));
+	while (input.indexOf("+CPIN:") == -1) {
+		Serial1.println(F("AT+CPIN?"));
+		input = Serial1.readString();
+		/*Serial.println(input);
+		delay(5);*/
+	}
+	Serial.println(input);
+	delay(5);
+	if (input.indexOf("NOT READY", input.indexOf("+CPIN:")) != -1 || input.indexOf("ERROR", input.indexOf("+CPIN:")) != -1 
+		|| input.indexOf("NOT INSERTED", input.indexOf("+CPIN:")) != -1)
+	{
+		Serial1.println(F("AT+CFUN=1,1")); //resets SIM if error is found
+		input = "";
+		delay(100);
+		Serial1.println(F("AT+CPIN?"));
+		while (input.indexOf("+CPIN:") == -1) {
+			Serial1.println(F("AT+CPIN?"));
+			input = Serial1.readString();
+			/*Serial.println(input);
+			delay(5);*/
+		}
+		if (input.indexOf("NOT READY", input.indexOf("+CPIN:")) != -1 || input.indexOf("ERROR", input.indexOf("+CPIN:")) != -1 
+			|| input.indexOf("NOT INSERTED", input.indexOf("+CPIN:")) != -1)
+			simInserted = 0;
+		else
+			simInserted = 1;
+	}
+	else
+		simInserted = 1;
 
+}
 //Messages app
 void MAKERphone::messagesApp() {
 	Serial.begin(115200);
