@@ -224,6 +224,7 @@ public:
 	void sleep();
 	void checkSMS();
 	void incomingCall();
+	void checkSim();
   
   //SMS functions
   uint8_t countSubstring(String string, String substring);
@@ -303,6 +304,7 @@ public:
   uint8_t volume = 10; //volume 0-14
   bool pinLock = 0;
   uint16_t pinNumber = 1234;
+  bool simInserted = 0;
 
   //Settings app
   uint8_t sleepTime = 2;
