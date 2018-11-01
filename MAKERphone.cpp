@@ -20,20 +20,23 @@ Authors:
 #include "MAKERphone.h"
 extern MAKERphone mp;
 void MAKERphone::begin(bool splash) {
+	String input="";
 	pinMode(SIM800_DTR, OUTPUT);
 	digitalWrite(SIM800_DTR, 0);
 	pinMode(INTERRUPT_PIN, INPUT_PULLUP);
 	esp_sleep_enable_ext0_wakeup(GPIO_NUM_35, 0); //1 = High, 0 = Low
 	//Initialize and start with the NeoPixels
 	pixels.begin();
-	
+	Serial1.begin(9600, SERIAL_8N1, 17, 16);
+	//Serial1.println(F("AT+CFUN=1,1"));
+	//Serial1.println("AT+CMEE=2");
+	//Serial1.println(F("AT+CPIN?"));
 	if (splash == 1) {
 		for (uint8_t i = 0; i < NUMPIXELS; i++) {
 			for (uint8_t x = 0; x < 128; x += 2) {
 				mp.pixels.setPixelColor(i, x, 0, 0);
 				delay(1);
 				mp.pixels.show(); // This sends the updated pixel color to the hardware.
-
 			}
 		}
 		for (uint8_t i = 0; i < NUMPIXELS; i++) {
@@ -88,7 +91,7 @@ void MAKERphone::begin(bool splash) {
 	buf.createSprite(BUF2WIDTH, BUF2HEIGHT); // Create the sprite and clear background to black
 	//buf2.setRotation(1);
 	buf.setTextSize(1);
-
+	
 	if (splash == 1)
 	{
 		display.fillScreen(TFT_RED);
@@ -98,6 +101,7 @@ void MAKERphone::begin(bool splash) {
 		display.fillScreen(TFT_BLACK);
 		while (!update());
 	}
+	
 	ledcAnalogWrite(LEDC_CHANNEL, 255);
 	for (uint8_t i = 255; i > 0; i--) {
 		ledcAnalogWrite(LEDC_CHANNEL, i);
@@ -105,19 +109,20 @@ void MAKERphone::begin(bool splash) {
 	}
 
 	//ledcAnalogWrite(LEDC_CHANNEL, 0);
-	if(splash == 1)
+	if (splash == 1)
 		splashScreen(); //Show the main splash screen
-
-
-	Serial1.begin(9600, SERIAL_8N1, 17, 16);
-	//delay(7000);
+	else
+	{
+		delay(500);
+		checkSim();
+	}
 
 	updateTimeGSM();
 
-	checkSim();
-	Serial.print("Sim inserted:");
+	
+	Serial.print("SIM inserted");
 	Serial.println(simInserted);
-	delay(5);
+	delay(50);
 	Serial1.println(F("AT+CFUN=1")); //enable full functionality
 	Serial1.println(F("AT+CLVL=100"));
 	Serial1.println(F("AT+CRSL=100"));
@@ -193,20 +198,47 @@ bool MAKERphone::update() {
 		return false;
 }
 void MAKERphone::splashScreen() {
-
 	display.setFreeFont(TT1);
+	Serial1.println(F("AT+CPIN?"));
+	String input;
 	for (int y = -49; y < 1; y++)
 	{
 		display.fillScreen(TFT_RED);
 		display.drawBitmap(0, y, splashScreenLogo, TFT_WHITE);
 		update();
+		while (Serial1.available())
+			input += (char)Serial1.read();
+		
 		delay(20);
 	}
+	Serial.println(input);
 	delay(500);
 	display.setTextColor(TFT_WHITE);
 	display.setCursor(19, 54);
 	display.print("CircuitMess");
-	while(!update());
+	while (!update());
+	while (input.indexOf("+CPIN:") == -1 && input.indexOf("ERROR") == -1)
+	{
+		Serial1.println(F("AT+CPIN?"));
+		input = Serial1.readString();
+	}
+	Serial.println(input);
+	delay(5);
+	
+	if (input.indexOf("NOT READY", input.indexOf("+CPIN:")) != -1 || input.indexOf("ERROR") != -1
+		|| input.indexOf("NOT INSERTED") != -1 )
+	{
+		simInserted = 0;
+	}
+	else
+	{
+		simInserted = 1;
+		if (input.indexOf("SIM PIN") != -1)
+			enterPin();
+	}
+	
+	
+	
 
 	
 }
@@ -335,8 +367,10 @@ void MAKERphone::lockScreen() {
 		/*display.setTextSize(2);
 		  display.setCursor(10, 50);
 		  display.print("12:00");*/
-
-		display.drawBitmap(1, 1, signal);
+		if(simInserted)
+			display.drawBitmap(1, 1, signal);
+		else
+			display.drawBitmap(1, 1, noSignal);
 		display.drawBitmap(11, 1, vibemode);
 		display.drawBitmap(21, 1, silentmode);
 		display.drawBitmap(31, 1, missedcall);
@@ -1206,37 +1240,106 @@ void MAKERphone::incomingCall()
 void MAKERphone::checkSim()
 {
 	String input = "";
-	Serial1.println(F("AT+CFUN=1,1"));
-	while (input.indexOf("+CPIN:") == -1) {
+	
+	while (input.indexOf("+CPIN:") == -1 && input.indexOf("ERROR", input.indexOf("+CPIN")) == -1) {
 		Serial1.println(F("AT+CPIN?"));
 		input = Serial1.readString();
-		/*Serial.println(input);
-		delay(5);*/
+		Serial.println(input);
+		delay(10);
 	}
-	Serial.println(input);
+	Serial.println("Odgovor na CPIN?");
 	delay(5);
-	if (input.indexOf("NOT READY", input.indexOf("+CPIN:")) != -1 || input.indexOf("ERROR", input.indexOf("+CPIN:")) != -1 
-		|| input.indexOf("NOT INSERTED", input.indexOf("+CPIN:")) != -1)
+	if (input.indexOf("NOT READY", input.indexOf("+CPIN:")) != -1 || input.indexOf("ERROR") != -1 && input.indexOf("+CPIN:") == -1
+		|| input.indexOf("NOT INSERTED") != -1)
 	{
-		Serial1.println(F("AT+CFUN=1,1")); //resets SIM if error is found
-		input = "";
-		delay(100);
-		Serial1.println(F("AT+CPIN?"));
-		while (input.indexOf("+CPIN:") == -1) {
-			Serial1.println(F("AT+CPIN?"));
-			input = Serial1.readString();
-			/*Serial.println(input);
-			delay(5);*/
-		}
-		if (input.indexOf("NOT READY", input.indexOf("+CPIN:")) != -1 || input.indexOf("ERROR", input.indexOf("+CPIN:")) != -1 
-			|| input.indexOf("NOT INSERTED", input.indexOf("+CPIN:")) != -1)
-			simInserted = 0;
-		else
-			simInserted = 1;
+		simInserted = 0;
 	}
 	else
+	{
 		simInserted = 1;
+		if (input.indexOf("SIM PIN") != -1)
+			enterPin();
+		
+	}
 
+}
+void MAKERphone::enterPin()
+{
+	
+	uint8_t timesRemaining;
+	char key = NO_KEY;
+	String pinBuffer = "";
+	String reply = "";
+	
+	while (reply.indexOf("+SPIC:") == -1)
+	{
+		Serial1.println("AT+SPIC");
+		reply = Serial1.readString();
+	}
+	timesRemaining = reply.substring(reply.indexOf(" ", reply.indexOf("+SPIC:")), reply.indexOf(",")).toInt();
+	
+	while (1)
+	{
+		display.setTextFont(1);
+		display.setTextColor(TFT_WHITE);
+		display.fillScreen(TFT_BLACK);
+		display.setCursor(5, 5);
+		display.printCenter("Enter pin:");
+		
+		display.setCursor(1, 30);
+		display.printCenter(pinBuffer);
+		display.setCursor(1, 63);
+		display.setFreeFont(TT1);
+		display.print("Press A to confirm");
+		display.setCursor(5, 19);
+		String temp = "Remaining attempts: ";
+		temp+=timesRemaining;
+		display.printCenter(temp);
+
+		key = buttons.kpdNum.getKey();
+		if (key == 'A') //clear number
+			pinBuffer = "";
+		else if (key == 'C' && pinBuffer != "")
+			pinBuffer.remove(pinBuffer.length() - 1);
+		if (key != NO_KEY && isDigit(key) && pinBuffer.length() != 4)
+			pinBuffer += key;
+		
+
+		if (buttons.released(BTN_A))//enter PIN
+		{
+			reply = "";
+			Serial1.print(F("AT+CPIN=\""));
+			Serial1.print(pinBuffer);
+			Serial1.println("\"");
+			while (!Serial1.available());
+			while (reply.indexOf("+CPIN: READY") == -1 && reply.indexOf("ERROR") == -1)
+				reply= Serial1.readString();
+			display.fillScreen(TFT_BLACK);
+			display.setCursor(28, 28);
+			display.setTextFont(1);
+			if (reply.indexOf("+CPIN: READY") != -1)
+			{
+				display.printCenter("PIN OK :)");
+				while (!update());
+				delay(1000);
+				break;
+			}
+			else if (reply.indexOf("ERROR") != -1)
+			{
+				timesRemaining--;
+				pinBuffer = "";
+				display.printCenter("Wrong PIN :(");
+				while (!update());
+				delay(2000);
+			}
+			
+
+
+		}
+		if (buttons.released(BTN_B) == 1) //sleeps
+			sleep();
+		update();
+	}
 }
 //Messages app
 void MAKERphone::messagesApp() {

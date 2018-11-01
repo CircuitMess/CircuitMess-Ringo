@@ -225,6 +225,7 @@ public:
 	void checkSMS();
 	void incomingCall();
 	void checkSim();
+	void enterPin();
   
   //SMS functions
   uint8_t countSubstring(String string, String substring);
