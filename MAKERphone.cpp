@@ -1341,6 +1341,215 @@ void MAKERphone::enterPin()
 		update();
 	}
 }
+String MAKERphone::textInput(String buffer)
+{
+	
+	int ret = 0;
+	byte key = mp.buttons.kpdNum.getKey(); // Get a key press from the keypad
+	if (key != NO_KEY)
+		if (key == 'C' && buffer != "" && textPointer >= 1)
+		{
+			if (textPointer == buffer.length())
+				textPointer = textPointer - 2;
+			else
+				textPointer--;
+			buffer.remove(buffer.length() - 1);
+		}
+		else if (key == 'A') //clear number
+		{
+			buffer = "";
+			textPointer = 0;
+		}
+	if (key != 'B' && key != 'D' && key != 'A')
+	{
+		ret = multi_tap(key);// Feed the key press to the multi_tap function.
+		if ((ret & 256) != 0) // If this is non-zero, we got a key. Handle some special keys or just print the key on screen
+		{
+			//switch (ret&255)
+			//{
+			//  case '\b':
+			//  if ((textPointer%lcd_columns)==0)
+			//  {
+			//    if (rowp>0)
+			//    {
+			//      rowp--;
+			//      textPointer=lcd_columns-2;
+			//    }
+			//  }
+			//  else textPointer--;
+			//  lcd.setCursor(textPointer,rowp);
+			//  lcd.write(' ');
+			//  lcd.setCursor(textPointer,rowp);
+			//  return;
+			//  break;
+			//  case '\n':
+			//  textPointer=0;
+			//  rowp++;
+			//  rowp%=lcd_rows;
+			//  lcd.setCursor(textPointer,rowp);
+			//  return;
+			//  break;
+			//}
+			textPointer++;
+
+		}
+		else if (ret) // We don't have a key but the user is still cycling through characters on one key so we need to update the screen
+		{
+			if (textPointer == buffer.length())
+				buffer += char(lowByte(ret));
+			else
+				buffer[buffer.length() - 1] = char(lowByte(ret));
+		}
+	}
+	return buffer;
+}
+int MAKERphone::multi_tap(byte key)
+{
+	static boolean upperCase = true;
+	static byte prevKeyPress = NO_KEY, cyclicPtr = 0;
+	static unsigned long prevKeyMillis = 0;
+	static const char multi_tap_mapping[10][map_width] = { {'0','#','$','.','?','"','&'},{'1','+','-','*','/','\'',':'},{'A','B','C','2','!',';','<'},{'D','E','F','3','%','[','='},{'G','H','I','4','(','\\','>'},{'J','K','L','5',')',']','^'},{'M','N','O','6','@','_','`'},{'P','Q','R','S','7','{','|'},{'T','U','V','8',',','}','~'},{'W','X','Y','Z','9',' ',0} };
+	if (key == RESET_MTP) // Received reset command. Flush everything and get ready for restart.
+	{
+		upperCase = true;
+		prevKeyPress = NO_KEY;
+		cyclicPtr = 0;
+		return 0;
+	}
+	if (key != NO_KEY) // A key is pressed at this iteration.
+	{
+		if (key == 'C')
+		{
+			char temp1 = multi_tap_mapping[prevKeyPress - '0'][cyclicPtr];
+			if ((!upperCase) && (temp1 >= 'A') && (temp1 <= 'Z')) temp1 += 'a' - 'A';
+			prevKeyPress = NO_KEY;
+			cyclicPtr = 0;
+			return(256 + (unsigned int)(temp1));
+		}
+		if (key == 'C')
+		{
+			char temp1 = multi_tap_mapping[prevKeyPress - '0'][cyclicPtr];
+			if ((!upperCase) && (temp1 >= 'A') && (temp1 <= 'Z')) temp1 += 'a' - 'A';
+			prevKeyPress = NO_KEY;
+			cyclicPtr = 0;
+			return (256 + (unsigned int)(' '));
+		}
+		if ((key > '9') || (key < '0')) // Function keys
+		{
+			if ((key == 1) || (key == '#')) // Up for case change
+			{
+				upperCase = !upperCase;
+				return 0;
+			}
+			else // Other function keys. These keys produce characters so they need to terminate the last keypress.
+			{
+				if (prevKeyPress != NO_KEY)
+				{
+					char temp1 = multi_tap_mapping[prevKeyPress - '0'][cyclicPtr];
+					if ((!upperCase) && (temp1 >= 'A') && (temp1 <= 'Z')) temp1 += 'a' - 'A';
+					cyclicPtr = 0;
+					prevKeyMillis = 0;
+					switch (key)
+					{
+					case 2:
+						// Call symbol list
+						return 0; // Clear the buffer.
+						break;
+					case 3:
+						prevKeyPress = '\b';
+						break;
+					case 5:
+						prevKeyPress = '\n';
+						break;
+					case 6:
+						prevKeyPress = NO_KEY; // Clear the buffer.
+						break;
+					}
+					return(256 + (unsigned int)(temp1));
+				}
+				else
+				{
+					prevKeyPress = NO_KEY;
+					cyclicPtr = 0;
+					prevKeyMillis = 0;
+					switch (key)
+					{
+					case 2:
+						// Call symbol list
+						return 0; // Clear the buffer.
+						break;
+					case 3:
+						return (256 + (unsigned int)('\b'));
+						break;
+					case 4:
+						return (256 + (unsigned int)(' '));
+						break;
+					case 5:
+						return (256 + (unsigned int)('\n'));
+						break;
+					case 6:
+						return 0; // Clear the buffer.
+						break;
+					}
+				}
+			}
+
+		}
+		if (prevKeyPress != NO_KEY)
+		{
+			if (prevKeyPress == key)
+			{
+				char temp1;
+				cyclicPtr++;
+				if ((multi_tap_mapping[key - '0'][cyclicPtr] == 0) || (cyclicPtr == map_width)) cyclicPtr = 0; //Cycle key
+				prevKeyMillis = millis();
+				temp1 = multi_tap_mapping[key - '0'][cyclicPtr];
+				if ((!upperCase) && (temp1 >= 'A') && (temp1 <= 'Z')) temp1 += 'a' - 'A';
+				return ((unsigned int)(temp1));
+			}
+			else
+			{
+				char temp1 = multi_tap_mapping[prevKeyPress - '0'][cyclicPtr];
+				if ((!upperCase) && (temp1 >= 'A') && (temp1 <= 'Z')) temp1 += 'a' - 'A';
+				prevKeyPress = key;
+				cyclicPtr = 0;
+				prevKeyMillis = millis();
+				//Print key on cursor+1
+				return(256 + (unsigned int)(temp1));
+			}
+		}
+		else
+		{
+			char temp1 = multi_tap_mapping[key - '0'][cyclicPtr];
+			if ((!upperCase) && (temp1 >= 'A') && (temp1 <= 'Z')) temp1 += 'a' - 'A';
+			prevKeyPress = key;
+			prevKeyMillis = millis();
+			cyclicPtr = 0;
+			return ((unsigned int)(temp1));
+		}
+
+	}
+	else // No key is pressed at this iteration.
+	{
+		if (prevKeyPress == NO_KEY) return 0; // No key was previously pressed.
+		else if (millis() - prevKeyMillis < multi_tap_threshold) // Key was pressed previously but within threshold
+		{
+			char temp1 = multi_tap_mapping[prevKeyPress - '0'][cyclicPtr];
+			if ((!upperCase) && (temp1 >= 'A') && (temp1 <= 'Z')) temp1 += 'a' - 'A';
+			return((unsigned int)(temp1));
+		}
+		else // Key was pressed previously and threshold has passed
+		{
+			char temp1 = multi_tap_mapping[prevKeyPress - '0'][cyclicPtr];
+			if ((!upperCase) && (temp1 >= 'A') && (temp1 <= 'Z')) temp1 += 'a' - 'A';
+			prevKeyPress = NO_KEY;
+			cyclicPtr = 0;
+			return(256 + (unsigned int)(temp1));
+		}
+	}
+	return 0;
+}
+
 //Messages app
 void MAKERphone::messagesApp() {
 	Serial.begin(115200);
@@ -1352,8 +1561,11 @@ void MAKERphone::messagesApp() {
 
 	input = readAllSms();
 	while (input == "")
+	{
+		delay(100);
 		input = readAllSms();
-	Serial.println(input);
+	}
+	//Serial.println(input);
 	if (input == "ERROR")
 	{
 		display.fillScreen(TFT_BLACK);
@@ -1366,6 +1578,7 @@ void MAKERphone::messagesApp() {
 	}
 	else if (input == "OK")
 	{
+		display.setFreeFont(TT1);
 		display.fillScreen(TFT_BLACK);
 		display.setCursor(5, 34);
 		display.setTextColor(TFT_WHITE);
@@ -1445,7 +1658,10 @@ void MAKERphone::messagesApp() {
 			Serial.println(menuChoice);
 			if (menuChoice == -1)
 				break;
-			viewSms(smsContent[menuChoice], phoneNumber[menuChoice], tempDate[menuChoice]);
+			else if (menuChoice == 0)
+				composeSMS();
+			else
+				viewSms(smsContent[menuChoice-1], phoneNumber[menuChoice-1], tempDate[menuChoice-1]);
 		}
 	}
 }
@@ -1476,20 +1692,22 @@ String MAKERphone::readSms(uint8_t index) {
 		return "";
 }
 String MAKERphone::readAllSms() {
-	Serial1.print(F("AT+CMGF=1\r"));
+	Serial.begin(115200);
 	Serial1.print(F("AT+CMGL=\"ALL\"\r"));
 	buffer = readSerial();
+	Serial.println(buffer);
+	delay(10);
 	if (buffer.indexOf("CMGL:") != -1) {
 		return buffer;
 	}
-	else if (buffer.indexOf("ERROR") != -1)
+	else if (buffer.indexOf("ERROR", buffer.indexOf("AT+CMGL")) != -1)
 		return "ERROR";
-	else if (buffer.indexOf("CMGL:") == -1 && buffer.indexOf("OK") != -1)
+	else if (buffer.indexOf("CMGL:") == -1 && buffer.indexOf("OK", buffer.indexOf("AT+CMGL")) != -1)
 		return "OK";
 	else
 		return "";
 
-	Serial.println(buffer);
+	
 }
 void MAKERphone::viewSms(String content, String contact, String date) {
 	y = 14;  //Beggining point
@@ -1552,9 +1770,9 @@ void MAKERphone::viewSms(String content, String contact, String date) {
 
 		}
 
-		if (buttons.kpd.pin_read(BTN_B) == 0) //BUTTON BACK
+		if (buttons.released(BTN_B)) //BUTTON BACK
 		{
-			while (buttons.kpd.pin_read(BTN_B) == 0);
+			while (!update());
 			break;
 		}
 		//}
@@ -1587,7 +1805,8 @@ void MAKERphone::viewSms(String content, String contact, String date) {
 	}
 }
 void MAKERphone::smsMenuDrawBox(String contact, String date, String content, uint8_t i, int32_t y) {
-	y += i * 20 + menuYOffset;
+	
+	y += (i-1) * 20 + composeBoxHeight + menuYOffset;
 	if (y < 0 || y > BUFHEIGHT) {
 		return;
 	}
@@ -1603,11 +1822,10 @@ void MAKERphone::smsMenuDrawCursor(uint8_t i, int32_t y) {
 	if (millis() % 500 <= 250) {
 		return;
 	}
-	y += i * 20 + menuYOffset;
+	y += (i-1) * 20 + composeBoxHeight + menuYOffset;
 	display.drawRect(0, y, display.width(), 21, TFT_RED);
 }
 int16_t MAKERphone::smsMenu(const char* title, String* contact, String *date, String *content, uint8_t length) {
-
 	uint8_t cursor = 0;
 	int32_t cameraY = 0;
 	int32_t cameraY_actual = 0;
@@ -1621,10 +1839,16 @@ int16_t MAKERphone::smsMenu(const char* title, String* contact, String *date, St
 			cameraY_actual = cameraY;
 		}
 
-		for (uint8_t i = 0; i < length; i++) {
-			smsMenuDrawBox(contact[i], date[i], content[i], i, cameraY_actual);
+		for (uint8_t i = 0; i < length+1; i++) {
+			if (i == 0)
+				smsMenuComposeBox(i, cameraY_actual);
+			else
+				smsMenuDrawBox(contact[i-1], date[i-1], content[i-1], i, cameraY_actual);
 		}
-		smsMenuDrawCursor(cursor, cameraY_actual);
+		if (cursor == 0)
+			smsMenuComposeBoxCursor(cursor, cameraY_actual);
+		else
+			smsMenuDrawCursor(cursor, cameraY_actual);
 
 		// last draw the top entry thing
 		display.fillRect(0, 0, display.width(), 7, TFT_DARKGREY);
@@ -1658,10 +1882,18 @@ int16_t MAKERphone::smsMenu(const char* title, String* contact, String *date, St
 
 		if (buttons.kpd.pin_read(JOYSTICK_B) == 0) { //BUTTON DOWN
 			while (buttons.kpd.pin_read(JOYSTICK_B) == 0);
-
 			cursor++;
-			if ((cursor * 20 + cameraY + menuYOffset) > 40) {
-				cameraY -= 20;
+			if (cursor > 0)
+			{
+				if (((cursor - 1) * 20 + composeBoxHeight + cameraY + menuYOffset) > 40) {
+					cameraY -= 20;
+				}
+			}
+			else
+			{
+				if ((cursor * 20 + cameraY + menuYOffset) > 40) {
+					cameraY -= 20;
+				}
 			}
 			if (cursor >= length) {
 				cursor = 0;
@@ -1679,7 +1911,159 @@ int16_t MAKERphone::smsMenu(const char* title, String* contact, String *date, St
 	return cursor;
 
 }
+void MAKERphone::smsMenuComposeBoxCursor(uint8_t i, int32_t y) {
+	if (millis() % 500 <= 250) {
+		return;
+	}
+	y += menuYOffset;
+	display.drawRect(0, y, display.width(), composeBoxHeight+1, TFT_RED);
+}
+void MAKERphone::smsMenuComposeBox(uint8_t i, int32_t y) {
+	y += menuYOffset;
+	if (y < 0 || y > BUFHEIGHT) {
+		return;
+	}
+	display.fillRect(1, y + 1, BUFWIDTH - 2, composeBoxHeight-1, TFT_DARKGREY);
+	display.drawBitmap(2, y + 2, composeIcon, TFT_WHITE);
+	display.setTextColor(TFT_WHITE);
+	display.setCursor(20, y + 3);
+	display.setTextFont(1);
+	display.print("New SMS");
+	display.setFreeFont(TT1);
 
+}
+void MAKERphone::composeSMS()
+{
+	textPointer = 0;
+	y = 10;  //Beggining point
+	String content = "";
+	String contact = "";
+	char key = NO_KEY;
+	bool cursor = 0; //editing contacts or text content
+	uint16_t contentCursor = 0;
+	unsigned long elapsedMillis = millis();
+	bool blinkState = 1;
+	while (1)
+	{
+		display.fillScreen(TFT_DARKGREY);
+		display.fillRect(0, 0, display.width(), 7, TFT_DARKGREY);
+		display.setTextColor(TFT_DARKGREY);
+		display.setCursor(1, 6);
+		display.print("To: ");
+		display.setTextColor(TFT_WHITE);
+		display.print(contact);
+		display.drawFastHLine(0, 7, LCDWIDTH, TFT_BLACK);
+		display.setTextWrap(1);
+		display.setCursor(1, y);
+		display.setTextFont(1);
+		display.print(content);
+		display.setFreeFont(TT1);
+		if (cursor == 0) //inputting the contact number
+		{
+			key = buttons.kpdNum.getKey();
+			if (key == 'A') //clear number
+				contact = "";
+			else if (key == 'C')
+				contact.remove(contact.length() - 1);
+			if (key != NO_KEY && isdigit(key))
+				contact += key;
+
+			if (blinkState == 1)
+			{
+				display.setTextColor(TFT_WHITE);
+				display.setCursor(1, 6);
+				display.print("To: ");
+			}
+		}
+		else
+		{
+			display.setTextColor(TFT_WHITE);
+			display.setCursor(1, 6);
+			display.print("To: ");
+			content = textInput(content);
+			Serial.print(content);
+			Serial.println("|");
+			delay(5);
+
+			/*if (blinkState == 1)
+			{
+				display.fillRect(0, 0, display.width(), 7, TFT_DARKGREY);
+				display.setTextColor(TFT_WHITE);
+				display.setCursor(1, 6);
+				display.print("From: ");
+				display.print(contact);
+				display.drawFastHLine(0, 7, LCDWIDTH, TFT_BLACK);
+			}
+			else
+			{
+				display.setTextColor(TFT_WHITE);
+				display.setCursor(1, 6);
+				display.drawFastHLine(0, 7, LCDWIDTH, TFT_BLACK);
+			}*/
+		}
+		if (buttons.kpd.pin_read(JOYSTICK_D) == 0 && cursor == 1) { //BUTTON UP
+			/*Serial.println(display.cursor_y);
+			if (display.cursor_y >= 64)
+			{
+				buttonHeld = millis();
+
+				if (buttons.kpd.pin_read(JOYSTICK_D) == 1)
+				{
+					y -= 2;
+					break;
+				}
+
+				while (buttons.kpd.pin_read(JOYSTICK_D) == 0)
+				{
+					if (millis() - buttonHeld > 100) {
+						y -= 2;
+						break;
+					}
+				}
+			}*/
+			cursor = 0;
+		}
+
+		if (buttons.kpd.pin_read(JOYSTICK_B) == 0 && cursor == 0) { //BUTTON DOWN
+			/*if (y < 14)
+			{
+
+
+				buttonHeld = millis();
+
+				if (buttons.kpd.pin_read(JOYSTICK_B) == 1)
+				{
+					y += 2;
+					break;
+				}
+
+				while (buttons.kpd.pin_read(JOYSTICK_B) == 0)
+				{
+					if (millis() - buttonHeld > 100) {
+						y += 2;
+						break;
+					}
+				}
+			}*/
+			cursor = 1;
+
+		}
+
+		if (buttons.released(BTN_B)) //BUTTON BACK
+		{
+			while (!update());
+			break;
+		}
+
+		if (millis() - elapsedMillis >= 250) {
+			elapsedMillis = millis();
+			blinkState = !blinkState;
+		}
+		
+
+		update();
+	}
+}
 //Contacts app
 void MAKERphone::contactsMenuDrawBox(String contact, String number, uint8_t i, int32_t y) {
 	y += i * 14 + menuYOffset;
