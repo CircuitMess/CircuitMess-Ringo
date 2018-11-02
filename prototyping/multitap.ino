@@ -45,8 +45,7 @@ MAKERphone mp;
 //byte pins[]={17, 16, 15, 13, 12, 11, 9, 8}; // The first four pins are rows, the next 4 are columns. If you have 4*3 pad, then the first 4 are rows and the next 3 are columns.
 //phi_matrix_keypads panel_keypad(mapping, pins, buttons_per_row, buttons_per_column);
 //
-boolean multiTap=true;
-int pointer=0, rowp=0;
+int pointer = 0;
 String buffer = "";
 //LiquidCrystal lcd(LCD_RS,LCD_EN,LCD_D4,LCD_D5,LCD_D6,LCD_D7); // Create the lcd object
 
@@ -173,21 +172,21 @@ int multi_tap(byte key)
           {
             case 2:
             // Call symbol list
-            return 0; // Clear the buffer.
-            break;
+				return 0; // Clear the buffer.
+				break;
             case 3:
-            prevKeyPress='\b';
-            break;
-            case 4:
+				prevKeyPress='\b';
+				break;
+			case 4:
             case '*':
-            prevKeyPress=' ';
-            break;
+				prevKeyPress=' ';
+				break;
             case 5:
-            prevKeyPress='\n';
-            break;
+				prevKeyPress='\n';
+				break;
             case 6:
-            prevKeyPress=NO_KEY; // Clear the buffer.
-            break;
+				prevKeyPress=NO_KEY; // Clear the buffer.
+				break;
           }
           return(256+(unsigned int)(temp1));
         }

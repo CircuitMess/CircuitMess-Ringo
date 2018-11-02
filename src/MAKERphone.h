@@ -89,6 +89,12 @@ extern HardwareSerial Serial1;
 
 #define menuYOffset 9
 #define settingsMenuYOffset 2
+#define composeBoxHeight 12
+#define map_width 7
+#define RESET_MTP '~'
+#define buttons_per_column 4
+#define buttons_per_row 4
+#define multi_tap_threshold 500
 
 #define ROWS 4 //four rows
 #define COLS 4
@@ -101,6 +107,7 @@ extern HardwareSerial Serial1;
 #define LEDC_CHANNEL 1 // use second channel of 16 channels(started from zero)
 #define LEDC_TIMER  13 // use 13 bit precission for LEDC timer
 #define LEDC_BASE_FREQ  5000 // use 5000 Hz as a LEDC base frequency
+
 
 #define smsNumber 22
 class Buttons
@@ -166,45 +173,7 @@ private:
   int32_t cameraY = 0;
   int32_t cameraY_actual = 0;
 };
-//class Display {
-//public:
-//  ///////////////////////
-//  //LCD setup
-//  ///////////////////////
-//  TFT_eSPI tft = TFT_eSPI();  // Invoke library, pins defined in User_Setup.h
-//  TFT_eSprite display = TFT_eSprite(&tft);
-//  TFT_eSprite buf = TFT_eSprite(&tft);
-//  
-//  void drawBitmap(int8_t x, int8_t y, const byte *bitmap, uint16_t color);
-//  void drawBitmap(int8_t x, int8_t y, const byte *bitmap);
-//  void drawNotificationWindow(uint8_t x, uint8_t y, uint8_t width, uint8_t height, String text);
-//  void begin();
-//  bool update();
-//  void drawIcon(const unsigned short* icon, int16_t x, int16_t y, uint16_t width, uint16_t height);
-//  uint8_t drawCursor(uint8_t xoffset, uint8_t yoffset, uint8_t xelements, uint8_t yelements, uint8_t xstart, uint8_t ystart);
-//  uint8_t drawBigIconsCursor(uint8_t xoffset, uint8_t yoffset, uint8_t xelements, uint8_t yelements, uint8_t xstart, uint8_t ystart);
-//  long elapsedMillis = millis();
-//  long elapsedMillis2 = millis();
-//  uint8_t cursorX = 0;
-//  uint8_t cursorY = 0;
-//  bool cursorState = 1;
-//  uint8_t index;
-//  bool previousButtonState = 0;
-//  uint8_t cursor = 0;
-//  int32_t cameraY = 0;
-//  int32_t cameraY_actual = 0;
-//  void menuDrawBox(String text, uint8_t i, int32_t y);
-//  void menuDrawCursor(uint8_t i, int32_t y);
-//  int8_t menu(const char* title, String* items, uint8_t length);
-//  
-//  
-//  
-//private:
-//    //Screen refresh
-//  
-//
-//
-//};
+
 class MAKERphone:public Buttons, public GUI
 {
 public:
@@ -226,6 +195,8 @@ public:
 	void incomingCall();
 	void checkSim();
 	void enterPin();
+	String textInput(String buffer);
+	int textPointer = 0;
   
   //SMS functions
   uint8_t countSubstring(String string, String substring);
@@ -234,9 +205,12 @@ public:
   String readAllSms();
   void viewSms(String content, String contact, String date);
   void smsMenuDrawBox(String contact, String date, String content, uint8_t i, int32_t y);
+  void smsMenuComposeBox(uint8_t i, int32_t y);
   void smsMenuDrawCursor(uint8_t i, int32_t y);
+  void smsMenuComposeBoxCursor(uint8_t i, int32_t y);
   int16_t smsMenu(const char* title, String* contact, String *date, String *content, uint8_t length);
   void messagesApp();
+  void composeSMS();
   void incomingMessagePopup();
   
   void updateFromFS(fs::FS &fs, String FilePath);
@@ -394,7 +368,7 @@ public:
   bool collideCircleCircle(int16_t centerX1, int16_t centerY1, int16_t r1, int16_t centerX2, int16_t centerY2, int16_t r2);  // Returns TRUE if the 2 circles overlap
   bool collidePointCircle(int16_t pointX, int16_t pointY, int16_t centerX, int16_t centerY, int16_t r);  // Returns TRUE if the point overlaps the circle
 private:
-	
+	int multi_tap(byte key);
 	bool newMessage = 0;
 	uint8_t currentMessageNumber;
   void performUpdate(Stream &updateSource, size_t updateSize);
