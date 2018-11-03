@@ -1365,31 +1365,6 @@ String MAKERphone::textInput(String buffer)
 		ret = multi_tap(key);// Feed the key press to the multi_tap function.
 		if ((ret & 256) != 0) // If this is non-zero, we got a key. Handle some special keys or just print the key on screen
 		{
-			//switch (ret&255)
-			//{
-			//  case '\b':
-			//  if ((textPointer%lcd_columns)==0)
-			//  {
-			//    if (rowp>0)
-			//    {
-			//      rowp--;
-			//      textPointer=lcd_columns-2;
-			//    }
-			//  }
-			//  else textPointer--;
-			//  lcd.setCursor(textPointer,rowp);
-			//  lcd.write(' ');
-			//  lcd.setCursor(textPointer,rowp);
-			//  return;
-			//  break;
-			//  case '\n':
-			//  textPointer=0;
-			//  rowp++;
-			//  rowp%=lcd_rows;
-			//  lcd.setCursor(textPointer,rowp);
-			//  return;
-			//  break;
-			//}
 			textPointer++;
 
 		}
@@ -1426,7 +1401,7 @@ int MAKERphone::multi_tap(byte key)
 			cyclicPtr = 0;
 			return(256 + (unsigned int)(temp1));
 		}
-		if (key == 'C')
+		if (key == '*')
 		{
 			char temp1 = multi_tap_mapping[prevKeyPress - '0'][cyclicPtr];
 			if ((!upperCase) && (temp1 >= 'A') && (temp1 <= 'Z')) temp1 += 'a' - 'A';
@@ -1857,9 +1832,9 @@ int16_t MAKERphone::smsMenu(const char* title, String* contact, String *date, St
 		display.drawString(title, 1, 1);
 		display.drawFastHLine(0, 7, LCDWIDTH, TFT_BLACK);
 
-		if (buttons.kpd.pin_read(BTN_A) == 0) {   //BUTTON CONFIRM
+		if (buttons.released(BTN_A)) {   //BUTTON CONFIRM
 
-			while (buttons.kpd.pin_read(BTN_A) == 0);// Exit when pressed
+			while (!update());// Exit when pressed
 			break;
 		}
 
@@ -1981,8 +1956,8 @@ void MAKERphone::composeSMS()
 			display.setCursor(1, 6);
 			display.print("To: ");
 			content = textInput(content);
-			Serial.print(content);
-			Serial.println("|");
+			Serial.println(content);
+			Serial.println(textPointer);
 			delay(5);
 
 			/*if (blinkState == 1)
@@ -2051,6 +2026,31 @@ void MAKERphone::composeSMS()
 
 		if (buttons.released(BTN_B)) //BUTTON BACK
 		{
+			while (!update());
+			break;
+		}
+		if (buttons.released(BTN_A)) // SEND SMS
+		{
+			display.fillScreen(TFT_BLACK);
+			display.setFreeFont(TT1);
+			display.setCursor(34, 32);
+			display.printCenter("Sending text...");
+			while (!update());
+			Serial1.print("AT+CMGS=\"");
+			Serial1.print(contact);
+			Serial1.println("\"");
+			while (!Serial1.available());
+			Serial.println(Serial1.readString());
+			delay(5);
+			Serial1.print(content);
+			while (!Serial1.available());
+			Serial.println(Serial1.readString());
+			delay(5);
+			Serial1.println((char)26);
+			while (Serial1.readString().indexOf("OK") != -1);
+			display.fillScreen(TFT_BLACK);
+			display.printCenter("Text sent!");
+			delay(1000);
 			while (!update());
 			break;
 		}
