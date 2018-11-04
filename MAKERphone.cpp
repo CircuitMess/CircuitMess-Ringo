@@ -1346,20 +1346,19 @@ String MAKERphone::textInput(String buffer)
 	
 	int ret = 0;
 	byte key = mp.buttons.kpdNum.getKey(); // Get a key press from the keypad
-	if (key != NO_KEY)
-		if (key == 'C' && buffer != "" && textPointer >= 1)
-		{
-			if (textPointer == buffer.length())
-				textPointer = textPointer - 2;
-			else
-				textPointer--;
-			buffer.remove(buffer.length() - 1);
-		}
-		else if (key == 'A') //clear number
-		{
-			buffer = "";
-			textPointer = 0;
-		}
+	if (key == 'C' && buffer != "")
+	{
+		if (textPointer == buffer.length())
+			textPointer = textPointer - 1;
+		buffer.remove(buffer.length() - 1);
+	}
+	else if (key == 'A') //clear number
+	{
+		buffer = "";
+		textPointer = 0;
+	}
+	else if (key == '*')
+		buffer += ' ';
 	if (key != 'B' && key != 'D' && key != 'A')
 	{
 		ret = multi_tap(key);// Feed the key press to the multi_tap function.
@@ -1395,16 +1394,12 @@ int MAKERphone::multi_tap(byte key)
 	{
 		if (key == 'C')
 		{
-			char temp1 = multi_tap_mapping[prevKeyPress - '0'][cyclicPtr];
-			if ((!upperCase) && (temp1 >= 'A') && (temp1 <= 'Z')) temp1 += 'a' - 'A';
 			prevKeyPress = NO_KEY;
 			cyclicPtr = 0;
-			return(256 + (unsigned int)(temp1));
+			return 0;
 		}
 		if (key == '*')
 		{
-			char temp1 = multi_tap_mapping[prevKeyPress - '0'][cyclicPtr];
-			if ((!upperCase) && (temp1 >= 'A') && (temp1 <= 'Z')) temp1 += 'a' - 'A';
 			prevKeyPress = NO_KEY;
 			cyclicPtr = 0;
 			return (256 + (unsigned int)(' '));
@@ -1913,6 +1908,7 @@ void MAKERphone::composeSMS()
 	y = 10;  //Beggining point
 	String content = "";
 	String contact = "";
+	String prevContent = "";
 	char key = NO_KEY;
 	bool cursor = 0; //editing contacts or text content
 	uint16_t contentCursor = 0;
@@ -1922,17 +1918,17 @@ void MAKERphone::composeSMS()
 	{
 		display.fillScreen(TFT_DARKGREY);
 		display.fillRect(0, 0, display.width(), 7, TFT_DARKGREY);
-		display.setTextColor(TFT_DARKGREY);
+		display.setTextColor(TFT_WHITE);
 		display.setCursor(1, 6);
 		display.print("To: ");
-		display.setTextColor(TFT_WHITE);
-		display.print(contact);
+		
 		display.drawFastHLine(0, 7, LCDWIDTH, TFT_BLACK);
-		display.setTextWrap(1);
-		display.setCursor(1, y);
-		display.setTextFont(1);
-		display.print(content);
 		display.setFreeFont(TT1);
+		if (millis() - elapsedMillis >= multi_tap_threshold) //cursor blinking routine 
+		{
+			elapsedMillis = millis();
+			blinkState = !blinkState;
+		}
 		if (cursor == 0) //inputting the contact number
 		{
 			key = buttons.kpdNum.getKey();
@@ -1942,23 +1938,43 @@ void MAKERphone::composeSMS()
 				contact.remove(contact.length() - 1);
 			if (key != NO_KEY && isdigit(key))
 				contact += key;
-
-			if (blinkState == 1)
+			display.setTextWrap(1);
+			display.setCursor(1, y);
+			display.setTextFont(1);
+			if (content = "")
 			{
+				display.setTextColor(TFT_LIGHTGREY);
+				display.print(F("Compose..."));
 				display.setTextColor(TFT_WHITE);
-				display.setCursor(1, 6);
-				display.print("To: ");
 			}
+			else
+				display.print(content);
+			display.setFreeFont(TT1);
+			display.setCursor(13, 6);
+			display.print(contact);
+			if (blinkState == 1)
+				display.drawFastVLine(display.getCursorX(), display.getCursorY()-5, 5, TFT_WHITE);
 		}
 		else
 		{
 			display.setTextColor(TFT_WHITE);
 			display.setCursor(1, 6);
 			display.print("To: ");
+			display.print(contact);
+			prevContent = content;
 			content = textInput(content);
-			Serial.println(content);
-			Serial.println(textPointer);
-			delay(5);
+			if (prevContent != content)
+			{
+				blinkState = 1;
+				elapsedMillis = millis();
+			}
+			display.setTextWrap(1);
+			display.setCursor(1, y);
+			display.setTextFont(1);
+			display.print(content);
+			display.setFreeFont(TT1);
+			if(blinkState == 1)
+				display.drawFastVLine(display.getCursorX(), display.getCursorY(), 7, TFT_WHITE);
 
 			/*if (blinkState == 1)
 			{
@@ -2055,10 +2071,7 @@ void MAKERphone::composeSMS()
 			break;
 		}
 
-		if (millis() - elapsedMillis >= 250) {
-			elapsedMillis = millis();
-			blinkState = !blinkState;
-		}
+		
 		
 
 		update();

@@ -60,9 +60,6 @@ void loop()
 {
   int ret=0;
   byte key=mp.buttons.kpdNum.getKey(); // Get a key press from the keypad
-  if(key!=NO_KEY)
-
-	//Serial.println(char(key));
   if (key == 'C' && buffer != "" && pointer >= 1)
   {
 	  if (pointer == buffer.length())
