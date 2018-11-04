@@ -23,8 +23,8 @@ Authors:
 #include <WiFi.h>
 #include <esp32-hal-bt.h>
 #include <stdint.h>
+#include <EEPROM.h>
 //#include <Arduino.h>
-//#include "included/Adafruit_NeoPixel.h"
 #include "utility/Adafruit_NeoPixel.h"
 extern HardwareSerial Serial1;
 #include "TFT_eSPI/TFT_eSPI.h" // Graphics and font library for ST7735 driver chip
@@ -113,36 +113,36 @@ extern HardwareSerial Serial1;
 class Buttons
 {
 public:
-  ///////////////////
-  //Keypad variables
-  //////////////////
+	///////////////////
+	//Keypad variables
+	//////////////////
   
-  char keys[4][3] = {
-    { '1','2','3' },
-  { '4','5','6' },
-  { '7','8','9' },
-  { '*','0','#' }
-  };
-  char keysNum[4][4] = {
-    { '1', '2', '3', 'A' },
-  { '4', '5', '6', 'B' },
-  { '7', '8', '9', 'C' },
-  { '*', '0', '#', 'D' }
-  };
-  byte rowPins[ROWS] = { 0, 1, 2, 3 }; //connect to the row pinouts of the keypad
-  byte colPins[COLS] = { 4, 5, 6, 7 }; //connect to the column pinouts of the keypad
-  int i2caddress = 0x21;
-  int i2caddressNum = 0x20;
-  Keypad_I2C kpd = Keypad_I2C(makeKeymap(keys), rowPins, colPins, ROWS, COLS, i2caddress);
-  Keypad_I2C kpdNum = Keypad_I2C(makeKeymap(keysNum), rowPins, colPins, ROWS, COLS, i2caddressNum);
+	char keys[4][3] = {
+	{ '1','2','3' },
+	{ '4','5','6' },
+	{ '7','8','9' },
+	{ '*','0','#' }
+	};
+	char keysNum[4][4] = {
+	{ '1', '2', '3', 'A' },
+	{ '4', '5', '6', 'B' },
+	{ '7', '8', '9', 'C' },
+	{ '*', '0', '#', 'D' }
+	};
+	byte rowPins[ROWS] = { 0, 1, 2, 3 }; //connect to the row pinouts of the keypad
+	byte colPins[COLS] = { 4, 5, 6, 7 }; //connect to the column pinouts of the keypad
+	int i2caddress = 0x21;
+	int i2caddressNum = 0x20;
+	Keypad_I2C kpd = Keypad_I2C(makeKeymap(keys), rowPins, colPins, ROWS, COLS, i2caddress);
+	Keypad_I2C kpdNum = Keypad_I2C(makeKeymap(keysNum), rowPins, colPins, ROWS, COLS, i2caddressNum);
 	bool pressed(uint8_t button);
 	void update();
 	bool repeat(uint8_t button, uint16_t period);
-  bool released(uint8_t button);
-  bool held(uint8_t button, uint16_t time);
-  uint16_t timeHeld(uint8_t button);
-  uint16_t states[NUM_BTN];
-  void begin();
+	bool released(uint8_t button);
+	bool held(uint8_t button, uint16_t time);
+	uint16_t timeHeld(uint8_t button);
+	uint16_t states[NUM_BTN];
+	void begin();
     
 };
 class GUI {
@@ -280,6 +280,7 @@ public:
   bool pinLock = 0;
   uint16_t pinNumber = 1234;
   bool simInserted = 0;
+  uint32_t sleepTimer = millis();
 
   //Settings app
   uint8_t sleepTime = 2;
