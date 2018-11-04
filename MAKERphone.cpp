@@ -118,12 +118,6 @@ void MAKERphone::begin(bool splash) {
 	}
 
 	updateTimeGSM();
-
-	
-	Serial.print("SIM inserted");
-	Serial.println(simInserted);
-	delay(50);
-	Serial1.println(F("AT+CFUN=1")); //enable full functionality
 	Serial1.println(F("AT+CLVL=100"));
 	Serial1.println(F("AT+CRSL=100"));
 	Serial1.println(F("AT+CMIC=0,6"));
@@ -142,7 +136,7 @@ void MAKERphone::begin(bool splash) {
 
 }
 bool MAKERphone::update() {
-	//Serial.println(millis());
+	bool pressed = 0;
 	//if (digitalRead(INTERRUPT_PIN) == 0) //message is received or incoming call
 	//{
 	//	Serial.println("INTERRUPTED");
@@ -163,14 +157,25 @@ bool MAKERphone::update() {
 	//		Serial.println("CALL");
 	//		//handleCall();
 	//	}
-
 	//}
+	
 	for (int y = 0; y < BUFHEIGHT; y++) {
 		for (int x = 0; x < BUFWIDTH; x++) {
 			buf.fillRect(x * 2, y * 2, 2, 2, display.readPixel(x, y));
 		}
 	}
 	//buf2.invertDisplay(1);
+	if (digitalRead(35) && sleepTime)
+	{
+		if (millis() - sleepTimer >= sleepTimeActual * 1000)
+		{
+			sleep();
+			sleepTimer = millis();
+		}
+	}
+	else if(!digitalRead(35) && sleepTime)
+		sleepTimer = millis();
+	
 	if (millis() - lastFrameCount2 >= frameSpeed) {
 		lastFrameCount2 = millis();
 		
@@ -196,6 +201,7 @@ bool MAKERphone::update() {
 	}
 	else
 		return false;
+	
 }
 void MAKERphone::splashScreen() {
 	display.setFreeFont(TT1);
@@ -249,7 +255,7 @@ void MAKERphone::tone2(int pin, int freq, int duration) {
 }
 void MAKERphone::vibration(int duration) {
 	kpd.pin_write(VIBRATION_MOTOR, 1);
-	delay(duration);
+	//delay(duration);
 	kpd.pin_write(VIBRATION_MOTOR, 0);
 }
 void MAKERphone::ledcAnalogWrite(uint8_t channel, uint32_t value, uint32_t valueMax) {
@@ -289,9 +295,13 @@ void MAKERphone::sleep() {
 	pixels.clear();
 	delay(2);
 	pixels.show();
-
-	while (buttons.pressed(BTN_B))
-		update(); //wait for lock button's release
+	if (buttons.pressed(BTN_A))
+		while (!buttons.released(BTN_A))
+			update();
+	else if (buttons.pressed(BTN_B))
+		while (!buttons.released(BTN_B))
+			update();
+	while (!update());
 }
 void MAKERphone::lockScreen() {
 	Serial.begin(115200);
@@ -1941,7 +1951,7 @@ void MAKERphone::composeSMS()
 			display.setTextWrap(1);
 			display.setCursor(1, y);
 			display.setTextFont(1);
-			if (content = "")
+			if (content == "")
 			{
 				display.setTextColor(TFT_LIGHTGREY);
 				display.print(F("Compose..."));
@@ -2066,8 +2076,8 @@ void MAKERphone::composeSMS()
 			while (Serial1.readString().indexOf("OK") != -1);
 			display.fillScreen(TFT_BLACK);
 			display.printCenter("Text sent!");
-			delay(1000);
 			while (!update());
+			delay(1000);
 			break;
 		}
 
@@ -2077,6 +2087,7 @@ void MAKERphone::composeSMS()
 		update();
 	}
 }
+
 //Contacts app
 void MAKERphone::contactsMenuDrawBox(String contact, String number, uint8_t i, int32_t y) {
 	y += i * 14 + menuYOffset;
@@ -3362,11 +3373,14 @@ void MAKERphone::applySettings()
 	switch (airplaneMode)
 	{
 	case 0:
+		Serial1.println("AT+CFUN=1");
 		break;
 
 	case 1:
+		Serial1.println("AT+CFUN=4");
 		break;
 	}
+
 	if (brightness == 0)
 		actualBrightness = 230;
 	else
@@ -3413,11 +3427,6 @@ void Buttons::update() {
 
 	for (uint8_t i = 0; i < 8; i++)
 		bitWrite(buttonsData, i, (bool)kpd.pin_read(i));
-
-	//Serial.println(buttonsData, BIN);
-
-
-
 	for (uint8_t thisButton = 0; thisButton < NUM_BTN; thisButton++) {
 		//extract the corresponding bit corresponding to the current button
 		//Inverted logic : button pressed = low state = 0

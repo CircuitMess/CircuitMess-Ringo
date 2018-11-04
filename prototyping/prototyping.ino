@@ -10,7 +10,6 @@ void setup() {
 }
 
 void loop() {
-	mp.composeSMS();
-	/*mp.lockScreen();
-	mp.bigIconsMainMenu();*/
+	mp.lockScreen();
+	mp.bigIconsMainMenu();
 }
