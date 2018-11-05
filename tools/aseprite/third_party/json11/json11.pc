@@ -1,0 +1,9 @@
+prefix=/usr
+libdir=${prefix}/lib/
+includedir=${prefix}/include/
+
+Name: json11
+Description: json11 is a tiny JSON library for C++11, providing JSON parsing and serialization.
+Version: 1.0.0
+Libs: -L${libdir} -ljson11
+Cflags: -I${includedir}
