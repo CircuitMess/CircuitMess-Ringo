@@ -3204,10 +3204,12 @@ void MAKERphone::securityMenu() {
 	pinNumber = 1234;
 	String pinBuffer = "";
 	uint32_t elapsedMillis = millis();
+	uint32_t blinkMillis = millis();
 	uint8_t cursor = 0;
 	bool errorMessage = 0;
 	bool confirmMessage = 0;
 	char key = NO_KEY;
+	bool blinkState=0;
 	while (1)
 	{
 		display.setTextColor(TFT_BLACK);
@@ -3219,20 +3221,40 @@ void MAKERphone::securityMenu() {
 		display.print("ON");
 		display.setCursor(59, 14);
 		display.print("OFF");
+		display.drawRect(3, 40, 74, 11, TFT_BLACK);
+		
+		
+		if (pinLock == 1)
+		{
+			display.setTextColor(TFT_BLACK);
+			display.drawRect(3, 40, 74, 11, TFT_BLACK);
+		}
+		else
+		{
+			display.setTextColor(TFT_DARKGREY);
+			display.fillRect(3, 40, 74, 11, TFT_DARKGREY);
+		}
 		display.setCursor(4, 31);
 		display.print("PIN:");
 		display.setCursor(6, 42);
-		if (cursor != 1)
-			display.print(pinNumber);
-		display.drawRect(3, 40, 74, 11, TFT_BLACK);
+		if (pinBuffer != "")
+			display.printCenter(pinBuffer);
+		else if(pinBuffer == "" && cursor != 1)
+			display.printCenter(pinNumber);
 		if (pinLock == 1 && cursor != 0)
 			display.drawRect(35, 12, 17, 11, TFT_BLACK);
 		else if (pinLock == 0 && cursor != 0)
 			display.drawRect(57, 12, 21, 11, TFT_BLACK);
-
-
-
-
+		display.setCursor(2, 61);
+		display.setFreeFont(TT1);
+		if(cursor == 1 && !errorMessage && !confirmMessage)
+			display.print("Press A to save PIN");
+		display.setTextFont(1);
+		if (millis() - blinkMillis >= multi_tap_threshold) //cursor blinking routine 
+		{
+			blinkMillis = millis();
+			blinkState = !blinkState;
+		}
 
 		if (cursor == 0)
 		{
@@ -3247,34 +3269,20 @@ void MAKERphone::securityMenu() {
 			pinBuffer = "";
 		}
 
-		if (cursor == 1)
+		
+		else if (cursor == 1 && pinLock == 1)
 		{
 			key = buttons.kpdNum.getKey();
-			if (key != NO_KEY && key != '*' && key != '#' && key != 'C' && key != 'D' && key != 'E')
-			{
-				pinBuffer += key;
-				Serial.println(pinBuffer);
-			}
-			if (key == 'A')
+			if (key == 'A') //clear number
 				pinBuffer = "";
+			else if (key == 'C')
+				pinBuffer.remove(pinBuffer.length() - 1);
+			if (key != NO_KEY && isdigit(key) && pinBuffer.length() < 4)
+				pinBuffer += key;
 			display.setCursor(6, 42);
-			//Serial.println(pinBuffer);
-			Serial.println(pinBuffer);
-			if (pinBuffer != "")
-			{
-				display.fillRect(6, 42, 70, 7, 0xED1F);
-				display.print(pinBuffer);
-			}
-			else
-				display.print(pinNumber);
-
-
-
-			if (millis() % 500 <= 250)
-				display.drawRect(3, 40, 74, 11, TFT_BLACK);
-			else
-				display.drawRect(3, 40, 74, 11, 0xED1F);
-
+			display.printCenter(pinBuffer);
+			if (blinkState == 1)
+				display.drawFastVLine(display.getCursorX(), display.getCursorY(), 7, TFT_BLACK);
 			if (buttons.kpd.pin_read(BTN_A) == 0 && pinBuffer.toInt() >= 1000 && confirmMessage == 0)
 			{
 				while (buttons.kpd.pin_read(BTN_A) == 0);
@@ -3286,6 +3294,7 @@ void MAKERphone::securityMenu() {
 				display.setTextFont(1);
 				elapsedMillis = millis();
 				confirmMessage = 1;
+				errorMessage = 0;
 			}
 			if (buttons.kpd.pin_read(BTN_A) == 0 && pinBuffer.toInt() < 1000 && errorMessage == 0)
 			{
@@ -3296,6 +3305,7 @@ void MAKERphone::securityMenu() {
 				display.setTextFont(1);
 				elapsedMillis = millis();
 				errorMessage = 1;
+				confirmMessage = 0;
 			}
 			if (millis() - elapsedMillis >= 2000 && errorMessage == 1)
 			{
@@ -3304,6 +3314,7 @@ void MAKERphone::securityMenu() {
 			}
 			else if (millis() - elapsedMillis < 2000 && errorMessage == 1)
 			{
+				display.fillRect(2, 57, 78, 5, 0xED1F);
 				display.setCursor(2, 61);
 				display.setFreeFont(TT1);
 				display.print("Pin must have 4+ digits");
@@ -3314,8 +3325,9 @@ void MAKERphone::securityMenu() {
 				display.fillRect(2, 57, 78, 5, 0xED1F);
 				confirmMessage = 0;
 			}
-			if (millis() - elapsedMillis < 2000 && confirmMessage == 1)
+			else if (millis() - elapsedMillis < 2000 && confirmMessage == 1)
 			{
+				display.fillRect(2, 56, 78, 6, 0xED1F);
 				display.setCursor(2, 61);
 				display.setFreeFont(TT1);
 				display.print("PIN saved!");
@@ -3326,9 +3338,9 @@ void MAKERphone::securityMenu() {
 		if (buttons.kpd.pin_read(JOYSTICK_D) == 0)
 		{
 			while (buttons.kpd.pin_read(JOYSTICK_D) == 0);
-			if (cursor == 0)
+			if (cursor == 0 && pinLock == 1)
 				cursor = 1;
-			else
+			else if (pinLock == 1 && cursor == 1)
 				cursor--;
 		}
 		if (buttons.kpd.pin_read(JOYSTICK_B) == 0)
@@ -3336,13 +3348,13 @@ void MAKERphone::securityMenu() {
 			while (buttons.kpd.pin_read(JOYSTICK_B) == 0);
 			if (cursor == 1)
 				cursor = 0;
-			else
+			else if(pinLock == 1 && cursor == 0)
 				cursor++;
-
 		}
 		if (buttons.released(BTN_B)) //BUTTON BACK
 			break;
-
+		Serial.println(millis() - elapsedMillis);
+		delay(5);
 		update();
 	}
 }
