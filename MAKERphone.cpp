@@ -295,6 +295,7 @@ void MAKERphone::sleep() {
 	pixels.clear();
 	delay(2);
 	pixels.show();
+	while (!update());
 	if (buttons.pressed(BTN_A))
 		while (!buttons.released(BTN_A))
 			update();

@@ -1,0 +1,40 @@
+<!-- Aseprite -->
+<!-- Copyright (C) 2001-2016 by David Capello -->
+<gui>
+<window id="sprite_properties" text="@.title">
+  <vbox>
+    <grid columns="2">
+      <label text="@.filename" />
+      <entry text="" id="name" maxsize="256" minwidth="64" readonly="true" cell_align="horizontal" />
+
+      <label text="@.type" />
+      <label text="" id="type" />
+
+      <label text="@.size" />
+      <label text="" id="size" />
+
+      <label text="@.frames" />
+      <label text="" id="frames" />
+
+      <separator text="@.advanced" horizontal="true" cell_hspan="2" />
+
+      <label text="@.transparent_color" />
+      <hbox id="transparent_color_placeholder" tooltip="@.transparent_color_tooltip" />
+
+      <label text="@.pixel_ratio" />
+      <combobox id="pixel_ratio" cell_align="horizontal">
+	<listitem text="@.square_pixels" value="1:1" />
+	<listitem text="@.double_wide" value="2:1" />
+	<listitem text="@.double_high" value="1:2" />
+      </combobox>
+
+    </grid>
+    <separator horizontal="true" />
+    <hbox>
+      <boxfiller />
+      <button text="@general.ok" closewindow="true" id="ok" magnet="true" width="60" />
+      <button text="@general.cancel" closewindow="true" id="cancel" width="60" />
+    </hbox>
+  </vbox>
+</window>
+</gui>

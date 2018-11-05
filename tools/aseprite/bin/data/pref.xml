@@ -1,0 +1,427 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Aseprite -->
+<!-- Copyright (C) 2014-2018 by David Capello -->
+<preferences>
+
+  <types>
+    <enum id="RightClickMode">
+      <value id="DEFAULT" value="0" />
+      <value id="PAINT_BGCOLOR" value="0" />
+      <value id="PICK_FGCOLOR" value="1" />
+      <value id="ERASE" value="2" />
+      <value id="SCROLL" value="3" />
+      <value id="RECTANGULAR_MARQUEE" value="4" />
+      <value id="LASSO" value="5" />
+    </enum>
+    <enum id="OnionskinType">
+      <value id="MERGE" value="0" />
+      <value id="RED_BLUE_TINT" value="1" />
+    </enum>
+    <enum id="BrushType">
+      <value id="CIRCLE" value="0" />
+      <value id="SQUARE" value="1" />
+      <value id="LINE" value="2" />
+    </enum>
+    <enum id="BrushPreview">
+      <value id="NONE" value="0" />
+      <value id="EDGES" value="1" />
+      <value id="FULL" value="2" />
+    </enum>
+    <enum id="BgType">
+      <value id="CHECKED_16x16" value="0" />
+      <value id="CHECKED_8x8" value="1" />
+      <value id="CHECKED_4x4" value="2" />
+      <value id="CHECKED_2x2" value="3" />
+      <value id="CHECKED_1x1" value="4" />
+    </enum>
+    <enum id="StopAtGrid">
+      <value id="NEVER" value="0" />
+      <value id="IF_VISIBLE" value="1" />
+      <value id="ALWAYS" value="2" />
+    </enum>
+    <enum id="FillReferTo">
+      <value id="ACTIVE_LAYER" value="0" />
+      <value id="ALL_LAYERS" value="1" />
+    </enum>
+    <enum id="EyedropperChannel">
+      <value id="COLOR_ALPHA" value="0" />
+      <value id="COLOR" value="1" />
+      <value id="ALPHA" value="2" />
+      <value id="RGBA" value="3" />
+      <value id="RGB" value="4" />
+      <value id="HSVA" value="5" />
+      <value id="HSV" value="6" />
+      <value id="HSLA" value="7" />
+      <value id="HSL" value="8" />
+      <value id="GRAYA" value="9" />
+      <value id="GRAY" value="10" />
+      <value id="INDEX" value="11" />
+    </enum>
+    <enum id="EyedropperSample">
+      <value id="ALL_LAYERS" value="0" />
+      <value id="CURRENT_LAYER" value="1" />
+      <value id="FIRST_REFERENCE_LAYER" value="2" />
+    </enum>
+    <enum id="SelectionMode">
+      <value id="DEFAULT" value="0" />
+      <value id="ADD" value="1" />
+      <value id="SUBTRACT" value="2" />
+    </enum>
+    <enum id="PivotPosition">
+      <value id="NORTHWEST" value="0" />
+      <value id="NORTH" value="1" />
+      <value id="NORTHEAST" value="2" />
+      <value id="WEST" value="3" />
+      <value id="CENTER" value="4" />
+      <value id="EAST" value="5" />
+      <value id="SOUTHWEST" value="6" />
+      <value id="SOUTH" value="7" />
+      <value id="SOUTHEAST" value="8" />
+    </enum>
+    <enum id="SymmetryMode">
+      <value id="NONE" value="0" />
+      <value id="HORIZONTAL" value="1" />
+      <value id="VERTICAL" value="2" />
+      <value id="BOTH" value="3" />
+    </enum>
+    <enum id="PaintingCursorType">
+      <value id="SIMPLE_CROSSHAIR" value="0" />
+      <value id="CROSSHAIR_ON_SPRITE" value="1" />
+    </enum>
+    <enum id="TimelinePosition">
+      <value id="BOTTOM" value="0" />
+      <value id="LEFT" value="1" />
+      <value id="RIGHT" value="2" />
+    </enum>
+    <enum id="HueSaturationMode">
+      <value id="HSV" value="0" />
+      <value id="HSL" value="1" />
+    </enum>
+  </types>
+
+  <global>
+    <section id="general">
+      <option id="language" type="std::string" default="&quot;en&quot;" />
+      <option id="screen_scale" type="int" default="0" />
+      <option id="ui_scale" type="int" default="1" migrate="experimental.ui_scale" />
+      <option id="gpu_acceleration" type="bool" default="false" />
+      <option id="show_home" type="bool" default="true" />
+      <option id="visible_timeline" type="bool" default="false" />
+      <option id="autoshow_timeline" type="bool" default="true" migrate="Options.AutoShowTimeline" />
+      <option id="rewind_on_stop" type="bool" default="false" />
+      <option id="expand_menubar_on_mouseover" type="bool" default="false" migrate="Options.ExpandMenuBarOnMouseover" />
+      <option id="data_recovery" type="bool" default="true" />
+      <option id="data_recovery_period" type="double" default="2.0" />
+      <option id="show_full_path" type="bool" default="true" />
+      <option id="timeline_position" type="TimelinePosition" default="TimelinePosition::BOTTOM" />
+      <option id="show_menu_bar" type="bool" default="true" />
+      <option id="recent_items" type="int" default="16" />
+    </section>
+    <section id="undo" text="Undo">
+      <option id="size_limit" type="int" default="0" />
+      <option id="goto_modified" type="bool" default="true" />
+      <option id="allow_nonlinear_history" type="bool" default="false" />
+    </section>
+    <section id="editor" text="Editor">
+      <option id="zoom_with_wheel" type="bool" default="true" migrate="Options.ZoomWithMouseWheel" />
+      <option id="zoom_with_slide" type="bool" default="false" />
+      <option id="zoom_from_center_with_wheel" type="bool" default="false" />
+      <option id="zoom_from_center_with_keys" type="bool" default="false" />
+      <option id="show_scrollbars" type="bool" default="true" migrate="Options.ShowScrollbars" />
+      <option id="auto_scroll" type="bool" default="true" />
+      <option id="right_click_mode" type="RightClickMode" default="RightClickMode::PAINT_BGCOLOR" migrate="Options.RightClickMode" />
+      <option id="auto_select_layer" type="bool" default="false" migrate="Options.AutoSelectLayer" />
+      <option id="straight_line_preview" type="bool" default="true" />
+      <option id="play_once" type="bool" default="false" />
+      <option id="play_all" type="bool" default="false" />
+    </section>
+    <section id="cursor">
+      <option id="use_native_cursor" type="bool" default="false" migrate="experimental.use_native_cursor" />
+      <option id="cursor_scale" type="int" default="1" />
+      <option id="cursor_color" type="app::Color" default="app::Color::fromMask()" migrate="editor.cursor_color" />
+      <option id="painting_cursor_type" type="PaintingCursorType" default="PaintingCursorType::CROSSHAIR_ON_SPRITE" />
+      <option id="brush_preview" type="BrushPreview" default="BrushPreview::FULL" migrate="editor.brush_preview" />
+    </section>
+    <section id="preview" text="Preview">
+      <option id="play_once" type="bool" default="false" />
+      <option id="play_all" type="bool" default="false" />
+    </section>
+    <section id="theme" text="Theme">
+      <option id="selected" type="std::string" default="&quot;default&quot;" migrate="Skin.Selected" />
+      <option id="font" type="std::string" migrate="Options.UserFont" />
+      <option id="mini_font" type="std::string" migrate="Options.UserMiniFont" />
+    </section>
+    <section id="experimental" text="Experimental">
+      <option id="new_render_engine" type="bool" default="true" />
+      <option id="use_native_clipboard" type="bool" default="true" />
+      <option id="use_native_file_dialog" type="bool" default="false" />
+      <option id="one_finger_as_mouse_movement" type="bool" default="true" />
+      <option id="load_wintab_driver" type="bool" default="true" />
+      <option id="flash_layer" type="bool" default="false" migrate="Options.FlashLayer" />
+      <option id="nonactive_layers_opacity" type="int" default="255" />
+    </section>
+    <section id="news">
+      <option id="cache_file" type="std::string" />
+    </section>
+    <section id="status_bar">
+      <option id="focus_frame_field_on_mouseover" type="bool" default="false" />
+    </section>
+    <section id="color_bar">
+      <option id="box_size" type="int" default="11" />
+      <option id="fg_color" type="app::Color" default="app::Color::fromRgb(255, 255, 255)" />
+      <option id="bg_color" type="app::Color" default="app::Color::fromRgb(0, 0, 0)" />
+      <option id="selector" type="app::ColorBar::ColorSelector" default="app::ColorBar::ColorSelector::TINT_SHADE_TONE" />
+      <option id="discrete_wheel" type="bool" default="false" />
+      <option id="wheel_model" type="int" default="0" />
+      <option id="harmony" type="int" default="0" />
+    </section>
+    <section id="updater">
+      <option id="inits" type="int" default="0" migrate="Updater.Inits" />
+      <option id="exits" type="int" default="0" migrate="Updater.Exits" />
+      <option id="is_developer" type="bool" default="false" migrate="Updater.IsDeveloper" />
+      <option id="wait_days" type="double" default="0.0" migrate="Updater.WaitDays" />
+      <option id="last_check" type="int" default="0" migrate="Updater.LastCheck" />
+      <option id="uuid" type="std::string" migrate="Updater.Uuid" />
+      <option id="current_version" type="std::string" />
+      <option id="new_version" type="std::string" />
+      <option id="new_url" type="std::string" />
+    </section>
+    <section id="brush">
+      <option id="pattern" type="doc::BrushPattern" default="doc::BrushPattern::DEFAULT" />
+    </section>
+    <section id="save_brush">
+      <option id="brush_type" type="bool" default="true" />
+      <option id="brush_size" type="bool" default="true" />
+      <option id="brush_angle" type="bool" default="true" />
+      <option id="fg_color" type="bool" default="false" />
+      <option id="bg_color" type="bool" default="false" />
+      <option id="image_color" type="bool" default="true" />
+      <option id="ink_type" type="bool" default="true" />
+      <option id="ink_opacity" type="bool" default="true" />
+      <option id="shade" type="bool" default="true" />
+      <option id="pixel_perfect" type="bool" default="false" />
+    </section>
+    <section id="selection">
+      <option id="mode" type="SelectionMode" default="SelectionMode::DEFAULT" />
+      <option id="move_edges" type="bool" default="true" />
+      <option id="modifiers_disable_handles" type="bool" default="true" />
+      <option id="move_on_add_mode" type="bool" default="true" />
+      <option id="pivot_visibility" type="bool" default="false" />
+      <option id="pivot_position" type="PivotPosition" default="PivotPosition::CENTER" />
+      <option id="opaque" type="bool" default="false" />
+      <option id="auto_opaque" type="bool" default="true" />
+      <option id="keep_selection_after_clear" type="bool" default="false" />
+      <option id="auto_show_selection_edges" type="bool" default="true" />
+      <option id="transparent_color" type="app::Color" />
+      <option id="rotation_algorithm" type="app::tools::RotationAlgorithm" default="app::tools::RotationAlgorithm::DEFAULT" />
+      <option id="modify_selection_quantity" type="int" default="1" />
+      <option id="modify_selection_brush" type="BrushType" default="BrushType::CIRCLE" />
+    </section>
+    <section id="quantization">
+      <option id="with_alpha" type="bool" default="true" />
+    </section>
+    <section id="eyedropper" text="Editor">
+      <option id="channel" type="EyedropperChannel" default="EyedropperChannel::COLOR_ALPHA" />
+      <option id="sample" type="EyedropperSample" default="EyedropperSample::ALL_LAYERS" />
+      <option id="discard_brush" type="bool" default="false" />
+    </section>
+    <section id="shared">
+      <option id="share_ink" type="bool" default="false" />
+      <option id="ink" type="app::tools::InkType" default="app::tools::InkType::DEFAULT" />
+    </section>
+    <section id="new_file">
+      <option id="width" type="int" default="32" />
+      <option id="height" type="int" default="32" />
+      <option id="color_mode" type="doc::PixelFormat" default="doc::IMAGE_RGB" />
+      <option id="background_color" type="int" default="0" />
+      <option id="advanced" type="bool" default="false" />
+      <option id="pixel_ratio" type="std::string" />
+    </section>
+    <section id="text_tool">
+      <option id="font_face" type="std::string" />
+      <option id="font_size" type="int" default="12" />
+      <option id="antialias" type="bool" default="false" />
+    </section>
+    <section id="symmetry_mode">
+      <option id="enabled" type="bool" default="false" />
+    </section>
+    <section id="perf">
+      <option id="show_render_time" type="bool" default="false" />
+    </section>
+    <section id="guides">
+      <option id="layer_edges_color" type="app::Color" default="app::Color::fromRgb(0, 0, 255)" />
+      <option id="auto_guides_color" type="app::Color" default="app::Color::fromRgb(0, 0, 255, 128)" />
+    </section>
+    <section id="slices">
+      <option id="default_color" type="app::Color" default="app::Color::fromRgb(0, 0, 255)" />
+    </section>
+    <section id="advanced_mode">
+      <option id="show_alert" type="bool" default="true" migrate="AdvancedMode.Warning" />
+    </section>
+    <section id="save_file">
+      <option id="show_file_format_doesnt_support_alert" type="bool" default="true" />
+      <option id="show_export_animation_in_sequence_alert" type="bool" default="true" />
+      <option id="default_extension" type="std::string" default="&quot;aseprite&quot;" />
+    </section>
+    <section id="export_file">
+      <option id="show_overwrite_files_alert" type="bool" default="true" />
+      <option id="image_default_extension" type="std::string" default="&quot;png&quot;" />
+      <option id="animation_default_extension" type="std::string" default="&quot;gif&quot;" />
+    </section>
+    <section id="sprite_sheet">
+      <option id="show_overwrite_files_alert" type="bool" default="true" />
+      <option id="default_extension" type="std::string" default="&quot;png&quot;" />
+    </section>
+    <section id="gif">
+      <option id="show_alert" type="bool" default="true" />
+      <option id="interlaced" type="bool" default="false" migrate="GIF.Interlaced" />
+      <option id="loop" type="bool" default="true" migrate="GIF.Loop" />
+    </section>
+    <section id="jpeg">
+      <option id="show_alert" type="bool" default="true" />
+      <option id="quality" type="double" default="1.0" migrate="JPEG.Quality" />
+    </section>
+    <section id="webp">
+      <option id="show_alert" type="bool" default="true" />
+      <option id="loop" type="bool" default="true" />
+      <option id="type" type="int" default="0" />
+      <option id="quality" type="int" default="100" migrate="WEBP.Quality" />
+      <option id="compression" type="int" default="6" migrate="WEBP.Compression" />
+      <option id="image_hint" type="int" default="0" migrate="WEBP.ImageHint" />
+      <option id="image_preset" type="int" default="0" migrate="WEBP.ImagePreset" />
+    </section>
+    <section id="hue_saturation">
+      <option id="mode" type="HueSaturationMode" default="HueSaturationMode::HSL" />
+    </section>
+    <section id="filters">
+      <option id="cels_target" type="CelsTarget" default="CelsTarget::Selected" />
+    </section>
+  </global>
+
+  <tool>
+    <option id="opacity" type="int" default="255" />
+    <option id="tolerance" type="int" default="0" />
+    <option id="contiguous" type="bool" default="true" />
+    <option id="filled" type="bool" default="false" />
+    <option id="filled_preview" type="bool" default="false" />
+    <option id="ink" type="app::tools::InkType" default="app::tools::InkType::DEFAULT" />
+    <option id="freehand_algorithm" type="app::tools::FreehandAlgorithm" default="app::tools::FreehandAlgorithm::DEFAULT" />
+    <section id="brush">
+      <option id="type" type="BrushType" default="BrushType::CIRCLE" />
+      <option id="size" type="int" default="1" />
+      <option id="angle" type="int" default="0" />
+    </section>
+    <section id="spray">
+      <option id="width" type="int" default="16" />
+      <option id="speed" type="int" default="32" />
+    </section>
+    <section id="floodfill">
+      <option id="stop_at_grid" type="StopAtGrid" default="StopAtGrid::NEVER" />
+      <option id="refer_to" type="FillReferTo" default="FillReferTo::ACTIVE_LAYER" />
+    </section>
+  </tool>
+
+  <document>
+    <section id="site">
+      <option id="frame" type="doc::frame_t" default="doc::frame_t(0)" />
+      <option id="layer" type="doc::layer_t" default="doc::layer_t(0)" />
+    </section>
+    <section id="tiled">
+      <option id="mode" type="filters::TiledMode" default="filters::TiledMode::NONE" migrate="Tools.Tiled" />
+    </section>
+    <section id="symmetry">
+      <option id="mode" type="SymmetryMode" default="SymmetryMode::NONE" />
+      <option id="x_axis" type="double" default="0" />
+      <option id="y_axis" type="double" default="0" />
+    </section>
+    <section id="grid">
+      <option id="snap" type="bool" default="false" migrate="Grid.SnapTo" />
+      <option id="bounds" type="gfx::Rect" default="gfx::Rect(0, 0, 16, 16)" migrate="Grid.Bounds" />
+      <option id="color" type="app::Color" default="app::Color::fromRgb(0, 0, 255)" migrate="Grid.Color" />
+      <option id="opacity" type="int" default="160" migrate="Grid.Opacity" />
+      <option id="auto_opacity" type="bool" default="true" migrate="Grid.AutoOpacity" />
+    </section>
+    <section id="pixel_grid">
+      <option id="color" type="app::Color" default="app::Color::fromRgb(200, 200, 200)" migrate="PixelGrid.Color" />
+      <option id="opacity" type="int" default="160" migrate="PixelGrid.Opacity" />
+      <option id="auto_opacity" type="bool" default="true" migrate="PixelGrid.AutoOpacity" />
+    </section>
+    <section id="bg">
+      <option id="type" type="BgType" default="BgType::CHECKED_16x16" migrate="Option.CheckedBgType" />
+      <option id="zoom" type="bool" default="true" migrate="Option.CheckedBgZoom" />
+      <option id="color1" type="app::Color" default="app::Color::fromRgb(128, 128, 128)" migrate="Option.CheckedBgColor1" />
+      <option id="color2" type="app::Color" default="app::Color::fromRgb(192, 192, 192)" migrate="Option.CheckedBgColor2" />
+    </section>
+    <section id="timeline">
+      <option id="first_frame" type="int" default="1" />
+    </section>
+    <section id="thumbnails">
+      <option id="zoom" type="double" default="1" />
+      <option id="enabled" type="bool" default="false" />
+      <option id="overlay_enabled" type="bool" default="false" />
+      <option id="overlay_size" type="int" default="5" />
+    </section>
+    <section id="onionskin">
+      <option id="active" type="bool" default="false" migrate="Onionskin.Enabled" />
+      <option id="prev_frames" type="int" default="1" migrate="Onionskin.PrevFrames" />
+      <option id="next_frames" type="int" default="1" migrate="Onionskin.NextFrames" />
+      <option id="opacity_base" type="int" default="68" migrate="Onionskin.OpacityBase" />
+      <option id="opacity_step" type="int" default="28" migrate="Onionskin.OpacityStep" />
+      <option id="type" type="OnionskinType" default="OnionskinType::MERGE" migrate="Onionskin.Type" />
+      <option id="loop_tag" type="bool" default="true" />
+      <option id="current_layer" type="bool" default="false" />
+      <option id="position" type="render::OnionskinPosition" default="render::OnionskinPosition::BEHIND" />
+    </section>
+    <section id="save_copy">
+      <option id="filename" type="std::string" />
+      <option id="resize_scale" type="double" default="1" />
+      <option id="layer" type="std::string" />
+      <option id="frame_tag" type="std::string" />
+      <option id="ani_dir" type="doc::AniDir" default="doc::AniDir::FORWARD" />
+      <option id="apply_pixel_ratio" type="bool" default="false" />
+      <option id="for_twitter" type="bool" default="false" />
+    </section>
+    <section id="sprite_sheet">
+      <option id="defined" type="bool" default="false" />
+      <option id="type" type="app::SpriteSheetType" default="app::SpriteSheetType::None" />
+      <option id="columns" type="int" default="0" />
+      <option id="rows" type="int" default="0" />
+      <option id="width" type="int" default="0" />
+      <option id="height" type="int" default="0" />
+      <option id="best_fit" type="bool" default="false" />
+      <option id="texture_filename" type="std::string" />
+      <option id="data_filename" type="std::string" />
+      <option id="data_format" type="DocumentExporter::DataFormat" default="DocumentExporter::DefaultDataFormat" />
+      <option id="border_padding" type="int" default="0" />
+      <option id="shape_padding" type="int" default="0" />
+      <option id="inner_padding" type="int" default="0" />
+      <option id="trim" type="bool" default="false" />
+      <option id="open_generated" type="bool" default="false" />
+      <option id="layer" type="std::string" />
+      <option id="frame_tag" type="std::string" />
+      <option id="list_layers" type="bool" default="true" />
+      <option id="list_frame_tags" type="bool" default="true" />
+      <option id="list_slices" type="bool" default="true" />
+    </section>
+    <section id="import_sprite_sheet">
+      <option id="type" type="app::SpriteSheetType" default="app::SpriteSheetType::Rows" />
+      <option id="bounds" type="gfx::Rect" default="gfx::Rect(0, 0, 0, 0)" />
+      <option id="partial_tiles" type="bool" default="false" />
+    </section>
+    <section id="preview" text="Preview">
+      <option id="zoom" type="double" default="1.0" />
+      <option id="scroll" type="gfx::Point" />
+      <option id="auto_scroll" type="bool" default="true" />
+    </section>
+    <section id="show">
+      <option id="layer_edges" type="bool" default="false" />
+      <option id="selection_edges" type="bool" default="true" />
+      <option id="grid" type="bool" default="false" migrate="grid.visible" />
+      <option id="pixel_grid" type="bool" default="false" migrate="pixel_grid.visible" />
+      <option id="brush_preview" type="bool" default="true" />
+      <option id="slices" type="bool" default="true" />
+      <option id="auto_guides" type="bool" default="true" />
+    </section>
+  </document>
+
+</preferences>
