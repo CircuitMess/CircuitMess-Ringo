@@ -3202,14 +3202,29 @@ void MAKERphone::listNotifications(fs::FS &fs, const char * dirname, uint8_t lev
 void MAKERphone::securityMenu() {
 	Serial.begin(115200);
 	pinNumber = 1234;
+	
 	String pinBuffer = "";
+	String reply = "";
+	String oldPin = "";
 	uint32_t elapsedMillis = millis();
 	uint32_t blinkMillis = millis();
 	uint8_t cursor = 0;
 	bool errorMessage = 0;
 	bool confirmMessage = 0;
+	bool saved = 0;
 	char key = NO_KEY;
 	bool blinkState=0;
+	//check if the SIM card is locked
+	while (reply.indexOf("+CLCK:") == -1)
+	{
+		Serial1.println("AT+CLCK=\"SC\", 2");
+		reply = Serial1.readString();
+	}
+	if (reply.indexOf("+CLCK: 0") != -1)
+		pinLock = 0;
+	else if (reply.indexOf("+CLCK: 1") != -1)
+		pinLock = 1;
+	bool pinLockBuffer = pinLock;
 	while (1)
 	{
 		display.setTextColor(TFT_BLACK);
@@ -3224,7 +3239,7 @@ void MAKERphone::securityMenu() {
 		display.drawRect(3, 40, 74, 11, TFT_BLACK);
 		
 		
-		if (pinLock == 1)
+		if (pinLockBuffer == 1)
 		{
 			display.setTextColor(TFT_BLACK);
 			display.drawRect(3, 40, 74, 11, TFT_BLACK);
@@ -3241,9 +3256,9 @@ void MAKERphone::securityMenu() {
 			display.printCenter(pinBuffer);
 		else if(pinBuffer == "" && cursor != 1)
 			display.printCenter(pinNumber);
-		if (pinLock == 1 && cursor != 0)
+		if (pinLockBuffer == 1 && cursor != 0)
 			display.drawRect(35, 12, 17, 11, TFT_BLACK);
-		else if (pinLock == 0 && cursor != 0)
+		else if (pinLockBuffer == 0 && cursor != 0)
 			display.drawRect(57, 12, 21, 11, TFT_BLACK);
 		display.setCursor(2, 61);
 		display.setFreeFont(TT1);
@@ -3258,19 +3273,84 @@ void MAKERphone::securityMenu() {
 
 		if (cursor == 0)
 		{
-			if (millis() % 500 <= 250 && pinLock == 1)
+			if (millis() % 500 <= 250 && pinLockBuffer == 1)
 				display.drawRect(35, 12, 17, 11, TFT_BLACK);
-			else if (millis() % 500 <= 250 && pinLock == 0)
+			else if (millis() % 500 <= 250 && pinLockBuffer == 0)
 				display.drawRect(57, 12, 21, 11, TFT_BLACK);
-			if (buttons.kpd.pin_read(JOYSTICK_A) == 0 && pinLock == 0)
-				pinLock = !pinLock;
-			if (buttons.kpd.pin_read(JOYSTICK_C) == 0 && pinLock == 1)
-				pinLock = !pinLock;
+			if (buttons.released(JOYSTICK_A) && pinLockBuffer == 0)
+				pinLockBuffer = !pinLockBuffer;
+			if (buttons.released(JOYSTICK_C) && pinLockBuffer == 1)
+			{
+				pinBuffer = "";
+				pinLockBuffer = !pinLockBuffer;
+				if(pinLock)
+					while (1)
+				{
+					display.setTextFont(1);
+					display.setTextColor(TFT_WHITE);
+					display.fillScreen(TFT_BLACK);
+					display.setCursor(5, 5);
+					display.printCenter("Enter pin:");
+
+					display.setCursor(1, 30);
+					display.printCenter(pinBuffer);
+					display.setCursor(1, 63);
+					display.setFreeFont(TT1);
+					display.print("Press A to confirm");
+					display.setCursor(5, 19);
+
+					key = buttons.kpdNum.getKey();
+					if (key == 'A') //clear number
+						pinBuffer = "";
+					else if (key == 'C' && pinBuffer != "")
+						pinBuffer.remove(pinBuffer.length() - 1);
+					if (key != NO_KEY && isDigit(key) && pinBuffer.length() != 4)
+						pinBuffer += key;
+
+					if (buttons.released(BTN_A))//enter PIN
+					{
+						reply = "";
+						Serial1.print(F("AT+CLCK=\"SC\", 0, \""));
+						Serial1.print(pinBuffer);
+						Serial1.println("\"");
+						while (!Serial1.available());
+						while (reply.indexOf("OK", reply.indexOf("AT+CLCK")) == -1 && reply.indexOf("ERROR", reply.indexOf("AT+CLCK")) == -1)
+							reply = Serial1.readString();
+						display.fillScreen(TFT_BLACK);
+						display.setCursor(28, 28);
+						display.setTextFont(1);
+						if (reply.indexOf("OK", reply.indexOf("AT+CLCK")) != -1)
+						{
+							display.printCenter("PIN OK :)");
+							while (!update());
+							delay(1000);
+							pinLock, pinLockBuffer = 0;
+							break;
+						}
+						else if (reply.indexOf("ERROR", reply.indexOf("AT+CLCK")) != -1)
+						{
+							pinBuffer = "";
+							display.printCenter("Wrong PIN :(");
+							while (!update());
+							delay(2000);
+						}
+						pinBuffer = "";
+					}
+					if (buttons.released(BTN_B))
+					{
+						while (!update());
+						break;
+					}
+						
+					update();
+				}
+
+			}
 			pinBuffer = "";
 		}
 
 		
-		else if (cursor == 1 && pinLock == 1)
+		else if (cursor == 1 && pinLockBuffer == 1)
 		{
 			key = buttons.kpdNum.getKey();
 			if (key == 'A') //clear number
@@ -3283,18 +3363,100 @@ void MAKERphone::securityMenu() {
 			display.printCenter(pinBuffer);
 			if (blinkState == 1)
 				display.drawFastVLine(display.getCursorX(), display.getCursorY(), 7, TFT_BLACK);
-			if (buttons.kpd.pin_read(BTN_A) == 0 && pinBuffer.toInt() >= 1000 && confirmMessage == 0)
+			if (buttons.released(BTN_A) && pinBuffer.toInt() >= 1000 && confirmMessage == 0)
 			{
-				while (buttons.kpd.pin_read(BTN_A) == 0);
+				while (!update());
 				pinNumber = pinBuffer.toInt();
-				display.setCursor(2, 61);
-				display.setFreeFont(TT1);
-				display.fillRect(2, 57, 78, 5, 0xED1F);
-				display.print("PIN saved!");
-				display.setTextFont(1);
-				elapsedMillis = millis();
-				confirmMessage = 1;
-				errorMessage = 0;
+				if (!pinLock)
+				{
+					reply = "";
+					Serial1.print(F("AT+CLCK=\"SC\", 1, \""));
+					Serial1.print(pinBuffer);
+					Serial1.println("\"");
+					while (!Serial1.available());
+					while (reply.indexOf("OK", reply.indexOf("AT+CLCK")) == -1)
+						reply = Serial1.readString();
+					display.fillScreen(0xED1F);
+					display.setCursor(28, 28);
+					display.setTextFont(1);		
+					saved = 1;
+				}
+				else
+				{
+					while (1)
+					{
+						display.setTextFont(1);
+						display.setTextColor(TFT_WHITE);
+						display.fillScreen(TFT_BLACK);
+						display.setCursor(5, 5);
+						display.printCenter("Enter old PIN:");
+
+						display.setCursor(1, 30);
+						display.printCenter(oldPin);
+						display.setCursor(1, 63);
+						display.setFreeFont(TT1);
+						display.print("Press A to confirm");
+						display.setCursor(5, 19);
+
+						key = buttons.kpdNum.getKey();
+						if (key == 'A') //clear number
+							oldPin = "";
+						else if (key == 'C' && oldPin != "")
+							oldPin.remove(oldPin.length() - 1);
+						if (key != NO_KEY && isDigit(key) && oldPin.length() != 4)
+							oldPin += key;
+
+						if (buttons.released(BTN_A))//enter PIN
+						{
+							reply = "";
+							Serial1.print(F("AT+CPWD=\"SC\", \""));
+							Serial1.print(oldPin);
+							Serial1.print("\", \"");
+							Serial1.print(pinBuffer);
+							Serial1.println("\"");
+							while (!Serial1.available());
+							while (reply.indexOf("OK", reply.indexOf("AT+CPWD")) == -1 && reply.indexOf("ERROR", reply.indexOf("AT+CPWD")) == -1)
+								reply = Serial1.readString();
+							display.fillScreen(TFT_BLACK);
+							display.setCursor(28, 28);
+							display.setTextFont(1);
+							if (reply.indexOf("OK", reply.indexOf("AT+CPWD")) != -1)
+							{
+								saved = 1;
+								break;
+							}
+							else if (reply.indexOf("ERROR", reply.indexOf("AT+CPWD")) != -1)
+							{
+								pinBuffer = "";
+								display.printCenter("Wrong PIN :(");
+								while (!update());
+								delay(2000);
+							}
+							oldPin = "";
+						}
+						if (buttons.released(BTN_B))
+						{
+							saved = 0;
+							while (!update());
+							break;
+						}
+
+						update();
+					}
+				}
+				oldPin = "";
+				pinBuffer = "";
+				if (saved)
+				{
+					display.setCursor(2, 61);
+					display.setFreeFont(TT1);
+					display.fillRect(2, 57, 78, 5, 0xED1F);
+					display.print("PIN saved!");
+					display.setTextFont(1);
+					elapsedMillis = millis();
+					confirmMessage = 1;
+					errorMessage = 0;
+				}
 			}
 			if (buttons.kpd.pin_read(BTN_A) == 0 && pinBuffer.toInt() < 1000 && errorMessage == 0)
 			{
@@ -3338,9 +3500,9 @@ void MAKERphone::securityMenu() {
 		if (buttons.kpd.pin_read(JOYSTICK_D) == 0)
 		{
 			while (buttons.kpd.pin_read(JOYSTICK_D) == 0);
-			if (cursor == 0 && pinLock == 1)
+			if (cursor == 0 && pinLockBuffer == 1)
 				cursor = 1;
-			else if (pinLock == 1 && cursor == 1)
+			else if (pinLockBuffer == 1 && cursor == 1)
 				cursor--;
 		}
 		if (buttons.kpd.pin_read(JOYSTICK_B) == 0)
@@ -3348,13 +3510,11 @@ void MAKERphone::securityMenu() {
 			while (buttons.kpd.pin_read(JOYSTICK_B) == 0);
 			if (cursor == 1)
 				cursor = 0;
-			else if(pinLock == 1 && cursor == 0)
+			else if(pinLockBuffer == 1 && cursor == 0)
 				cursor++;
 		}
 		if (buttons.released(BTN_B)) //BUTTON BACK
 			break;
-		Serial.println(millis() - elapsedMillis);
-		delay(5);
 		update();
 	}
 }
@@ -3417,6 +3577,19 @@ void MAKERphone::applySettings()
 		break;
 	case 5:
 		sleepTimeActual = 1800;
+		break;
+	}
+
+	switch (pinLock)
+	{
+	case 0:
+		if (simInserted)
+		{
+			Serial1.println("AT+CLCK=");
+			while (!Serial1.available());
+		}
+		break;
+	case 1:
 		break;
 	}
 

@@ -277,7 +277,8 @@ public:
   uint16_t sleepTimeActual = 30; //in seconds
   uint8_t backgroundIndex = 0;
   uint8_t volume = 10; //volume 0-14
-  bool pinLock = 0;
+  bool pinLock;
+ 
   uint16_t pinNumber = 1234;
   bool simInserted = 0;
   uint32_t sleepTimer = millis();
