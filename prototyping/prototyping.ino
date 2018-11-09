@@ -10,7 +10,6 @@ void setup() {
 }
 
 void loop() {
-	/*mp.lockScreen();
-	mp.bigIconsMainMenu();*/
-	mp.securityMenu();
+	mp.lockScreen();
+	mp.bigIconsMainMenu();
 }
