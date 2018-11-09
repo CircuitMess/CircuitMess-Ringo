@@ -377,6 +377,7 @@ private:
 	uint8_t coverWidth = 45;
 	uint8_t coverHeight = 45;
 	bool mute = false;
+	uint8_t timesRemaining;
 
   bool Century = false;
 bool h12;
