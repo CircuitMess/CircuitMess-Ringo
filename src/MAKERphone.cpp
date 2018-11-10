@@ -72,7 +72,7 @@ void MAKERphone::begin(bool splash) {
 	ledcAttachPin(LCD_BL_PIN, LEDC_CHANNEL);
 	ledcAnalogWrite(LEDC_CHANNEL, 255);
 
-	applySettings();
+	//applySettings();
 
 	Serial.begin(115200);
 
@@ -118,6 +118,7 @@ void MAKERphone::begin(bool splash) {
 	}
 
 	updateTimeGSM();
+	Serial1.println("AT+CMEE=2");
 	Serial1.println(F("AT+CLVL=100"));
 	Serial1.println(F("AT+CRSL=100"));
 	Serial1.println(F("AT+CMIC=0,6"));
@@ -175,7 +176,10 @@ bool MAKERphone::update() {
 	}
 	else if(!digitalRead(35) && sleepTime)
 		sleepTimer = millis();
-	
+	if (millis() > 7000)
+		simReady = 1;
+	else
+		simReady = 0;
 	if (millis() - lastFrameCount2 >= frameSpeed) {
 		lastFrameCount2 = millis();
 		
@@ -1260,6 +1264,7 @@ void MAKERphone::checkSim()
 	}
 	Serial.println("Odgovor na CPIN?");
 	delay(5);
+	
 	if (input.indexOf("NOT READY", input.indexOf("+CPIN:")) != -1 || input.indexOf("ERROR") != -1 && input.indexOf("+CPIN:") == -1
 		|| input.indexOf("NOT INSERTED") != -1)
 	{
@@ -3213,14 +3218,20 @@ void MAKERphone::securityMenu() {
 	bool saved = 0;
 	char key = NO_KEY;
 	bool blinkState = 0;
-
+	while (!simReady)
+	{
+		display.fillScreen(TFT_BLACK);
+		display.setCursor(34, 34);
+		display.printCenter("GSM still booting...");
+		update();
+	}
 	while (reply.indexOf("+SPIC:") == -1)
 	{
 		Serial1.println("AT+SPIC");
 		reply = Serial1.readString();
 	}
 	timesRemaining = reply.substring(reply.indexOf(" ", reply.indexOf("+SPIC:")), reply.indexOf(",", reply.indexOf(" ", reply.indexOf("+SPIC:")))).toInt();
-	Serial.print(timesRemaining);
+	Serial.println(timesRemaining);
 	//check if the SIM card is locked
 	while (reply.indexOf("+CLCK:") == -1)
 	{
@@ -3229,8 +3240,6 @@ void MAKERphone::securityMenu() {
 		Serial.println(reply);
 		delay(5);
 	}
-	Serial.println(reply);
-	delay(5);
 	if (reply.indexOf("+CLCK: 0") != -1)
 		pinLock = 0;
 	else if (reply.indexOf("+CLCK: 1") != -1)
@@ -3248,6 +3257,8 @@ void MAKERphone::securityMenu() {
 		}
 		else
 		{
+			Serial.println(pinLock);
+			delay(5);
 			display.setTextColor(TFT_BLACK);
 			display.fillScreen(0xED1F);
 			display.setTextFont(1);
@@ -3342,6 +3353,8 @@ void MAKERphone::securityMenu() {
 								while (!Serial1.available());
 								while (reply.indexOf("OK", reply.indexOf("AT+CLCK")) == -1 && reply.indexOf("ERROR", reply.indexOf("AT+CLCK")) == -1)
 									reply = Serial1.readString();
+								Serial.println(reply);
+								delay(5);
 								display.fillScreen(TFT_BLACK);
 								display.setCursor(28, 28);
 								display.setTextFont(1);
@@ -3369,9 +3382,7 @@ void MAKERphone::securityMenu() {
 									display.printCenter("Wrong PIN :(");
 									while (!update());
 									delay(2000);
-									if (timesRemaining)
-										timesRemaining--;
-									else
+									if (!timesRemaining)
 									{
 										while (!update());
 										break;
@@ -3423,8 +3434,10 @@ void MAKERphone::securityMenu() {
 							Serial.println(reply);
 							delay(5);
 						}
-						if (reply.indexOf("OK", reply.indexOf("AT+CLCK")) == -1)
+						if (reply.indexOf("OK", reply.indexOf("AT+CLCK")) != -1)
+						{
 							saved = 1;
+						}
 						else
 						{
 							while (reply.indexOf("+SPIC:") == -1)
@@ -3433,11 +3446,9 @@ void MAKERphone::securityMenu() {
 								reply = Serial1.readString();
 							}
 							timesRemaining = reply.substring(reply.indexOf(" ", reply.indexOf("+SPIC:")), reply.indexOf(",", reply.indexOf(" ", reply.indexOf("+SPIC:")))).toInt();
-							Serial.print(timesRemaining);
+							Serial.println(timesRemaining);
 							delay(5);
 							saved = 0;
-							if (timesRemaining)
-								timesRemaining--;
 						}
 						display.fillScreen(0xED1F);
 						display.setTextFont(1);
@@ -3492,6 +3503,7 @@ void MAKERphone::securityMenu() {
 								display.setTextFont(1);
 								if (reply.indexOf("OK", reply.indexOf("AT+CPWD")) != -1)
 								{
+									pinLock = 1;
 									saved = 1;
 									break;
 								}
@@ -3505,18 +3517,16 @@ void MAKERphone::securityMenu() {
 									timesRemaining = reply.substring(reply.indexOf(" ", reply.indexOf("+SPIC:")), reply.indexOf(",", reply.indexOf(" ", reply.indexOf("+SPIC:")))).toInt();
 									Serial.print(timesRemaining);
 									delay(5);
-									pinBuffer = "";
+									oldPin = "";
 									display.printCenter("Wrong PIN :(");
 									while (!update());
 									delay(2000);
-									if (!timesRemaining)
+									if (timesRemaining==0)
 									{
 										saved = 0;
 										while (!update());
 										break;
 									}
-									else
-										timesRemaining--;
 								}
 								oldPin = "";
 							}
@@ -3675,23 +3685,6 @@ void MAKERphone::applySettings()
 		sleepTimeActual = 1800;
 		break;
 	}
-
-	switch (pinLock)
-	{
-	case 0:
-		if (simInserted)
-		{
-			Serial1.println("AT+CLCK=");
-			while (!Serial1.available());
-		}
-		break;
-	case 1:
-		break;
-	}
-
-
-
-
 }
 
 

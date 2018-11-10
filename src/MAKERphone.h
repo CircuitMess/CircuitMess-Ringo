@@ -281,6 +281,7 @@ public:
  
   uint16_t pinNumber = 1234;
   bool simInserted = 0;
+  bool simReady = 0;
   uint32_t sleepTimer = millis();
 
   //Settings app
