@@ -4751,7 +4751,7 @@ void TFT_eSPI::getSetup(setup_t &tft_settings)
 #ifdef SMOOTH_FONT
   #include "Extensions/Smooth_font.cpp"
 #endif
-
+//Custom functions
 ////////////////////////////////////////////////////////////////////////////////////////
 
 void TFT_eSPI::drawBitmap(int8_t x, int8_t y, const byte *bitmap, uint16_t color) {
@@ -4866,7 +4866,7 @@ void TFT_eSPI::printCenter(char text)
 	print(text);
 }
 
-
+/////////////////////////////////////////////////////////////////////////////////////////
 /***************************************************************************************
 ** Function name:           TFT_eSprite
 ** Description:             Class constructor
