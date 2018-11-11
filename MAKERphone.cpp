@@ -72,7 +72,7 @@ void MAKERphone::begin(bool splash) {
 	ledcAttachPin(LCD_BL_PIN, LEDC_CHANNEL);
 	ledcAnalogWrite(LEDC_CHANNEL, 255);
 
-	//applySettings();
+	applySettings();
 
 	Serial.begin(115200);
 
@@ -284,11 +284,9 @@ void MAKERphone::sleep() {
 
 	ledcAnalogWrite(LEDC_CHANNEL, 255);
 	tft.writecommand(16);//send 16 for sleep in, 17 for sleep out
-	Serial.println("Going to sleep");
 
 	esp_light_sleep_start();
 
-	Serial.println("stay woke fam");
 	tft.writecommand(17);
 	ledcAnalogWrite(LEDC_CHANNEL, actualBrightness);
 
@@ -312,6 +310,7 @@ void MAKERphone::lockScreen() {
 	Serial.begin(115200);
 	bool goOut = 0;
 	uint8_t updatePixels = 0;	
+	uint32_t elapsedMillis = millis();
 	//pixels.clear();
 	//delay(1);
 	//pixels.show();
@@ -880,6 +879,8 @@ void MAKERphone::bigIconsMainMenu() {
 			Serial.println("pressed");
 			break;
 		}
+		if (index == -3) // DEBUG MODE
+			debugMode();
 		update();
 	}
 }
@@ -1534,7 +1535,56 @@ int MAKERphone::multi_tap(byte key)
 	}
 	return 0;
 }
+void MAKERphone::debugMode()
+{
+	String percentage = "";
+	String voltage = "";
+	String Arsp, Grsp, reply;
+	uint32_t elapsedMillis=millis();
+	while (!buttons.released(BTN_B))
+	{
+		display.fillScreen(TFT_BLACK);
+		display.setCursor(29, 2);
+		display.setTextFont(1);
+		display.printCenter("DEBUG MODE");
+		if (millis() - elapsedMillis >= 200)
+		{
+			Serial1.println("AT+CBC");
+			while (reply.indexOf("+CBC:") == -1 && !buttons.pressed(BTN_B))
+			{
+				reply = Serial1.readString();
+				buttons.update();
+				Serial.println(reply);
+				delay(5);
+			}
+			elapsedMillis = millis();
+			percentage = reply.substring(reply.indexOf(",", reply.indexOf("+CBC:"))+1, reply.indexOf(",", reply.indexOf(",", reply.indexOf("+CBC:"))+1));
+			voltage = reply.substring(reply.indexOf(",", reply.indexOf(",", reply.indexOf("+CBC:")) + 1)+1, reply.indexOf("\n", reply.indexOf("+CBC:")));
+			batteryVoltage = voltage.toInt();
+		}
+		display.setFreeFont(TT1);
+		display.setCursor(30, 25);
+		reply = "Battery: " + percentage + "%";
+		display.printCenter(reply);
+		reply = "Voltage: " + voltage + "mV";
+		display.setCursor(30, 32);
+		display.printCenter(reply);
+		/*while (!update());
+		if (Serial1.available())
+		{
+			Grsp = mp.readSerial();;
+			Serial.println(Grsp);
+		}
 
+		if (Serial.available())
+		{
+			Arsp = Serial.readString();
+			Serial1.println(Arsp);
+		}*/
+		reply = "";
+		update();
+	}
+}
 //Messages app
 void MAKERphone::messagesApp() {
 	Serial.begin(115200);
@@ -3366,8 +3416,6 @@ void MAKERphone::securityMenu() {
 								while (!Serial1.available());
 								while (reply.indexOf("OK", reply.indexOf("AT+CLCK")) == -1 && reply.indexOf("ERROR", reply.indexOf("AT+CLCK")) == -1)
 									reply = Serial1.readString();
-								Serial.println(reply);
-								delay(5);
 								display.fillScreen(TFT_BLACK);
 								display.setCursor(28, 28);
 								display.setTextFont(1);
@@ -3381,39 +3429,39 @@ void MAKERphone::securityMenu() {
 									timesRemaining = 3;
 									break;
 								}
-								else if (reply.indexOf("ERROR", reply.indexOf("AT+CLCK")) != -1)
+								else if (reply.indexOf("ERROR", reply.indexOf("AT+CLCK")) != -1) 
 								{
 
-									while (reply.indexOf("+SPIC:") == -1)
-									{
-										Serial1.println("AT+SPIC");
-										reply = Serial1.readString();
-									}
-									timesRemaining = reply.substring(reply.indexOf(" ", reply.indexOf("+SPIC:")), reply.indexOf(",", reply.indexOf(" ", reply.indexOf("+SPIC:")))).toInt();
-									Serial.print(timesRemaining);
+									
+									Serial.println("Start:");
+									Serial.println(reply);
+									Serial.println("End");
 									delay(5);
 									pinBuffer = "";
-									if (reply.indexOf("incorrect") != -1)
+									Serial.println(reply.indexOf("password"));
+									delay(5);
+									if (reply.indexOf("password") != -1)
 									{
 										display.printCenter("Wrong PIN :(");
-
+										timesRemaining--;
 									}
-									else
+									else if (reply.indexOf("PUK") != -1)
 									{
+										timesRemaining = 0;
+										break;
+									}	
+									else 
 										display.printCenter("Invalid PIN");
-									}
 									while (!update());
 									delay(2000);
-									if (!timesRemaining)
-									{
-										while (!update());
-										break;
-									}
 								}
 								pinBuffer = "";
 							}
+							if (timesRemaining == 0)
+								break;
 							if (buttons.released(BTN_B))
 							{
+								pinLockBuffer = 1;
 								while (!update());
 								break;
 							}
@@ -3500,6 +3548,7 @@ void MAKERphone::securityMenu() {
 								display.setTextFont(1);
 								if (reply.indexOf("OK", reply.indexOf("AT+CPWD")) != -1)
 								{
+									timesRemaining = 3;
 									pinLock = 1;
 									saved = 1;
 									break;
@@ -3509,33 +3558,19 @@ void MAKERphone::securityMenu() {
 									
 									if(reply.indexOf("incorrect") != -1)
 									{
-										while (reply.indexOf("+SPIC:") == -1)
-										{
-											Serial1.println("AT+SPIC");
-											reply = Serial1.readString();
-										}
-										timesRemaining = reply.substring(reply.indexOf(" ", reply.indexOf("+SPIC:")), reply.indexOf(",", reply.indexOf(" ", reply.indexOf("+SPIC:")))).toInt();
-										Serial.print(timesRemaining);
-										delay(5);
 										oldPin = "";
-										display.printCenter("Wrong PIN :(");
-										while (!update());
-										delay(2000);
+										timesRemaining--;
+										display.printCenter("Wrong PIN :(");										
 									}
-									else
+									else if (reply.indexOf("PUK") != -1)
 									{
-										display.fillScreen(TFT_BLACK);
-										display.setTextFont(1);
-										display.printCenter("Invalid PIN");
-										while (!update());
-										delay(2000);
-									}
-									if (timesRemaining == 0)
-									{
-										saved = 0;
-										while (!update());
+										timesRemaining = 0;
 										break;
 									}
+									else
+										display.printCenter("Invalid PIN");
+									while (!update());
+									delay(2000);
 								}
 							}
 							else
@@ -3570,68 +3605,46 @@ void MAKERphone::securityMenu() {
 									display.setTextFont(1);
 									if (reply.indexOf("OK", reply.indexOf("AT+CPWD")) != -1)
 									{
+										timesRemaining = 3;
 										pinLock = 1;
 										saved = 1;
 										break;
 									}
 									else if (reply.indexOf("ERROR", reply.indexOf("AT+CPWD")) != -1)
 									{
-										while (reply.indexOf("+SPIC:") == -1)
-										{
-											Serial1.println("AT+SPIC");
-											reply = Serial1.readString();
-										}
-										timesRemaining = reply.substring(reply.indexOf(" ", reply.indexOf("+SPIC:")), reply.indexOf(",", reply.indexOf(" ", reply.indexOf("+SPIC:")))).toInt();
-										Serial.print(timesRemaining);
-										delay(5);
 										oldPin = "";
-										
 										while (!update());
-										while (reply.indexOf("+SPIC:") == -1)
-										{
-											Serial1.println("AT+SPIC");
-											reply = Serial1.readString();
-										}
-										timesRemaining = reply.substring(reply.indexOf(" ", reply.indexOf("+SPIC:")), reply.indexOf(",", reply.indexOf(" ", reply.indexOf("+SPIC:")))).toInt();
-										Serial.println(timesRemaining);
-										delay(5);
+										timesRemaining--;
 										saved = 0;
 										if (timesRemaining == 0)
-										{
-											saved = 0;
-											while (!update());
 											break;
-										}
+										saved = 0;
 									}
-									saved = 1;
 								}
 								else
 								{
-									while (reply.indexOf("+SPIC:") == -1)
-									{
-										Serial1.println("AT+SPIC");
-										reply = Serial1.readString();
-									}
-									timesRemaining = reply.substring(reply.indexOf(" ", reply.indexOf("+SPIC:")), reply.indexOf(",", reply.indexOf(" ", reply.indexOf("+SPIC:")))).toInt();
-									Serial.println(timesRemaining);
-									delay(5);
+									
 									saved = 0;
 										
 									display.fillScreen(TFT_BLACK);
 									display.setTextFont(1);
 									display.setCursor(30, 30);
-									if (reply.indexOf("incorrect", reply.indexOf(oldPin)) != -1)
+									if (reply.indexOf("incorrect") != -1)
 									{
+										timesRemaining--;
 										display.printCenter("Wrong PIN :(");
-
+									}
+									else if (reply.indexOf("PUK") != -1)
+									{
+										timesRemaining = 0;
+										break;
 									}
 									else
-									{
 										display.printCenter("Invalid PIN");
-									}
 									while (!update());
 									delay(2000);
-									
+									Serial.println(timesRemaining);
+									delay(5);
 									if (timesRemaining == 0)
 										break;
 								}
@@ -3645,7 +3658,8 @@ void MAKERphone::securityMenu() {
 							while (!update());
 							break;
 						}
-
+						if (timesRemaining == 0)
+							break;
 						update();
 					}
 
@@ -3736,18 +3750,18 @@ void MAKERphone::securityMenu() {
 }
 void MAKERphone::applySettings()
 {
-	switch (wifi)
-	{
-	case 0:
-		WiFi.disconnect(true); delay(1); // disable WIFI altogether
-		WiFi.mode(WIFI_MODE_NULL); delay(1);
-		break;
+	//switch (wifi)
+	//{
+	//case 0:
+	//	WiFi.disconnect(true); delay(1); // disable WIFI altogether
+	//	WiFi.mode(WIFI_MODE_NULL); delay(1);
+	//	break;
 
-	case 1:
-		WiFi.begin();
-		delay(1);
-		break;
-	}
+	//case 1:
+	//	WiFi.begin();
+	//	delay(1);
+	//	break;
+	//}
 
 	switch (bt)
 	{
@@ -4152,6 +4166,8 @@ uint8_t GUI::drawCursor(uint8_t xoffset, uint8_t yoffset, uint8_t xelements, uin
 	}
 }
 int8_t GUI::drawBigIconsCursor(uint8_t xoffset, uint8_t yoffset, uint8_t xelements, uint8_t yelements, uint8_t xstart, uint8_t ystart) {
+	String passcode = "";
+	uint32_t passcodeMillis = millis();
 	Serial.begin(115200);
 	long elapsedMillis = millis();
 	long elapsedMillis2 = millis();
@@ -4184,7 +4200,8 @@ int8_t GUI::drawBigIconsCursor(uint8_t xoffset, uint8_t yoffset, uint8_t xelemen
 			elapsedMillis2 = millis();
 			previousButtonState = mp.kpd.pin_read(BTN_B);
 		}
-
+		if (millis() - passcodeMillis >= 1000)
+			passcode = "";
 
 		if (cursorState == 1)
 			mp.display.drawRect(xstart + cursorX * xoffset, ystart + cursorY * yoffset, width + 2, bigIconHeight + 2, TFT_RED);
@@ -4200,9 +4217,10 @@ int8_t GUI::drawBigIconsCursor(uint8_t xoffset, uint8_t yoffset, uint8_t xelemen
 			return cursorY * xelements + cursorX;  //returns index of selected icon
 
 		}
-		if (mp.buttons.pressed(JOYSTICK_B)) //UP
+		if (mp.buttons.pressed(JOYSTICK_B)) //DOWN
 		{
-
+			passcode += "DOWN";
+			passcodeMillis = millis();
 			mp.pixels.setPixelColor(0, mp.hslBlue);
 			mp.pixels.setPixelColor(7, mp.hslBlue);
 			while(!mp.update());
@@ -4221,9 +4239,10 @@ int8_t GUI::drawBigIconsCursor(uint8_t xoffset, uint8_t yoffset, uint8_t xelemen
 			elapsedMillis = millis();
 			cursorState = 1;
 		}
-		if (mp.buttons.kpd.pin_read(JOYSTICK_D) == 0)//DOWN
+		if (mp.buttons.kpd.pin_read(JOYSTICK_D) == 0)//UP
 		{
-
+			passcode += "UP";
+			passcodeMillis = millis();
 			mp.pixels.setPixelColor(3, mp.hslBlue);
 			mp.pixels.setPixelColor(4, mp.hslBlue);
 			while (!mp.update());
@@ -4244,6 +4263,8 @@ int8_t GUI::drawBigIconsCursor(uint8_t xoffset, uint8_t yoffset, uint8_t xelemen
 		}
 		if (mp.buttons.kpd.pin_read(JOYSTICK_A) == 0) //LEFT
 		{
+			passcode += "LEFT";
+			passcodeMillis = millis();
 			mp.pixels.setPixelColor(6, mp.hslBlue);
 			mp.pixels.setPixelColor(5, mp.hslBlue);
 			while (!mp.update());
@@ -4264,6 +4285,8 @@ int8_t GUI::drawBigIconsCursor(uint8_t xoffset, uint8_t yoffset, uint8_t xelemen
 		}
 		if (mp.buttons.kpd.pin_read(JOYSTICK_C) == 0)//RIGHT
 		{
+			passcode += "RIGHT";
+			passcodeMillis = millis();
 			mp.pixels.setPixelColor(1, mp.hslBlue);
 			mp.pixels.setPixelColor(2, mp.hslBlue);
 			mp.pixels.show();
@@ -4297,7 +4320,9 @@ int8_t GUI::drawBigIconsCursor(uint8_t xoffset, uint8_t yoffset, uint8_t xelemen
 
 			return -2;
 		}
-		while (!mp.update());
+		if (passcode == "UPUPDOWNDOWNLEFTRIGHTLEFTRIGHT")
+			return -3;
+		mp.update();
 	}
 }
 void GUI::popup(String text, uint8_t duration) {

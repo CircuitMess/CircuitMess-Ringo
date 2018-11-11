@@ -197,6 +197,7 @@ public:
 	void enterPin();
 	String textInput(String buffer);
 	int textPointer = 0;
+	void debugMode();
   
   //SMS functions
   uint8_t countSubstring(String string, String substring);
@@ -277,13 +278,13 @@ public:
   uint16_t sleepTimeActual = 30; //in seconds
   uint8_t backgroundIndex = 0;
   uint8_t volume = 10; //volume 0-14
+
   bool pinLock;
- 
   uint16_t pinNumber = 1234;
   bool simInserted = 0;
   bool simReady = 0;
   uint32_t sleepTimer = millis();
-
+  uint16_t batteryVoltage;
   //Settings app
   uint8_t sleepTime = 2;
   String ringtone = "/ringtones/chiptune.mp3";
@@ -357,7 +358,6 @@ public:
   //random junkerino
 
   unsigned long buttonHeld;
-  unsigned long elapsedMillis;
   bool blinkState;
   int frameSpeed = 40;
   int lastFrameCount2 = 0;
