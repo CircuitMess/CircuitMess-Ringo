@@ -859,12 +859,18 @@ void MAKERphone::bigIconsMainMenu() {
 			update();
 			messagesApp();
 		}
-
 		if (titles[index] == "Media")
 			mediaApp();
 		if (titles[index] == "Phone")
 			phoneApp();
 		if (titles[index] == "Contacts") {
+			Serial.println("Begin contacst");
+			display.fillScreen(TFT_BLACK);
+			display.setCursor(22, 30);
+			display.print("Loading");
+			display.setCursor(20, 36);
+			display.print("contacts...");
+			update();
 			contactsApp();
 		}
 
@@ -2089,6 +2095,215 @@ void MAKERphone::composeSMS()
 }
 
 //Contacts app
+
+uint8_t MAKERphone::deleteContact(String contact, String number, String id)
+{
+	uint16_t contentCursor = 0;
+	unsigned long elapsedMillis = millis();
+	bool blinkState = 1;
+	while (1)
+	{
+		display.fillScreen(TFT_BLACK);
+		display.fillRect(0, 0, display.width(), 7, TFT_DARKGREY);
+		display.setTextColor(TFT_WHITE);
+		display.setCursor(1, 1);
+		display.drawString("Contacts", 1, 1);
+		display.drawFastHLine(0, 7, LCDWIDTH, TFT_BLACK);
+
+		display.setFreeFont(TT1);
+		if (millis() - elapsedMillis >= multi_tap_threshold) {
+			elapsedMillis = millis();
+			blinkState = !blinkState;
+		}
+
+		display.setTextColor(TFT_WHITE);
+		display.setCursor(3, 16);
+		display.print("Are you sure ?");
+		display.setCursor(3, 24);
+		display.print(contact);
+		display.setCursor(3, 32);
+		display.print(number);
+
+		if (blinkState){
+			display.drawRect(BUFWIDTH / 2 - 15, 53, 30, 9, TFT_RED);
+			display.setTextColor(TFT_RED);
+			display.setCursor(28, 60);
+			display.print("DELETE");
+		} else {
+			display.fillRect(BUFWIDTH / 2 - 15, 53, 30, 9, TFT_RED);
+			display.setTextColor(TFT_WHITE);
+			display.setCursor(28, 60);
+			display.print("DELETE");
+		}
+
+		// if(blinkState == 1)
+		// 	display.drawFastVLine(display.getCursorX(), display.getCursorY(), 7, TFT_WHITE);
+
+
+		if (buttons.released(BTN_B)) //BUTTON BACK
+		{
+			while (!update());
+			break;
+		}
+		if (buttons.released(BTN_A)) // DELETE
+		{
+			display.fillScreen(TFT_BLACK);
+			display.setFreeFont(TT1);
+			display.setCursor(34, 32);
+			display.printCenter("Deleting contact...");
+			while (!update());
+
+			Serial1.print("AT+CPBW=");
+			Serial1.println(id);
+
+			while (Serial1.readString().indexOf("OK") != -1);
+			display.fillScreen(TFT_BLACK);
+			display.printCenter("Contact deleted!");
+			while (!update());
+			delay(1000);
+			return 1;
+		}
+
+		update();
+	}
+	return 0;
+}
+
+uint8_t MAKERphone::newContact()
+{
+	textPointer = 0;
+	y = 20;  //Beggining point
+	String content = "";
+	String contact = "";
+	String prevContent = "";
+	char key = NO_KEY;
+	bool cursor = 0; //editing contacts or text content
+	uint16_t contentCursor = 0;
+	unsigned long elapsedMillis = millis();
+	bool blinkState = 1;
+	while (1)
+	{
+		display.fillScreen(TFT_BLACK);
+		display.fillRect(0, 0, display.width(), 7, TFT_DARKGREY);
+		display.setTextColor(TFT_WHITE);
+		display.setCursor(1, 1);
+		display.drawString("Contacts", 1, 1);
+		display.drawFastHLine(0, 7, LCDWIDTH, TFT_BLACK);
+		display.setFreeFont(TT1);
+
+		if (millis() - elapsedMillis >= multi_tap_threshold) //cursor blinking routine 
+		{
+			elapsedMillis = millis();
+			blinkState = !blinkState;
+		}
+		if (cursor == 0) //inputting the contact number
+		{
+			key = buttons.kpdNum.getKey();
+			if (key == 'A') //clear number
+				contact = "";
+			else if (key == 'C')
+				contact.remove(contact.length() - 1);
+			if (key != NO_KEY && isdigit(key))
+				contact += key;
+			display.setTextWrap(1);
+			display.setCursor(2, 10);
+			display.setTextFont(1);
+			if (content == "")
+			{
+				display.setTextColor(TFT_LIGHTGREY);
+				display.print(F("Name"));
+				display.setTextColor(TFT_WHITE);
+			}
+			else
+				display.print(content);
+			display.setFreeFont(TT1);
+			display.setCursor(2, 24);
+			display.print("Num: ");
+			display.print(contact);
+			if (blinkState == 1)
+				display.drawFastVLine(display.getCursorX(), display.getCursorY()-5, 5, TFT_WHITE);
+		}
+		else
+		{
+			display.setTextColor(TFT_WHITE);
+			display.setCursor(2, 24);
+			display.print("Num: ");
+			if (contact == "")
+			{
+				display.setTextColor(TFT_LIGHTGREY);
+				display.print(F("xxxxxxxx"));
+				display.setTextColor(TFT_WHITE);
+			}
+			else
+				display.print(contact);
+			prevContent = content;
+			content = textInput(content);
+			if (prevContent != content)
+			{
+				blinkState = 1;
+				elapsedMillis = millis();
+			}
+			display.setTextColor(TFT_LIGHTGREY);
+			display.setTextWrap(1);
+			display.setCursor(2, 10);
+			display.setTextFont(1);
+			display.print(content);
+			display.setFreeFont(TT1);
+			display.setTextColor(TFT_WHITE);
+			if(blinkState == 1)
+				display.drawFastVLine(display.getCursorX(), display.getCursorY(), 7, TFT_WHITE);
+		}
+
+		display.fillRect(BUFWIDTH / 2 - 15, 53, 30, 9, TFT_GREENYELLOW);
+		display.setTextColor(TFT_WHITE);
+		display.setCursor(31, 60);
+		display.print("SAVE");
+
+		if (buttons.kpd.pin_read(JOYSTICK_B) == 0 && cursor == 1) { //BUTTON UP
+			cursor = 0;
+		}
+
+		if (buttons.kpd.pin_read(JOYSTICK_D) == 0 && cursor == 0) { //BUTTON DOWN
+			cursor = 1;
+		}
+
+		if (buttons.released(BTN_B)) //BUTTON BACK
+		{
+			while (!update());
+			break;
+		}
+		if (buttons.released(BTN_A)) // SEND SMS
+		{
+			if(contact != "" && content != ""){
+				// international numbers ?
+				// AT+CPBW=,”6187759088″,129,”Adam”
+
+				display.fillScreen(TFT_BLACK);
+				display.setFreeFont(TT1);
+				display.setCursor(34, 32);
+				display.printCenter("Inserting contact...");
+				while (!update());
+
+				Serial1.print("AT+CPBW=,\"");
+				Serial1.print(contact);
+				Serial1.print("\",129,\"");
+				Serial1.print(content);
+				Serial1.println("\"");
+
+				while (Serial1.readString().indexOf("OK") != -1);
+				display.fillScreen(TFT_BLACK);
+				display.printCenter("Contact insreted!");
+				while (!update());
+				delay(1000);
+				return 1;
+			}
+		}
+		update();
+	}
+	return 0;
+}
+
+
 void MAKERphone::contactsMenuDrawBox(String contact, String number, uint8_t i, int32_t y) {
 	y += i * 14 + menuYOffset;
 	if (y < 0 || y > BUFHEIGHT) {
@@ -2109,7 +2324,31 @@ void MAKERphone::contactsMenuDrawCursor(uint8_t i, int32_t y) {
 	y += i * 14 + menuYOffset;
 	display.drawRect(0, y, display.width(), 15, TFT_RED);
 }
-int8_t MAKERphone::contactsMenu(const char* title, String* contact, String *number, uint8_t length) {
+
+void MAKERphone::contactsMenuNewBoxCursor(uint8_t i, int32_t y) {
+	if (millis() % 500 <= 250) {
+		return;
+	}
+	y += menuYOffset + 1;
+	display.drawRect(0, y, display.width(), 14, TFT_RED);
+}
+void MAKERphone::contactsMenuNewBox(uint8_t i, int32_t y) {
+	y += menuYOffset + 1;
+	if (y < 0 || y > BUFHEIGHT) {
+		return;
+	}
+
+	display.fillRect(1, y + 1, BUFWIDTH - 2, 12, TFT_DARKGREY);
+	display.drawBitmap(0, y + 2, newContactIcon, TFT_WHITE);
+	display.setTextColor(TFT_WHITE);
+	display.setCursor(12, y + 3);
+	display.setTextFont(1);
+	display.print("New contact");
+	display.setFreeFont(TT1);
+
+}
+
+int MAKERphone::contactsMenu(const char* title, String* contact, String *number, uint8_t length) {
 
 	uint8_t cursor = 0;
 	int32_t cameraY = 0;
@@ -2124,10 +2363,18 @@ int8_t MAKERphone::contactsMenu(const char* title, String* contact, String *numb
 			cameraY_actual = cameraY;
 		}
 
-		for (uint8_t i = 0; i < length; i++) {
-			contactsMenuDrawBox(contact[i], number[i], i, cameraY_actual);
+		for (uint8_t i = 0; i < length + 1; i++) {
+			if(i == 0){
+				contactsMenuNewBox(i, cameraY_actual);
+			} else {
+				contactsMenuDrawBox(contact[i-1], number[i-1], i, cameraY_actual);
+			}
 		}
-		contactsMenuDrawCursor(cursor, cameraY_actual);
+		if(cursor == 0){
+			contactsMenuNewBoxCursor(cursor, cameraY_actual);
+		} else {
+			contactsMenuDrawCursor(cursor, cameraY_actual);
+		}
 
 		// last draw the top entry thing
 		display.fillRect(0, 0, display.width(), 7, TFT_DARKGREY);
@@ -2137,9 +2384,16 @@ int8_t MAKERphone::contactsMenu(const char* title, String* contact, String *numb
 		display.drawFastHLine(0, 7, LCDWIDTH, TFT_BLACK);
 
 		if (buttons.kpd.pin_read(BTN_A) == 0) {   //BUTTON CONFIRM
-
 			while (buttons.kpd.pin_read(BTN_A) == 0);// Exit when pressed
 			break;
+		}
+		if (buttons.kpd.pin_read(JOYSTICK_A) == 0 && cursor != 0) {
+			while (buttons.kpd.pin_read(JOYSTICK_A) == 0); // Delete
+			return -1000 + cursor;
+		}
+		if (buttons.kpd.pin_read(JOYSTICK_C) == 0 && cursor != 0) {
+			while (buttons.kpd.pin_read(JOYSTICK_C) == 0); // Edit contact
+			return -3000 + cursor;
 		}
 
 		if (buttons.kpd.pin_read(JOYSTICK_D) == 0) {  //BUTTON UP
@@ -2166,7 +2420,7 @@ int8_t MAKERphone::contactsMenu(const char* title, String* contact, String *numb
 			if ((cursor * 14 + cameraY + menuYOffset) > 48) {
 				cameraY -= 14;
 			}
-			if (cursor >= length) {
+			if (cursor >= length + 1) {
 				cursor = 0;
 				cameraY = 0;
 
@@ -2180,13 +2434,19 @@ int8_t MAKERphone::contactsMenu(const char* title, String* contact, String *numb
 		}
 	}
 	return cursor;
-
 }
 void MAKERphone::contactsApp() {
 	delay(5);
+	Serial.println("Loaded ?");
+	int change = 0;
 	String input = readAllContacts();
-	while (input == "")
+	int count_try = 0;
+	while (input == "") {
+		if(count_try > 2) delay(1000);
+		Serial.println("try again");
 		input = readAllContacts();
+		count_try++;
+	}
 	if (input.indexOf("CPBR:") == -1)
 	{
 		display.fillScreen(TFT_BLACK);
@@ -2207,33 +2467,128 @@ void MAKERphone::contactsApp() {
 		////////////////////////////////
 		String phoneNumber[contactNumber];
 		String contactName[contactNumber];
+		String contact_id[contactNumber];
 		uint16_t start;
 		uint16_t end = 0;
+		uint16_t foo = 0;
+		uint16_t bar = 0;
 		/////////////////////////////////////////////////////
 		//parsing the raw data input for contact number, 
 		//date and text content
 		////////////////////////////////////////////////////
+		Serial.println(input);
 		for (uint8_t i = 0; i < contactNumber; i++)
 		{
+			foo = input.indexOf(" ", input.indexOf("CPBR:", end));
+			bar = input.indexOf("\"", input.indexOf("CPBR:", end));
+			contact_id[i] = input.substring(foo+1, bar-1);
+
 			start = input.indexOf("\"", input.indexOf("CPBR:", end));
 			end = input.indexOf("\"", start + 1);
 			phoneNumber[i] = input.substring(start + 1, end);
+
 			start = input.indexOf("\"", end + 1);
 			end = input.indexOf("\"", start + 1);
 			contactName[i] = input.substring(start + 1, end);
 		}
-		int8_t menuChoice = contactsMenu("Contacts", contactName, phoneNumber, contactNumber);
-		if (menuChoice != -2)
-		{
-			callNumber(phoneNumber[menuChoice]);
+		while(1){
+			if(change){
+				display.fillScreen(TFT_BLACK);
+				display.setCursor(16, 35);
+				display.setFreeFont(TT1);
+				display.print("Reloading data");
+				while (!update());
+
+				String input = "";
+				int count_try = 0;
+				while (input == "") {
+					if(count_try > 2) delay(1000);
+					Serial.println("try again");
+					input = readAllContacts();
+					count_try++;
+				}
+				if (input.indexOf("CPBR:") == -1)
+				{
+					display.fillScreen(TFT_BLACK);
+					display.setCursor(16, 35);
+					display.setFreeFont(TT1);
+					display.print("No contacts  :(");
+					while (buttons.released(BTN_B) == 0)//BUTTON BACK
+						while (!update());
+					while (!update());
+				}
+				else
+				{
+					uint8_t contactNumber = countSubstring(input, "CPBR:");
+					Serial.println(contactNumber);
+
+					/////////////////////////////////
+					//Variables for contact parsing
+					////////////////////////////////
+					String phoneNumber[contactNumber];
+					String contactName[contactNumber];
+					String contact_id[contactNumber];
+					uint16_t start;
+					uint16_t end = 0;
+					uint16_t foo = 0;
+					uint16_t bar = 0;
+					/////////////////////////////////////////////////////
+					//parsing the raw data input for contact number, 
+					//date and text content
+					////////////////////////////////////////////////////
+					Serial.println(input);
+					for (uint8_t i = 0; i < contactNumber; i++)
+					{
+						foo = input.indexOf(" ", input.indexOf("CPBR:", end));
+						bar = input.indexOf("\"", input.indexOf("CPBR:", end));
+						contact_id[i] = input.substring(foo+1, bar-1);
+
+						start = input.indexOf("\"", input.indexOf("CPBR:", end));
+						end = input.indexOf("\"", start + 1);
+						phoneNumber[i] = input.substring(start + 1, end);
+
+						start = input.indexOf("\"", end + 1);
+						end = input.indexOf("\"", start + 1);
+						contactName[i] = input.substring(start + 1, end);
+					}
+				}
+			}
+			int menuChoice = contactsMenu("Contacts", contactName, phoneNumber, contactNumber);
+			change = 0;
 			update();
-			while (buttons.kpd.pin_read(BTN_B) == 1);
-			Serial1.println("ATH");
+			if (menuChoice != -2)
+			{
+				Serial.println(menuChoice);
+				if (menuChoice == 0){
+					if(newContact()){
+						change = 1;
+					}
+				} else if (menuChoice < -1000){
+					Serial.println("Edit this concat");
+				} else if (menuChoice < -10){
+					int id = menuChoice + 1000 - 1;
+					if(deleteContact(contactName[id], phoneNumber[id], contact_id[id])){
+						change = 1;
+					}
+				} else {
+					callNumber(phoneNumber[menuChoice - 1]);
+					update();
+					while (buttons.kpd.pin_read(BTN_B) == 1);
+					Serial1.println("ATH");
+					break;
+				}
+			} else {
+				break;
+			}
 		}
-		update();
 	}
+}
+
+// todo
+void parse_contacts(){
 
 }
+
 String MAKERphone::readAllContacts() {
 	String buffer;
 	Serial1.print(F("AT+CPBR=1,250\r"));

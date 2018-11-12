@@ -25,9 +25,9 @@ Authors:
 #include <stdint.h>
 #include <EEPROM.h>
 //#include <Arduino.h>
-#include "utility/Adafruit_NeoPixel.h"
+#include "Adafruit_NeoPixel.h"
 extern HardwareSerial Serial1;
-#include "TFT_eSPI/TFT_eSPI.h" // Graphics and font library for ST7735 driver chip
+#include <TFT_eSPI.h> // Graphics and font library for ST7735 driver chip
 #include <SPI.h>
 
 //Includes for SD firmware update
@@ -36,13 +36,13 @@ extern HardwareSerial Serial1;
 #include <Update.h>
 
 //Keypad setup
-#include "utility/Keypad_I2C.h"
-#include "utility/Keypad.h"
+#include "Keypad_I2C.h"
+#include "Keypad.h"
 //#include "utility/Wire2.h"
 
 //Fonts and sprites to use
-#include "src/Free_Fonts.h"
-#include "src/sprites.c"
+#include "Free_Fonts.h"
+#include "sprites.c"
 
 
 //Setup for MP3 playback
@@ -256,8 +256,13 @@ public:
 
   //Contacts app
   void contactsMenuDrawBox(String contact, String number, uint8_t i, int32_t y);
+  uint8_t deleteContact(String contact, String number, String id);
+  uint8_t newContact();
+  void parse_contacts();
+  void contactsMenuNewBox(uint8_t i, int32_t y);
   void contactsMenuDrawCursor(uint8_t i, int32_t y);
-  int8_t contactsMenu(const char* title, String* contact, String *number, uint8_t length);
+  void contactsMenuNewBoxCursor(uint8_t i, int32_t y);
+  int contactsMenu(const char* title, String* contact, String *number, uint8_t length);
   void contactsApp();
   String readAllContacts();
   void callNumber(String number);
@@ -274,7 +279,7 @@ public:
   bool airplaneMode = 0;
   uint8_t brightness = 5;  //brightness 0-5
   uint8_t actualBrightness = 0; //value from 0 (brightest) to 255 (backlight off)
-  uint16_t sleepTimeActual = 30; //in seconds
+  uint16_t sleepTimeActual = 600; //in seconds
   uint8_t backgroundIndex = 0;
   uint8_t volume = 10; //volume 0-14
   bool pinLock = 0;
@@ -283,7 +288,7 @@ public:
   uint32_t sleepTimer = millis();
 
   //Settings app
-  uint8_t sleepTime = 2;
+  uint8_t sleepTime = 4;
   String ringtone = "/ringtones/chiptune.mp3";
   String notification = "/notifications/to-the-point.mp3";
   uint8_t ringtoneCount=0;
