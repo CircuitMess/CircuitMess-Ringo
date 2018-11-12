@@ -1569,6 +1569,15 @@ void MAKERphone::debugMode()
 		reply = "Voltage: " + voltage + "mV";
 		display.setCursor(30, 32);
 		display.printCenter(reply);
+		if (voltage.toInt() > 4000)
+			display.drawBitmap(38, 50, batteryCharging, TFT_WHITE);
+		else if(voltage.toInt() <=3900 && voltage.toInt() >= 3800)
+			display.drawBitmap(38, 50, batteryFull, TFT_WHITE);
+		else if (voltage.toInt() < 3800 && voltage.toInt() >= 3700)
+			display.drawBitmap(38, 50, batteryMid, TFT_WHITE);
+		else if(voltage.toInt() < 3700)
+			display.drawBitmap(38, 50, batteryEmpty, TFT_WHITE);
+
 		/*while (!update());
 		if (Serial1.available())
 		{
