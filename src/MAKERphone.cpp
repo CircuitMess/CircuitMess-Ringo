@@ -382,9 +382,9 @@ void MAKERphone::lockScreen() {
 		  display.setCursor(10, 50);
 		  display.print("12:00");*/
 		if(simInserted)
-			display.drawBitmap(1, 1, signal);
+			display.drawBitmap(1, 1, signalFullIcon);
 		else
-			display.drawBitmap(1, 1, noSignal);
+			display.drawBitmap(1, 1, signalErrorIcon);
 		display.drawBitmap(11, 1, vibemode);
 		display.drawBitmap(21, 1, silentmode);
 		display.drawBitmap(31, 1, missedcall);
@@ -1079,12 +1079,10 @@ void MAKERphone::checkSMS() {
 }
 String MAKERphone::readSerial() {
 	uint8_t _timeout = 0;
-	while (!Serial1.available() && _timeout < 1200)
+	while (!Serial1.available() && _timeout < 300)
 	{
-		delay(13);
+		delay(20);
 		_timeout++;
-
-
 	}
 	if (Serial1.available()) {
 		return Serial1.readString();
@@ -1539,6 +1537,7 @@ void MAKERphone::debugMode()
 {
 	String percentage = "";
 	String voltage = "";
+	String signal = "";
 	String Arsp, Grsp, reply;
 	uint32_t elapsedMillis=millis();
 	while (!buttons.released(BTN_B))
@@ -1547,12 +1546,12 @@ void MAKERphone::debugMode()
 		display.setCursor(29, 2);
 		display.setTextFont(1);
 		display.printCenter("DEBUG MODE");
-		if (millis() - elapsedMillis >= 200)
+		if (millis() - elapsedMillis >= 100)
 		{
 			Serial1.println("AT+CBC");
 			while (reply.indexOf("+CBC:") == -1 && !buttons.pressed(BTN_B))
 			{
-				reply = Serial1.readString();
+				reply = readSerial();
 				buttons.update();
 				Serial.println(reply);
 				delay(5);
@@ -1561,6 +1560,16 @@ void MAKERphone::debugMode()
 			percentage = reply.substring(reply.indexOf(",", reply.indexOf("+CBC:"))+1, reply.indexOf(",", reply.indexOf(",", reply.indexOf("+CBC:"))+1));
 			voltage = reply.substring(reply.indexOf(",", reply.indexOf(",", reply.indexOf("+CBC:")) + 1)+1, reply.indexOf("\n", reply.indexOf("+CBC:")));
 			batteryVoltage = voltage.toInt();
+			Serial1.println("AT+CSQ");
+			while (reply.indexOf("+CSQ:") == -1 && !buttons.pressed(BTN_B))
+			{
+				reply = readSerial();
+				buttons.update();
+				Serial.println(reply);
+				delay(5);
+			}
+			signal = reply.substring(reply.indexOf(" ", reply.indexOf("+CSQ:"))+1, reply.indexOf(",", reply.indexOf(" ", reply.indexOf("+CSQ:"))));
+
 		}
 		display.setFreeFont(TT1);
 		display.setCursor(30, 25);
@@ -1569,14 +1578,29 @@ void MAKERphone::debugMode()
 		reply = "Voltage: " + voltage + "mV";
 		display.setCursor(30, 32);
 		display.printCenter(reply);
+		reply = "Signal: " + signal;
+		display.setCursor(30, 39);
+		display.printCenter(reply);
+
 		if (voltage.toInt() > 4000)
-			display.drawBitmap(38, 50, batteryCharging, TFT_WHITE);
-		else if(voltage.toInt() <=3900 && voltage.toInt() >= 3800)
-			display.drawBitmap(38, 50, batteryFull, TFT_WHITE);
+			display.drawBitmap(30, 50, batteryCharging, TFT_WHITE);
+		else if(voltage.toInt() <= 4000 && voltage.toInt() >= 3800)
+			display.drawBitmap(30, 50, batteryFull, TFT_WHITE);
 		else if (voltage.toInt() < 3800 && voltage.toInt() >= 3700)
-			display.drawBitmap(38, 50, batteryMid, TFT_WHITE);
+			display.drawBitmap(30, 50, batteryMid, TFT_WHITE);
 		else if(voltage.toInt() < 3700)
-			display.drawBitmap(38, 50, batteryEmpty, TFT_WHITE);
+			display.drawBitmap(30, 50, batteryEmpty, TFT_WHITE);
+
+		if (signal.toInt() <= 2)
+			display.drawBitmap(40, 50, noSignalIcon, TFT_WHITE);
+		else if(signal.toInt() > 3 && signal.toInt() <= 10)
+			display.drawBitmap(40, 50, signalLowIcon, TFT_WHITE);
+		else if (signal.toInt() > 10 && signal.toInt() <= 20)
+			display.drawBitmap(40, 50, signalHighIcon, TFT_WHITE);
+		else if (signal.toInt() > 20 && signal.toInt() <= 31)
+			display.drawBitmap(40, 50, signalFullIcon, TFT_WHITE);
+		else if(signal.toInt() == 99)
+			display.drawBitmap(40, 50, signalErrorIcon, TFT_WHITE);
 
 		/*while (!update());
 		if (Serial1.available())
@@ -1594,6 +1618,7 @@ void MAKERphone::debugMode()
 		update();
 	}
 }
+
 //Messages app
 void MAKERphone::messagesApp() {
 	Serial.begin(115200);
