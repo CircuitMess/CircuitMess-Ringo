@@ -275,7 +275,7 @@ public:
   bool airplaneMode = 0;
   uint8_t brightness = 5;  //brightness 0-5
   uint8_t actualBrightness = 0; //value from 0 (brightest) to 255 (backlight off)
-  uint16_t sleepTimeActual = 30; //in seconds
+  uint16_t sleepTimeActual = 0; //in seconds
   uint8_t backgroundIndex = 0;
   uint8_t volume = 10; //volume 0-14
 
@@ -286,7 +286,7 @@ public:
   uint32_t sleepTimer = millis();
   uint16_t batteryVoltage;
   //Settings app
-  uint8_t sleepTime = 2;
+  uint8_t sleepTime = 0;
   String ringtone = "/ringtones/chiptune.mp3";
   String notification = "/notifications/to-the-point.mp3";
   uint8_t ringtoneCount=0;
