@@ -25,7 +25,7 @@ Authors:
 #include <stdint.h>
 #include <EEPROM.h>
 //#include <Arduino.h>
-#include "Adafruit_NeoPixel.h"
+#include "utility/Adafruit_NeoPixel.h"
 extern HardwareSerial Serial1;
 #include <TFT_eSPI.h> // Graphics and font library for ST7735 driver chip
 #include <SPI.h>
@@ -36,13 +36,13 @@ extern HardwareSerial Serial1;
 #include <Update.h>
 
 //Keypad setup
-#include "Keypad_I2C.h"
-#include "Keypad.h"
+#include "utility/Keypad_I2C.h"
+#include "utility/Keypad.h"
 //#include "utility/Wire2.h"
 
 //Fonts and sprites to use
-#include "Free_Fonts.h"
-#include "sprites.c"
+#include "utility/Free_Fonts.h"
+#include "utility/sprites.c"
 
 
 //Setup for MP3 playback
