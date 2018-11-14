@@ -285,6 +285,8 @@ public:
   bool simReady = 0;
   uint32_t sleepTimer = millis();
   uint16_t batteryVoltage;
+  uint16_t signalStrength;
+
   //Settings app
   uint8_t sleepTime = 0;
   String ringtone = "/ringtones/chiptune.mp3";
@@ -355,14 +357,16 @@ public:
     "Fast_as_fuck_boi"
   };
 
-  //random junkerino
+  //update() variables
 
   unsigned long buttonHeld;
   bool blinkState;
   int frameSpeed = 40;
   int lastFrameCount2 = 0;
   int smsRefresh = 0;
-
+  String updateBuffer;
+  uint32_t refreshMillis = millis();
+  bool dataRefreshFlag=1;
    /////////////////////////////////////////
   ///////////////COLLISION//////////////////
   //////////////////////////////////////////
