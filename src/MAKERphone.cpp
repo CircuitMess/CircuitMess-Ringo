@@ -159,7 +159,10 @@ bool MAKERphone::update() {
 	//		//handleCall();
 	//	}
 	//}
+	char c;
 	
+	uint16_t refreshInterval = 3000;
+
 	for (int y = 0; y < BUFHEIGHT; y++) {
 		for (int x = 0; x < BUFWIDTH; x++) {
 			buf.fillRect(x * 2, y * 2, 2, 2, display.readPixel(x, y));
@@ -180,6 +183,29 @@ bool MAKERphone::update() {
 		simReady = 1;
 	else
 		simReady = 0;
+	/////////////////////////////////////////////
+	//refreshing signal and battery info////////
+	///////////////////////////////////////////
+	if (dataRefreshFlag)
+	{
+		if (millis() - refreshMillis >= refreshInterval)
+		{
+			updateBuffer = "";
+			Serial1.println("AT+CBC");
+			Serial1.println("AT+CSQ");
+			refreshMillis = millis();
+		}
+		if (Serial1.available())
+		{
+			c = Serial1.read();
+			updateBuffer += c;
+			if (updateBuffer.indexOf("\n", updateBuffer.indexOf("+CSQ:")) != -1)
+				signalStrength = updateBuffer.substring(updateBuffer.indexOf(" ", updateBuffer.indexOf("+CSQ:")) + 1, updateBuffer.indexOf(",", updateBuffer.indexOf(" ", updateBuffer.indexOf("+CSQ:")))).toInt();
+			if (updateBuffer.indexOf("\n", updateBuffer.indexOf("+CBC:")) != -1)
+				batteryVoltage = updateBuffer.substring(updateBuffer.indexOf(",", updateBuffer.indexOf(",", updateBuffer.indexOf("+CBC:")) + 1) + 1, updateBuffer.indexOf("\n", updateBuffer.indexOf("+CBC:"))).toInt();
+		}
+	}
+	///////////////////////////////////////////////
 	if (millis() - lastFrameCount2 >= frameSpeed) {
 		lastFrameCount2 = millis();
 		
@@ -307,6 +333,7 @@ void MAKERphone::sleep() {
 	while (!update());
 }
 void MAKERphone::lockScreen() {
+	dataRefreshFlag = 1;
 	Serial.begin(115200);
 	bool goOut = 0;
 	uint8_t updatePixels = 0;	
@@ -381,8 +408,19 @@ void MAKERphone::lockScreen() {
 		/*display.setTextSize(2);
 		  display.setCursor(10, 50);
 		  display.print("12:00");*/
-		if(simInserted)
-			display.drawBitmap(1, 1, signalFullIcon);
+		if (simInserted)
+		{
+			if (signalStrength <= 2)
+				display.drawBitmap(1, 1, noSignalIcon);
+			else if (signalStrength > 3 && signalStrength <= 10)
+				display.drawBitmap(1, 1, signalLowIcon);
+			else if (signalStrength > 10 && signalStrength <= 20)
+				display.drawBitmap(1, 1, signalHighIcon);
+			else if (signalStrength > 20 && signalStrength <= 31)
+				display.drawBitmap(1, 1, signalFullIcon);
+			else if (signalStrength == 99)
+				display.drawBitmap(1, 1, signalErrorIcon);
+		}
 		else
 			display.drawBitmap(1, 1, signalErrorIcon);
 		display.drawBitmap(11, 1, vibemode);
@@ -391,7 +429,14 @@ void MAKERphone::lockScreen() {
 		display.drawBitmap(41, 1, newtext);
 		display.drawBitmap(51, 1, wifion);
 		display.drawBitmap(61, 1, BTon);
-		display.drawBitmap(74, 1, battery);
+		if (batteryVoltage > 4000)
+			display.drawBitmap(74, 1, batteryCharging);
+		else if (batteryVoltage <= 4000 && batteryVoltage >= 3800)
+			display.drawBitmap(74, 1, batteryFull);
+		else if (batteryVoltage < 3800 && batteryVoltage >= 3700)
+			display.drawBitmap(74, 1, batteryMid);
+		else if (batteryVoltage < 3700)
+			display.drawBitmap(74, 1, batteryEmpty);
 
 		gui.drawNotificationWindow(2, 32, 77, 10, "Missed call from Dad");
 		gui.drawNotificationWindow(2, 44, 77, 10, "Text from Jack");
@@ -885,6 +930,7 @@ void MAKERphone::bigIconsMainMenu() {
 	}
 }
 void MAKERphone::callNumber(String number) {
+	dataRefreshFlag = 0;
 	Serial.begin(115200);
 	String localBuffer = "";
 	Serial1.print(F("ATD"));
@@ -900,13 +946,15 @@ void MAKERphone::callNumber(String number) {
 	display.setCursor(11, -20);
 	textLength = display.cursor_x;
 	Serial.println(textLength);
-	display.print(number);
+	display.printCenter(number);
 	textLength = display.cursor_x - textLength;
 	while (1)
 	{
 		display.fillScreen(TFT_WHITE);
 		if (Serial1.available())
 			localBuffer = Serial1.readString();
+		Serial.println(localBuffer);
+		delay(5);
 		if (localBuffer.indexOf("CLCC:") != -1)
 		{
 			if (localBuffer.indexOf(",0,0,0,0") != -1)
@@ -1622,7 +1670,7 @@ void MAKERphone::debugMode()
 //Messages app
 void MAKERphone::messagesApp() {
 	Serial.begin(115200);
-
+	dataRefreshFlag = 0;
 	//sim800.println("AT+CMGL=\"REC READ\"");
 	//sim800.flush();
 	/*while (sim800.available())
@@ -2272,7 +2320,7 @@ int8_t MAKERphone::contactsMenu(const char* title, String* contact, String *numb
 
 }
 void MAKERphone::contactsApp() {
-	delay(5);
+	dataRefreshFlag = 0;
 	String input = readAllContacts();
 	while (input == "")
 		input = readAllContacts();
@@ -2336,6 +2384,7 @@ String MAKERphone::readAllContacts() {
 
 //Phone app
 void MAKERphone::phoneApp() {
+	dataRefreshFlag = 0;
 	dialer();
 	update();
 }
