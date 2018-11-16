@@ -435,7 +435,11 @@ void MAKERphone::lockScreen() {
 			display.drawBitmap(74, 1, batteryFull);
 		else if (batteryVoltage < 3800 && batteryVoltage >= 3700)
 			display.drawBitmap(74, 1, batteryMid);
-		else if (batteryVoltage < 3700)
+		else if (batteryVoltage < 3700 && batteryVoltage >= 3600)
+			display.drawBitmap(74, 1, batteryMidLow);
+		else if (batteryVoltage < 3600 && batteryVoltage >= 3500)
+			display.drawBitmap(74, 1, batteryLow);
+		else if (batteryVoltage < 3500)
 			display.drawBitmap(74, 1, batteryEmpty);
 
 		gui.drawNotificationWindow(2, 32, 77, 10, "Missed call from Dad");
