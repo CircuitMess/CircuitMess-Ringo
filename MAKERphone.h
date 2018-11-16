@@ -345,17 +345,6 @@ public:
   };
   String BinaryFiles[255];
   uint8_t binaryCount = 0;//Number of binary files available for loading
-  String entries[9] = {
-    "Pizza",
-    "Spaghetti",
-    "Noodles",
-    "Ice Cream",
-    "Skrrrt",
-    "Reeeeee",
-    "Deeznuts.exe",
-    "Arhn.eu",
-    "Fast_as_fuck_boi"
-  };
 
   //update() variables
 
