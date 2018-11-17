@@ -192,15 +192,33 @@ bool MAKERphone::update() {
 		{
 			updateBuffer = "";
 			Serial1.println("AT+CBC");
-			Serial1.println("AT+CSQ");
+			if (simInserted)
+			{
+				Serial1.println("AT+CSQ");
+				if (carrierName == "")
+					Serial1.println("AT+CSPN?");
+			}
 			refreshMillis = millis();
 		}
 		if (Serial1.available())
 		{
 			c = Serial1.read();
 			updateBuffer += c;
-			if (updateBuffer.indexOf("\n", updateBuffer.indexOf("+CSQ:")) != -1)
-				signalStrength = updateBuffer.substring(updateBuffer.indexOf(" ", updateBuffer.indexOf("+CSQ:")) + 1, updateBuffer.indexOf(",", updateBuffer.indexOf(" ", updateBuffer.indexOf("+CSQ:")))).toInt();
+			if (simInserted)
+			{
+				if (carrierName == "")
+				{
+					if (updateBuffer.indexOf("\n", updateBuffer.indexOf("+CSPN:")) != -1)
+					{
+						carrierName = updateBuffer.substring(updateBuffer.indexOf("\"", updateBuffer.indexOf("+CSPN:"))+1, updateBuffer.indexOf("\"", updateBuffer.indexOf("\"", updateBuffer.indexOf("+CSPN:"))+1));
+						Serial.println(updateBuffer);
+						Serial.println(carrierName);
+						delay(5);
+					}
+				}
+				if (updateBuffer.indexOf("\n", updateBuffer.indexOf("+CSQ:")) != -1)
+					signalStrength = updateBuffer.substring(updateBuffer.indexOf(" ", updateBuffer.indexOf("+CSQ:")) + 1, updateBuffer.indexOf(",", updateBuffer.indexOf(" ", updateBuffer.indexOf("+CSQ:")))).toInt();
+			}
 			if (updateBuffer.indexOf("\n", updateBuffer.indexOf("+CBC:")) != -1)
 				batteryVoltage = updateBuffer.substring(updateBuffer.indexOf(",", updateBuffer.indexOf(",", updateBuffer.indexOf("+CBC:")) + 1) + 1, updateBuffer.indexOf("\n", updateBuffer.indexOf("+CBC:"))).toInt();
 		}
@@ -408,6 +426,7 @@ void MAKERphone::lockScreen() {
 		/*display.setTextSize(2);
 		  display.setCursor(10, 50);
 		  display.print("12:00");*/
+		uint8_t helper = 11;
 		if (simInserted)
 		{
 			if (signalStrength <= 2)
@@ -423,12 +442,30 @@ void MAKERphone::lockScreen() {
 		}
 		else
 			display.drawBitmap(1, 1, signalErrorIcon);
-		display.drawBitmap(11, 1, vibemode);
-		display.drawBitmap(21, 1, silentmode);
-		display.drawBitmap(31, 1, missedcall);
-		display.drawBitmap(41, 1, newtext);
-		display.drawBitmap(51, 1, wifion);
-		display.drawBitmap(61, 1, BTon);
+		if (volume == 0)
+		{
+			display.drawBitmap(helper, 1, silentmode);
+			helper += 10;
+		}
+		//display.drawBitmap(31, 1, missedcall);
+		//display.drawBitmap(41, 1, newtext);
+		if (!airplaneMode)
+		{
+			if (wifi == 1)
+				display.drawBitmap(helper, 1, wifion);
+			else
+				display.drawBitmap(helper, 1, wifioff);
+			helper += 10;
+			if (bt)
+				display.drawBitmap(helper, 1, BTon);
+			else
+				display.drawBitmap(helper, 1, BToff);
+		}
+		else
+		{
+			display.drawBitmap(helper, 1, airplaneModeIcon);
+			helper += 10;
+		}
 		if (batteryVoltage > 4000)
 			display.drawBitmap(74, 1, batteryCharging);
 		else if (batteryVoltage <= 4000 && batteryVoltage >= 3800)
