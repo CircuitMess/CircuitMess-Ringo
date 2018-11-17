@@ -286,6 +286,7 @@ public:
   uint32_t sleepTimer = millis();
   uint16_t batteryVoltage;
   uint16_t signalStrength;
+  String carrierName = "";
 
   //Settings app
   uint8_t sleepTime = 0;
