@@ -1624,6 +1624,7 @@ int MAKERphone::multi_tap(byte key)
 }
 void MAKERphone::debugMode()
 {
+	dataRefreshFlag = 0;
 	String percentage = "";
 	String voltage = "";
 	String signal = "";
