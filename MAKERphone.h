@@ -284,8 +284,8 @@ public:
   bool simInserted = 0;
   bool simReady = 0;
   uint32_t sleepTimer = millis();
-  uint16_t batteryVoltage;
-  uint16_t signalStrength;
+  uint16_t batteryVoltage=0;
+  uint16_t signalStrength=0;
   String carrierName = "";
 
   //Settings app
