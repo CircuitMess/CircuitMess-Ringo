@@ -439,16 +439,6 @@ void MAKERphone::lockScreen() {
 				display.drawBitmap(1, 1, signalFullIcon);
 			else if (signalStrength == 99)
 				display.drawBitmap(1, 1, signalErrorIcon);
-			else
-			{
-				while (!buttons.pressed(BTN_A))
-				{
-					display.fillScreen(TFT_BLACK);
-					display.printCenter("SIGNAL ICON NOT PRINTED");
-					Serial.println(signalStrength);
-					update();
-				}
-			}
 		}
 		else
 			display.drawBitmap(1, 1, signalErrorIcon);
