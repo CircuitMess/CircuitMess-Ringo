@@ -198,6 +198,8 @@ bool MAKERphone::update() {
 				if (carrierName == "")
 					Serial1.println("AT+CSPN?");
 			}
+			if (clockYear == 4 || clockYear == 80)
+				Serial1.println("AT+CCLK?");
 			refreshMillis = millis();
 		}
 		if (Serial1.available())
@@ -219,6 +221,62 @@ bool MAKERphone::update() {
 				if (updateBuffer.indexOf("\n", updateBuffer.indexOf("+CSQ:")) != -1)
 					signalStrength = updateBuffer.substring(updateBuffer.indexOf(" ", updateBuffer.indexOf("+CSQ:")) + 1, updateBuffer.indexOf(",", updateBuffer.indexOf(" ", updateBuffer.indexOf("+CSQ:")))).toInt();
 			}
+			Serial.println(clockYear);
+			Serial.println(updateBuffer);
+			delay(5);
+			if(clockYear == 4)
+				if (updateBuffer.indexOf("\n", updateBuffer.indexOf("+CCLK:")) != -1)
+				{
+					uint16_t index = updateBuffer.indexOf(F("+CCLK: \""));
+					char c1, c2; //buffer for saving date and time numerals in form of characters
+					c1 = updateBuffer.charAt(index + 8);
+					c2 = updateBuffer.charAt(index + 9);
+					clockYear = 2000 + ((c1 - '0') * 10) + (c2 - '0');
+					Serial.println(F("CLOCK YEAR:"));
+					Serial.println(clockYear);
+					delay(5);
+					clockYear = ((c1 - '0') * 10) + (c2 - '0');
+
+					c1 = updateBuffer.charAt(index + 11);
+					c2 = updateBuffer.charAt(index + 12);
+					clockMonth = ((c1 - '0') * 10) + (c2 - '0');
+					Serial.println(F("CLOCK MONTH:"));
+					Serial.println(clockMonth);
+
+					c1 = updateBuffer.charAt(index + 14);
+					c2 = updateBuffer.charAt(index + 15);
+					clockDay = ((c1 - '0') * 10) + (c2 - '0');
+					Serial.println(F("CLOCK DAY:"));
+					Serial.println(clockDay);
+
+					c1 = updateBuffer.charAt(index + 17);
+					c2 = updateBuffer.charAt(index + 18);
+					clockHour = ((c1 - '0') * 10) + (c2 - '0');
+					Serial.println(F("CLOCK HOUR:"));
+					Serial.println(clockHour);
+
+					c1 = updateBuffer.charAt(index + 20);
+					c2 = updateBuffer.charAt(index + 21);
+					clockMinute = ((c1 - '0') * 10) + (c2 - '0');
+					Serial.println(F("CLOCK MINUTE:"));
+					Serial.println(clockMinute);
+
+					c1 = updateBuffer.charAt(index + 23);
+					c2 = updateBuffer.charAt(index + 24);
+					clockSecond = ((c1 - '0') * 10) + (c2 - '0');
+					Serial.println(F("CLOCK SECOND:"));
+					Serial.println(clockSecond);
+
+					//TO-DO: UPDATE THE RTC HERE
+
+					buttons.kpd.setHour(clockHour);
+					buttons.kpd.setMinute(clockMinute);
+					buttons.kpd.setSecond(clockSecond);
+					buttons.kpd.setDate(clockDay);
+					buttons.kpd.setMonth(clockMonth);
+					buttons.kpd.setYear(clockYear);
+					Serial.println(F("\nRTC TIME UPDATE OVER GSM DONE!"));
+				}
 			if (updateBuffer.indexOf("\n", updateBuffer.indexOf("+CBC:")) != -1)
 				batteryVoltage = updateBuffer.substring(updateBuffer.indexOf(",", updateBuffer.indexOf(",", updateBuffer.indexOf("+CBC:")) + 1) + 1, updateBuffer.indexOf("\n", updateBuffer.indexOf("+CBC:"))).toInt();
 		}
@@ -364,12 +422,9 @@ void MAKERphone::lockScreen() {
 	//pixels.show();
 	while (1)
 	{
-		if (clockHour = 0 && clockMinute == 0)
-		{
-			Serial.println("Updated");
-			updateTimeGSM();
-		}
-		updateTimeRTC();
+		if (clockYear != 4 && clockYear != 80)
+			updateTimeRTC();
+		
 
 		display.fillScreen(backgroundColors[backgroundIndex]);
 
@@ -1349,10 +1404,7 @@ void MAKERphone::checkSim()
 		input = Serial1.readString();
 		Serial.println(input);
 		delay(10);
-	}
-	Serial.println("Odgovor na CPIN?");
-	delay(5);
-	
+	}	
 	if (input.indexOf("NOT READY", input.indexOf("+CPIN:")) != -1 || input.indexOf("ERROR") != -1 && input.indexOf("+CPIN:") == -1
 		|| input.indexOf("NOT INSERTED") != -1)
 	{
