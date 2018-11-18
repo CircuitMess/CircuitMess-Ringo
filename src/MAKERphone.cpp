@@ -429,7 +429,7 @@ void MAKERphone::lockScreen() {
 		uint8_t helper = 11;
 		if (simInserted)
 		{
-			if (signalStrength <= 2)
+			if (signalStrength <= 3)
 				display.drawBitmap(1, 1, noSignalIcon);
 			else if (signalStrength > 3 && signalStrength <= 10)
 				display.drawBitmap(1, 1, signalLowIcon);
