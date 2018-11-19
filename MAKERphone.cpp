@@ -213,17 +213,11 @@ bool MAKERphone::update() {
 					if (updateBuffer.indexOf("\n", updateBuffer.indexOf("+CSPN:")) != -1)
 					{
 						carrierName = updateBuffer.substring(updateBuffer.indexOf("\"", updateBuffer.indexOf("+CSPN:"))+1, updateBuffer.indexOf("\"", updateBuffer.indexOf("\"", updateBuffer.indexOf("+CSPN:"))+1));
-						Serial.println(updateBuffer);
-						Serial.println(carrierName);
-						delay(5);
 					}
 				}
 				if (updateBuffer.indexOf("\n", updateBuffer.indexOf("+CSQ:")) != -1)
 					signalStrength = updateBuffer.substring(updateBuffer.indexOf(" ", updateBuffer.indexOf("+CSQ:")) + 1, updateBuffer.indexOf(",", updateBuffer.indexOf(" ", updateBuffer.indexOf("+CSQ:")))).toInt();
 			}
-			Serial.println(clockYear);
-			Serial.println(updateBuffer);
-			delay(5);
 			if(clockYear == 4)
 				if (updateBuffer.indexOf("\n", updateBuffer.indexOf("+CCLK:")) != -1)
 				{
@@ -2789,7 +2783,7 @@ int8_t MAKERphone::settingsMenu(String* title, uint8_t length) {
 	uint8_t cursor = 0;
 	int32_t cameraY = 0;
 	int32_t cameraY_actual = 0;
-
+	dataRefreshFlag = 0;
 	while (1) {
 		while (!update());
 		display.fillScreen(TFT_BLACK);
@@ -3050,6 +3044,8 @@ void MAKERphone::networkMenu() {
 void MAKERphone::displayMenu() {
 	display.setTextFont(1);
 	display.setTextColor(TFT_BLACK);
+	uint8_t sleepTimeBuffer = 0;
+	uint16_t sleepTimeActualBuffer = 0;
 	uint8_t cursor = 0;
 	while (1)
 	{
@@ -3064,19 +3060,19 @@ void MAKERphone::displayMenu() {
 
 		display.setCursor(10, 23);
 		display.print("Sleep:");
-		if (sleepTimeActual > 60)
+		if (sleepTimeActualBuffer > 60)
 		{
-			display.print(sleepTimeActual / 60);
+			display.print(sleepTimeActualBuffer / 60);
 			display.print("min");
 		}
 		else
 		{
-			display.print(sleepTimeActual);
+			display.print(sleepTimeActualBuffer);
 			display.print("s");
 		}
 		display.setTextFont(1);
 		display.drawRect(14, 35, 47, 4, TFT_BLACK);
-		display.drawRect(15, 36, sleepTime * 9, 2, TFT_BLACK);
+		display.drawRect(15, 36, sleepTimeBuffer* 9, 2, TFT_BLACK);
 		display.setCursor(1, 33);
 		display.print("0s");
 		display.setCursor(62, 33);
@@ -3127,15 +3123,15 @@ void MAKERphone::displayMenu() {
 				display.fillRect(1, 33, 12, 7, 0x8FEA);
 				display.fillRect(62, 33, 17, 7, 0x8FEA);
 			}
-			if (buttons.kpd.pin_read(JOYSTICK_A) == 0 && sleepTime != 0)
+			if (buttons.kpd.pin_read(JOYSTICK_A) == 0 && sleepTimeBuffer!= 0)
 			{
 				while (buttons.kpd.pin_read(JOYSTICK_A) == 0);
-				sleepTime--;
+				sleepTimeBuffer--;
 			}
-			if (buttons.kpd.pin_read(JOYSTICK_C) == 0 && sleepTime != 5)
+			if (buttons.kpd.pin_read(JOYSTICK_C) == 0 && sleepTimeBuffer!= 5)
 			{
 				while (buttons.kpd.pin_read(JOYSTICK_C) == 0);
-				sleepTime++;
+				sleepTimeBuffer++;
 			}
 		}
 		if (cursor == 2)
@@ -3179,48 +3175,56 @@ void MAKERphone::displayMenu() {
 			}
 		}
 
-		if (buttons.kpd.pin_read(JOYSTICK_D) == 0)
+		if (buttons.released(JOYSTICK_D))
 		{
-			while (buttons.kpd.pin_read(JOYSTICK_D) == 0);
+			while (!update());
 			if (cursor == 0)
 				cursor = 2;
 			else
 				cursor--;
 		}
-		if (buttons.kpd.pin_read(JOYSTICK_B) == 0)
+		if (buttons.released(JOYSTICK_B))
 		{
-			while (buttons.kpd.pin_read(JOYSTICK_B) == 0);
+			while (!update());
 			if (cursor == 2)
 				cursor = 0;
 			else
 				cursor++;
 		}
 
-		switch (sleepTime) { //interpreting value into actual numbers
+		switch (sleepTimeBuffer) { //interpreting value into actual numbers
 		case 0:
-			sleepTimeActual = 0;
+			sleepTimeActualBuffer = 0;
 			break;
 		case 1:
-			sleepTimeActual = 10;
+			sleepTimeActualBuffer = 10;
 			break;
 		case 2:
-			sleepTimeActual = 30;
+			sleepTimeActualBuffer = 30;
 			break;
 		case 3:
-			sleepTimeActual = 60;
+			sleepTimeActualBuffer = 60;
 			break;
 		case 4:
-			sleepTimeActual = 600;
+			sleepTimeActualBuffer = 600;
 			break;
 		case 5:
-			sleepTimeActual = 1800;
+			sleepTimeActualBuffer = 1800;
 			break;
 		}
 		if (buttons.released(BTN_B)) //BUTTON BACK
 			break;
 		update();
-		applySettings();
+		
+		if (brightness == 0)
+			actualBrightness = 230;
+		else
+			actualBrightness = (5 - brightness) * 51;
+		ledcAnalogWrite(LEDC_CHANNEL, actualBrightness);
 	}
+	sleepTimer = millis();
+	sleepTime = sleepTimeBuffer;
+	sleepTimeActual = sleepTimeActualBuffer;
 }
 void MAKERphone::soundMenu() {
 	SD.begin();
@@ -3927,46 +3931,66 @@ void MAKERphone::securityMenu() {
 }
 void MAKERphone::applySettings()
 {
-	//switch (wifi)
-	//{
-	//case 0:
-	//	WiFi.disconnect(true); delay(1); // disable WIFI altogether
-	//	WiFi.mode(WIFI_MODE_NULL); delay(1);
-	//	break;
+	
+	const char * path = "/settings.mph";
+	char helper[20] = "";
+	writeFile(path, "MAKERphone settings file\n");
+	appendFile(path, "Wifi: ");
+	switch (wifi)
+	{
+	case 0:
+		//WiFi.disconnect(true); delay(1); // disable WIFI altogether
+		//WiFi.mode(WIFI_MODE_NULL); delay(1);
+		appendFile(path, "0\n");
+		break;
 
-	//case 1:
-	//	WiFi.begin();
-	//	delay(1);
-	//	break;
-	//}
-
+	case 1:
+		//WiFi.begin();
+		//delay(1);
+		appendFile(path, "1\n");
+		break;
+	}
+	appendFile(path, "Bluetooth: ");
 	switch (bt)
 	{
 	case 0:
-		btStop();
+		appendFile(path, "0\n");
+		//btStop();
 		break;
 	case 1:
-		btStart();
+		appendFile(path, "1\n");
+		//btStart();
 		break;
 	}
-
+	appendFile(path, "Airplane mode: ");
 	switch (airplaneMode)
 	{
 	case 0:
+		appendFile(path, "0\n");
 		Serial1.println("AT+CFUN=1");
 		break;
 
 	case 1:
+		appendFile(path, "1\n");
 		Serial1.println("AT+CFUN=4");
 		break;
 	}
-
+	appendFile(path, "Brightness: ");
+	itoa(brightness, helper, 10);
+	appendFile(path, helper);
 	if (brightness == 0)
 		actualBrightness = 230;
 	else
 		actualBrightness = (5 - brightness) * 51;
 	ledcAnalogWrite(LEDC_CHANNEL, actualBrightness);
-
+	appendFile(path, "\nSleep time: ");
+	itoa(sleepTime, helper, 10);
+	appendFile(path, helper);
+	appendFile(path, "\nBackground color: ");
+	itoa(backgroundIndex, helper, 10);
+	appendFile(path, helper);
+	Serial.println(readFile(path));
+	delay(5);
 	switch (sleepTime) { //interpreting value into actual numbers
 	case 0:
 		sleepTimeActual = 0;
@@ -3987,6 +4011,7 @@ void MAKERphone::applySettings()
 		sleepTimeActual = 1800;
 		break;
 	}
+
 }
 
 
@@ -4081,6 +4106,63 @@ bool MAKERphone::collidePointCircle(int16_t pointX, int16_t pointY, int16_t cent
 	// Just like circleCircle collision, but r2 = 0
 	r = abs(r);
 	return (((pointX - centerX) * (pointX - centerX) + (pointY - centerY) * (pointY - centerY)) < r * r);
+}
+
+//SD operations
+void MAKERphone::writeFile(const char * path, const char * message)
+{
+	while (!SD.begin());
+	Serial.printf("Writing file: %s\n", path);
+
+	File file = SD.open(path, FILE_WRITE);
+	if (!file) {
+		Serial.println("Failed to open file for writing");
+		return;
+	}
+	if (file.print(message)) {
+		Serial.println("File written");
+	}
+	else {
+		Serial.println("Write failed");
+	}
+	file.close();
+}
+void MAKERphone::appendFile(const char * path, const char * message) {
+	Serial.printf("Appending to file: %s\n", path);
+
+	File file = SD.open(path, FILE_APPEND);
+	if (!file) {
+		Serial.println("Failed to open file for appending");
+		return;
+	}
+	if (file.print(message)) {
+		Serial.println("Message appended");
+		delay(5);
+	}
+	else {
+		Serial.println("Append failed");
+		delay(5);
+	}
+	file.close();
+}
+String MAKERphone::readFile(const char * path) {
+	while (!SD.begin());
+	Serial.printf("Reading file: %s\n", path);
+	String helper="";
+	File file = SD.open(path);
+	if (!file) {
+		Serial.println("Failed to open file for reading");
+		return "";
+	}
+
+	Serial.print("Read from file: ");
+	while (file.available()) {
+		helper += (char)file.read();
+
+	}
+	file.close();
+	
+	return helper;
 }
 
 //GUI class
