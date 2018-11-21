@@ -199,171 +199,174 @@ public:
 	int textPointer = 0;
 	void debugMode();
   
-  //SMS functions
-  uint8_t countSubstring(String string, String substring);
-  String readSerial();
-  String readSms(uint8_t index);
-  String readAllSms();
-  void viewSms(String content, String contact, String date);
-  void smsMenuDrawBox(String contact, String date, String content, uint8_t i, int32_t y);
-  void smsMenuComposeBox(uint8_t i, int32_t y);
-  void smsMenuDrawCursor(uint8_t i, int32_t y);
-  void smsMenuComposeBoxCursor(uint8_t i, int32_t y);
-  int16_t smsMenu(const char* title, String* contact, String *date, String *content, uint8_t length);
-  void messagesApp();
-  void composeSMS();
-  void incomingMessagePopup();
+	//SMS functions
+	uint8_t countSubstring(String string, String substring);
+	String readSerial();
+	String readSms(uint8_t index);
+	String readAllSms();
+	void viewSms(String content, String contact, String date);
+	void smsMenuDrawBox(String contact, String date, String content, uint8_t i, int32_t y);
+	void smsMenuComposeBox(uint8_t i, int32_t y);
+	void smsMenuDrawCursor(uint8_t i, int32_t y);
+	void smsMenuComposeBoxCursor(uint8_t i, int32_t y);
+	int16_t smsMenu(const char* title, String* contact, String *date, String *content, uint8_t length);
+	void messagesApp();
+	void composeSMS();
+	void incomingMessagePopup();
   
-  void updateFromFS(fs::FS &fs, String FilePath);
+	void updateFromFS(fs::FS &fs, String FilePath);
 
 
-  //variables used for parsing SMS
-  int16_t y;
-  String smsContent[smsNumber];
-  String phoneNumber[smsNumber];
-  String tempDate[smsNumber];
-  uint8_t smsMonth, smsDay, smsHour, smsMinute, smsSecond;
-  uint16_t smsYear;
-  uint16_t year[smsNumber];
-  uint8_t day[smsNumber];
-  uint8_t month[smsNumber];
-  uint8_t minute[smsNumber];
-  uint8_t second[smsNumber];
-  uint8_t hour[smsNumber];
-  uint32_t start;
-  uint32_t end = 0;
-  String input;
-  String buffer;
+	//variables used for parsing SMS
+	int16_t y;
+	String smsContent[smsNumber];
+	String phoneNumber[smsNumber];
+	String tempDate[smsNumber];
+	uint8_t smsMonth, smsDay, smsHour, smsMinute, smsSecond;
+	uint16_t smsYear;
+	uint16_t year[smsNumber];
+	uint8_t day[smsNumber];
+	uint8_t month[smsNumber];
+	uint8_t minute[smsNumber];
+	uint8_t second[smsNumber];
+	uint8_t hour[smsNumber];
+	uint32_t start;
+	uint32_t end = 0;
+	String input;
+	String buffer;
   
-  //NeoPixels...
-  int numberOfColors = 19;
-  uint32_t hslRed = pixels.Color(255, 0, 0);
-  uint32_t hslBlack = pixels.Color(0, 0, 0);
-  uint32_t hslBlue = pixels.Color(0, 0, 255);
-  uint8_t pixelState;
-  Adafruit_NeoPixel pixels = Adafruit_NeoPixel(NUMPIXELS, PIXELPIN, NEO_GRB + NEO_KHZ800);
+	//NeoPixels...
+	int numberOfColors = 19;
+	uint32_t hslRed = pixels.Color(255, 0, 0);
+	uint32_t hslBlack = pixels.Color(0, 0, 0);
+	uint32_t hslBlue = pixels.Color(0, 0, 255);
+	uint8_t pixelState;
+	Adafruit_NeoPixel pixels = Adafruit_NeoPixel(NUMPIXELS, PIXELPIN, NEO_GRB + NEO_KHZ800);
 
-  //Media app
-  uint8_t cursor = 0;
-  int32_t cameraY = 0;
-  int32_t cameraY_actual = 0;
-  String mp3Files[255];
-  uint8_t mp3Count = 0;
-  int16_t mp3Menu(const char* title, String* items, uint8_t length);
-  void listMP3(fs::FS &fs, const char * dirname, uint8_t levels);
-  void mp3player(String songName);
-  void mediaApp();
-  void MDCallback(void *cbData, const char *type, bool isUnicode, const char *string);
+	//Media app
+	uint8_t cursor = 0;
+	int32_t cameraY = 0;
+	int32_t cameraY_actual = 0;
+	String mp3Files[255];
+	uint8_t mp3Count = 0;
+	int16_t mp3Menu(const char* title, String* items, uint8_t length);
+	void listMP3(fs::FS &fs, const char * dirname, uint8_t levels);
+	void mp3player(String songName);
+	void mediaApp();
+	void MDCallback(void *cbData, const char *type, bool isUnicode, const char *string);
 
-  //Contacts app
-  void contactsMenuDrawBox(String contact, String number, uint8_t i, int32_t y);
-  void contactsMenuDrawCursor(uint8_t i, int32_t y);
-  int8_t contactsMenu(const char* title, String* contact, String *number, uint8_t length);
-  void contactsApp();
-  String readAllContacts();
-  void callNumber(String number);
+	//Contacts app
+	void contactsMenuDrawBox(String contact, String number, uint8_t i, int32_t y);
+	void contactsMenuDrawCursor(uint8_t i, int32_t y);
+	int8_t contactsMenu(const char* title, String* contact, String *number, uint8_t length);
+	void contactsApp();
+	String readAllContacts();
+	void callNumber(String number);
 
 
-  //Phone app
-  void phoneApp();
-  void dialer();
+	//Phone app
+	void phoneApp();
+	void dialer();
 
-  //Settings variables
-  void applySettings();
-  bool wifi = 1;
-  bool bt = 0;
-  bool airplaneMode = 0;
-  uint8_t brightness = 5;  //brightness 0-5
-  uint8_t actualBrightness = 0; //value from 0 (brightest) to 255 (backlight off)
-  uint16_t sleepTimeActual = 0; //in seconds
-  uint8_t backgroundIndex = 0;
-  uint8_t volume = 10; //volume 0-14
+	//Settings variables
+ 
+	bool wifi = 1;
+	bool bt = 0;
+	bool airplaneMode = 0;
+	uint8_t brightness = 5;  //brightness 0-5
+	uint8_t actualBrightness = 0; //value from 0 (brightest) to 255 (backlight off)
+	uint16_t sleepTimeActual = 0; //in seconds
+	uint8_t backgroundIndex = 0;
+	uint8_t volume = 10; //volume 0-14
 
-  bool pinLock;
-  uint16_t pinNumber = 1234;
-  bool simInserted = 0;
-  bool simReady = 0;
-  uint32_t sleepTimer = millis();
-  uint16_t batteryVoltage;
-  uint16_t signalStrength;
-  String carrierName = "";
+	bool pinLock;
+	uint16_t pinNumber = 1234;
+	bool simInserted = 0;
+	bool simReady = 0;
+	uint32_t sleepTimer = millis();
+	uint16_t batteryVoltage;
+	uint16_t signalStrength;
+	String carrierName = "";
 
-  //Settings app
-  uint8_t sleepTime = 0;
-  String ringtone = "/ringtones/chiptune.mp3";
-  String notification = "/notifications/to-the-point.mp3";
-  uint8_t ringtoneCount=0;
-  uint8_t notificationCount=0;
-  String ringtoneFiles[255];
-  String notificationFiles[255];
-  int backgroundColors[7] = {
-  TFT_CYAN,
-  TFT_GREEN,
-  TFT_RED,
-  TFT_YELLOW,
-  TFT_WHITE,
-  TFT_ORANGE,
-  TFT_PINK
-  };
-  String backgroundColorsNames[7] = {
-  "Cyan",
-  "Green",
-  "Red",
-  "Yellow",
-  "White",
-  "Orange",
-  "Pink"
-  };
+	//Settings app
+	uint8_t sleepTime = 0;
+	String ringtone = "/ringtones/chiptune.mp3";
+	String notification = "/notifications/to-the-point.mp3";
+	uint8_t ringtoneCount=0;
+	uint8_t notificationCount=0;
+	String ringtoneFiles[255];
+	String notificationFiles[255];
+	int backgroundColors[7] = {
+	TFT_CYAN,
+	TFT_GREEN,
+	TFT_RED,
+	TFT_YELLOW,
+	TFT_WHITE,
+	TFT_ORANGE,
+	TFT_PINK
+	};
+	String backgroundColorsNames[7] = {
+	"Cyan",
+	"Green",
+	"Red",
+	"Yellow",
+	"White",
+	"Orange",
+	"Pink"
+	};
   
-  void settingsApp();
-  int8_t settingsMenu(String* title, uint8_t length);
-  void settingsMenuDrawBox(String title, uint8_t i, int32_t y);
-  void settingsMenuDrawCursor(uint8_t i, int32_t y,  bool pressed);
-  String settingsItems[4] = {
-    "Network",
-    "Display",
-    "Sound",
-    "Security"};
-  void networkMenu();
-  void displayMenu();
-  void soundMenu();
-  void securityMenu();
-  void listRingtones(fs::FS &fs, const char * dirname, uint8_t levels);
-  void listNotifications(fs::FS &fs, const char * dirname, uint8_t levels);
-  
+	void settingsApp();
+	int8_t settingsMenu(String* title, uint8_t length);
+	void settingsMenuDrawBox(String title, uint8_t i, int32_t y);
+	void settingsMenuDrawCursor(uint8_t i, int32_t y,  bool pressed);
+	String settingsItems[4] = {
+	"Network",
+	"Display",
+	"Sound",
+	"Security"};
+	void networkMenu();
+	void displayMenu();
+	void soundMenu();
+	void securityMenu();
+	void listRingtones(fs::FS &fs, const char * dirname, uint8_t levels);
+	void listNotifications(fs::FS &fs, const char * dirname, uint8_t levels);
+	void applySettings();
+	void saveSettings();
+	void loadSettings();
 	GUI gui;
 	Buttons buttons;
-  //Display display;
+	//Display display;
 
-    ////////////////////////////////Main_menu.ino variables
+	////////////////////////////////Main_menu.ino variables
 	String titles[6] = {
-    "Messages",
-    "Media",
-    "Contacts",
-    "Settings",
-    "Phone",
-    "Apps",
-  };
-  String BinaryFiles[255];
-  uint8_t binaryCount = 0;//Number of binary files available for loading
+	"Messages",
+	"Media",
+	"Contacts",
+	"Settings",
+	"Phone",
+	"Apps",
+	};
+	String BinaryFiles[255];
+	uint8_t binaryCount = 0;//Number of binary files available for loading
 
-  //update() variables
+	//update() variables
 
-  unsigned long buttonHeld;
-  bool blinkState;
-  int frameSpeed = 40;
-  int lastFrameCount2 = 0;
-  int smsRefresh = 0;
-  String updateBuffer;
-  uint32_t refreshMillis = millis();
-  bool dataRefreshFlag=1;
-   /////////////////////////////////////////
-  ///////////////COLLISION//////////////////
-  //////////////////////////////////////////
-  bool collideRectRect(int16_t x1, int16_t y1, int16_t w1, int16_t h1, int16_t x2, int16_t y2, int16_t w2, int16_t h2);  // Returns TRUE if the 2 rects overlap
-  bool collidePointRect(int16_t pointX, int16_t pointY, uint16_t rectX, uint16_t rectY, uint16_t rectW, uint16_t rectH);  // Returns TRUE if the point overlaps the rect
-  bool collideCircleCircle(int16_t centerX1, int16_t centerY1, int16_t r1, int16_t centerX2, int16_t centerY2, int16_t r2);  // Returns TRUE if the 2 circles overlap
-  bool collidePointCircle(int16_t pointX, int16_t pointY, int16_t centerX, int16_t centerY, int16_t r);  // Returns TRUE if the point overlaps the circle
+	unsigned long buttonHeld;
+	bool blinkState;
+	int frameSpeed = 40;
+	int lastFrameCount2 = 0;
+	int smsRefresh = 0;
+	String updateBuffer;
+	uint32_t refreshMillis = millis();
+	bool dataRefreshFlag=0;
+	bool receivedFlag = 0;
+	/////////////////////////////////////////
+	///////////////COLLISION//////////////////
+	//////////////////////////////////////////
+	bool collideRectRect(int16_t x1, int16_t y1, int16_t w1, int16_t h1, int16_t x2, int16_t y2, int16_t w2, int16_t h2);  // Returns TRUE if the 2 rects overlap
+	bool collidePointRect(int16_t pointX, int16_t pointY, uint16_t rectX, uint16_t rectY, uint16_t rectW, uint16_t rectH);  // Returns TRUE if the point overlaps the rect
+	bool collideCircleCircle(int16_t centerX1, int16_t centerY1, int16_t r1, int16_t centerX2, int16_t centerY2, int16_t r2);  // Returns TRUE if the 2 circles overlap
+	bool collidePointCircle(int16_t pointX, int16_t pointY, int16_t centerX, int16_t centerY, int16_t r);  // Returns TRUE if the point overlaps the circle
 
 private:
 	int multi_tap(byte key);

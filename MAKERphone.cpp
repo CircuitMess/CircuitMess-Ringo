@@ -21,6 +21,7 @@ Authors:
 extern MAKERphone mp;
 void MAKERphone::begin(bool splash) {
 	String input="";
+	dataRefreshFlag = 0;
 	pinMode(SIM800_DTR, OUTPUT);
 	digitalWrite(SIM800_DTR, 0);
 	pinMode(INTERRUPT_PIN, INPUT_PULLUP);
@@ -72,6 +73,7 @@ void MAKERphone::begin(bool splash) {
 	ledcAttachPin(LCD_BL_PIN, LEDC_CHANNEL);
 	ledcAnalogWrite(LEDC_CHANNEL, 255);
 
+	loadSettings();
 	applySettings();
 
 	Serial.begin(115200);
@@ -118,7 +120,7 @@ void MAKERphone::begin(bool splash) {
 	}
 
 	updateTimeGSM();
-	Serial1.println("AT+CMEE=2");
+	Serial1.println(F("AT+CMEE=2"));
 	Serial1.println(F("AT+CLVL=100"));
 	Serial1.println(F("AT+CRSL=100"));
 	Serial1.println(F("AT+CMIC=0,6"));
@@ -127,6 +129,7 @@ void MAKERphone::begin(bool splash) {
 	Serial1.println(F("AT+CLTS=1")); //Enable local Timestamp mode (used for syncrhonising RTC with GSM time
 	Serial1.println(F("AT+CPMS=\"SM\",\"SM\",\"SM\""));
 	Serial1.println(F("AT+CLCC=1"));
+	Serial1.println(F("AT&W"));
 	//  while(1){
 	//    if(Serial1.available())
 	//      Serial.println(Serial1.read());
@@ -160,7 +163,6 @@ bool MAKERphone::update() {
 	//	}
 	//}
 	char c;
-	
 	uint16_t refreshInterval = 3000;
 
 	for (int y = 0; y < BUFHEIGHT; y++) {
@@ -186,10 +188,11 @@ bool MAKERphone::update() {
 	/////////////////////////////////////////////
 	//refreshing signal and battery info////////
 	///////////////////////////////////////////
-	if (dataRefreshFlag)
+	if (dataRefreshFlag==1)
 	{
 		if (millis() - refreshMillis >= refreshInterval)
 		{
+			receivedFlag = 0;
 			updateBuffer = "";
 			Serial1.println("AT+CBC");
 			if (simInserted)
@@ -212,13 +215,13 @@ bool MAKERphone::update() {
 				{
 					if (updateBuffer.indexOf("\n", updateBuffer.indexOf("+CSPN:")) != -1)
 					{
-						carrierName = updateBuffer.substring(updateBuffer.indexOf("\"", updateBuffer.indexOf("+CSPN:"))+1, updateBuffer.indexOf("\"", updateBuffer.indexOf("\"", updateBuffer.indexOf("+CSPN:"))+1));
+						carrierName = updateBuffer.substring(updateBuffer.indexOf("\"", updateBuffer.indexOf("+CSPN:")) + 1, updateBuffer.indexOf("\"", updateBuffer.indexOf("\"", updateBuffer.indexOf("+CSPN:")) + 1));
 					}
 				}
 				if (updateBuffer.indexOf("\n", updateBuffer.indexOf("+CSQ:")) != -1)
 					signalStrength = updateBuffer.substring(updateBuffer.indexOf(" ", updateBuffer.indexOf("+CSQ:")) + 1, updateBuffer.indexOf(",", updateBuffer.indexOf(" ", updateBuffer.indexOf("+CSQ:")))).toInt();
 			}
-			if(clockYear == 4)
+			if (clockYear == 4)
 				if (updateBuffer.indexOf("\n", updateBuffer.indexOf("+CCLK:")) != -1)
 				{
 					uint16_t index = updateBuffer.indexOf(F("+CCLK: \""));
@@ -272,7 +275,10 @@ bool MAKERphone::update() {
 					Serial.println(F("\nRTC TIME UPDATE OVER GSM DONE!"));
 				}
 			if (updateBuffer.indexOf("\n", updateBuffer.indexOf("+CBC:")) != -1)
+			{
 				batteryVoltage = updateBuffer.substring(updateBuffer.indexOf(",", updateBuffer.indexOf(",", updateBuffer.indexOf("+CBC:")) + 1) + 1, updateBuffer.indexOf("\n", updateBuffer.indexOf("+CBC:"))).toInt();
+			}
+			Serial.println(updateBuffer);
 		}
 	}
 	///////////////////////////////////////////////
@@ -2916,6 +2922,7 @@ void MAKERphone::settingsApp() {
 			securityMenu();
 	}
 	applySettings();
+	saveSettings();
 }
 void MAKERphone::networkMenu() {
 	uint8_t cursor = 0;
@@ -3929,7 +3936,7 @@ void MAKERphone::securityMenu() {
 
 	}
 }
-void MAKERphone::applySettings()
+void MAKERphone::saveSettings()
 {
 	
 	const char * path = "/settings.mph";
@@ -3939,14 +3946,10 @@ void MAKERphone::applySettings()
 	switch (wifi)
 	{
 	case 0:
-		//WiFi.disconnect(true); delay(1); // disable WIFI altogether
-		//WiFi.mode(WIFI_MODE_NULL); delay(1);
 		appendFile(path, "0\n");
 		break;
 
 	case 1:
-		//WiFi.begin();
-		//delay(1);
 		appendFile(path, "1\n");
 		break;
 	}
@@ -3955,11 +3958,9 @@ void MAKERphone::applySettings()
 	{
 	case 0:
 		appendFile(path, "0\n");
-		//btStop();
 		break;
 	case 1:
 		appendFile(path, "1\n");
-		//btStart();
 		break;
 	}
 	appendFile(path, "Airplane mode: ");
@@ -3967,22 +3968,15 @@ void MAKERphone::applySettings()
 	{
 	case 0:
 		appendFile(path, "0\n");
-		Serial1.println("AT+CFUN=1");
 		break;
 
 	case 1:
 		appendFile(path, "1\n");
-		Serial1.println("AT+CFUN=4");
 		break;
 	}
 	appendFile(path, "Brightness: ");
 	itoa(brightness, helper, 10);
 	appendFile(path, helper);
-	if (brightness == 0)
-		actualBrightness = 230;
-	else
-		actualBrightness = (5 - brightness) * 51;
-	ledcAnalogWrite(LEDC_CHANNEL, actualBrightness);
 	appendFile(path, "\nSleep time: ");
 	itoa(sleepTime, helper, 10);
 	appendFile(path, helper);
@@ -3991,6 +3985,45 @@ void MAKERphone::applySettings()
 	appendFile(path, helper);
 	Serial.println(readFile(path));
 	delay(5);
+}
+void MAKERphone::applySettings()
+{
+	switch (wifi)
+	{
+	case 0:
+		//WiFi.disconnect(true); delay(1); // disable WIFI altogether
+		//WiFi.mode(WIFI_MODE_NULL); delay(1);
+		break;
+
+	case 1:
+		//WiFi.begin();
+		//delay(1);
+		break;
+	}
+	switch (bt)
+	{
+	case 0:
+		//btStop();
+		break;
+	case 1:
+		//btStart();
+		break;
+	}
+	switch (airplaneMode)
+	{
+	case 0:
+		Serial1.println("AT+CFUN=1");
+		break;
+
+	case 1:
+		Serial1.println("AT+CFUN=4");
+		break;
+	}
+	if (brightness == 0)
+		actualBrightness = 230;
+	else
+		actualBrightness = (5 - brightness) * 51;
+	ledcAnalogWrite(LEDC_CHANNEL, actualBrightness);
 	switch (sleepTime) { //interpreting value into actual numbers
 	case 0:
 		sleepTimeActual = 0;
@@ -4013,7 +4046,48 @@ void MAKERphone::applySettings()
 	}
 
 }
-
+void MAKERphone::loadSettings()
+{
+	const char * path = "/settings.mph";
+	String buffer = readFile(path);
+	Serial.println(buffer);
+	delay(5);
+	uint16_t indexHelper;
+	indexHelper = buffer.indexOf("Wifi");
+	if (buffer.indexOf("0", indexHelper) < buffer.indexOf("1", indexHelper) && buffer.indexOf("0", indexHelper) != -1 || buffer.indexOf("1") == -1)
+		wifi = 0;
+	else
+		wifi = 1;
+	Serial.print("Wifi:");
+	Serial.println(wifi);
+	delay(5);
+	indexHelper = buffer.indexOf("Bluetooth");
+	if (buffer.indexOf("0", indexHelper) < buffer.indexOf("1", indexHelper) && buffer.indexOf("0", indexHelper) != -1 || buffer.indexOf("1") == -1)
+		bt = 0;
+	else
+		bt = 1;
+	Serial.print("BT:");
+	Serial.println(bt);
+	delay(5);
+	indexHelper = buffer.indexOf("Airplane mode");
+	if (buffer.indexOf("0", indexHelper) < buffer.indexOf("1", indexHelper) && buffer.indexOf("0", indexHelper) != -1 || buffer.indexOf("1") == -1)
+		airplaneMode = 0;
+	else
+		airplaneMode = 1;
+	Serial.print("Airplane mode:");
+	Serial.println(airplaneMode);
+	delay(5);
+	indexHelper = buffer.indexOf("Brightness: ");
+	brightness = buffer.substring(indexHelper, buffer.indexOf("\n", indexHelper)).toInt();
+	Serial.print("Brightness:");
+	Serial.println(brightness);
+	delay(5);
+	indexHelper = buffer.indexOf("Background color: ");
+	backgroundIndex = buffer.substring(indexHelper, buffer.indexOf("\n", indexHelper)).toInt();
+	Serial.print("BG color:");
+	Serial.println(backgroundIndex);
+	delay(5);
+}
 
 //Buttons class
 bool Buttons::pressed(uint8_t button) {
