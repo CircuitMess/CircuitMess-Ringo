@@ -73,8 +73,12 @@ void MAKERphone::begin(bool splash) {
 	ledcAttachPin(LCD_BL_PIN, LEDC_CHANNEL);
 	ledcAnalogWrite(LEDC_CHANNEL, 255);
 
-	loadSettings();
-	applySettings();
+	if (SD.begin())
+	{
+		SDinsertedFlag = 1;
+		loadSettings();
+		applySettings();
+	}
 
 	Serial.begin(115200);
 
@@ -105,7 +109,7 @@ void MAKERphone::begin(bool splash) {
 	}
 	
 	ledcAnalogWrite(LEDC_CHANNEL, 255);
-	for (uint8_t i = 255; i > 0; i--) {
+	for (uint8_t i = 255; i > actualBrightness; i--) {
 		ledcAnalogWrite(LEDC_CHANNEL, i);
 		delay(2);
 	}
@@ -135,7 +139,6 @@ void MAKERphone::begin(bool splash) {
 	//      Serial.println(Serial1.read());
 	//  }
 	//Serial1.println(F("AT&W")); //Save  all settings in SIM's non-volatile memory
-
 	Serial.println("Serial1 up and running...");
 
 }
@@ -188,28 +191,28 @@ bool MAKERphone::update() {
 	/////////////////////////////////////////////
 	//refreshing signal and battery info////////
 	///////////////////////////////////////////
-	if (dataRefreshFlag==1)
+	if (dataRefreshFlag)
 	{
 		if (millis() - refreshMillis >= refreshInterval)
 		{
 			receivedFlag = 0;
 			updateBuffer = "";
 			Serial1.println("AT+CBC");
-			if (simInserted)
+			if (simInserted && !airplaneMode)
 			{
 				Serial1.println("AT+CSQ");
 				if (carrierName == "")
 					Serial1.println("AT+CSPN?");
+				if (clockYear == 4 || clockYear == 80 || clockMonth == 0 || clockMonth > 12 || clockHour > 24 || clockMinute >= 60)
+					Serial1.println("AT+CCLK?");
 			}
-			if (clockYear == 4 || clockYear == 80)
-				Serial1.println("AT+CCLK?");
 			refreshMillis = millis();
 		}
 		if (Serial1.available())
 		{
 			c = Serial1.read();
 			updateBuffer += c;
-			if (simInserted)
+			if (simInserted && !airplaneMode)
 			{
 				if (carrierName == "")
 				{
@@ -220,65 +223,65 @@ bool MAKERphone::update() {
 				}
 				if (updateBuffer.indexOf("\n", updateBuffer.indexOf("+CSQ:")) != -1)
 					signalStrength = updateBuffer.substring(updateBuffer.indexOf(" ", updateBuffer.indexOf("+CSQ:")) + 1, updateBuffer.indexOf(",", updateBuffer.indexOf(" ", updateBuffer.indexOf("+CSQ:")))).toInt();
+				if (clockYear == 4 || clockYear == 80 || clockMonth == 0 || clockMonth > 12 || clockHour > 24 || clockMinute >= 60 || doubleCheck)
+					if (updateBuffer.indexOf("\n", updateBuffer.indexOf("+CCLK:")) != -1)
+					{
+						uint16_t index = updateBuffer.indexOf(F("+CCLK: \""));
+						char c1, c2; //buffer for saving date and time numerals in form of characters
+						c1 = updateBuffer.charAt(index + 8);
+						c2 = updateBuffer.charAt(index + 9);
+						clockYear = 2000 + ((c1 - '0') * 10) + (c2 - '0');
+						Serial.println(F("CLOCK YEAR:"));
+						Serial.println(clockYear);
+						delay(5);
+						clockYear = ((c1 - '0') * 10) + (c2 - '0');
+
+						c1 = updateBuffer.charAt(index + 11);
+						c2 = updateBuffer.charAt(index + 12);
+						clockMonth = ((c1 - '0') * 10) + (c2 - '0');
+						Serial.println(F("CLOCK MONTH:"));
+						Serial.println(clockMonth);
+
+						c1 = updateBuffer.charAt(index + 14);
+						c2 = updateBuffer.charAt(index + 15);
+						clockDay = ((c1 - '0') * 10) + (c2 - '0');
+						Serial.println(F("CLOCK DAY:"));
+						Serial.println(clockDay);
+
+						c1 = updateBuffer.charAt(index + 17);
+						c2 = updateBuffer.charAt(index + 18);
+						clockHour = ((c1 - '0') * 10) + (c2 - '0');
+						Serial.println(F("CLOCK HOUR:"));
+						Serial.println(clockHour);
+
+						c1 = updateBuffer.charAt(index + 20);
+						c2 = updateBuffer.charAt(index + 21);
+						clockMinute = ((c1 - '0') * 10) + (c2 - '0');
+						Serial.println(F("CLOCK MINUTE:"));
+						Serial.println(clockMinute);
+
+						c1 = updateBuffer.charAt(index + 23);
+						c2 = updateBuffer.charAt(index + 24);
+						clockSecond = ((c1 - '0') * 10) + (c2 - '0');
+						Serial.println(F("CLOCK SECOND:"));
+						Serial.println(clockSecond);
+
+						//TO-DO: UPDATE THE RTC HERE
+
+						buttons.kpd.setHour(clockHour);
+						buttons.kpd.setMinute(clockMinute);
+						buttons.kpd.setSecond(clockSecond);
+						buttons.kpd.setDate(clockDay);
+						buttons.kpd.setMonth(clockMonth);
+						buttons.kpd.setYear(clockYear);
+						Serial.println(F("\nRTC TIME UPDATE OVER GSM DONE!"));
+					}
 			}
-			if (clockYear == 4)
-				if (updateBuffer.indexOf("\n", updateBuffer.indexOf("+CCLK:")) != -1)
-				{
-					uint16_t index = updateBuffer.indexOf(F("+CCLK: \""));
-					char c1, c2; //buffer for saving date and time numerals in form of characters
-					c1 = updateBuffer.charAt(index + 8);
-					c2 = updateBuffer.charAt(index + 9);
-					clockYear = 2000 + ((c1 - '0') * 10) + (c2 - '0');
-					Serial.println(F("CLOCK YEAR:"));
-					Serial.println(clockYear);
-					delay(5);
-					clockYear = ((c1 - '0') * 10) + (c2 - '0');
-
-					c1 = updateBuffer.charAt(index + 11);
-					c2 = updateBuffer.charAt(index + 12);
-					clockMonth = ((c1 - '0') * 10) + (c2 - '0');
-					Serial.println(F("CLOCK MONTH:"));
-					Serial.println(clockMonth);
-
-					c1 = updateBuffer.charAt(index + 14);
-					c2 = updateBuffer.charAt(index + 15);
-					clockDay = ((c1 - '0') * 10) + (c2 - '0');
-					Serial.println(F("CLOCK DAY:"));
-					Serial.println(clockDay);
-
-					c1 = updateBuffer.charAt(index + 17);
-					c2 = updateBuffer.charAt(index + 18);
-					clockHour = ((c1 - '0') * 10) + (c2 - '0');
-					Serial.println(F("CLOCK HOUR:"));
-					Serial.println(clockHour);
-
-					c1 = updateBuffer.charAt(index + 20);
-					c2 = updateBuffer.charAt(index + 21);
-					clockMinute = ((c1 - '0') * 10) + (c2 - '0');
-					Serial.println(F("CLOCK MINUTE:"));
-					Serial.println(clockMinute);
-
-					c1 = updateBuffer.charAt(index + 23);
-					c2 = updateBuffer.charAt(index + 24);
-					clockSecond = ((c1 - '0') * 10) + (c2 - '0');
-					Serial.println(F("CLOCK SECOND:"));
-					Serial.println(clockSecond);
-
-					//TO-DO: UPDATE THE RTC HERE
-
-					buttons.kpd.setHour(clockHour);
-					buttons.kpd.setMinute(clockMinute);
-					buttons.kpd.setSecond(clockSecond);
-					buttons.kpd.setDate(clockDay);
-					buttons.kpd.setMonth(clockMonth);
-					buttons.kpd.setYear(clockYear);
-					Serial.println(F("\nRTC TIME UPDATE OVER GSM DONE!"));
-				}
+			
 			if (updateBuffer.indexOf("\n", updateBuffer.indexOf("+CBC:")) != -1)
 			{
 				batteryVoltage = updateBuffer.substring(updateBuffer.indexOf(",", updateBuffer.indexOf(",", updateBuffer.indexOf("+CBC:")) + 1) + 1, updateBuffer.indexOf("\n", updateBuffer.indexOf("+CBC:"))).toInt();
 			}
-			Serial.println(updateBuffer);
 		}
 	}
 	///////////////////////////////////////////////
@@ -482,7 +485,7 @@ void MAKERphone::lockScreen() {
 		  display.setCursor(10, 50);
 		  display.print("12:00");*/
 		uint8_t helper = 11;
-		if (simInserted)
+		if (simInserted && !airplaneMode)
 		{
 			if (signalStrength <= 3)
 				display.drawBitmap(1, 1, noSignalIcon);
@@ -495,7 +498,7 @@ void MAKERphone::lockScreen() {
 			else if (signalStrength == 99)
 				display.drawBitmap(1, 1, signalErrorIcon);
 		}
-		else
+		else if(!simInserted && !airplaneMode)
 			display.drawBitmap(1, 1, signalErrorIcon);
 		if (volume == 0)
 		{
@@ -515,12 +518,16 @@ void MAKERphone::lockScreen() {
 				display.drawBitmap(helper, 1, BTon);
 			else
 				display.drawBitmap(helper, 1, BToff);
+			helper += 10;
 		}
 		else
 		{
 			display.drawBitmap(helper, 1, airplaneModeIcon);
 			helper += 10;
 		}
+		if(!SDinsertedFlag)
+			display.drawBitmap(helper, 1, noSDIcon);
+
 		if (batteryVoltage > 4000)
 			display.drawBitmap(74, 1, batteryCharging);
 		else if (batteryVoltage <= 4000 && batteryVoltage >= 3800)
@@ -880,74 +887,76 @@ void MAKERphone::updateFromFS(fs::FS &fs, String FilePath) {
 		Serial.println("Could not load update.bin from sd root");
 	}
 }
-void MAKERphone::mainMenu() {
-	while (buttons.kpd.pin_read(BTN_A) == 0);
-	Serial.println("entered main menu");
-
-	uint8_t index = gui.drawCursor(width + 1, width + 1, 3, 2, 0, 7);
-
-	if (titles[index] == "Apps")
-	{
-		display.fillScreen(TFT_BLACK);
-		update();
-		if (!SD.begin()) {
-			display.setCursor(0, 0);
-			display.println("\nCard Mount Failed");
-			update();
-			return;
-		}
-		listDir(SD, "/", 0);
-
-		update();
-		int8_t index = gui.menu("Load from SD", BinaryFiles, binaryCount);
-
-		if (index != -1) {  //IF BUTTON "BACK" WAS NOT PRESSED
-			display.fillScreen(TFT_BLACK);
-			display.setCursor(0, 0);
-			display.print("You picked:");
-			display.println(BinaryFiles[index]);
-			display.print("LOADING NOW...");
-			update();
-			delay(1000);
-			if (!SD.begin()) {
-				display.println("Card Mount Failed");
-				return;
-			}
-			listDir(SD, "/", 0);
-			updateFromFS(SD, BinaryFiles[index]);
-		}
-
-
-	}
-
-	if (titles[index] == "Messages")
-	{
-		display.fillScreen(TFT_BLACK);
-		display.setCursor(22, 30);
-		display.print("Loading");
-		display.setCursor(20, 36);
-		display.print("messages...");
-		update();
-		messagesApp();
-	}
-
-	if (titles[index] == "Media")
-		mediaApp();
-	if (titles[index] == "Phone")
-		phoneApp();
-	if (titles[index] == "Contacts")
-		contactsApp();
-	if (titles[index] == "Settings")
-	{
-		settingsApp();
-		Serial.println(brightness);
-		applySettings();
-		
-	}
-
-
-
-}
+//void MAKERphone::mainMenu() {
+//	while (buttons.kpd.pin_read(BTN_A) == 0);
+//	Serial.println("entered main menu");
+//
+//	uint8_t index = gui.drawCursor(width + 1, width + 1, 3, 2, 0, 7);
+//	Serial.println(simInserted);
+//	Serial.println(airplaneMode);
+//	delay(5);
+//	if (titles[index] == "Apps")
+//	{
+//		display.fillScreen(TFT_BLACK);
+//		update();
+//		if (!SD.begin()) {
+//			display.setCursor(0, 0);
+//			display.println("\nCard Mount Failed");
+//			update();
+//			return;
+//		}
+//		listDir(SD, "/", 0);
+//
+//		update();
+//		int8_t index = gui.menu("Load from SD", BinaryFiles, binaryCount);
+//
+//		if (index != -1) {  //IF BUTTON "BACK" WAS NOT PRESSED
+//			display.fillScreen(TFT_BLACK);
+//			display.setCursor(0, 0);
+//			display.print("You picked:");
+//			display.println(BinaryFiles[index]);
+//			display.print("LOADING NOW...");
+//			update();
+//			delay(1000);
+//			if (!SD.begin()) {
+//				display.println("Card Mount Failed");
+//				return;
+//			}
+//			listDir(SD, "/", 0);
+//			updateFromFS(SD, BinaryFiles[index]);
+//		}
+//
+//
+//	}
+//
+//	if (titles[index] == "Messages" && simInserted && !airplaneMode)
+//	{
+//		display.fillScreen(TFT_BLACK);
+//		display.setCursor(22, 30);
+//		display.print("Loading");
+//		display.setCursor(20, 36);
+//		display.print("messages...");
+//		update();
+//		messagesApp();
+//	}
+//
+//	if (titles[index] == "Media")
+//		mediaApp();
+//	if (titles[index] == "Phone" && simInserted && !airplaneMode)
+//		phoneApp();
+//	if (titles[index] == "Contacts" && simInserted && !airplaneMode)
+//		contactsApp();
+//	if (titles[index] == "Settings")
+//	{
+//		settingsApp();
+//		Serial.println(brightness);
+//		applySettings();
+//		
+//	}
+//
+//
+//
+//}
 void MAKERphone::bigIconsMainMenu() {
 	Serial.begin(115200);
 	while (buttons.kpd.pin_read(BTN_A) == 0);
@@ -994,7 +1003,7 @@ void MAKERphone::bigIconsMainMenu() {
 
 		}
 
-		if (titles[index] == "Messages")
+		if (titles[index] == "Messages" && simInserted && !airplaneMode)
 		{
 			display.fillScreen(TFT_BLACK);
 			display.setCursor(22, 30);
@@ -1007,9 +1016,9 @@ void MAKERphone::bigIconsMainMenu() {
 
 		if (titles[index] == "Media")
 			mediaApp();
-		if (titles[index] == "Phone")
+		if (titles[index] == "Phone" && simInserted && !airplaneMode)
 			phoneApp();
-		if (titles[index] == "Contacts") {
+		if (titles[index] == "Contacts" && simInserted && !airplaneMode) {
 			contactsApp();
 		}
 
@@ -2922,7 +2931,8 @@ void MAKERphone::settingsApp() {
 			securityMenu();
 	}
 	applySettings();
-	saveSettings();
+	if(SDinsertedFlag)
+		saveSettings();
 }
 void MAKERphone::networkMenu() {
 	uint8_t cursor = 0;
@@ -3983,6 +3993,7 @@ void MAKERphone::saveSettings()
 	appendFile(path, "\nBackground color: ");
 	itoa(backgroundIndex, helper, 10);
 	appendFile(path, helper);
+
 	Serial.println(readFile(path));
 	delay(5);
 }
@@ -4048,6 +4059,8 @@ void MAKERphone::applySettings()
 }
 void MAKERphone::loadSettings()
 {
+	Serial.begin(115200);
+	while (!SD.begin());
 	const char * path = "/settings.mph";
 	String buffer = readFile(path);
 	Serial.println(buffer);
@@ -4077,12 +4090,14 @@ void MAKERphone::loadSettings()
 	Serial.print("Airplane mode:");
 	Serial.println(airplaneMode);
 	delay(5);
-	indexHelper = buffer.indexOf("Brightness: ");
+
+	indexHelper = buffer.indexOf("Brightness: ") + sizeof("Brightness: ")-1;
 	brightness = buffer.substring(indexHelper, buffer.indexOf("\n", indexHelper)).toInt();
 	Serial.print("Brightness:");
 	Serial.println(brightness);
 	delay(5);
-	indexHelper = buffer.indexOf("Background color: ");
+	
+	indexHelper = buffer.indexOf("Background color: ") + sizeof("Background color: ") - 1;
 	backgroundIndex = buffer.substring(indexHelper, buffer.indexOf("\n", indexHelper)).toInt();
 	Serial.print("BG color:");
 	Serial.println(backgroundIndex);
