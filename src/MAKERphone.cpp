@@ -1778,25 +1778,26 @@ void MAKERphone::messagesApp() {
 	//sim800.flush();
 	/*while (sim800.available())
 	  input += (char)sim800.read();*/
-
-	input = readAllSms();
-	while (input == "")
+	Serial1.println(F("AT+CPMS?"));
+	while (input.indexOf("\n", input.indexOf("+CPMS:")) == -1)
 	{
-		delay(100);
-		input = readAllSms();
+		input = readSerial();
 	}
+	input = input.substring(input.indexOf("+CPMS:"), input.indexOf("\n", input.indexOf("+CPMS:")));
+	uint16_t helper;
+	if (input.indexOf("SM") == -1)
+		helper = input.indexOf("+CPMS: ")+7;
+	else
+		helper = input.indexOf("+CPMS: \"SM\",")+12;	
+	currentMessageNumber=input.substring(helper, input.indexOf(",", helper + 1)).toInt();
+	//input = readAllSms();
+	/*while (input.indexOf("AT+CMGL") == -1)
+	{
+		input = readSerial();
+	}*/
+	//input = readSerial();
 	//Serial.println(input);
-	if (input == "ERROR")
-	{
-		display.fillScreen(TFT_BLACK);
-		display.setCursor(5, 34);
-		display.setTextColor(TFT_WHITE);
-		display.printCenter("Error loading SMS!");
-		while (!update());
-		while (!buttons.released(BTN_A) && !buttons.released(BTN_B))
-			update();
-	}
-	else if (input == "OK")
+	if (currentMessageNumber == 0)
 	{
 		display.setFreeFont(TT1);
 		display.fillScreen(TFT_BLACK);
@@ -1809,11 +1810,12 @@ void MAKERphone::messagesApp() {
 	}
 	else
 	{
-		currentMessageNumber = countSubstring(input, "CMGL:");
+		Serial.println(input);
+		delay(5);
 
 
 		/////////////////////////////////////////////////////
-		//parsing the raw data input for contact number,
+		//parsing the raw input data for contact number,
 		//date and text content
 		////////////////////////////////////////////////////
 		for (uint8_t i = 0; i < smsNumber; i++)
@@ -1927,7 +1929,7 @@ String MAKERphone::readAllSms() {
 	else
 		return "";
 
-	
+
 }
 void MAKERphone::viewSms(String content, String contact, String date) {
 	y = 14;  //Beggining point
@@ -2036,6 +2038,7 @@ void MAKERphone::smsMenuDrawBox(String contact, String date, String content, uin
 	display.drawString(contact, 3, y + 2);
 	display.drawString(date, 3, y + 8);
 	display.drawString(content, 3, y + 14);
+	display.drawFastVLine(79, y, 20, TFT_BLACK);
 
 }
 void MAKERphone::smsMenuDrawCursor(uint8_t i, int32_t y) {
