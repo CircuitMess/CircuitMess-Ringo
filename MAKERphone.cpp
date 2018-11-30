@@ -48,7 +48,7 @@ void MAKERphone::begin(bool splash) {
 			}
 		}
 
-	}	
+	}
 	pixels.clear();
 	for (uint8_t x = 0; x < NUMPIXELS;x++)
 		pixels.setPixelColor(x, 0, 0, 0);
@@ -91,7 +91,7 @@ void MAKERphone::begin(bool splash) {
 	buf.createSprite(BUF2WIDTH, BUF2HEIGHT); // Create the sprite and clear background to black
 	//buf2.setRotation(1);
 	buf.setTextSize(1);
-	
+
 	if (splash == 1)
 	{
 		display.fillScreen(TFT_RED);
@@ -101,7 +101,7 @@ void MAKERphone::begin(bool splash) {
 		display.fillScreen(TFT_BLACK);
 		while (!update());
 	}
-	
+
 	ledcAnalogWrite(LEDC_CHANNEL, 255);
 	for (uint8_t i = 255; i > 0; i--) {
 		ledcAnalogWrite(LEDC_CHANNEL, i);
@@ -158,7 +158,7 @@ bool MAKERphone::update() {
 	//		//handleCall();
 	//	}
 	//}
-	
+
 	for (int y = 0; y < BUFHEIGHT; y++) {
 		for (int x = 0; x < BUFWIDTH; x++) {
 			buf.fillRect(x * 2, y * 2, 2, 2, display.readPixel(x, y));
@@ -175,10 +175,10 @@ bool MAKERphone::update() {
 	}
 	else if(!digitalRead(35) && sleepTime)
 		sleepTimer = millis();
-	
+
 	if (millis() - lastFrameCount2 >= frameSpeed) {
 		lastFrameCount2 = millis();
-		
+
 		buf.pushSprite(0, 0);
 		buttons.update();
 		gui.updatePopup();
@@ -194,14 +194,14 @@ bool MAKERphone::update() {
 		if (pixelUpdate == 3)
 		{
 			pixelUpdate = 0;
-			
+
 		}
 			*/
 		return true;
 	}
 	else
 		return false;
-	
+
 }
 void MAKERphone::splashScreen() {
 	display.setFreeFont(TT1);
@@ -214,7 +214,7 @@ void MAKERphone::splashScreen() {
 		update();
 		while (Serial1.available())
 			input += (char)Serial1.read();
-		
+
 		delay(20);
 	}
 	Serial.println(input);
@@ -230,7 +230,7 @@ void MAKERphone::splashScreen() {
 	}
 	Serial.println(input);
 	delay(5);
-	
+
 	if (input.indexOf("NOT READY", input.indexOf("+CPIN:")) != -1 || input.indexOf("ERROR") != -1
 		|| input.indexOf("NOT INSERTED") != -1 )
 	{
@@ -242,11 +242,11 @@ void MAKERphone::splashScreen() {
 		if (input.indexOf("SIM PIN") != -1)
 			enterPin();
 	}
-	
-	
-	
 
-	
+
+
+
+
 }
 void MAKERphone::tone2(int pin, int freq, int duration) {
 	ledcWriteTone(0, freq);
@@ -306,7 +306,7 @@ void MAKERphone::sleep() {
 void MAKERphone::lockScreen() {
 	Serial.begin(115200);
 	bool goOut = 0;
-	uint8_t updatePixels = 0;	
+	uint8_t updatePixels = 0;
 	//pixels.clear();
 	//delay(1);
 	//pixels.show();
@@ -437,7 +437,7 @@ void MAKERphone::lockScreen() {
 
 					/*if (updatePixels == 0) {
 						pixels.clear();
-						
+
 						delay(1);
 						pixels.show();
 						Serial.println("Pixels.show()");
@@ -454,7 +454,7 @@ void MAKERphone::lockScreen() {
 					pixels.setPixelColor(1, hslRed);
 					pixels.setPixelColor(6, hslRed);
 					/*if (updatePixels == 1) {
-						
+
 						delay(1);
 						pixels.show();
 						Serial.println("Pixels.show()");
@@ -473,7 +473,7 @@ void MAKERphone::lockScreen() {
 					pixels.setPixelColor(2, hslRed);
 					pixels.setPixelColor(5, hslRed);
 					/*if (updatePixels == 2) {
-						
+
 						delay(1);
 						pixels.show();
 						Serial.println("Pixels.show()");
@@ -491,7 +491,7 @@ void MAKERphone::lockScreen() {
 					pixels.setPixelColor(3, hslRed);
 					pixels.setPixelColor(4, hslRed);
 					/*if (updatePixels == 3) {
-						
+
 						delay(1);
 						pixels.show();
 						Serial.println("Pixels.show()");
@@ -797,7 +797,7 @@ void MAKERphone::mainMenu() {
 		settingsApp();
 		Serial.println(brightness);
 		applySettings();
-		
+
 	}
 
 
@@ -999,7 +999,7 @@ void MAKERphone::callNumber(String number) {
 		{
 			if (localBuffer.indexOf("ERROR") != -1)
 			{
-				
+
 				display.setCursor(3, 9);
 				display.println("Couldn't dial number!");
 				display.drawBitmap(29, 24, call_icon, TFT_RED);
@@ -1256,7 +1256,7 @@ void MAKERphone::incomingCall()
 void MAKERphone::checkSim()
 {
 	String input = "";
-	
+
 	while (input.indexOf("+CPIN:") == -1 && input.indexOf("ERROR", input.indexOf("+CPIN")) == -1) {
 		Serial1.println(F("AT+CPIN?"));
 		input = Serial1.readString();
@@ -1275,25 +1275,25 @@ void MAKERphone::checkSim()
 		simInserted = 1;
 		if (input.indexOf("SIM PIN") != -1)
 			enterPin();
-		
+
 	}
 
 }
 void MAKERphone::enterPin()
 {
-	
+
 	uint8_t timesRemaining;
 	char key = NO_KEY;
 	String pinBuffer = "";
 	String reply = "";
-	
+
 	while (reply.indexOf("+SPIC:") == -1)
 	{
 		Serial1.println("AT+SPIC");
 		reply = Serial1.readString();
 	}
 	timesRemaining = reply.substring(reply.indexOf(" ", reply.indexOf("+SPIC:")), reply.indexOf(",")).toInt();
-	
+
 	while (1)
 	{
 		display.setTextFont(1);
@@ -1301,7 +1301,7 @@ void MAKERphone::enterPin()
 		display.fillScreen(TFT_BLACK);
 		display.setCursor(5, 5);
 		display.printCenter("Enter pin:");
-		
+
 		display.setCursor(1, 30);
 		display.printCenter(pinBuffer);
 		display.setCursor(1, 63);
@@ -1319,7 +1319,7 @@ void MAKERphone::enterPin()
 			pinBuffer.remove(pinBuffer.length() - 1);
 		if (key != NO_KEY && isDigit(key) && pinBuffer.length() != 4)
 			pinBuffer += key;
-		
+
 
 		if (buttons.released(BTN_A))//enter PIN
 		{
@@ -1348,7 +1348,7 @@ void MAKERphone::enterPin()
 				while (!update());
 				delay(2000);
 			}
-			
+
 
 
 		}
@@ -1357,9 +1357,8 @@ void MAKERphone::enterPin()
 		update();
 	}
 }
-String MAKERphone::textInput(String buffer)
+String MAKERphone::textInput(String buffer, uint8_t length = -1)
 {
-	
 	int ret = 0;
 	byte key = mp.buttons.kpdNum.getKey(); // Get a key press from the keypad
 	if (key == 'C' && buffer != "")
@@ -1373,22 +1372,24 @@ String MAKERphone::textInput(String buffer)
 		buffer = "";
 		textPointer = 0;
 	}
-	else if (key == '*')
-		buffer += ' ';
-	if (key != 'B' && key != 'D' && key != 'A')
-	{
-		ret = multi_tap(key);// Feed the key press to the multi_tap function.
-		if ((ret & 256) != 0) // If this is non-zero, we got a key. Handle some special keys or just print the key on screen
-		{
-			textPointer++;
 
-		}
-		else if (ret) // We don't have a key but the user is still cycling through characters on one key so we need to update the screen
+	if(length == -1 || length > buffer.length()){
+		if (key == '*') buffer += ' ';
+		if (key != 'B' && key != 'D' && key != 'A')
 		{
-			if (textPointer == buffer.length())
-				buffer += char(lowByte(ret));
-			else
-				buffer[buffer.length() - 1] = char(lowByte(ret));
+			ret = multi_tap(key);// Feed the key press to the multi_tap function.
+			if ((ret & 256) != 0) // If this is non-zero, we got a key. Handle some special keys or just print the key on screen
+			{
+				textPointer++;
+
+			}
+			else if (ret) // We don't have a key but the user is still cycling through characters on one key so we need to update the screen
+			{
+				if (textPointer == buffer.length())
+					buffer += char(lowByte(ret));
+				else
+					buffer[buffer.length() - 1] = char(lowByte(ret));
+			}
 		}
 	}
 	return buffer;
@@ -1693,7 +1694,7 @@ String MAKERphone::readAllSms() {
 	else
 		return "";
 
-	
+
 }
 void MAKERphone::viewSms(String content, String contact, String date) {
 	y = 14;  //Beggining point
@@ -1791,7 +1792,7 @@ void MAKERphone::viewSms(String content, String contact, String date) {
 	}
 }
 void MAKERphone::smsMenuDrawBox(String contact, String date, String content, uint8_t i, int32_t y) {
-	
+
 	y += (i-1) * 20 + composeBoxHeight + menuYOffset;
 	if (y < 0 || y > BUFHEIGHT) {
 		return;
@@ -1937,10 +1938,10 @@ void MAKERphone::composeSMS()
 		display.setTextColor(TFT_WHITE);
 		display.setCursor(1, 6);
 		display.print("To: ");
-		
+
 		display.drawFastHLine(0, 7, LCDWIDTH, TFT_BLACK);
 		display.setFreeFont(TT1);
-		if (millis() - elapsedMillis >= multi_tap_threshold) //cursor blinking routine 
+		if (millis() - elapsedMillis >= multi_tap_threshold) //cursor blinking routine
 		{
 			elapsedMillis = millis();
 			blinkState = !blinkState;
@@ -2087,8 +2088,8 @@ void MAKERphone::composeSMS()
 			break;
 		}
 
-		
-		
+
+
 
 		update();
 	}
@@ -2142,11 +2143,13 @@ uint8_t MAKERphone::deleteContact(String contact, String number, String id)
 
 		if (buttons.released(BTN_B)) //BUTTON BACK
 		{
+			Serial.println("Go back");
 			while (!update());
 			break;
 		}
 		if (buttons.released(BTN_A)) // DELETE
 		{
+			Serial.println("DElete");
 			display.fillScreen(TFT_BLACK);
 			display.setFreeFont(TT1);
 			display.setCursor(34, 32);
@@ -2155,10 +2158,13 @@ uint8_t MAKERphone::deleteContact(String contact, String number, String id)
 
 			Serial1.print("AT+CPBW=");
 			Serial1.println(id);
+			Serial.print("AT+CPBW=");
+			Serial.println(id);
 
 			while (Serial1.readString().indexOf("OK") != -1);
 			display.fillScreen(TFT_BLACK);
 			display.printCenter("Contact deleted!");
+			Serial.println("Contact deleted");
 			while (!update());
 			delay(1000);
 			return 1;
@@ -2191,7 +2197,7 @@ uint8_t MAKERphone::newContact()
 		display.drawFastHLine(0, 7, LCDWIDTH, TFT_BLACK);
 		display.setFreeFont(TT1);
 
-		if (millis() - elapsedMillis >= multi_tap_threshold) //cursor blinking routine 
+		if (millis() - elapsedMillis >= multi_tap_threshold) //cursor blinking routine
 		{
 			elapsedMillis = millis();
 			blinkState = !blinkState;
@@ -2203,7 +2209,7 @@ uint8_t MAKERphone::newContact()
 				contact = "";
 			else if (key == 'C')
 				contact.remove(contact.length() - 1);
-			if (key != NO_KEY && isdigit(key))
+			if (key != NO_KEY && isdigit(key) && contact.length() < 14)
 				contact += key;
 			display.setTextWrap(1);
 			display.setCursor(2, 10);
@@ -2237,7 +2243,7 @@ uint8_t MAKERphone::newContact()
 			else
 				display.print(contact);
 			prevContent = content;
-			content = textInput(content);
+			content = textInput(content, 12);
 			if (prevContent != content)
 			{
 				blinkState = 1;
@@ -2281,7 +2287,7 @@ uint8_t MAKERphone::newContact()
 				display.fillScreen(TFT_BLACK);
 				display.setFreeFont(TT1);
 				display.setCursor(34, 32);
-				display.printCenter("Inserting contact...");
+				display.printCenter("Inserting contact");
 				while (!update());
 
 				Serial1.print("AT+CPBW=,\"");
@@ -2292,7 +2298,8 @@ uint8_t MAKERphone::newContact()
 
 				while (Serial1.readString().indexOf("OK") != -1);
 				display.fillScreen(TFT_BLACK);
-				display.printCenter("Contact insreted!");
+				display.setCursor(34, 32);
+				display.printCenter("Contact inserted");
 				while (!update());
 				delay(1000);
 				return 1;
@@ -2442,7 +2449,7 @@ void MAKERphone::contactsApp() {
 	String input = readAllContacts();
 	int count_try = 0;
 	while (input == "") {
-		if(count_try > 2) delay(1000);
+		if(count_try > 0) delay(1000);
 		Serial.println("try again");
 		input = readAllContacts();
 		count_try++;
@@ -2473,7 +2480,7 @@ void MAKERphone::contactsApp() {
 		uint16_t foo = 0;
 		uint16_t bar = 0;
 		/////////////////////////////////////////////////////
-		//parsing the raw data input for contact number, 
+		//parsing the raw data input for contact number,
 		//date and text content
 		////////////////////////////////////////////////////
 		Serial.println(input);
@@ -2492,23 +2499,29 @@ void MAKERphone::contactsApp() {
 			contactName[i] = input.substring(start + 1, end);
 		}
 		while(1){
+			int menuChoice = -1;
 			if(change){
+				Serial.println("realoding data bullshit");
 				display.fillScreen(TFT_BLACK);
-				display.setCursor(16, 35);
 				display.setFreeFont(TT1);
-				display.print("Reloading data");
+				display.setCursor(34, 32);
+				display.printCenter("Reloading data...");
 				while (!update());
 
-				String input = "";
+				delay(1000);
+
+				input = "";
 				int count_try = 0;
+				bool flag = 0;
 				while (input == "") {
-					if(count_try > 2) delay(1000);
+					if(count_try > 4) { flag = 1; break; }
+					delay(1000);
 					Serial.println("try again");
 					input = readAllContacts();
 					count_try++;
 				}
-				if (input.indexOf("CPBR:") == -1)
-				{
+
+				if (input.indexOf("CPBR:") == -1 || flag) {
 					display.fillScreen(TFT_BLACK);
 					display.setCursor(16, 35);
 					display.setFreeFont(TT1);
@@ -2516,6 +2529,7 @@ void MAKERphone::contactsApp() {
 					while (buttons.released(BTN_B) == 0)//BUTTON BACK
 						while (!update());
 					while (!update());
+					break;
 				}
 				else
 				{
@@ -2533,7 +2547,7 @@ void MAKERphone::contactsApp() {
 					uint16_t foo = 0;
 					uint16_t bar = 0;
 					/////////////////////////////////////////////////////
-					//parsing the raw data input for contact number, 
+					//parsing the raw data input for contact number,
 					//date and text content
 					////////////////////////////////////////////////////
 					Serial.println(input);
@@ -2551,10 +2565,18 @@ void MAKERphone::contactsApp() {
 						end = input.indexOf("\"", start + 1);
 						contactName[i] = input.substring(start + 1, end);
 					}
+
+					Serial.println("done parsing data");
+
+					for(int i = 0; i<contactNumber; i++){
+						Serial.println(contactName[i]);
+					}
+
+					menuChoice = contactsMenu("Contacts", contactName, phoneNumber, contactNumber);
+					change = 0;
 				}
-			}
-			int menuChoice = contactsMenu("Contacts", contactName, phoneNumber, contactNumber);
-			change = 0;
+			} else menuChoice = contactsMenu("Contacts", contactName, phoneNumber, contactNumber);
+
 			update();
 			if (menuChoice != -2)
 			{
@@ -2609,7 +2631,7 @@ void MAKERphone::dialer() {
 	String callBuffer = "";
 	char key = NO_KEY;
 	display.setTextWrap(0);
-	
+
 	while (1)
 	{
 		display.fillScreen(TFT_BLACK);
@@ -2640,7 +2662,7 @@ void MAKERphone::dialer() {
 			display.setCursor(BUFWIDTH - display.cursor_x, 53);
 			display.print(callBuffer);
 		}
-		
+
 
 		if (buttons.kpd.pin_read(BTN_A) == 0)//initate call
 		{
@@ -2982,7 +3004,7 @@ int8_t MAKERphone::settingsMenu(String* title, uint8_t length) {
 			return -1;
 		}
 	}
-	
+
 	return cursor;
 
 }
