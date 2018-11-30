@@ -1,0 +1,56 @@
+{
+    "name": "ESP8266Spiram", 
+    "version": "1.0", 
+    "keywords": [
+        "data", 
+        "processing"
+    ], 
+    "description": "Arduino IDE ESP8266 - SPI additional RAM Library.", 
+    "frameworks": [
+        "arduino"
+    ], 
+    "platforms": [
+        "atmelavr", 
+        "atmelsam", 
+        "espressif32", 
+        "espressif8266", 
+        "intel_arc32", 
+        "microchippic32", 
+        "nordicnrf51", 
+        "nordicnrf52", 
+        "ststm32", 
+        "teensy", 
+        "timsp430"
+    ], 
+    "authors": [
+        {
+            "email": null, 
+            "url": null, 
+            "maintainer": false, 
+            "name": "Giancarlo Bacchio"
+        }, 
+        {
+            "email": "bacchio.giancarlo@gmail.com", 
+            "url": null, 
+            "maintainer": true, 
+            "name": "Giancarlo"
+        }
+    ], 
+    "repository": {
+        "type": "git", 
+        "url": "https://github.com/Gianbacchio/ESP8266_Spiram"
+    }, 
+    "homepage": "https://github.com/Gianbacchio/ESP8266_Spiram/tree/master", 
+    "export": {
+        "include": null, 
+        "exclude": [
+            "extras", 
+            "docs", 
+            "tests", 
+            "test", 
+            "*.doxyfile", 
+            "*.pdf"
+        ]
+    }, 
+    "id": 5417
+}
