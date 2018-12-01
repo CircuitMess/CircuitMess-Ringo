@@ -369,3 +369,9 @@ ASALocalRun/
 
 # Local History for Visual Studio
 .localhistory/
+
+##########
+## Visual Micro
+##########
+__vm/
+prototyping/
