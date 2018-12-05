@@ -119,8 +119,18 @@ void loop() {
 		}
    
 		if (gamestatus == "title") { 
-		  showtitle();
-		}
+      showtitle();
+      if (mp.buttons.released(BTN_B))
+      {
+        while (!mp.update());
+        while(1)
+        {
+          mp.loader();
+           //mp.bigIconsMainMenu();
+           //mp.lockScreen();// title
+        }
+      }
+    }
 
 		if (gamestatus == "gameover") { // game over
 			mp.display.fillScreen(TFT_BLACK);

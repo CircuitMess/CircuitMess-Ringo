@@ -366,7 +366,7 @@ void showtitle() {
 		gamestatus = "newgame";
 		//gb.sound.playOK();
 	}
-  if (mp.buttons.released(BTN_B))
+/*  if (mp.buttons.released(BTN_B))
       {
       while (!mp.update());
       while(1)
@@ -374,7 +374,7 @@ void showtitle() {
          mp.bigIconsMainMenu();
          mp.lockScreen();// title
       }
-    }
+    }*/
     
 	//if (buttonsPressed(BUTTON_MENU)) {
 	//	// Menu: Pause / Retour � l'�cran de titre

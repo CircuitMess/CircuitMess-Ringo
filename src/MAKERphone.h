@@ -24,6 +24,7 @@ Authors:
 #include <esp32-hal-bt.h>
 #include <stdint.h>
 #include <EEPROM.h>
+#include "esp_ota_ops.h"
 //#include <Arduino.h>
 #include "utility/Adafruit_NeoPixel.h"
 extern HardwareSerial Serial1;
@@ -31,8 +32,17 @@ extern HardwareSerial Serial1;
 #include <SPI.h>
 
 //Includes for SD firmware update
-#include "FS.h"
-#include "SD.h"
+//#include <SysCall.h>
+//#include <sdios.h>
+//#include <SdFatConfig.h>
+//#include <SdFat.h>
+//#include <MinimumSerial.h>
+//#include <FreeStack.h>
+//#include <BlockDriver.h>
+//SdFatSdio SD;
+//File file;
+#include <FS.h>
+#include <SD.h>
 #include <Update.h>
 
 //Keypad setup
@@ -171,9 +181,12 @@ private:
 class MAKERphone:public Buttons, public GUI
 {
 public:
-  TFT_eSPI tft = TFT_eSPI();  // Invoke library, pins defined in User_Setup.h
-  TFT_eSprite display = TFT_eSprite(&tft);
-  TFT_eSprite buf = TFT_eSprite(&tft);
+	TFT_eSPI tft = TFT_eSPI();  // Invoke library, pins defined in User_Setup.h
+	TFT_eSprite display = TFT_eSprite(&tft);
+	TFT_eSprite buf = TFT_eSprite(&tft);
+	const esp_partition_t* partition;
+	const esp_partition_t* partition2;
+
 	void begin(bool splash = 1);
 	void tone2(int pin, int freq, int duration);
 	void vibration(int duration);
@@ -192,6 +205,7 @@ public:
 	String textInput(String buffer);
 	int textPointer = 0;
 	void debugMode();
+	void loader();
   
 	//SMS functions
 	uint8_t countSubstring(String string, String substring);

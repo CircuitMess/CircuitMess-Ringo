@@ -70,8 +70,7 @@ void loop() {
 
 			while (1)
 			{
-				mp.bigIconsMainMenu();
-				mp.lockScreen();
+				mp.loader();
 			}
 		}
 		mp.display.fillScreen(TFT_BLACK);

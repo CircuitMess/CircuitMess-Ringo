@@ -26,6 +26,10 @@ void MAKERphone::begin(bool splash) {
 	digitalWrite(SIM800_DTR, 0);
 	pinMode(INTERRUPT_PIN, INPUT_PULLUP);
 	esp_sleep_enable_ext0_wakeup(GPIO_NUM_35, 0); //1 = High, 0 = Low
+	//PARTITION FALLBACK ADDRESS FIND
+	partition = esp_ota_get_running_partition();
+	partition2 = esp_ota_get_next_update_partition(partition);
+
 	//Initialize and start with the NeoPixels
 	pixels.begin();
 	Serial1.begin(9600, SERIAL_8N1, 17, 16);
@@ -1768,6 +1772,11 @@ void MAKERphone::debugMode()
 		reply = "";
 		update();
 	}
+}
+void MAKERphone::loader()
+{
+	esp_ota_set_boot_partition(partition2);
+	ESP.restart();
 }
 
 //Messages app
