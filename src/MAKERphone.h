@@ -41,8 +41,7 @@ extern HardwareSerial Serial1;
 //#include <BlockDriver.h>
 //SdFatSdio SD;
 //File file;
-#include <FS.h>
-#include <SD.h>
+#include "SdFat.h"
 #include <Update.h>
 
 //Keypad setup
@@ -57,6 +56,12 @@ extern HardwareSerial Serial1;
 
 //Setup for MP3 playback
 
+//#include <AudioFileSource.h>
+//#include <AudioFileSourceID3.h>
+//#include <AudioGeneratorMP3.h>
+//#include <AudioOutputI2S.h>
+//#include <AudioFileSourceSD.h>
+//#include <AudioFileSourceBuffer.h>
 //#include "src/ESP8266Audio.h"
 //#include "utility/AudioFileSource.h"
 //#include "utility/AudioFileSourceID3.h"
@@ -181,6 +186,7 @@ private:
 class MAKERphone:public Buttons, public GUI
 {
 public:
+	SdFat SD;
 	TFT_eSPI tft = TFT_eSPI();  // Invoke library, pins defined in User_Setup.h
 	TFT_eSprite display = TFT_eSprite(&tft);
 	TFT_eSprite buf = TFT_eSprite(&tft);
@@ -196,7 +202,7 @@ public:
 	void lockScreen();
 	void mainMenu();
 	void bigIconsMainMenu();
-	void listDir(fs::FS &fs, const char * dirname, uint8_t levels);
+	void listDir(const char * dirname, uint8_t levels);
 	void sleep();
 	void checkSMS();
 	void incomingCall();
@@ -222,7 +228,7 @@ public:
 	void composeSMS();
 	void incomingMessagePopup();
   
-	void updateFromFS(fs::FS &fs, String FilePath);
+	void updateFromFS(String FilePath);
 
 
 	//variables used for parsing SMS
@@ -258,7 +264,7 @@ public:
 	String mp3Files[255];
 	uint8_t mp3Count = 0;
 	int16_t mp3Menu(const char* title, String* items, uint8_t length);
-	void listMP3(fs::FS &fs, const char * dirname, uint8_t levels);
+	void listMP3(const char * dirname, uint8_t levels);
 	void mp3player(String songName);
 	void mediaApp();
 	void MDCallback(void *cbData, const char *type, bool isUnicode, const char *string);
@@ -336,8 +342,8 @@ public:
 	void displayMenu();
 	void soundMenu();
 	void securityMenu();
-	void listRingtones(fs::FS &fs, const char * dirname, uint8_t levels);
-	void listNotifications(fs::FS &fs, const char * dirname, uint8_t levels);
+	void listRingtones(const char * dirname, uint8_t levels);
+	void listNotifications(const char * dirname, uint8_t levels);
 	void applySettings();
 	void saveSettings();
 	void loadSettings();
@@ -432,11 +438,11 @@ private:
 //	HardwareSerial sim800 = HardwareSerial(1);
 
 	//Audio objects
-/* 	AudioGeneratorMP3 *mp3;
+	/*AudioGeneratorMP3 *mp3;
 	AudioFileSourceSD *file;
 	AudioOutputI2S *out;
 	AudioFileSourceID3 *id3;
-	AudioFileSourceBuffer *buff; */
+	AudioFileSourceBuffer *buff;*/
 };
 
 #endif
