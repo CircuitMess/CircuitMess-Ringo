@@ -52,12 +52,7 @@ void loop() {
 				while(!mp.update());
 				if (mp.buttons.pressed(BTN_B))
 				{
-					while (!mp.update());
-					while (1)
-					{
-						mp.bigIconsMainMenu();
-						mp.lockScreen();
-					}
+					mp.loader();
 				}
 			}
 				
@@ -66,12 +61,7 @@ void loop() {
 		}
 		if (mp.buttons.pressed(BTN_B))
 		{
-			while (!mp.update());
-
-			while (1)
-			{
-				mp.loader();
-			}
+			mp.loader();
 		}
 		mp.display.fillScreen(TFT_BLACK);
 		//move the player
