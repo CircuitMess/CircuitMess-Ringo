@@ -81,9 +81,8 @@ void MAKERphone::begin(bool splash) {
 	{
 		SDinsertedFlag = 1;
 		loadSettings();
-		applySettings();
 	}
-
+	//applySettings();
 	Serial.begin(115200);
 
 	//display initialization
@@ -4022,14 +4021,15 @@ void MAKERphone::applySettings()
 		break;
 
 	case 1:
-		//WiFi.begin();
-		//delay(1);
+		/*WiFi.mode(WIFI_STA);
+		Serial.println("Enabled wifi!");
+		delay(1);*/
 		break;
 	}
 	switch (bt)
 	{
 	case 0:
-		//btStop();
+		btStop();
 		break;
 	case 1:
 		//btStart();
@@ -4045,7 +4045,7 @@ void MAKERphone::applySettings()
 		Serial1.println("AT+CFUN=4");
 		break;
 	}
-	if (brightness == 0)
+	if (brightness == 0) 
 		actualBrightness = 230;
 	else
 		actualBrightness = (5 - brightness) * 51;
@@ -4118,7 +4118,78 @@ void MAKERphone::loadSettings()
 	Serial.println(backgroundIndex);
 	delay(5);
 }
-
+void MAKERphone::wifiMenu()
+{
+	int n = WiFi.scanNetworks();
+	Serial.println("scan done");
+	if (n == 0) {
+		Serial.println("no networks found");
+	}
+	
+	else 
+	{
+		String networkNames[n];
+		String wifiSignalStrengths[n];
+		bool wifiPasswordNeeded[n];
+		Serial.print(n);
+		Serial.println(" networks found");
+		for (int i = 0; i < n; ++i) {
+			// Print SSID and RSSI for each network found
+			networkNames[i] = WiFi.SSID(i);
+			wifiSignalStrengths[i] = WiFi.RSSI(i);
+			wifiPasswordNeeded[i] = !(WiFi.encryptionType(i) == WIFI_AUTH_OPEN);
+			Serial.print(i + 1);
+			Serial.print(": ");
+			Serial.print(WiFi.SSID(i));
+			Serial.print(" (");
+			Serial.print(WiFi.RSSI(i));
+			Serial.print(")");
+			Serial.println((WiFi.encryptionType(i) == WIFI_AUTH_OPEN) ? " " : "*");
+			delay(10);
+		}
+		while (!Serial.available());
+		int reading = Serial.parseInt() - 1;
+		Serial.println("Selected network:");
+		Serial.println(networkNames[reading]);
+		Serial.println(wifiSignalStrengths[reading]);
+		Serial.println(wifiPasswordNeeded[reading]);
+		delay(5);
+		if (wifiPasswordNeeded[reading])
+		{
+			while (Serial.available()) { Serial.read(); }
+			Serial.println("\nPassword:");
+			while (1)
+			{
+				while (!Serial.available());
+				char temp[networkNames[reading].length()+1];
+				String foo = Serial.readString();
+				char temp2[foo.length()-1];
+				networkNames[reading].toCharArray(temp, networkNames[reading].length()+1);
+				foo.toCharArray(temp2, foo.length()-1);
+				WiFi.begin(temp, temp2);
+				/*WiFi.begin("ISKONOVAC-487af4", "ISKON2738000957");*/
+				uint8_t counter = 0;
+				Serial.println(temp);
+				Serial.println(temp2);
+				while (WiFi.status() != WL_CONNECTED) {
+					delay(500);
+					Serial.print(".");
+					counter++;
+					if (counter >= 30)
+					{
+						Serial.println("\nWrong password, try again:");
+						break;
+					}
+				}
+				if (WiFi.status() == WL_CONNECTED)
+				{
+					Serial.println("CONNECTED!");
+					break;
+				}
+			}
+		}
+	}
+}
 //Buttons class
 bool Buttons::pressed(uint8_t button) {
 	return states[(uint8_t)button] == 1;

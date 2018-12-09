@@ -347,6 +347,9 @@ public:
 	void applySettings();
 	void saveSettings();
 	void loadSettings();
+	void wifiMenu();
+
+
 	GUI gui;
 	Buttons buttons;
 	//Display display;
