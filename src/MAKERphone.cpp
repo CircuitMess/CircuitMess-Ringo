@@ -287,6 +287,8 @@ bool MAKERphone::update() {
 			}
 		}
 	}
+	if (popupMenuFlag && buttons.kpdNum.getKey() == 'C')
+		popupMenu();
 	///////////////////////////////////////////////
 	if (millis() - lastFrameCount2 >= frameSpeed) {
 		lastFrameCount2 = millis();
@@ -416,6 +418,7 @@ void MAKERphone::sleep() {
 }
 void MAKERphone::lockScreen() {
 	dataRefreshFlag = 1;
+	popupMenuFlag = 0;
 	Serial.begin(115200);
 	bool goOut = 0;
 	uint8_t updatePixels = 0;	
@@ -964,6 +967,8 @@ void MAKERphone::updateFromFS(String FilePath) {
 //
 //}
 void MAKERphone::bigIconsMainMenu() {
+	dataRefreshFlag = 0;
+	popupMenuFlag = 0;
 	Serial.begin(115200);
 	while (buttons.kpd.pin_read(BTN_A) == 0);
 	Serial.println("entered main menu");
@@ -1779,6 +1784,27 @@ void MAKERphone::loader()
 {
 	esp_ota_set_boot_partition(partition2);
 	ESP.restart();
+}
+void MAKERphone::popupMenu()
+{
+	while (1)
+	{
+		display.fillScreen(TFT_BLACK);
+		display.setCursor(6, 2);
+		display.setTextFont(1);
+		display.printCenter("POPUP MENU");
+		display.setFreeFont(TT1);
+		display.setTextSize(1);		
+		display.setCursor(40, 40);
+		display.printCenter("Press B to resume");
+		display.setCursor(40, 47);
+		display.printCenter("Press C for loader");
+		if (buttons.kpdNum.getKey() == 'C')
+			loader();
+		if (buttons.released(BTN_B))
+			break;
+		update();
+	}
 }
 
 //Messages app
@@ -4190,6 +4216,7 @@ void MAKERphone::wifiMenu()
 		}
 	}
 }
+
 //Buttons class
 bool Buttons::pressed(uint8_t button) {
 	return states[(uint8_t)button] == 1;

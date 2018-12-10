@@ -212,6 +212,7 @@ public:
 	int textPointer = 0;
 	void debugMode();
 	void loader();
+	void popupMenu();
   
 	//SMS functions
 	uint8_t countSubstring(String string, String substring);
@@ -375,9 +376,10 @@ public:
 	int smsRefresh = 0;
 	String updateBuffer;
 	uint32_t refreshMillis = millis();
-	bool dataRefreshFlag=0;
+	bool dataRefreshFlag = 0;
 	bool receivedFlag = 0;
 	bool SDinsertedFlag = 0;
+	bool popupMenuFlag = 1;
 	/////////////////////////////////////////
 	///////////////COLLISION//////////////////
 	//////////////////////////////////////////
