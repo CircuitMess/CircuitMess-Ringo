@@ -329,7 +329,8 @@ public:
 	"Orange",
 	"Pink"
 	};
-  
+	uint16_t firmware_version = 1;
+
 	void settingsApp();
 	int8_t settingsMenu(String* title, uint8_t length);
 	void settingsMenuDrawBox(String title, uint8_t i, int32_t y);

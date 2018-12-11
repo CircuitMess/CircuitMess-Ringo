@@ -119,6 +119,7 @@ void setup() {
         USE_SERIAL.flush();
         delay(1000);
     }
+	//SD.remove("/UPDATE.BIN");  //uncomment if downloading large files
 	File file = SD.open("/UPDATE.BIN", FILE_WRITE);
     wifiMulti.addAP("ISKONOVAC-487af4", "ISKON2738000957");
 	// wait for WiFi connection
@@ -129,7 +130,7 @@ void setup() {
 
 		USE_SERIAL.print("[HTTP] begin...\n");
 		// configure traged server and url
-		http.begin("https://www.makerbuino.com/wp-content/uploads/2018/12/Invaders-Copy.txt", ca); //HTTPS
+		http.begin("https://www.makerbuino.com/wp-content/uploads/MP_firmwareVersion.txt", ca); //HTTPS
 		//http.begin("http://example.com/index.html"); //HTTP
 
 		USE_SERIAL.print("[HTTP] GET...\n");
@@ -143,12 +144,19 @@ void setup() {
 
 			// file found at server
 			if (httpCode == HTTP_CODE_OK) {
-				http.writeToStream(&file);
-				//stream = http.getStream();
-				//SD.remove("/UPDATE.BIN");
-				//writeFile("/UPDATE.BIN", String(stream.read()));
-				//USE_SERIAL.println(String(stream.read()));
-				//delay(5);
+				//http.writeToStream(&file);  //for large files
+				String payload = http.getString();
+				uint16_t version = payload.substring(payload.indexOf("version=") + 8, payload.indexOf("\n")).toInt();
+				String foo = readFile("/UPDATE.BIN");
+				USE_SERIAL.println(foo);
+				uint16_t old_version = foo.substring(foo.indexOf("version=") + 8, foo.indexOf("\n")).toInt();
+				USE_SERIAL.println(version);
+				USE_SERIAL.println(old_version);
+				if (version > old_version)
+				{
+					SD.remove("/UPDATE.BIN");
+					writeFile("/UPDATE.BIN", payload);
+				}
 			}
 		}
 		else {
@@ -158,7 +166,9 @@ void setup() {
 		http.end();
 		file.close();
 		//listDir("/", 0);
-		//USE_SERIAL.println(readFile("/UPDATE.BIN"));
+		
+
+		USE_SERIAL.println(readFile("/UPDATE.BIN"));
 	}
 }
 

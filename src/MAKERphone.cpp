@@ -3989,9 +3989,10 @@ void MAKERphone::saveSettings()
 	SD.remove(path);
 	char helper[20] = "";
 	writeFile(path, "MAKERphone settings file\n");
-	String buffer = readFile(path);
-	Serial.println(buffer);
-	delay(5);
+	appendFile(path, "version=");
+	itoa(firmware_version, helper, 10);
+	appendFile(path, helper);
+	appendFile(path, "\n");
 	appendFile(path, "Wifi: ");
 	switch (wifi)
 	{
