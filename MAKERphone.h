@@ -418,11 +418,11 @@ private:
 //	HardwareSerial sim800 = HardwareSerial(1);
 
 	//Audio objects
-	AudioGeneratorMP3 *mp3;
+/* 	AudioGeneratorMP3 *mp3;
 	AudioFileSourceSD *file;
 	AudioOutputI2S *out;
 	AudioFileSourceID3 *id3;
-	AudioFileSourceBuffer *buff;
+	AudioFileSourceBuffer *buff; */
 };
 
 #endif

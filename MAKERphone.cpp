@@ -2542,7 +2542,7 @@ void MAKERphone::dialer() {
 }
 
 //Media app
-int16_t MAKERphone::mp3Menu(const char* title, String* items, uint8_t length) {
+int16_t MAKERphone::mp3Menu(const char* title, String* items, uint8_t length) {/* 
 	cursor = 0;
 	cameraY = 0;
 	cameraY_actual = 0;
@@ -2616,11 +2616,11 @@ int16_t MAKERphone::mp3Menu(const char* title, String* items, uint8_t length) {
 			return -1;
 		}
 	}
-	return cursor;
+	return cursor; */
 
 }
 void MAKERphone::listMP3(fs::FS &fs, const char * dirname, uint8_t levels) {
-	mp3Count = 0;
+	/* mp3Count = 0;
 	Serial.begin(115200);
 	Serial.printf("Listing directory: %s\n", dirname);
 
@@ -2650,10 +2650,10 @@ void MAKERphone::listMP3(fs::FS &fs, const char * dirname, uint8_t levels) {
 			counter++;
 		}
 		file = root.openNextFile();
-	}
+	} */
 }
 void MAKERphone::mp3player(String songName) {
-	Serial.begin(115200);
+	/* Serial.begin(115200);
 	char test[songName.length() + 1];
 	songName.toCharArray(test, songName.length() + 1);
 
@@ -2758,10 +2758,10 @@ void MAKERphone::mp3player(String songName) {
 		}
 		else
 			out->stop();
-	}
+	} */
 }
 void MAKERphone::mediaApp() {
-	if (!SD.begin())
+	/* if (!SD.begin())
 		Serial.println("SD card error");
 	listMP3(SD, "/", 0);
 	while (1)
@@ -2771,10 +2771,10 @@ void MAKERphone::mediaApp() {
 			break;
 		display.fillScreen(TFT_LIGHTGREY);
 		mp3player(mp3Files[index]);
-	}
+	} */
 }
 void MAKERphone::MDCallback(void *cbData, const char *type, bool isUnicode, const char *string) {
-	(void)cbData;
+	/* (void)cbData;
 	Serial.printf("ID3 callback for: %s = '", type);
 
 	if (isUnicode) {
@@ -2790,7 +2790,7 @@ void MAKERphone::MDCallback(void *cbData, const char *type, bool isUnicode, cons
 	}
 	Serial.printf("'\n");
 	Serial.flush();
-}
+*/} 
 
 //Settings app
 int8_t MAKERphone::settingsMenu(String* title, uint8_t length) {
