@@ -47,12 +47,6 @@ extern HardwareSerial Serial1;
 
 //Setup for MP3 playback
 
-#include <AudioFileSource.h>
-#include <AudioFileSourceID3.h>
-#include <AudioGeneratorMP3.h>
-#include <AudioOutputI2S.h>
-#include <AudioFileSourceSD.h>
-#include <AudioFileSourceBuffer.h>
 //#include "src/ESP8266Audio.h"
 //#include "utility/AudioFileSource.h"
 //#include "utility/AudioFileSourceID3.h"
