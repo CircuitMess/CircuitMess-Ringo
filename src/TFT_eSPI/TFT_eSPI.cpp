@@ -4808,10 +4808,10 @@ void TFT_eSPI::drawBitmap(int8_t x, int8_t y, const byte *bitmap) {
 		y++;
 	}
 }
-void TFT_eSPI::drawIcon(const unsigned short* icon, int16_t x, int16_t y, uint16_t width, uint16_t height) {
+void TFT_eSPI::drawIcon(const unsigned short* icon, int16_t x, int16_t y, uint16_t width, uint16_t height, uint8_t scale) {
 	for (int i = 0; i < width; i++) {
 		for (int j = 0; j < height; j++) {
-			drawPixel(x + i, y + j, pgm_read_word(&icon[j * width + i]));
+			fillRect(x + i*scale, y + j*scale, scale, scale, pgm_read_word(&icon[j * width + i]));
 		}
 	}
 }

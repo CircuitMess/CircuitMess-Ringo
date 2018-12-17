@@ -32,7 +32,7 @@
 #endif
 
 // Use GLCD font in error case where user requests a smooth font file
-// that does not exist (this is a temporary fix to stop ESP32 reboot)
+// that does not exist (this is  temporary fix to stop ESP32 reboot)
 #ifdef SMOOTH_FONT
   #ifndef LOAD_GLCD
     #define LOAD_GLCD
@@ -651,7 +651,7 @@ class TFT_eSPI : public Print {
   /////////////////////
   void drawBitmap(int8_t x, int8_t y, const byte *bitmap, uint16_t color);
   void drawBitmap(int8_t x, int8_t y, const byte *bitmap);
-  void drawIcon(const unsigned short* icon, int16_t x, int16_t y, uint16_t width, uint16_t height);
+  void drawIcon(const unsigned short* icon, int16_t x, int16_t y, uint16_t width, uint16_t height, uint8_t scale = 1);
   void printCenter(const char* text);
   void printCenter(String text);
   void printCenter(int text);
