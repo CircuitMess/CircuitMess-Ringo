@@ -171,9 +171,14 @@ private:
 class MAKERphone:public Buttons, public GUI
 {
 public:
-  TFT_eSPI tft = TFT_eSPI();  // Invoke library, pins defined in User_Setup.h
-  TFT_eSprite display = TFT_eSprite(&tft);
-  TFT_eSprite buf = TFT_eSprite(&tft);
+
+	TFT_eSPI tft = TFT_eSPI();  // Invoke library, pins defined in User_Setup.h
+	TFT_eSprite display = TFT_eSprite(&tft);
+	TFT_eSprite buf = TFT_eSprite(&tft);
+	bool resolutionMode=0; //0 is native, 1 is halved
+	void setResolution(bool res = 1);
+	bool spriteCreated = 0;
+	
 	void begin(bool splash = 1);
 	void tone2(int pin, int freq, int duration);
 	void vibration(int duration);

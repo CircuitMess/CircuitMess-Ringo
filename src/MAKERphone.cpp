@@ -167,10 +167,25 @@ bool MAKERphone::update() {
 	//}
 	char c;
 	uint16_t refreshInterval = 3000;
-
-	for (int y = 0; y < BUFHEIGHT; y++) {
-		for (int x = 0; x < BUFWIDTH; x++) {
-			buf.fillRect(x * 2, y * 2, 2, 2, display.readPixel(x, y));
+	if(!spriteCreated)
+	{
+		display.deleteSprite();
+		if(resolutionMode)
+			display.createSprite(BUFWIDTH, BUFHEIGHT);
+		else
+			display.createSprite(BUF2WIDTH, BUF2HEIGHT);
+		Serial.println("SPRITE CHANGED");
+		delay(5);
+		spriteCreated=1;
+	}
+	
+	//halved resolution mode
+	if(resolutionMode == 1)
+	{
+		for (int y = 0; y < BUFHEIGHT; y++) {
+			for (int x = 0; x < BUFWIDTH; x++) {
+				buf.fillRect(x * 2, y * 2, 2, 2, display.readPixel(x, y));
+			}
 		}
 	}
 	//buf2.invertDisplay(1);
@@ -287,8 +302,10 @@ bool MAKERphone::update() {
 	///////////////////////////////////////////////
 	if (millis() - lastFrameCount2 >= frameSpeed) {
 		lastFrameCount2 = millis();
-		
-		buf.pushSprite(0, 0);
+		if(resolutionMode == 0) //native res mode
+			display.pushSprite(0, 0);
+		else//halved res mode
+			buf.pushSprite(0,0);
 		buttons.update();
 		gui.updatePopup();
 		delay(1);
@@ -357,6 +374,12 @@ void MAKERphone::splashScreen() {
 
 	
 }
+void MAKERphone::setResolution(bool res)
+{
+	mp.resolutionMode=res;
+	mp.spriteCreated=0;
+}
+
 void MAKERphone::tone2(int pin, int freq, int duration) {
 	ledcWriteTone(0, freq);
 	delay(duration);
