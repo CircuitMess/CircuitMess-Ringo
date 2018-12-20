@@ -1589,10 +1589,10 @@ void TFT_eSPI::fillEllipse(int16_t x0, int16_t y0, int16_t rx, int16_t ry, uint1
 ** Function name:           fillScreen
 ** Description:             Clear the screen to defined colour
 ***************************************************************************************/
-void TFT_eSPI::fillScreen(uint32_t color)
+/* void TFT_eSPI::fillScreen(uint32_t color)
 {
   fillRect(0, 0, _width, _height, color);
-}
+} */
 
 
 /***************************************************************************************
@@ -1767,7 +1767,7 @@ void TFT_eSPI::fillTriangle ( int32_t x0, int32_t y0, int32_t x1, int32_t y1, in
 ** Function name:           drawBitmap
 ** Description:             Draw an image stored in an array on the TFT
 ***************************************************************************************/
-void TFT_eSPI::drawBitmap(int16_t x, int16_t y, const uint8_t *bitmap, int16_t w, int16_t h, uint16_t color)
+/* void TFT_eSPI::drawBitmap(int16_t x, int16_t y, const uint8_t *bitmap, int16_t w, int16_t h, uint16_t color)
 {
   spi_begin();
   inTransaction = true;
@@ -1785,7 +1785,7 @@ void TFT_eSPI::drawBitmap(int16_t x, int16_t y, const uint8_t *bitmap, int16_t w
   inTransaction = false;
   spi_end();
 }
-
+ */
 
 /***************************************************************************************
 ** Function name:           drawXBitmap
@@ -4754,7 +4754,7 @@ void TFT_eSPI::getSetup(setup_t &tft_settings)
 //Custom functions
 ////////////////////////////////////////////////////////////////////////////////////////
 
-void TFT_eSPI::drawBitmap(int8_t x, int8_t y, const byte *bitmap, uint16_t color) {
+void TFT_eSPI::drawBitmap(int8_t x, int8_t y, const byte *bitmap, uint16_t color, uint8_t scale) {
 	uint8_t w = *(bitmap++);
 	uint8_t h = *(bitmap++);
 
@@ -4772,16 +4772,16 @@ void TFT_eSPI::drawBitmap(int8_t x, int8_t y, const byte *bitmap, uint16_t color
 					break;
 				}
 				if (b & 0x80) {
-					drawPixel(x, y, color);
+					fillRect(x, y, scale, scale, color);
 				}
 				b <<= 1;
-				x++;
+				x+=scale;
 			}
 		}
-		y++;
+		y+=scale;
 	}
 }
-void TFT_eSPI::drawBitmap(int8_t x, int8_t y, const byte *bitmap) {
+/* void TFT_eSPI::drawBitmap(int8_t x, int8_t y, const byte *bitmap) {
 	uint8_t w = *(bitmap++);
 	uint8_t h = *(bitmap++);
 
@@ -4807,7 +4807,7 @@ void TFT_eSPI::drawBitmap(int8_t x, int8_t y, const byte *bitmap) {
 		}
 		y++;
 	}
-}
+} */
 void TFT_eSPI::drawIcon(const unsigned short* icon, int16_t x, int16_t y, uint16_t width, uint16_t height, uint8_t scale) {
 	for (int i = 0; i < width; i++) {
 		for (int j = 0; j < height; j++) {
@@ -5510,10 +5510,10 @@ void TFT_eSprite::scroll(int16_t dx, int16_t dy)
 
 
 /***************************************************************************************
-** Function name:           fillSprite
+** Function name:           fillScreen
 ** Description:             Fill the whole sprite with defined colour
 *************************************************************************************x*/
-void TFT_eSprite::fillSprite(uint32_t color)
+void TFT_eSprite::fillScreen(uint32_t color)
 {
 	if (!_created) return;
 
@@ -6360,7 +6360,7 @@ void TFT_eSprite::drawGlyph(uint16_t code)
 		if (newSprite)
 		{
 			createSprite(this->gWidth[gNum], this->gFont.yAdvance);
-			if (bg) fillSprite(bg);
+			if (bg) fillScreen(bg);
 			this->cursor_x = -this->gdX[gNum];
 			this->cursor_y = 0;
 		}
@@ -6470,7 +6470,7 @@ void TFT_eSprite::printToSprite(char *cbuffer, int len) //String string)
 		createSprite(sWidth, this->gFont.yAdvance);
 		uint16_t transparent = TFT_BLACK;
 
-		if (this->textbgcolor != TFT_BLACK) fillSprite(this->textbgcolor);
+		if (this->textbgcolor != TFT_BLACK) fillScreen(this->textbgcolor);
 	}
 
 	n = 0;
@@ -6506,7 +6506,7 @@ int16_t TFT_eSprite::printToSprite(int16_t x, int16_t y, uint16_t index)
 	{
 		createSprite(sWidth, this->gFont.yAdvance);
 		uint16_t transparent = TFT_BLACK;
-		if (this->textbgcolor != TFT_BLACK) fillSprite(this->textbgcolor);
+		if (this->textbgcolor != TFT_BLACK) fillScreen(this->textbgcolor);
 
 		drawGlyph(this->gUnicode[index]);
 

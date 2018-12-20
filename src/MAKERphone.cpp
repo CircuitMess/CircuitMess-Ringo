@@ -178,7 +178,8 @@ bool MAKERphone::update() {
 		delay(5);
 		spriteCreated=1;
 	}
-	
+	Serial.println(display.height());
+	delay(5);
 	//halved resolution mode
 	if(resolutionMode == 1)
 	{
@@ -304,8 +305,10 @@ bool MAKERphone::update() {
 		lastFrameCount2 = millis();
 		if(resolutionMode == 0) //native res mode
 			display.pushSprite(0, 0);
+
 		else//halved res mode
 			buf.pushSprite(0,0);
+
 		buttons.update();
 		gui.updatePopup();
 		delay(1);
@@ -440,6 +443,11 @@ void MAKERphone::lockScreen() {
 	bool goOut = 0;
 	uint8_t updatePixels = 0;	
 	uint32_t elapsedMillis = millis();
+	uint8_t scale;
+	if(resolutionMode)
+		scale = 1;
+	else
+		scale = 2;
 	//pixels.clear();
 	//delay(1);
 	//pixels.show();
@@ -455,21 +463,21 @@ void MAKERphone::lockScreen() {
 		display.fillScreen(backgroundColors[backgroundIndex]);
 
 		display.setFreeFont(TT1);
-		display.setTextSize(3);//
+		display.setTextSize(3*scale);//
 		//Hour shadow
 		display.setTextColor(TFT_DARKGREY);
 		if (clockHour == 11)
-			display.setCursor(10, 28);
+			display.setCursor(10*scale, 28*scale);
 		else if (clockHour % 10 == 1 || (int)clockHour / 10 == 1)
-			display.setCursor(7, 28);
+			display.setCursor(7*scale, 28*scale);
 		else
-			display.setCursor(4, 28);
+			display.setCursor(4*scale, 28*scale);
 		if (clockHour < 10)
 			display.print("0");
 		display.print(clockHour);
 
 		//minute shadow
-		display.setCursor(36, 28);
+		display.setCursor(36*scale, 28*scale);
 		if (clockMinute < 10)
 			display.print("0");
 		display.print(clockMinute);
@@ -477,23 +485,23 @@ void MAKERphone::lockScreen() {
 		//Hour black
 		display.setTextColor(TFT_BLACK);
 		if (clockHour == 11)
-			display.setCursor(9, 27);
+			display.setCursor(9*scale, 27*scale);
 		else if (clockHour % 10 == 1 || (int)clockHour / 10 == 1)
-			display.setCursor(6, 27);
+			display.setCursor(6*scale, 27*scale);
 		else
-			display.setCursor(3, 27);
+			display.setCursor(3*scale, 27*scale);
 		if (clockHour < 10)
 			display.print("0");
 		display.print(clockHour);
 
 		//Minute black
-		display.setCursor(35, 27);
+		display.setCursor(35*scale, 27*scale);
 		if (clockMinute < 10)
 			display.print("0");
 		display.print(clockMinute);
 
-		display.setTextSize(1);
-		display.setCursor(60, 19);
+		display.setTextSize(1*scale);
+		display.setCursor(60*scale, 19*scale);
 		display.setTextWrap(false);
 		if (clockDay < 10)
 			display.print("0");
@@ -502,7 +510,7 @@ void MAKERphone::lockScreen() {
 		if (clockMonth < 10)
 			display.print("0");
 		display.print(clockMonth);
-		display.setCursor(62, 25);
+		display.setCursor(62*scale, 25*scale);
 		display.print(2000 + clockYear);
 		/*display.setTextSize(2);
 		  display.setCursor(10, 50);
@@ -511,21 +519,21 @@ void MAKERphone::lockScreen() {
 		if (simInserted && !airplaneMode)
 		{
 			if (signalStrength <= 3)
-				display.drawBitmap(1, 1, noSignalIcon);
+				display.drawBitmap(1*scale, 1*scale, noSignalIcon);
 			else if (signalStrength > 3 && signalStrength <= 10)
-				display.drawBitmap(1, 1, signalLowIcon);
+				display.drawBitmap(1*scale, 1*scale, signalLowIcon);
 			else if (signalStrength > 10 && signalStrength <= 20)
-				display.drawBitmap(1, 1, signalHighIcon);
+				display.drawBitmap(1*scale, 1*scale, signalHighIcon);
 			else if (signalStrength > 20 && signalStrength <= 31)
-				display.drawBitmap(1, 1, signalFullIcon);
+				display.drawBitmap(1*scale, 1*scale, signalFullIcon);
 			else if (signalStrength == 99)
-				display.drawBitmap(1, 1, signalErrorIcon);
+				display.drawBitmap(1*scale, 1*scale, signalErrorIcon);
 		}
 		else if(!simInserted && !airplaneMode)
-			display.drawBitmap(1, 1, signalErrorIcon);
+			display.drawBitmap(1*scale, 1*scale, signalErrorIcon, TFT_BLACK, scale);
 		if (volume == 0)
 		{
-			display.drawBitmap(helper, 1, silentmode);
+			display.drawBitmap(helper*scale, 1*scale, silentmode, TFT_BLACK, scale);
 			helper += 10;
 		}
 		//display.drawBitmap(31, 1, missedcall);
@@ -533,40 +541,41 @@ void MAKERphone::lockScreen() {
 		if (!airplaneMode)
 		{
 			if (wifi == 1)
-				display.drawBitmap(helper, 1, wifion);
+				display.drawBitmap(helper*scale, 1*scale, wifion, TFT_BLACK, scale);
 			else
-				display.drawBitmap(helper, 1, wifioff);
+				display.drawBitmap(helper*scale, 1*scale, wifioff, TFT_BLACK, scale);
 			helper += 10;
 			if (bt)
-				display.drawBitmap(helper, 1, BTon);
+				display.drawBitmap(helper*scale, 1*scale, BTon, TFT_BLACK, scale);
 			else
-				display.drawBitmap(helper, 1, BToff);
+				display.drawBitmap(helper*scale, 1*scale, BToff, TFT_BLACK, scale);
 			helper += 10;
 		}
 		else
 		{
-			display.drawBitmap(helper, 1, airplaneModeIcon);
+			display.drawBitmap(helper*scale, 1*scale, airplaneModeIcon, TFT_BLACK, scale);
 			helper += 10;
 		}
 		if(!SDinsertedFlag)
-			display.drawBitmap(helper, 1, noSDIcon);
+			display.drawBitmap(helper*scale, 1*scale, noSDIcon, TFT_BLACK, scale);
 
 		if (batteryVoltage > 4000)
-			display.drawBitmap(74, 1, batteryCharging);
+			display.drawBitmap(74*scale, 1*scale, batteryCharging, TFT_BLACK, scale);
 		else if (batteryVoltage <= 4000 && batteryVoltage >= 3800)
-			display.drawBitmap(74, 1, batteryFull);
+			display.drawBitmap(74*scale, 1*scale, batteryFull, TFT_BLACK, scale);
 		else if (batteryVoltage < 3800 && batteryVoltage >= 3700)
-			display.drawBitmap(74, 1, batteryMid);
+			display.drawBitmap(74*scale, 1*scale, batteryMid, TFT_BLACK, scale);
 		else if (batteryVoltage < 3700 && batteryVoltage >= 3600)
-			display.drawBitmap(74, 1, batteryMidLow);
+			display.drawBitmap(74*scale, 1*scale, batteryMidLow, TFT_BLACK, scale);
 		else if (batteryVoltage < 3600 && batteryVoltage >= 3500)
-			display.drawBitmap(74, 1, batteryLow);
+			display.drawBitmap(74*scale, 1*scale, batteryLow, TFT_BLACK, scale);
 		else if (batteryVoltage < 3500)
-			display.drawBitmap(74, 1, batteryEmpty);
+			display.drawBitmap(74*scale, 1*scale, batteryEmpty, TFT_BLACK, scale);
 
-		gui.drawNotificationWindow(2, 32, 77, 10, "Missed call from Dad");
-		gui.drawNotificationWindow(2, 44, 77, 10, "Text from Jack");
-
+		gui.drawNotificationWindow(2*scale, 32*scale, 77*scale, 10*scale, "Missed call from Dad");
+		gui.drawNotificationWindow(2*scale, 44*scale, 77*scale, 10*scale, "Text from Jack");
+		display.setFreeFont(TT1);
+		display.setTextSize(2*scale);
 		if (millis() - elapsedMillis >= 500) {
 			elapsedMillis = millis();
 			blinkState = !blinkState;
@@ -576,39 +585,70 @@ void MAKERphone::lockScreen() {
 		if (blinkState == 1)
 		{
 			display.setTextSize(1);
+			if(scale == 1)
+			{
+				display.setCursor(1, 63);
+				display.setFreeFont(TT1);
+			}
+			else
+			{
+				/* display.setCursor(2, 63*scale);
+				display.setFreeFont(FSS9); */
+				display.setCursor(2, 111);
+				display.setTextFont(2);
+			}
 			display.setTextColor(TFT_BLACK);
-			display.setCursor(1, 63);
 			display.print("Hold \"A\" to unlock");
-			display.setTextSize(3);
+			display.setTextSize(3*scale);
 			display.setTextColor(TFT_DARKGREY);
-			display.setCursor(29, 28);
+			display.setFreeFont(TT1);
+			display.setCursor(29*scale, 28*scale);
 			display.print(":");
 			display.setTextColor(TFT_BLACK);
-			display.setCursor(28, 27);
+			display.setCursor(28*scale, 27*scale);
 			display.print(":");
 		}
 		update();
 
-		display.setTextSize(1);
+		display.setTextSize(1*scale);
 
 		if (buttons.pressed(BTN_A)) {
-
+			display.setTextSize(1);
 			vibration(200);
 
-			display.fillRect(0, 57, BUFWIDTH, 7, backgroundColors[backgroundIndex]);
-			display.setCursor(1, 63);
+			display.fillRect(0, 56*scale, display.width(), 7*scale, backgroundColors[backgroundIndex]);
+			if(mp.resolutionMode)
+			{
+				display.setCursor(1, 63);
+				display.setFreeFont(TT1);
+			}
+			else
+			{
+				display.setCursor(2, 111);
+				display.setTextFont(2);
+			}
 			display.print("Unlocking");
 			update();
 			buttonHeld = millis();
 			pixelState = 0;
 			while (buttons.kpd.pin_read(BTN_A) == 0)
 			{
+				
 				if (millis() - buttonHeld > 250 && millis() - buttonHeld < 500) {
-					display.fillRect(0, 64, BUFWIDTH, 7, TFT_CYAN);
-					display.setCursor(1, 63);
-					display.print("Unlocking *");
+					display.fillRect(0, 57*scale, display.width(), 7*scale, backgroundColors[backgroundIndex]);
+					if(mp.resolutionMode)
+					{
+						display.setCursor(1, 63);
+						display.setFreeFont(TT1);
+					}
+					else
+					{
+						display.setCursor(2, 111);
+						display.setTextFont(2);
+					}
 					pixels.setPixelColor(0, hslRed);
 					pixels.setPixelColor(7, hslRed);
+					display.print("Unlocking *");
 
 					/*if (updatePixels == 0) {
 						pixels.clear();
@@ -621,8 +661,17 @@ void MAKERphone::lockScreen() {
 				}
 				else if (millis() - buttonHeld > 500 && millis() - buttonHeld < 750)
 				{
-					display.fillRect(0, 64, BUFWIDTH, 7, TFT_CYAN);
-					display.setCursor(1, 63);
+					display.fillRect(0, 57*scale, display.width(), 7*scale, backgroundColors[backgroundIndex]);
+					if(mp.resolutionMode)
+					{
+						display.setCursor(1, 63);
+						display.setFreeFont(TT1);
+					}
+					else
+					{
+						display.setCursor(2, 111);
+						display.setTextFont(2);
+					}
 					display.print("Unlocking * *");
 					pixels.setPixelColor(0, hslRed);
 					pixels.setPixelColor(7, hslRed);
@@ -638,8 +687,17 @@ void MAKERphone::lockScreen() {
 				}
 				else if (millis() - buttonHeld > 750 && millis() - buttonHeld < 1000)
 				{
-					display.fillRect(0, 64, BUFWIDTH, 7, TFT_CYAN);
-					display.setCursor(1, 63);
+					display.fillRect(0, 57*scale, display.width(), 7*scale, backgroundColors[backgroundIndex]);
+					if(mp.resolutionMode)
+					{
+						display.setCursor(1, 63);
+						display.setFreeFont(TT1);
+					}
+					else
+					{
+						display.setCursor(2, 111);
+						display.setTextFont(2);
+					}
 					display.print("Unlocking * * *");
 					pixels.setPixelColor(0, hslRed);
 					pixels.setPixelColor(7, hslRed);
@@ -700,12 +758,6 @@ void MAKERphone::lockScreen() {
 			while (buttons.kpd.pin_read(BTN_B) == 0);
 			sleep();
 
-		}
-
-		if (buttons.pressed(JOYSTICK_B)) {
-			while (buttons.kpd.pin_read(JOYSTICK_B) == 0);
-			digitalWrite(SIM800_DTR, 1);
-			Serial1.println(F("AT+CSCLK=1"));
 		}
 
 		if (goOut == 1)
@@ -4279,9 +4331,24 @@ String MAKERphone::readFile(const char * path) {
 
 //GUI class
 void GUI::drawNotificationWindow(uint8_t x, uint8_t y, uint8_t width, uint8_t height, String text) {
-	mp.display.fillRoundRect(x - 1, y + 1, width, height, 1, TFT_DARKGREY);
-	mp.display.fillRoundRect(x, y, width, height, 1, TFT_WHITE);
-	mp.display.setCursor(x + 3, y + 3 + 5);
+	uint8_t scale;
+	if(mp.resolutionMode)
+	{
+		scale = 1;
+		mp.display.setFreeFont(TT1);
+		mp.display.setTextSize(1);
+		mp.display.setCursor(x + 3*scale, y + 3*scale + 5*scale);
+	}
+	else
+	{
+		scale = 2;
+		mp.display.setTextFont(2);
+		mp.display.setTextSize(1);
+		mp.display.setCursor(x + 3*scale, y + scale);
+	}
+	mp.display.fillRoundRect(x - scale, y + scale, width, height, scale, TFT_DARKGREY);
+	mp.display.fillRoundRect(x, y, width, height, scale, TFT_WHITE);
+	//mp.display.setCursor(x + 3*scale, y + 3*scale + 5*scale);
 	mp.display.print(text);
 }
 void GUI::menuDrawBox(String text, uint8_t i, int32_t y) {

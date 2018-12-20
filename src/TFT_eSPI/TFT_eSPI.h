@@ -46,7 +46,7 @@
 #endif
 
 #ifdef LOAD_FONT2
-  #include <Fonts/Font16.h>
+  #include "Fonts/Font16.h"
 #endif
 
 #ifdef LOAD_FONT4
@@ -268,8 +268,8 @@
   //#include <Fonts/GFXFF/FreeMonoOblique18pt7b.h> // FF7 or FMO18
   //#include <Fonts/GFXFF/FreeMonoOblique24pt7b.h> // FF8 or FMO24
   //
-  //#include <Fonts/GFXFF/FreeMonoBold9pt7b.h>  // FF9  or FMB9
-  //#include <Fonts/GFXFF/FreeMonoBold12pt7b.h> // FF10 or FMB12
+  #include "Fonts/GFXFF/FreeMonoBold9pt7b.h"  // FF9  or FMB9
+  //#include "Fonts/GFXFF/FreeMonoBold12pt7b.h" // FF10 or FMB12
   //#include <Fonts/GFXFF/FreeMonoBold18pt7b.h> // FF11 or FMB18
   //#include <Fonts/GFXFF/FreeMonoBold24pt7b.h> // FF12 or FMB24
   //
@@ -279,12 +279,12 @@
   //#include <Fonts/GFXFF/FreeMonoBoldOblique24pt7b.h> // FF16 or FMBO24
   //
   //// Sans serif fonts
-  //#include <Fonts/GFXFF/FreeSans9pt7b.h>  // FF17 or FSS9
+  #include "Fonts/GFXFF/FreeSans9pt7b.h"  // FF17 or FSS9
   //#include <Fonts/GFXFF/FreeSans12pt7b.h> // FF18 or FSS12
   //#include <Fonts/GFXFF/FreeSans18pt7b.h> // FF19 or FSS18
   //#include <Fonts/GFXFF/FreeSans24pt7b.h> // FF20 or FSS24
   //
-  //#include <Fonts/GFXFF/FreeSansOblique9pt7b.h>  // FF21 or FSSO9
+  //#include "Fonts/GFXFF/FreeSansOblique9pt7b.h"  // FF21 or FSSO9
   //#include <Fonts/GFXFF/FreeSansOblique12pt7b.h> // FF22 or FSSO12
   //#include <Fonts/GFXFF/FreeSansOblique18pt7b.h> // FF23 or FSSO18
   //#include <Fonts/GFXFF/FreeSansOblique24pt7b.h> // FF24 or FSSO24
@@ -300,7 +300,7 @@
   //#include <Fonts/GFXFF/FreeSansBoldOblique24pt7b.h> // FF32 or FSSBO24
   //
   //// Serif fonts
-  //#include <Fonts/GFXFF/FreeSerif9pt7b.h>  // FF33 or FS9
+  #include "Fonts/GFXFF/FreeSerif9pt7b.h"  // FF33 or FS9
   //#include <Fonts/GFXFF/FreeSerif12pt7b.h> // FF34 or FS12
   //#include <Fonts/GFXFF/FreeSerif18pt7b.h> // FF35 or FS18
   //#include <Fonts/GFXFF/FreeSerif24pt7b.h> // FF36 or FS24
@@ -511,9 +511,9 @@ class TFT_eSPI : public Print {
            pushColor(uint16_t color),
            pushColor(uint16_t color, uint16_t len),
            pushColors(uint16_t  *data, uint32_t len, bool swap = true), // With byte swap option
-           pushColors(uint8_t  *data, uint32_t len),
+           pushColors(uint8_t  *data, uint32_t len);
 
-           fillScreen(uint32_t color);
+           //fillScreen(uint32_t color);
 
   void     drawRect(int32_t x, int32_t y, int32_t w, int32_t h, uint32_t color),
            drawRoundRect(int32_t x0, int32_t y0, int32_t w, int32_t h, int32_t radius, uint32_t color),
@@ -533,7 +533,7 @@ class TFT_eSPI : public Print {
            drawTriangle(int32_t x0, int32_t y0, int32_t x1, int32_t y1, int32_t x2, int32_t y2, uint32_t color),
            fillTriangle(int32_t x0, int32_t y0, int32_t x1, int32_t y1, int32_t x2, int32_t y2, uint32_t color),
 
-           drawBitmap(int16_t x, int16_t y, const uint8_t *bitmap, int16_t w, int16_t h, uint16_t color),
+           //drawBitmap(int16_t x, int16_t y, const uint8_t *bitmap, int16_t w, int16_t h, uint16_t color),
            drawXBitmap(int16_t x, int16_t y, const uint8_t *bitmap, int16_t w, int16_t h, uint16_t color),
            drawXBitmap(int16_t x, int16_t y, const uint8_t *bitmap, int16_t w, int16_t h, uint16_t fgcolor, uint16_t bgcolor),
            setBitmapColor(uint16_t c, uint16_t b), // For 1bpp sprites
@@ -649,8 +649,8 @@ class TFT_eSPI : public Print {
 	//////////////////////
   //added functions:
   /////////////////////
-  void drawBitmap(int8_t x, int8_t y, const byte *bitmap, uint16_t color);
-  void drawBitmap(int8_t x, int8_t y, const byte *bitmap);
+  void drawBitmap(int8_t x, int8_t y, const byte *bitmap, uint16_t color = TFT_BLACK, uint8_t scale = 1);
+  //void drawBitmap(int8_t x, int8_t y, const byte *bitmap);
   void drawIcon(const unsigned short* icon, int16_t x, int16_t y, uint16_t width, uint16_t height, uint8_t scale = 1);
   void printCenter(const char* text);
   void printCenter(String text);
@@ -748,7 +748,7 @@ public:
 
 	void     drawChar(int32_t x, int32_t y, unsigned char c, uint32_t color, uint32_t bg, uint8_t size),
 
-		fillSprite(uint32_t color),
+		fillScreen(uint32_t color),
 
 		// Define a window to push 16 bit colour pixels into is a raster order
 		// Colours are converted to 8 bit if depth is set to 8
