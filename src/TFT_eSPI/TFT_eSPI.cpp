@@ -4820,8 +4820,8 @@ void TFT_eSPI::printCenter(const char* text)
 	int8_t cursorBuffer = cursor_y;
 	setCursor(-10, -10);
 	uint16_t textLength = cursor_x;
-	print(number);
-	textLength = cursor_x - textLength;
+  print(text);
+  textLength = cursor_x - textLength;
 	setCursor(int((80 - textLength) / 2), cursorBuffer); //TO-DO: change this to the sprite width value
 	print(text);
 }

@@ -659,7 +659,6 @@ class TFT_eSPI : public Print {
   void printCenter(char text);
  private:
 
-	 void printCenter(const char* text);
   inline void spi_begin() __attribute__((always_inline));
   inline void spi_end()   __attribute__((always_inline));
 
