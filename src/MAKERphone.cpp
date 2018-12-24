@@ -1062,10 +1062,11 @@ void MAKERphone::bigIconsMainMenu() {
 		if (titles[index] == "Messages" && simInserted && !airplaneMode)
 		{
 			display.fillScreen(TFT_BLACK);
-			display.setCursor(22, 30);
-			display.print("Loading");
-			display.setCursor(20, 36);
-			display.print("messages...");
+			if(resolutionMode)
+				display.setCursor(0, display.height()/2);
+			else
+				display.setCursor(0, display.height()/2 - 16);
+			display.printCenter("Loading messages...");
 			update();
 			messagesApp();
 		}
@@ -1283,8 +1284,6 @@ void MAKERphone::callNumber(String number) {
 	}
 }
 void MAKERphone::checkSMS() {
-
-
 }
 String MAKERphone::readSerial() {
 	uint8_t _timeout = 0;
@@ -1845,7 +1844,16 @@ void MAKERphone::messagesApp() {
 	if (input == "ERROR")
 	{
 		display.fillScreen(TFT_BLACK);
-		display.setCursor(5, 34);
+		if(resolutionMode)
+		{
+			display.setCursor(0, display.height()/2);
+			display.setFreeFont(TT1);
+		}
+		else
+		{
+			display.setCursor(0, display.height()/2 - 16);
+			display.setTextFont(2);
+		}
 		display.setTextColor(TFT_WHITE);
 		display.printCenter("Error loading SMS!");
 		while (!update());
@@ -1856,7 +1864,16 @@ void MAKERphone::messagesApp() {
 	{
 		display.setFreeFont(TT1);
 		display.fillScreen(TFT_BLACK);
-		display.setCursor(5, 34);
+		if(resolutionMode)
+		{
+			display.setCursor(0, display.height()/2);
+			display.setFreeFont(TT1);
+		}
+		else
+		{
+			display.setCursor(0, display.height()/2 - 16);
+			display.setTextFont(2);
+		}
 		display.setTextColor(TFT_WHITE);
 		display.printCenter("No messages :(");
 		while (!update());
@@ -2081,31 +2098,100 @@ void MAKERphone::viewSms(String content, String contact, String date) {
 	}
 }
 void MAKERphone::smsMenuDrawBox(String contact, String date, String content, uint8_t i, int32_t y) {
-	
-	y += (i-1) * 20 + composeBoxHeight + menuYOffset;
-	if (y < 0 || y > BUFHEIGHT) {
+	uint8_t scale;
+	uint8_t offset;
+	uint8_t boxHeight;
+	uint8_t composeHeight;
+	display.setTextSize(1);
+	if(resolutionMode)
+	{
+		scale = 1;
+		offset = menuYOffset;
+		composeHeight=12;
+		boxHeight = 21;
+		display.setFreeFont(TT1);
+	}
+	else
+	{
+		scale = 2;
+		offset = 19;
+		composeHeight=21;
+		boxHeight = 27;
+		display.setTextFont(1);
+	}
+	y += (i-1) * (boxHeight-1) + composeHeight + offset;
+	if (y < 0 || y > display.height()) {
 		return;
 	}
-	display.fillRect(1, y + 1, BUFWIDTH - 2, 19, TFT_DARKGREY);
-	display.setTextColor(TFT_WHITE);
-	display.setCursor(2, y + 2);
-	display.drawString(contact, 3, y + 2);
-	display.drawString(date, 3, y + 8);
-	display.drawString(content, 3, y + 14);
+	if(resolutionMode)
+	{
+		display.fillRect(scale, y + 1, display.width() - 2, boxHeight-2, TFT_DARKGREY);
+		display.setTextColor(TFT_WHITE);
+		display.setCursor(2*scale, y + 2);
+		display.drawString(contact, 3, y + 2);
+		display.drawString(date, 3, y + 8);
+		display.drawString(content, 3, y + 14);
+	}
+	else
+	{
+		display.fillRect(scale, y + 1, display.width() - 2, boxHeight-2, TFT_DARKGREY);
+		display.setTextColor(TFT_WHITE);
+		display.setCursor(2*scale, y + 2);
+		display.drawString(contact, 3, y + 2);
+		display.drawString(date, 3, y + 10);
+		display.drawString(content, 3, y + 18);
+	}
 
 }
 void MAKERphone::smsMenuDrawCursor(uint8_t i, int32_t y) {
+	uint8_t scale;
+	uint8_t offset;
+	uint8_t boxHeight;
+	uint8_t composeHeight;
+	if(resolutionMode)
+	{
+		scale = 1;
+		offset = menuYOffset;
+		composeHeight=12;
+		boxHeight = 21;
+		display.setTextSize(1);
+	}
+	else
+	{
+		scale = 2;
+		offset = 19;
+		composeHeight=21;
+		boxHeight = 27;
+		display.setTextSize(2);
+	}
 	if (millis() % 500 <= 250) {
 		return;
 	}
-	y += (i-1) * 20 + composeBoxHeight + menuYOffset;
-	display.drawRect(0, y, display.width(), 21, TFT_RED);
+	y += (i-1) * (boxHeight-1) + composeHeight + offset;
+	display.drawRect(0, y, display.width(), boxHeight, TFT_RED);
 }
 int16_t MAKERphone::smsMenu(const char* title, String* contact, String *date, String *content, uint8_t length) {
 	uint8_t cursor = 0;
 	int32_t cameraY = 0;
 	int32_t cameraY_actual = 0;
-
+	uint8_t scale;
+	uint8_t offset;
+	uint8_t boxHeight;
+	uint8_t composeHeight;
+	if(resolutionMode)
+	{
+		scale = 1;
+		offset = menuYOffset;
+		composeHeight=12;
+		boxHeight = 21;
+	}
+	else
+	{
+		scale = 2;
+		offset = 19;
+		composeHeight=21;
+		boxHeight = 27;
+	}
 	while (1) {
 		while (!update());
 		display.fillScreen(TFT_BLACK);
@@ -2127,11 +2213,22 @@ int16_t MAKERphone::smsMenu(const char* title, String* contact, String *date, St
 			smsMenuDrawCursor(cursor, cameraY_actual);
 
 		// last draw the top entry thing
-		display.fillRect(0, 0, display.width(), 7, TFT_DARKGREY);
+		display.fillRect(0, 0, display.width(), 6*scale, TFT_DARKGREY);
+		if(resolutionMode)
+		{
+			display.setFreeFont(TT1);
+			display.setCursor(0,5);
+			display.drawFastHLine(0, 6, BUF2WIDTH, TFT_WHITE);
+		}
+		else
+		{
+			display.setTextFont(2);
+			display.setCursor(0,-2);
+			display.drawFastHLine(0, 14, BUF2WIDTH, TFT_WHITE);
+		}
+		display.setTextSize(1);
 		display.setTextColor(TFT_WHITE);
-		display.setCursor(1, 1);
-		display.drawString(title, 1, 1);
-		display.drawFastHLine(0, 7, LCDWIDTH, TFT_BLACK);
+		display.print(title);
 
 		if (buttons.released(BTN_A)) {   //BUTTON CONFIRM
 
@@ -2139,39 +2236,36 @@ int16_t MAKERphone::smsMenu(const char* title, String* contact, String *date, St
 			break;
 		}
 
-		if (buttons.kpd.pin_read(JOYSTICK_D) == 0) {  //BUTTON UP
-
-			while (buttons.kpd.pin_read(JOYSTICK_D) == 0);
+		if (buttons.released(JOYSTICK_D)) {  //BUTTON UP
 			if (cursor == 0) {
 				cursor = length - 1;
 				if (length > 2) {
-					cameraY = -(cursor - 1) * 20;
+					cameraY = -(cursor - 1) * (boxHeight-1);
 				}
 			}
 			else {
 				cursor--;
-				if (cursor > 0 && (cursor * 20 + cameraY + menuYOffset) < 14) {
-					cameraY += 20;
+				if (cursor > 0 && (cursor * (boxHeight-1) + cameraY + offset) < 14*scale) {
+					cameraY += (boxHeight-1);
 				}
 			}
 		}
 
-		if (buttons.kpd.pin_read(JOYSTICK_B) == 0) { //BUTTON DOWN
-			while (buttons.kpd.pin_read(JOYSTICK_B) == 0);
+		if (buttons.released(JOYSTICK_B)) { //BUTTON DOWN
 			cursor++;
 			if (cursor > 0)
 			{
-				if (((cursor - 1) * 20 + composeBoxHeight + cameraY + menuYOffset) > 40) {
-					cameraY -= 20;
+				if (((cursor - 1) * (boxHeight-1) + composeBoxHeight + cameraY + offset) > 40*scale) {
+					cameraY -= boxHeight-1;
 				}
 			}
 			else
 			{
-				if ((cursor * 20 + cameraY + menuYOffset) > 40) {
-					cameraY -= 20;
+				if ((cursor * (boxHeight-1) + cameraY + offset) > 40*scale) {
+					cameraY -= boxHeight-1;
 				}
 			}
-			if (cursor >= length) {
+			if (cursor > length) {
 				cursor = 0;
 				cameraY = 0;
 
@@ -2188,23 +2282,55 @@ int16_t MAKERphone::smsMenu(const char* title, String* contact, String *date, St
 
 }
 void MAKERphone::smsMenuComposeBoxCursor(uint8_t i, int32_t y) {
+	uint8_t scale;
+	uint8_t offset;
+	uint8_t boxHeight;
+	if(resolutionMode)
+	{
+		scale = 1;
+		offset = menuYOffset;
+		boxHeight=composeBoxHeight;
+	}
+	else
+	{
+		scale = 2;
+		offset = 19;
+		boxHeight=21;
+	}
 	if (millis() % 500 <= 250) {
 		return;
 	}
-	y += menuYOffset;
-	display.drawRect(0, y, display.width(), composeBoxHeight+1, TFT_RED);
+	y += offset;
+	display.drawRect(0, y, display.width(), boxHeight+1, TFT_RED);
 }
 void MAKERphone::smsMenuComposeBox(uint8_t i, int32_t y) {
-	y += menuYOffset;
-	if (y < 0 || y > BUFHEIGHT) {
+	uint8_t scale;
+	uint8_t offset;
+	uint8_t boxHeight;
+	display.setTextSize(1);
+	if(resolutionMode)
+	{
+		scale = 1;
+		offset = menuYOffset;
+		boxHeight=12;
+		display.setTextFont(1);
+		
+	}
+	else
+	{
+		scale = 2;
+		offset = 19;
+		boxHeight=21;
+		display.setTextFont(2);
+	}
+	y += offset;
+	if (y < 0 || y > display.height()) {
 		return;
 	}
-	display.fillRect(1, y + 1, BUFWIDTH - 2, composeBoxHeight-1, TFT_DARKGREY);
-	display.drawBitmap(2, y + 2, composeIcon, TFT_WHITE);
+	display.fillRect(scale, y + 1, display.width() - 2, boxHeight-1, TFT_DARKGREY);
+	display.drawBitmap(2*scale, y + 2, composeIcon, TFT_WHITE, scale);
 	display.setTextColor(TFT_WHITE);
-	display.setCursor(20, y + 3);
-	display.setTextFont(1);
-	display.print("New SMS");
+	display.drawString("New SMS", 20*scale, y+3);
 	display.setFreeFont(TT1);
 
 }
@@ -4599,13 +4725,10 @@ int8_t GUI::drawBigIconsCursor(uint8_t xoffset, uint8_t yoffset, uint8_t xelemen
 	while (1)
 	{
 		mp.display.fillScreen(TFT_BLACK);
-		if(mp.resolutionMode)
-			mp.display.setFreeFont(TT1);
-		else
-			mp.display.setTextFont(2);
+		
 		mp.display.setTextSize(1);
 		mp.display.setTextColor(TFT_WHITE);
-		mp.display.drawFastHLine(0, 6*scale, BUF2WIDTH, TFT_WHITE);
+		
 		// Draw the icons
 		mp.display.drawIcon(bigMessages, 2*scale, 9*scale, width, bigIconHeight, scale);
 		mp.display.drawIcon(bigMedia, 28*scale, 9*scale, width, bigIconHeight, scale);
@@ -4616,7 +4739,18 @@ int8_t GUI::drawBigIconsCursor(uint8_t xoffset, uint8_t yoffset, uint8_t xelemen
 
 		mp.display.fillRect(0, 0, 80*scale, 6*scale, TFT_BLACK);
 		index = cursorY * xelements + cursorX;
-		mp.display.setCursor(0,-2);
+		if(mp.resolutionMode)
+		{
+			mp.display.setFreeFont(TT1);
+			mp.display.setCursor(0,5);
+			mp.display.drawFastHLine(0, 6, BUF2WIDTH, TFT_WHITE);
+		}
+		else
+		{
+			mp.display.setTextFont(2);
+			mp.display.setCursor(0,-2);
+			mp.display.drawFastHLine(0, 14, BUF2WIDTH, TFT_WHITE);
+		}
 		mp.display.print(mp.titles[index]);
 
 		if (millis() - elapsedMillis >= 250) {

@@ -4820,51 +4820,51 @@ void TFT_eSPI::drawIcon(const unsigned short* icon, int16_t x, int16_t y, uint16
 void TFT_eSPI::printCenter(const char* text)
 {
 	int8_t cursorBuffer = cursor_y;
-	setCursor(-10, -10);
+	setCursor(-50, -50);
 	uint16_t textLength = cursor_x;
   print(text);
   textLength = cursor_x - textLength;
-	setCursor(int((80 - textLength) / 2), cursorBuffer); //TO-DO: change this to the sprite width value
+	setCursor(int((width() - textLength) / 2), cursorBuffer); //TO-DO: change this to the sprite width value
 	print(text);
 }
 void TFT_eSPI::printCenter(String text)
 {
 	int8_t cursorBuffer = cursor_y;
-	setCursor(-10, -10);
+	setCursor(-50, -50);
 	uint16_t textLength = cursor_x;
 	print(text);
 	textLength = cursor_x - textLength;
-	setCursor(int((80 - textLength) / 2), cursorBuffer); //TO-DO: change this to the sprite width value
+	setCursor(int((width() - textLength) / 2), cursorBuffer); //TO-DO: change this to the sprite width value
 	print(text);
 }
 void TFT_eSPI::printCenter(int text)
 {
 	int8_t cursorBuffer = cursor_y;
-	setCursor(-10, -10);
+	setCursor(-50, -50);
 	uint16_t textLength = cursor_x;
 	print(text);
 	textLength = cursor_x - textLength;
-	setCursor(int((80 - textLength) / 2), cursorBuffer); //TO-DO: change this to the sprite width value
+	setCursor(int((width() - textLength) / 2), cursorBuffer); //TO-DO: change this to the sprite width value
 	print(text);
 }
 void TFT_eSPI::printCenter(float text)
 {
 	int8_t cursorBuffer = cursor_y;
-	setCursor(-10, -10);
+	setCursor(-50, -50);
 	uint16_t textLength = cursor_x;
 	print(text);
 	textLength = cursor_x - textLength;
-	setCursor(int((80 - textLength) / 2), cursorBuffer); //TO-DO: change this to the sprite width value
+	setCursor(int((width() - textLength) / 2), cursorBuffer); //TO-DO: change this to the sprite width value
 	print(text);
 }
 void TFT_eSPI::printCenter(char text)
 {
 	int8_t cursorBuffer = cursor_y;
-	setCursor(-10, -10);
+	setCursor(-50, -50);
 	uint16_t textLength = cursor_x;
 	print(text);
 	textLength = cursor_x - textLength;
-	setCursor(int((80 - textLength) / 2), cursorBuffer); //TO-DO: change this to the sprite width value
+	setCursor(int((width() - textLength) / 2), cursorBuffer); //TO-DO: change this to the sprite width value
 	print(text);
 }
 
