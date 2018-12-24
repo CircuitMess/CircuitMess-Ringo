@@ -17,9 +17,9 @@
 #include "TFT_eSPI.h"
 
 #include <pgmspace.h>
-extern TFT_eSPI tft = TFT_eSPI();  // Invoke library, pins defined in User_Setup.h
+/* extern TFT_eSPI tft = TFT_eSPI();  // Invoke library, pins defined in User_Setup.h
 extern TFT_eSprite buf = TFT_eSprite(&tft);
-extern TFT_eSprite buf2 = TFT_eSprite(&tft);
+extern TFT_eSprite buf2 = TFT_eSprite(&tft); */
 #ifndef ESP32_PARALLEL
   #include <SPI.h>
 #endif
@@ -4751,29 +4751,31 @@ void TFT_eSPI::getSetup(setup_t &tft_settings)
 #ifdef SMOOTH_FONT
   #include "Extensions/Smooth_font.cpp"
 #endif
+
+////////////////////////////////////////////////////////////////////////////////////////
 //Custom functions
 ////////////////////////////////////////////////////////////////////////////////////////
 
-void TFT_eSPI::drawBitmap(int8_t x, int8_t y, const byte *bitmap, uint16_t color, uint8_t scale) {
-	uint8_t w = *(bitmap++);
-	uint8_t h = *(bitmap++);
+void TFT_eSPI::drawBitmap(int16_t x, int16_t y, const byte *bitmap, uint16_t color, uint8_t scale) {
+	uint16_t w = *(bitmap++);
+	uint16_t h = *(bitmap++);
 
-	uint8_t byteWidth = (w + 7) / 8;
-	uint8_t _x = x;
-	uint8_t dw = 8 - (w % 8);
-	for (uint8_t j = 0; j < h; j++) {
+	uint16_t byteWidth = (w + 7) / 8;
+	uint16_t _x = x;
+	uint16_t dw = 8 - (w % 8);
+	for (uint16_t j = 0; j < h; j++) {
 		x = _x;
-		for (uint8_t i = 0; i < byteWidth;) {
-			uint8_t b = *(bitmap++);
+		for (uint16_t i = 0; i < byteWidth;) {
+			uint16_t b = *(bitmap++);
 			i++;
-			for (uint8_t k = 0; k < 8; k++) {
+			for (uint16_t k = 0; k < 8; k++) {
 				if (i == byteWidth && k == dw) {
 					x += (w % 8);
 					break;
 				}
 				if (b & 0x80) {
 					fillRect(x, y, scale, scale, color);
-				}
+				} 
 				b <<= 1;
 				x+=scale;
 			}

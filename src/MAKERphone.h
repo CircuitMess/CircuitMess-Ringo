@@ -175,7 +175,7 @@ public:
 	TFT_eSPI tft = TFT_eSPI();  // Invoke library, pins defined in User_Setup.h
 	TFT_eSprite display = TFT_eSprite(&tft);
 	TFT_eSprite buf = TFT_eSprite(&tft);
-	bool resolutionMode=0; //0 is native, 1 is halved
+	bool resolutionMode=1; //0 is native, 1 is halved
 	void setResolution(bool res = 1);
 	bool spriteCreated = 0;
 	

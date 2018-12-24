@@ -87,7 +87,6 @@ void MAKERphone::begin(bool splash) {
 
 	tft.invertDisplay(0);
 	tft.setRotation(1);
-
 	display.setColorDepth(8); // Set colour depth of Sprite to 8 (or 16) bits
 	display.createSprite(BUFWIDTH, BUFHEIGHT); // Create the sprite and clear background to black
 	display.setTextWrap(0);             //setRotation(1);
@@ -95,7 +94,6 @@ void MAKERphone::begin(bool splash) {
 
 	buf.setColorDepth(8); // Set colour depth of Sprite to 8 (or 16) bits
 	buf.createSprite(BUF2WIDTH, BUF2HEIGHT); // Create the sprite and clear background to black
-	//buf2.setRotation(1);
 	buf.setTextSize(1);
 	
 	if (splash == 1)
@@ -174,12 +172,9 @@ bool MAKERphone::update() {
 			display.createSprite(BUFWIDTH, BUFHEIGHT);
 		else
 			display.createSprite(BUF2WIDTH, BUF2HEIGHT);
-		Serial.println("SPRITE CHANGED");
-		delay(5);
+		display.setRotation(1);
 		spriteCreated=1;
 	}
-	Serial.println(display.height());
-	delay(5);
 	//halved resolution mode
 	if(resolutionMode == 1)
 	{
@@ -312,20 +307,9 @@ bool MAKERphone::update() {
 		buttons.update();
 		gui.updatePopup();
 		delay(1);
+		
 		pixels.show();
 		pixels.clear();
-		/*if (pixelUpdate == 0)
-			pixelUpdate = 1;
-		if (pixelUpdate == 1)
-			pixelUpdate = 2;
-		if (pixelUpdate == 2)
-			pixelUpdate = 3;
-		if (pixelUpdate == 3)
-		{
-			pixelUpdate = 0;
-			
-		}
-			*/
 		return true;
 	}
 	else
@@ -377,12 +361,10 @@ void MAKERphone::splashScreen() {
 
 	
 }
-void MAKERphone::setResolution(bool res)
-{
+void MAKERphone::setResolution(bool res){
 	mp.resolutionMode=res;
 	mp.spriteCreated=0;
 }
-
 void MAKERphone::tone2(int pin, int freq, int duration) {
 	ledcWriteTone(0, freq);
 	delay(duration);
@@ -519,15 +501,15 @@ void MAKERphone::lockScreen() {
 		if (simInserted && !airplaneMode)
 		{
 			if (signalStrength <= 3)
-				display.drawBitmap(1*scale, 1*scale, noSignalIcon);
+				display.drawBitmap(1*scale, 1*scale, noSignalIcon, TFT_BLACK, scale);
 			else if (signalStrength > 3 && signalStrength <= 10)
-				display.drawBitmap(1*scale, 1*scale, signalLowIcon);
+				display.drawBitmap(1*scale, 1*scale, signalLowIcon, TFT_BLACK, scale);
 			else if (signalStrength > 10 && signalStrength <= 20)
-				display.drawBitmap(1*scale, 1*scale, signalHighIcon);
+				display.drawBitmap(1*scale, 1*scale, signalHighIcon, TFT_BLACK, scale);
 			else if (signalStrength > 20 && signalStrength <= 31)
-				display.drawBitmap(1*scale, 1*scale, signalFullIcon);
+				display.drawBitmap(1*scale, 1*scale, signalFullIcon, TFT_BLACK, scale);
 			else if (signalStrength == 99)
-				display.drawBitmap(1*scale, 1*scale, signalErrorIcon);
+				display.drawBitmap(1*scale, 1*scale, signalErrorIcon, TFT_BLACK, scale);
 		}
 		else if(!simInserted && !airplaneMode)
 			display.drawBitmap(1*scale, 1*scale, signalErrorIcon, TFT_BLACK, scale);
@@ -558,7 +540,6 @@ void MAKERphone::lockScreen() {
 		}
 		if(!SDinsertedFlag)
 			display.drawBitmap(helper*scale, 1*scale, noSDIcon, TFT_BLACK, scale);
-
 		if (batteryVoltage > 4000)
 			display.drawBitmap(74*scale, 1*scale, batteryCharging, TFT_BLACK, scale);
 		else if (batteryVoltage <= 4000 && batteryVoltage >= 3800)
@@ -4609,26 +4590,34 @@ int8_t GUI::drawBigIconsCursor(uint8_t xoffset, uint8_t yoffset, uint8_t xelemen
 	Serial.begin(115200);
 	long elapsedMillis = millis();
 	long elapsedMillis2 = millis();
+	uint8_t scale;
+	if(mp.resolutionMode)
+		scale = 1;
+	else
+		scale = 2;
+
 	while (1)
 	{
 		mp.display.fillScreen(TFT_BLACK);
-		mp.display.setFreeFont(TT1);
+		if(mp.resolutionMode)
+			mp.display.setFreeFont(TT1);
+		else
+			mp.display.setTextFont(2);
 		mp.display.setTextSize(1);
 		mp.display.setTextColor(TFT_WHITE);
-		mp.display.drawString("Test", 0, 0);
-		mp.display.drawFastHLine(0, 6, BUFWIDTH, TFT_WHITE);
+		mp.display.drawFastHLine(0, 6*scale, BUF2WIDTH, TFT_WHITE);
 		// Draw the icons
-		mp.display.drawIcon(bigMessages, 2, 9, width, bigIconHeight);
-		mp.display.drawIcon(bigMedia, 28, 9, width, bigIconHeight);
-		mp.display.drawIcon(bigContacts, 54, 9, width, bigIconHeight);
-		mp.display.drawIcon(bigSettings, 2, 36, width, bigIconHeight);
-		mp.display.drawIcon(bigPhone, 28, 36, width, bigIconHeight);
-		mp.display.drawIcon(bigApps, 54, 36, width, bigIconHeight);
+		mp.display.drawIcon(bigMessages, 2*scale, 9*scale, width, bigIconHeight, scale);
+		mp.display.drawIcon(bigMedia, 28*scale, 9*scale, width, bigIconHeight, scale);
+		mp.display.drawIcon(bigContacts, 54*scale, 9*scale, width, bigIconHeight, scale);
+		mp.display.drawIcon(bigSettings, 2*scale, 36*scale, width, bigIconHeight, scale);
+		mp.display.drawIcon(bigPhone, 28*scale, 36*scale, width, bigIconHeight, scale);
+		mp.display.drawIcon(bigApps, 54*scale, 36*scale, width, bigIconHeight, scale);
 
-		mp.display.fillRect(0, 0, 80, 6, TFT_BLACK);
+		mp.display.fillRect(0, 0, 80*scale, 6*scale, TFT_BLACK);
 		index = cursorY * xelements + cursorX;
-		mp.display.drawString(mp.titles[index], 0, 0);
-		//kpd.begin(14, 27);
+		mp.display.setCursor(0,-2);
+		mp.display.print(mp.titles[index]);
 
 		if (millis() - elapsedMillis >= 250) {
 			elapsedMillis = millis();
@@ -4642,9 +4631,9 @@ int8_t GUI::drawBigIconsCursor(uint8_t xoffset, uint8_t yoffset, uint8_t xelemen
 			passcode = "";
 
 		if (cursorState == 1)
-			mp.display.drawRect(xstart + cursorX * xoffset, ystart + cursorY * yoffset, width + 2, bigIconHeight + 2, TFT_RED);
+			mp.display.drawRect((xstart + cursorX * xoffset)*scale, (ystart + cursorY * yoffset)*scale, (width + 2)*scale, (bigIconHeight + 2)*scale, TFT_RED);
 		else
-			mp.display.drawRect(xstart + cursorX * xoffset, ystart + cursorY * yoffset, width + 2, bigIconHeight + 2, TFT_BLACK);
+			mp.display.drawRect((xstart + cursorX * xoffset)*scale, (ystart + cursorY * yoffset)*scale, (width + 2)*scale, (bigIconHeight + 2)*scale, TFT_BLACK);
 
 		///////////////////////////////
 		//////Checking for button input
@@ -4668,7 +4657,7 @@ int8_t GUI::drawBigIconsCursor(uint8_t xoffset, uint8_t yoffset, uint8_t xelemen
 			while (!mp.update());
 
 			while (mp.buttons.kpd.pin_read(JOYSTICK_B) == 0);
-			mp.display.drawRect(xstart + cursorX * xoffset, ystart + cursorY * yoffset, width + 2, bigIconHeight + 2, TFT_BLACK);
+			mp.display.drawRect((xstart + cursorX * xoffset)*scale, (ystart + cursorY * yoffset)*scale, (width + 2)*scale, (bigIconHeight + 2)*scale, TFT_BLACK);
 			if (cursorY == 0) {
 				cursorY = yelements - 1;
 			}
@@ -4690,7 +4679,7 @@ int8_t GUI::drawBigIconsCursor(uint8_t xoffset, uint8_t yoffset, uint8_t xelemen
 			while (!mp.update());
 
 			while (mp.buttons.kpd.pin_read(JOYSTICK_D) == 0);
-			mp.display.drawRect(xstart + cursorX * xoffset, ystart + cursorY * yoffset, width + 2, bigIconHeight + 2, TFT_BLACK);
+			mp.display.drawRect((xstart + cursorX * xoffset)*scale, (ystart + cursorY * yoffset)*scale, (width + 2)*scale, (bigIconHeight + 2)*scale, TFT_BLACK);
 			if (cursorY == yelements - 1) {
 				cursorY = 0;
 			}
@@ -4712,7 +4701,7 @@ int8_t GUI::drawBigIconsCursor(uint8_t xoffset, uint8_t yoffset, uint8_t xelemen
 			while (!mp.update());
 
 			while (mp.buttons.kpd.pin_read(JOYSTICK_A) == 0);
-			mp.display.drawRect(xstart + cursorX * xoffset, ystart + cursorY * yoffset, width + 2, bigIconHeight + 2, TFT_BLACK);
+			mp.display.drawRect((xstart + cursorX * xoffset)*scale, (ystart + cursorY * yoffset)*scale, (width + 2)*scale, (bigIconHeight + 2)*scale, TFT_BLACK);
 			if (cursorX == 0) {
 				cursorX = xelements - 1;
 			}
@@ -4735,7 +4724,7 @@ int8_t GUI::drawBigIconsCursor(uint8_t xoffset, uint8_t yoffset, uint8_t xelemen
 			while (!mp.update());
 
 			while (mp.buttons.kpd.pin_read(JOYSTICK_C) == 0);
-			mp.display.drawRect(xstart + cursorX * xoffset, ystart + cursorY * yoffset, width + 2, bigIconHeight + 2, TFT_BLACK);
+			mp.display.drawRect((xstart + cursorX * xoffset)*scale, (ystart + cursorY * yoffset)*scale, (width + 2)*scale, (bigIconHeight + 2)*scale, TFT_BLACK);
 			if (cursorX == xelements - 1) {
 				cursorX = 0;
 			}
