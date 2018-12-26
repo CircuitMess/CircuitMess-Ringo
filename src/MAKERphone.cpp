@@ -1922,27 +1922,27 @@ void MAKERphone::messagesApp() {
 			char c1, c2; //buffer for saving date and time numerals in form of characters
 			c1 = tempDate[i].charAt(index + 8);
 			c2 = tempDate[i].charAt(index + 9);
-			smsYear = 2000 + ((c1 - '0') * 10) + (c2 - '0');
+			smsYear[i] = 2000 + ((c1 - '0') * 10) + (c2 - '0');
 
 			c1 = tempDate[i].charAt(index + 11);
 			c2 = tempDate[i].charAt(index + 12);
-			smsMonth = ((c1 - '0') * 10) + (c2 - '0');
+			smsMonth[i] = ((c1 - '0') * 10) + (c2 - '0');
 
 			c1 = tempDate[i].charAt(index + 14);
 			c2 = tempDate[i].charAt(index + 15);
-			smsDay = ((c1 - '0') * 10) + (c2 - '0');
+			smsDay[i] = ((c1 - '0') * 10) + (c2 - '0');
 
 			c1 = tempDate[i].charAt(index + 17);
 			c2 = tempDate[i].charAt(index + 18);
-			smsHour = ((c1 - '0') * 10) + (c2 - '0');
+			smsHour[i] = ((c1 - '0') * 10) + (c2 - '0');
 
 			c1 = tempDate[i].charAt(index + 20);
 			c2 = tempDate[i].charAt(index + 21);
-			smsMinute = ((c1 - '0') * 10) + (c2 - '0');
+			smsMinute[i] = ((c1 - '0') * 10) + (c2 - '0');
 
 			c1 = tempDate[i].charAt(index + 23);
 			c2 = tempDate[i].charAt(index + 24);
-			smsSecond = ((c1 - '0') * 10) + (c2 - '0');
+			smsSecond[i] = ((c1 - '0') * 10) + (c2 - '0');
 		}
 
 		while (1)
@@ -2116,8 +2116,8 @@ void MAKERphone::smsMenuDrawBox(String contact, String date, String content, uin
 		scale = 2;
 		offset = 19;
 		composeHeight=21;
-		boxHeight = 27;
-		display.setTextFont(1);
+		boxHeight = 30;
+		display.setTextFont(2);
 	}
 	y += (i-1) * (boxHeight-1) + composeHeight + offset;
 	if (y < 0 || y > display.height()) {
@@ -2134,12 +2134,19 @@ void MAKERphone::smsMenuDrawBox(String contact, String date, String content, uin
 	}
 	else
 	{
+		String monthsList[] = {"JAN", "FEB", "MAR", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"};
 		display.fillRect(scale, y + 1, display.width() - 2, boxHeight-2, TFT_DARKGREY);
 		display.setTextColor(TFT_WHITE);
-		display.setCursor(2*scale, y + 2);
-		display.drawString(contact, 3, y + 2);
-		display.drawString(date, 3, y + 10);
-		display.drawString(content, 3, y + 18);
+		display.setCursor(4, y + 2);
+		display.drawString(contact, 3, y-1);
+		
+		//display.drawString(date, 3, y + 10);
+		display.drawString(content, 3, y + 13);
+		display.setTextFont(1);
+		display.setCursor(124, y+3);
+		display.print(monthsList[smsMonth[i - 1]-1]);
+		display.print(" ");
+		display.print(smsDay[i - 1]);
 	}
 
 }
@@ -2161,7 +2168,7 @@ void MAKERphone::smsMenuDrawCursor(uint8_t i, int32_t y) {
 		scale = 2;
 		offset = 19;
 		composeHeight=21;
-		boxHeight = 27;
+		boxHeight = 30;
 		display.setTextSize(2);
 	}
 	if (millis() % 500 <= 250) {
@@ -2190,7 +2197,7 @@ int16_t MAKERphone::smsMenu(const char* title, String* contact, String *date, St
 		scale = 2;
 		offset = 19;
 		composeHeight=21;
-		boxHeight = 27;
+		boxHeight = 30;
 	}
 	while (1) {
 		while (!update());
@@ -2213,15 +2220,17 @@ int16_t MAKERphone::smsMenu(const char* title, String* contact, String *date, St
 			smsMenuDrawCursor(cursor, cameraY_actual);
 
 		// last draw the top entry thing
-		display.fillRect(0, 0, display.width(), 6*scale, TFT_DARKGREY);
+		
 		if(resolutionMode)
 		{
+			display.fillRect(0, 0, display.width(), 6, TFT_DARKGREY);
 			display.setFreeFont(TT1);
 			display.setCursor(0,5);
 			display.drawFastHLine(0, 6, BUF2WIDTH, TFT_WHITE);
 		}
 		else
 		{
+			display.fillRect(0, 0, display.width(), 14, TFT_DARKGREY);
 			display.setTextFont(2);
 			display.setCursor(0,-2);
 			display.drawFastHLine(0, 14, BUF2WIDTH, TFT_WHITE);
