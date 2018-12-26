@@ -2078,20 +2078,43 @@ void MAKERphone::viewSms(String content, String contact, String date) {
 
 		if (blinkState == 1)
 		{
-			display.fillRect(0, 0, display.width(), 7, TFT_DARKGREY);
 			display.setTextColor(TFT_WHITE);
-			display.setCursor(1, 6);
+			if(resolutionMode)
+			{
+				display.fillRect(0, 0, display.width(), 7, TFT_DARKGREY);
+				display.setFreeFont(TT1);
+				display.setCursor(1, 6);
+				display.drawFastHLine(0, 7, LCDWIDTH, TFT_BLACK);
+			}
+			else
+			{
+				display.fillRect(0, 0, display.width(), 14, TFT_DARKGREY);
+				display.setTextFont(2);
+				display.setCursor(2,-1);
+				display.drawFastHLine(0, 14, display.width(), TFT_WHITE);
+				
+			}
 			display.print("From: ");
 			display.print(contact);
-			display.drawFastHLine(0, 7, LCDWIDTH, TFT_BLACK);
 		}
 		else
 		{
-			display.fillRect(0, 0, display.width(), 7, TFT_DARKGREY);
 			display.setTextColor(TFT_WHITE);
-			display.setCursor(1, 6);
+			if(resolutionMode)
+			{
+				display.fillRect(0, 0, display.width(), 7, TFT_DARKGREY);
+				display.setFreeFont(TT1);
+				display.setCursor(1, 6);
+				display.drawFastHLine(0, 7, LCDWIDTH, TFT_BLACK);
+			}
+			else
+			{
+				display.fillRect(0, 0, display.width(), 14, TFT_DARKGREY);
+				display.setTextFont(2);
+				display.setCursor(2,-1);
+				display.drawFastHLine(0, 14, display.width(), TFT_WHITE);
+			}
 			display.print(date);
-			display.drawFastHLine(0, 7, LCDWIDTH, TFT_BLACK);
 		}
 
 		update();
@@ -2346,7 +2369,10 @@ void MAKERphone::smsMenuComposeBox(uint8_t i, int32_t y) {
 void MAKERphone::composeSMS()
 {
 	textPointer = 0;
-	y = 10;  //Beggining point
+	if(resolutionMode)
+		y = 10;  //Beggining point
+	else
+		y = 16;
 	String content = "";
 	String contact = "";
 	String prevContent = "";
@@ -2355,16 +2381,34 @@ void MAKERphone::composeSMS()
 	uint16_t contentCursor = 0;
 	unsigned long elapsedMillis = millis();
 	bool blinkState = 1;
+	uint8_t scale;
+	
 	while (1)
 	{
+		
+		
 		display.fillScreen(TFT_DARKGREY);
-		display.fillRect(0, 0, display.width(), 7, TFT_DARKGREY);
+
 		display.setTextColor(TFT_WHITE);
-		display.setCursor(1, 6);
+		if(resolutionMode)
+		{
+			scale = 1;
+			display.fillRect(0, 0, display.width(), 7, TFT_DARKGREY);
+			display.setFreeFont(TT1);
+			display.setCursor(1, 6);
+			display.drawFastHLine(0, 7, LCDWIDTH, TFT_BLACK);
+		}
+		else
+		{
+			scale = 2;
+			display.fillRect(0, 0, display.width(), 14, TFT_DARKGREY);
+			display.setTextFont(2);
+			display.setCursor(2,-1);
+			display.drawFastHLine(0, 14, display.width(), TFT_WHITE);
+		
+		}
 		display.print("To: ");
 		
-		display.drawFastHLine(0, 7, LCDWIDTH, TFT_BLACK);
-		display.setFreeFont(TT1);
 		if (millis() - elapsedMillis >= multi_tap_threshold) //cursor blinking routine 
 		{
 			elapsedMillis = millis();
@@ -2380,8 +2424,9 @@ void MAKERphone::composeSMS()
 			if (key != NO_KEY && isdigit(key))
 				contact += key;
 			display.setTextWrap(1);
-			display.setCursor(1, y);
-			display.setTextFont(1);
+			display.setCursor(1*scale, y);
+			if(resolutionMode)
+				display.setTextFont(1);
 			if (content == "")
 			{
 				display.setTextColor(TFT_LIGHTGREY);
@@ -2390,16 +2435,30 @@ void MAKERphone::composeSMS()
 			}
 			else
 				display.print(content);
-			display.setFreeFont(TT1);
-			display.setCursor(13, 6);
+			if(resolutionMode)
+			{
+				display.setFreeFont(TT1);
+				display.setCursor(13, 6);
+			}
+			else
+				display.setCursor(27, -1);
+
 			display.print(contact);
 			if (blinkState == 1)
-				display.drawFastVLine(display.getCursorX(), display.getCursorY()-5, 5, TFT_WHITE);
+			{
+				if(resolutionMode)
+					display.drawFastVLine(display.getCursorX(), display.getCursorY()-5, 5, TFT_WHITE);
+				else
+					display.drawFastVLine(display.getCursorX(), display.getCursorY()+3, 10, TFT_WHITE);
+			}
 		}
 		else
 		{
 			display.setTextColor(TFT_WHITE);
-			display.setCursor(1, 6);
+			if(resolutionMode)
+				display.setCursor(1, 6);
+			else
+				display.setCursor(2, -1);
 			display.print("To: ");
 			display.print(contact);
 			prevContent = content;
@@ -2410,12 +2469,19 @@ void MAKERphone::composeSMS()
 				elapsedMillis = millis();
 			}
 			display.setTextWrap(1);
-			display.setCursor(1, y);
-			display.setTextFont(1);
+			display.setCursor(1*scale, y);
+			if(resolutionMode)
+				display.setTextFont(1);
 			display.print(content);
-			display.setFreeFont(TT1);
+			if(resolutionMode)
+				display.setFreeFont(TT1);
 			if(blinkState == 1)
-				display.drawFastVLine(display.getCursorX(), display.getCursorY(), 7, TFT_WHITE);
+			{
+				if(resolutionMode)
+					display.drawFastVLine(display.getCursorX(), display.getCursorY(), 7, TFT_WHITE);
+				else
+					display.drawFastVLine(display.getCursorX(), display.getCursorY()+3, 10, TFT_WHITE);
+			}
 
 			/*if (blinkState == 1)
 			{
@@ -2486,11 +2552,19 @@ void MAKERphone::composeSMS()
 			while (!update());
 			break;
 		}
-		if (buttons.released(BTN_A)) // SEND SMS
+		if (buttons.released(BTN_A) && contact != "" && content != "") // SEND SMS
 		{
 			display.fillScreen(TFT_BLACK);
-			display.setFreeFont(TT1);
-			display.setCursor(34, 32);
+			if(resolutionMode)
+			{
+				display.setCursor(0, display.height()/2);
+				display.setFreeFont(TT1);
+			}
+			else
+			{
+				display.setCursor(0, display.height()/2 - 16);
+				display.setTextFont(2);
+			}
 			display.printCenter("Sending text...");
 			while (!update());
 			Serial1.print("AT+CMGS=\"");
