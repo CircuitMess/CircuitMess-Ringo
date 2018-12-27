@@ -82,7 +82,7 @@ extern HardwareSerial Serial1;
 #define BUF2HEIGHT 128 
 
 #define menuYOffset 9
-#define settingsMenuYOffset 2
+#define settingsMenuYOffset 5
 #define composeBoxHeight 12
 #define map_width 7
 #define RESET_MTP '~'
@@ -316,11 +316,13 @@ public:
 	int8_t settingsMenu(String* title, uint8_t length);
 	void settingsMenuDrawBox(String title, uint8_t i, int32_t y);
 	void settingsMenuDrawCursor(uint8_t i, int32_t y,  bool pressed);
-	String settingsItems[4] = {
+	String settingsItems[6] = {
 	"Network",
 	"Display",
+	"Storage",
 	"Sound",
-	"Security"};
+	"Security",
+	"About"};
 	void networkMenu();
 	void displayMenu();
 	void soundMenu();

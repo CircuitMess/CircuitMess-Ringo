@@ -3168,6 +3168,19 @@ int8_t MAKERphone::settingsMenu(String* title, uint8_t length) {
 	int32_t cameraY = 0;
 	int32_t cameraY_actual = 0;
 	dataRefreshFlag = 0;
+
+	uint8_t scale;
+	uint8_t boxHeight;
+	if(resolutionMode)
+	{
+		scale = 1;
+		boxHeight = 15;
+	}
+	else
+	{
+		scale = 2;
+		boxHeight = 20; //actually 2 less than that
+	}
 	while (1) {
 		while (!update());
 		display.fillScreen(TFT_BLACK);
@@ -3182,13 +3195,6 @@ int8_t MAKERphone::settingsMenu(String* title, uint8_t length) {
 		}
 		settingsMenuDrawCursor(cursor, cameraY_actual, pressed);
 
-		// last draw the top entry thing
-	//    display.fillRect(0, 0, display.width(), 7, TFT_DARKGREY);
-	//    display.setTextColor(TFT_WHITE);
-	//    display.setCursor(1, 1);
-	//    display.drawString(title, 1, 1);
-	//    display.drawFastHLine(0, 7, LCDWIDTH, TFT_BLACK);
-
 		if (buttons.kpd.pin_read(JOYSTICK_B) == 1 && buttons.kpd.pin_read(JOYSTICK_D) == 1)
 			pressed = 0;
 
@@ -3198,30 +3204,26 @@ int8_t MAKERphone::settingsMenu(String* title, uint8_t length) {
 			break;
 		}
 
-		if (buttons.kpd.pin_read(JOYSTICK_D) == 0) {  //BUTTON DOWN
-
-			while (buttons.kpd.pin_read(JOYSTICK_D) == 0);
+		if (buttons.released(JOYSTICK_D)) {  //BUTTON UP
 			if (cursor == 0) {
 				cursor = length - 1;
-				if (length > 5) {
-					cameraY = -(cursor - 2) * 15;
+				if (length > 6) {
+					cameraY = -(cursor - 2) * boxHeight;
 				}
 			}
 			else {
 				cursor--;
-				if (cursor > 0 && (cursor * 15 + cameraY + settingsMenuYOffset) < 15) {
+				if (cursor > 0 && (cursor * boxHeight + cameraY + settingsMenuYOffset) < boxHeight) {
 					cameraY += 15;
 				}
 			}
 			pressed = 1;
 		}
 
-		if (buttons.kpd.pin_read(JOYSTICK_B) == 0) { //BUTTON UP
-			while (buttons.kpd.pin_read(JOYSTICK_B) == 0);
-
+		if (buttons.released(JOYSTICK_B)) { //BUTTON DOWN
 			cursor++;
-			if ((cursor * 15 + cameraY + settingsMenuYOffset) > 48) {
-				cameraY -= 15;
+			if ((cursor * boxHeight + cameraY + settingsMenuYOffset) > 128) {
+				cameraY -= boxHeight;
 			}
 			if (cursor >= length) {
 				cursor = 0;
@@ -3242,62 +3244,104 @@ int8_t MAKERphone::settingsMenu(String* title, uint8_t length) {
 
 }
 void MAKERphone::settingsMenuDrawBox(String title, uint8_t i, int32_t y) {
-	y += i * 15 + settingsMenuYOffset; // 2px padding on top bezel
-	if (y < 0 || y > BUFHEIGHT) {
+	uint8_t scale;
+	uint8_t boxHeight;
+	uint8_t foo;
+	if(resolutionMode)
+	{
+		scale = 1;
+		boxHeight = 15;
+		foo=2;
+	}
+	else
+	{
+		scale = 2;
+		boxHeight = 20;
+		foo=5;
+	}
+	y += i * boxHeight + settingsMenuYOffset;
+	if (y < 0 || y > display.width()) {
 		return;
 	}
-	display.setTextFont(1);
-	display.setTextSize(1);
-
-	display.setTextColor(TFT_BLACK);
+	
+	
 	if (title == "Network") //red
 	{
-		display.fillRect(1, y + 1, BUFWIDTH - 2, 14, 0xFB6D);
-		display.drawBitmap(3, y + 2, network, 0x7800);
+		display.fillRect(2, y + 1, display.width() - 4, boxHeight-2, 0xFB6D);
+		display.drawBitmap(6, y + foo, network, 0x7800);
 	}
 	if (title == "Display") //green
 	{
-		display.fillRect(1, y + 1, BUFWIDTH - 2, 14, 0x8FEA);
-		display.drawBitmap(3, y + 2, displayIcon, 0x0341);
+		display.fillRect(2, y + 1, display.width() - 4, boxHeight-2, 0x8FEA);
+		display.drawBitmap(6, y + foo, displayIcon, 0x0341);
+	}
+	if (title == "Storage") //yellow
+	{
+		display.fillRect(2, y + 1, display.width() - 4, boxHeight-2, 0xFFEC);
+		display.drawBitmap(6, y + foo, displayIcon, 0x6B60);
 	}
 	if (title == "Sound")//blue
 	{
-		display.fillRect(1, y + 1, BUFWIDTH - 2, 14, 0xA7FF);
-		display.drawBitmap(3, y + 2, soundIcon, 0x010F);
+		display.fillRect(2, y + 1, display.width() - 4, boxHeight-2, 0xA7FF);
+		display.drawBitmap(6, y + foo, soundIcon, 0x010F);
 	}
 	if (title == "Security")//purple
 	{
-		display.fillRect(1, y + 1, BUFWIDTH - 2, 14, 0xED1F);
-		display.drawBitmap(3, y + 2, security, 0x600F);
+		display.fillRect(2, y + 1, display.width() - 4, boxHeight-2, 0xED1F);
+		display.drawBitmap(6, y + foo, security, 0x600F);
 	}
-	display.drawString(title, 19, y + 4);
+	if (title == "About")//orange
+	{
+		display.fillRect(2, y + 1, display.width() - 4, boxHeight-2, 0xFD29);
+		display.drawBitmap(6, y + foo, security, 0x8200);
+	}
+	display.setTextColor(TFT_BLACK);
 	display.setTextSize(1);
+	display.setTextFont(2);
+	display.drawString(title, 30, y + 2 );
 	display.setTextColor(TFT_WHITE);
 	display.setFreeFont(TT1);
 }
 void MAKERphone::settingsMenuDrawCursor(uint8_t i, int32_t y, bool pressed) {
+	uint8_t scale;
+	uint8_t boxHeight;
+	if(resolutionMode)
+	{
+		scale = 1;
+		boxHeight = 15;
+	}
+	else
+	{
+		scale = 2;
+		boxHeight = 20;
+	}
 	if (millis() % 500 <= 250 && pressed == 0) {
 		return;
 	}
-	y += i * 15 + settingsMenuYOffset;
-	display.drawRect(0, y, display.width(), 16, TFT_RED);
+	y += i * boxHeight + settingsMenuYOffset;
+	display.drawRect(0, y-1, display.width()-1, boxHeight+2, TFT_RED);
+	display.drawRect(1, y, display.width()-3, boxHeight, TFT_RED);
 }
 void MAKERphone::settingsApp() {
 	while (!update());
 	Serial.begin(115200);
 	while (1)
 	{
-		int8_t input = settingsMenu(settingsItems, 4);
+		int8_t input = settingsMenu(settingsItems, 6);
 		if (input == -1) //BUTTON BACK
 			break;
 		if (input == 0)
 			networkMenu();
 		if (input == 1)
 			displayMenu();
-		if (input == 2)
-			soundMenu();
+		/* if (input == 2)
+			storageMenu(); */
 		if (input == 3)
+			soundMenu();
+		if (input == 4)
 			securityMenu();
+		/* if (input == 5)
+			aboutMenu(); */
 	}
 	applySettings();
 	if(SDinsertedFlag)
@@ -3305,66 +3349,109 @@ void MAKERphone::settingsApp() {
 }
 void MAKERphone::networkMenu() {
 	uint8_t cursor = 0;
+	uint8_t scale;
+	if(resolutionMode)
+		scale = 1;
+	else
+		scale = 2;
 	while (1)
 	{
 		display.setTextColor(TFT_BLACK);
 		display.fillScreen(0xFB6D);
-		display.setTextFont(1);
-		display.setCursor(4, 10);
+		display.setTextFont(2);
+		display.setTextSize(1);
+		display.setCursor(18, 20);
 		display.print("Wifi");
-		display.setCursor(38, 10);
-		display.print("ON");
-		display.setCursor(59, 10);
-		display.print("OFF");
-		display.setCursor(8, 29);
+		display.setCursor(22, 58);
 		display.print("BT");
-		display.setCursor(38, 29);
+		display.setCursor(16, 88);
+		display.print("Plane\n   mode");
+		
+		display.setTextFont(1);
+		display.setTextSize(2);
+		display.setCursor(76, 20);
 		display.print("ON");
-		display.setCursor(59, 29);
+		display.setCursor(118, 20);
 		display.print("OFF");
-		display.setCursor(3, 44);
-		display.print("Plane\n mode");
-		display.setCursor(38, 48);
+		display.setCursor(76, 58);
 		display.print("ON");
-		display.setCursor(59, 48);
+		display.setCursor(118, 58);
+		display.print("OFF");
+		display.setCursor(76, 96);
+		display.print("ON");
+		display.setCursor(118, 96);
 		display.print("OFF");
 		switch (cursor) {
 
 		case 0:
 			if (bt == 1)
-				display.drawRect(35, 27, 17, 11, TFT_BLACK);
+			{
+				display.drawRect(35*2, 27*2, 17*2, 11*2, TFT_BLACK);
+				display.drawRect(35*2-1, 27*2-1, 17*2+2, 11*2+2, TFT_BLACK);
+			}
 			else
-				display.drawRect(57, 27, 21, 11, TFT_BLACK);
-
+			{
+				display.drawRect(57*2, 27*2, 21*2, 11*2, TFT_BLACK);
+				display.drawRect(57*2-1, 27*2-1, 21*2+2, 11*2+2, TFT_BLACK);
+			}
 			if (airplaneMode == 1)
-				display.drawRect(35, 46, 17, 11, TFT_BLACK);
+			{
+				display.drawRect(35*2, 46*2, 17*2, 11*2, TFT_BLACK);
+				display.drawRect(35*2-1, 46*2-1, 17*2+2, 11*2+2, TFT_BLACK);
+			}
 			else
-				display.drawRect(57, 46, 21, 11, TFT_BLACK);
+			{
+				display.drawRect(57*2, 46*2, 21*2, 11*2, TFT_BLACK);
+				display.drawRect(57*2-1, 46*2-1, 21*2+2, 11*2+2, TFT_BLACK);
+			}
 			break;
 
 		case 1:
 			if (wifi == 1)
-				display.drawRect(35, 8, 17, 11, TFT_BLACK);
+			{
+				display.drawRect(35*2, 8*2, 17*2, 11*2, TFT_BLACK);
+				display.drawRect(35*2-1, 8*2-1, 17*2+2, 11*2+2, TFT_BLACK);
+			}
 			else
-				display.drawRect(57, 8, 21, 11, TFT_BLACK);
+			{
+				display.drawRect(57*2, 8*2, 21*2, 11*2, TFT_BLACK);
+				display.drawRect(57*2-1, 8*2-1, 21*2+2, 11*2+2, TFT_BLACK);
+			}
 
 			if (airplaneMode == 1)
-				display.drawRect(35, 46, 17, 11, TFT_BLACK);
+			{
+				display.drawRect(35*2, 46*2, 17*2, 11*2, TFT_BLACK);
+				display.drawRect(35*2-1, 46*2-1, 17*2+2, 11*2+2, TFT_BLACK);
+			}
 			else
-				display.drawRect(57, 46, 21, 11, TFT_BLACK);
+			{
+				display.drawRect(57*2, 46*2, 21*2, 11*2, TFT_BLACK);
+				display.drawRect(57*2-1, 46*2-1, 21*2+2, 11*2+2, TFT_BLACK);
+			}
 			break;
 
 		case 2:
 			if (wifi == 1)
-				display.drawRect(35, 8, 17, 11, TFT_BLACK);
+			{
+				display.drawRect(35*2, 8*2, 17*2, 11*2, TFT_BLACK);
+				display.drawRect(35*2-1, 8*2-1, 17*2+2, 11*2+2, TFT_BLACK);
+			}
 			else
-				display.drawRect(57, 8, 21, 11, TFT_BLACK);
+			{
+				display.drawRect(57*2, 8*2, 21*2, 11*2, TFT_BLACK);
+				display.drawRect(57*2-1, 8*2-1, 21*2+2, 11*2+2, TFT_BLACK);
+			}
 
 			if (bt == 1)
-				display.drawRect(35, 27, 17, 11, TFT_BLACK);
+			{
+				display.drawRect(35*2, 27*2, 17*2, 11*2, TFT_BLACK);
+				display.drawRect(35*2-1, 27*2-1, 17*2+2, 11*2+2, TFT_BLACK);
+			}
 			else
-				display.drawRect(57, 27, 21, 11, TFT_BLACK);
-
+			{
+				display.drawRect(57*2, 27*2, 21*2, 11*2, TFT_BLACK);
+				display.drawRect(57*2-1, 27*2-1, 21*2+2, 11*2+2, TFT_BLACK);
+			}
 		}
 
 
@@ -3373,9 +3460,15 @@ void MAKERphone::networkMenu() {
 		if (cursor == 0)
 		{
 			if (millis() % 500 <= 250 && wifi == 1)
-				display.drawRect(35, 8, 17, 11, TFT_BLACK);
+			{
+				display.drawRect(35*2, 8*2, 17*2, 11*2, TFT_BLACK);
+				display.drawRect(35*2-1, 8*2-1, 17*2+2, 11*2+2, TFT_BLACK);
+			}
 			else if (millis() % 500 <= 250 && wifi == 0)
-				display.drawRect(57, 8, 21, 11, TFT_BLACK);
+			{
+				display.drawRect(57*2, 8*2, 21*2, 11*2, TFT_BLACK);
+				display.drawRect(57*2-1, 8*2-1, 21*2+2, 11*2+2, TFT_BLACK);
+			}
 			if (buttons.kpd.pin_read(JOYSTICK_A) == 0 && wifi == 0)
 				wifi = !wifi;
 			if (buttons.kpd.pin_read(JOYSTICK_C) == 0 && wifi == 1)
@@ -3384,9 +3477,15 @@ void MAKERphone::networkMenu() {
 		if (cursor == 1)
 		{
 			if (millis() % 500 <= 250 && bt == 1)
-				display.drawRect(35, 27, 17, 11, TFT_BLACK);
+			{
+				display.drawRect(35*2, 27*2, 17*2, 11*2, TFT_BLACK);
+				display.drawRect(35*2-1, 27*2-1, 17*2+2, 11*2+2, TFT_BLACK);
+			}
 			else if (millis() % 500 <= 250 && bt == 0)
-				display.drawRect(57, 27, 21, 11, TFT_BLACK);
+			{
+				display.drawRect(57*2, 27*2, 21*2, 11*2, TFT_BLACK);
+				display.drawRect(57*2-1, 27*2-1, 21*2+2, 11*2+2, TFT_BLACK);
+			}
 			if (buttons.kpd.pin_read(JOYSTICK_A) == 0 && bt == 0)
 				bt = !bt;
 			if (buttons.kpd.pin_read(JOYSTICK_C) == 0 && bt == 1)
@@ -3395,9 +3494,15 @@ void MAKERphone::networkMenu() {
 		if (cursor == 2)
 		{
 			if (millis() % 500 <= 250 && airplaneMode == 1)
-				display.drawRect(35, 46, 17, 11, TFT_BLACK);
+			{
+				display.drawRect(35*2, 46*2, 17*2, 11*2, TFT_BLACK);
+				display.drawRect(35*2-1, 46*2-1, 17*2+2, 11*2+2, TFT_BLACK);
+			}
 			else if (millis() % 500 <= 250 && airplaneMode == 0)
-				display.drawRect(57, 46, 21, 11, TFT_BLACK);
+			{
+				display.drawRect(57*2, 46*2, 21*2, 11*2, TFT_BLACK);
+				display.drawRect(57*2-1, 46*2-1, 21*2+2, 11*2+2, TFT_BLACK);
+			}
 			if (buttons.kpd.pin_read(JOYSTICK_A) == 0 && airplaneMode == 0)
 				airplaneMode = !airplaneMode;
 			if (buttons.kpd.pin_read(JOYSTICK_C) == 0 && airplaneMode == 1)
@@ -3436,88 +3541,91 @@ void MAKERphone::displayMenu() {
 	while (1)
 	{
 		display.setTextFont(1);
+		display.setTextSize(2);
 		display.fillScreen(0x8FEA);
-		display.setCursor(9, 2);
-		display.print("Brightness");
-		display.drawBitmap(5, 14, noBrightness);
-		display.drawRect(14, 15, 47, 4, TFT_BLACK);
-		display.drawBitmap(65, 11, fullBrightness);
-		display.drawRect(15, 16, brightness * 9, 2, TFT_BLACK);
+		display.setCursor(9*2, 2*2);
+		display.printCenter("Brightness");
+		display.drawBitmap(5*2, 15*2, noBrightness, TFT_BLACK, 2);
+		display.drawRect(14*2, 15*2, 47*2, 4*2, TFT_BLACK);
+		display.drawBitmap(65*2, 11*2, fullBrightness, TFT_BLACK, 2);
+		display.fillRect(15*2, 16*2, brightness * 9*2, 2*2, TFT_BLACK);
 
-		display.setCursor(10, 23);
-		display.print("Sleep:");
+		String foo = "Sleep:";
 		if (sleepTimeActualBuffer > 60)
 		{
-			display.print(sleepTimeActualBuffer / 60);
-			display.print("min");
+			foo += sleepTimeActualBuffer / 60;
+			foo += "min";
 		}
 		else
 		{
-			display.print(sleepTimeActualBuffer);
-			display.print("s");
+			foo += sleepTimeActualBuffer;
+			foo += "s";
 		}
+		display.setCursor(10*2, 23*2);
+		display.printCenter(foo);
+
 		display.setTextFont(1);
-		display.drawRect(14, 35, 47, 4, TFT_BLACK);
-		display.drawRect(15, 36, sleepTimeBuffer* 9, 2, TFT_BLACK);
-		display.setCursor(1, 33);
+		display.drawRect(14*2, 35*2, 47*2, 4*2, TFT_BLACK);
+		display.fillRect(15*2, 36*2, sleepTimeBuffer* 9*2, 2*2, TFT_BLACK);
+		display.setCursor(1*2, 33*2);
 		display.print("0s");
-		display.setCursor(62, 33);
+		display.setCursor(62*2, 33*2);
 		display.print("30m");
 
-		display.setCursor(11, 43);
+		display.setCursor(11*2, 43*2);
 		display.print("Background");
-		display.fillRect(16, 52, 48, 9, backgroundColors[backgroundIndex]);
-		display.setCursor(18, 53);
+		display.fillRect(16*2, 52*2, 48*2, 9*2, backgroundColors[backgroundIndex]);
+		display.setCursor(18*2, 53*2);
 		display.print(backgroundColorsNames[backgroundIndex]);
-		display.drawBitmap(11, 53, arrowLeft);
-		display.drawBitmap(65, 53, arrowRight);
+		display.drawBitmap(11*2, 53*2, arrowLeft, TFT_BLACK, 2);
+		display.drawBitmap(65*2, 53*2, arrowRight, TFT_BLACK, 2);
 
 		if (cursor == 0)
 		{
 			if (millis() % 1000 <= 500)
 			{
-				display.drawBitmap(5, 14, noBrightness);
-				display.drawBitmap(65, 11, fullBrightness);
+				display.drawBitmap(5*2, 15*2, noBrightness, TFT_BLACK, 2);
+				display.drawBitmap(65*2, 11*2, fullBrightness, TFT_BLACK, 2);
 			}
 			else
 			{
-				display.drawBitmap(5, 14, noBrightness, 0x8FEA);
-				display.drawBitmap(65, 11, fullBrightness, 0x8FEA);
+				display.drawBitmap(5*2, 15*2, noBrightness, 0x8FEA, 2);
+				display.drawBitmap(65*2, 11*2, fullBrightness, 0x8FEA, 2);
 			}
-			if (buttons.kpd.pin_read(JOYSTICK_A) == 0 && brightness != 0)
+			if (buttons.released(JOYSTICK_A) && brightness != 0)
 			{
-				while (buttons.kpd.pin_read(JOYSTICK_A) == 0);
 				brightness--;
+				while(!update());
 			}
-			if (buttons.kpd.pin_read(JOYSTICK_C) == 0 && brightness != 5)
+			if (buttons.released(JOYSTICK_C) && brightness != 5)
 			{
-				while (buttons.kpd.pin_read(JOYSTICK_C) == 0);
 				brightness++;
+				while(!update());
 			}
 		}
 		if (cursor == 1)
 		{
 			if (millis() % 1000 <= 500)
 			{
-				display.setCursor(1, 33);
+				display.setCursor(1*2, 33*2);
 				display.print("0s");
-				display.setCursor(62, 33);
+				display.setCursor(62*2, 33*2);
 				display.print("30m");
 			}
 			else
 			{
-				display.fillRect(1, 33, 12, 7, 0x8FEA);
-				display.fillRect(62, 33, 17, 7, 0x8FEA);
+				display.fillRect(1*2, 33*2, 12*2, 7*2, 0x8FEA);
+				display.fillRect(62*2, 33*2, 17*2, 7*2, 0x8FEA);
 			}
-			if (buttons.kpd.pin_read(JOYSTICK_A) == 0 && sleepTimeBuffer!= 0)
+			if (buttons.released(JOYSTICK_A) && sleepTimeBuffer!= 0)
 			{
-				while (buttons.kpd.pin_read(JOYSTICK_A) == 0);
 				sleepTimeBuffer--;
+				while(!update());
 			}
-			if (buttons.kpd.pin_read(JOYSTICK_C) == 0 && sleepTimeBuffer!= 5)
+			if (buttons.released(JOYSTICK_C) && sleepTimeBuffer!= 5)
 			{
-				while (buttons.kpd.pin_read(JOYSTICK_C) == 0);
 				sleepTimeBuffer++;
+				while(!update());
 			}
 		}
 		if (cursor == 2)
@@ -3526,38 +3634,38 @@ void MAKERphone::displayMenu() {
 			{
 				if (backgroundIndex == 0)
 				{
-					display.drawLine(65, 53, 65, 59, 0x8FEA);
-					display.drawBitmap(11, 53, arrowLeft);
-					display.drawBitmap(66, 53, arrowRight);
+					display.fillRect(65*2 , 52*2, 20, 20, 0x8FEA);
+					display.drawBitmap(11*2, 53*2, arrowLeft, TFT_BLACK, 2);
+					display.drawBitmap(66*2, 53*2, arrowRight, TFT_BLACK, 2);
 				}
 				else if (backgroundIndex == 6)
 				{
-					display.drawLine(14, 53, 14, 59, 0x8FEA);
-					display.drawBitmap(10, 53, arrowLeft);
-					display.drawBitmap(65, 53, arrowRight);
+					display.fillRect(5*2 , 52*2, 20, 20, 0x8FEA);
+					display.drawBitmap(10*2, 53*2, arrowLeft, TFT_BLACK, 2);
+					display.drawBitmap(65*2, 53*2, arrowRight, TFT_BLACK, 2);
 				}
 				else
 				{
-					display.drawLine(65, 53, 65, 59, 0x8FEA);
-					display.drawLine(14, 53, 14, 59, 0x8FEA);
-					display.drawBitmap(10, 53, arrowLeft);
-					display.drawBitmap(66, 53, arrowRight);
+					display.fillRect(65*2 , 52*2, 20, 20, 0x8FEA);
+					display.fillRect(5*2 , 52*2, 20, 20, 0x8FEA);
+					display.drawBitmap(10*2, 53*2, arrowLeft, TFT_BLACK, 2);
+					display.drawBitmap(66*2, 53*2, arrowRight, TFT_BLACK, 2);
 				}
 			}
 			else
 			{
-				display.drawBitmap(11, 53, arrowLeft);
-				display.drawBitmap(65, 53, arrowRight);
+				display.drawBitmap(11*2, 53*2, arrowLeft, TFT_BLACK, 2);
+				display.drawBitmap(65*2, 53*2, arrowRight, TFT_BLACK, 2);
 			}
-			if (buttons.kpd.pin_read(JOYSTICK_A) == 0 && backgroundIndex != 0)
+			if (buttons.released(JOYSTICK_A) && backgroundIndex != 0)
 			{
-				while (buttons.kpd.pin_read(JOYSTICK_A) == 0);
 				backgroundIndex--;
+				while(!update());
 			}
-			if (buttons.kpd.pin_read(JOYSTICK_C) == 0 && backgroundIndex != 6)
+			if (buttons.released(JOYSTICK_C) && backgroundIndex != 6)
 			{
-				while (buttons.kpd.pin_read(JOYSTICK_C) == 0);
 				backgroundIndex++;
+				while(!update());
 			}
 		}
 
@@ -3579,22 +3687,22 @@ void MAKERphone::displayMenu() {
 		}
 
 		switch (sleepTimeBuffer) { //interpreting value into actual numbers
-		case 0:
-			sleepTimeActualBuffer = 0;
-			break;
-		case 1:
-			sleepTimeActualBuffer = 10;
-			break;
-		case 2:
-			sleepTimeActualBuffer = 30;
-			break;
-		case 3:
-			sleepTimeActualBuffer = 60;
-			break;
-		case 4:
-			sleepTimeActualBuffer = 600;
-			break;
-		case 5:
+			case 0:
+				sleepTimeActualBuffer = 0;
+				break;
+			case 1:
+				sleepTimeActualBuffer = 10;
+				break;
+			case 2:
+				sleepTimeActualBuffer = 30;
+				break;
+			case 3:
+				sleepTimeActualBuffer = 60;
+				break;
+			case 4:
+				sleepTimeActualBuffer = 600;
+				break;
+			case 5:
 			sleepTimeActualBuffer = 1800;
 			break;
 		}
