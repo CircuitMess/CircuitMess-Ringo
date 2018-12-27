@@ -1103,10 +1103,20 @@ void MAKERphone::callNumber(String number) {
 	bool firstPass = 1;
 	uint32_t timeOffset = 0;
 	uint16_t textLength;
+	uint8_t scale;
+	String temp;
+	if(resolutionMode)
+	{
+		scale = 1;
+		display.setFreeFont(TT1);
+	}
+	else
+	{
+		scale = 2;
+		display.setTextFont(2);
+	}
 	display.setTextSize(1);
-	//centering the on-screen number
-	display.setCursor(11, -20);
-	textLength = display.cursor_x;
+
 	Serial.println(textLength);
 	display.printCenter(number);
 	textLength = display.cursor_x - textLength;
@@ -1126,83 +1136,109 @@ void MAKERphone::callNumber(String number) {
 					timeOffset = millis();
 					firstPass = 0;
 				}
-
-				display.setCursor(32, 9);
+				
+				
+				temp = "";
 				if ((int((millis() - timeOffset) / 1000) / 60) > 9)
-					display.print(int((millis() - timeOffset) / 1000) / 60);
+					temp += (int((millis() - timeOffset) / 1000) / 60) ;
 				else
 				{
-					display.print("0");
-					display.print(int((millis() - timeOffset) / 1000) / 60);
+					temp += "0";
+					temp += (int((millis() - timeOffset) / 1000) / 60);
 				}
-				display.print(":");
+				temp += ":";
 				if (int((millis() - timeOffset) / 1000) % 60 > 9)
-					display.print(int((millis() - timeOffset) / 1000) % 60);
+					temp += (int((millis() - timeOffset) / 1000) % 60);
 				else
 				{
-					display.print("0");
-					display.print(int((millis() - timeOffset) / 1000) % 60);
+					temp += "0";
+					temp += (int((millis() - timeOffset) / 1000) % 60);
 				}
+				display.setCursor(9, 9);
+				display.printCenter(temp);
 				Serial.println("CALL ACTIVE");
-				display.drawBitmap(29, 24, call_icon, TFT_GREEN);
+				display.drawBitmap(29*scale, 24*scale, call_icon, TFT_GREEN, scale);
 			}
 
 			else if (localBuffer.indexOf(",0,3,") != -1)
 			{
 				display.setCursor(25, 9);
 				Serial.println("ringing");
-				display.println("Ringing...");
-				display.drawBitmap(29, 24, call_icon, TFT_DARKGREY);
+				display.printCenter("Ringing...");
+				display.drawBitmap(29*scale, 24*scale, call_icon, TFT_DARKGREY, scale);
 			}
 			else if (localBuffer.indexOf(",0,2,") != -1)
 			{
 				display.setCursor(25, 9);
-				display.println("Calling...");
-				display.drawBitmap(29, 24, call_icon, TFT_DARKGREY);
+				display.printCenter("Calling...");
+				display.drawBitmap(29*scale, 24*scale, call_icon, TFT_DARKGREY, scale);
 			}
 			else if (localBuffer.indexOf(",0,6,") != -1)
 			{
 				display.fillScreen(TFT_WHITE);
 				display.setCursor(32, 9);
 				if (timeOffset == 0)
-					display.print("00:00");
+					display.printCenter("00:00");
 				else
 				{
+					temp = "";
 					if ((int((millis() - timeOffset) / 1000) / 60) > 9)
-						display.print(int((millis() - timeOffset) / 1000) / 60);
+						temp += (int((millis() - timeOffset) / 1000) / 60) ;
 					else
 					{
-						display.print("0");
-						display.print(int((millis() - timeOffset) / 1000) / 60);
+						temp += "0";
+						temp += (int((millis() - timeOffset) / 1000) / 60);
 					}
-					display.print(":");
-					if ((int((millis() - timeOffset) / 1000) % 60) > 9)
-						display.print(int((millis() - timeOffset) / 1000) % 60);
+					temp += ":";
+					if (int((millis() - timeOffset) / 1000) % 60 > 9)
+						temp += (int((millis() - timeOffset) / 1000) % 60);
 					else
 					{
-						display.print("0");
-						display.print(int((millis() - timeOffset) / 1000) % 60);
+						temp += "0";
+						temp += (int((millis() - timeOffset) / 1000) % 60);
 					}
+					display.setCursor(9, 9);
+					display.printCenter(temp);
 				}
-				display.drawBitmap(29, 24, call_icon, TFT_RED);
-				display.setCursor(11, 20);
-				display.println(number);
-				display.fillRect(0, 51, 80, 13, TFT_RED);
-				display.setCursor(2, 62);
+				display.drawBitmap(29*scale, 24*scale, call_icon, TFT_RED, scale);
+				if(resolutionMode)
+					display.setCursor(11, 20);
+				else
+					display.setCursor(11, 28);
+				display.printCenter(number);
+				display.fillRect(0, 51*scale, 80*scale, 13*scale, TFT_RED);
+				if(resolutionMode)
+					display.setCursor(2, 62);
+				else
+					display.setCursor(2, 112);
 				display.print("Call ended");
 				Serial.println("ENDED");
 				while (!update());
 				delay(1000);
 				break;
 			}
-			display.setCursor(int((80 - textLength) / 2), 20);
+			if(resolutionMode)
+					display.setCursor(11, 20);
+			else
+				display.setCursor(11, 28);
 			display.printCenter(number);
-			display.fillRect(0, 51, 80, 13, TFT_RED);
-			display.setCursor(2, 62);
-			display.print("press");
-			display.drawBitmap(24, 52, letterB, TFT_BLACK);
-			display.setCursor(35, 62);
-			display.print("to hang up");
+			display.fillRect(0, 51*scale, 80*scale, 13*scale, TFT_RED);
+			if(resolutionMode)
+			{
+				display.setCursor(2, 62);
+				display.print("press");
+				display.drawBitmap(24, 52, letterB, TFT_BLACK);
+				display.setCursor(35, 62);
+				display.print("to hang up");
+			}
+			else
+			{
+				display.setCursor(2, 112);
+				display.print("press");
+				display.drawBitmap(37, 105, letterB, TFT_BLACK, scale);
+				display.setCursor(55, 112);
+				display.print("to hang up");
+			}
 
 		}
 		else if (localBuffer.indexOf("CLCC:") == -1)
@@ -1211,15 +1247,28 @@ void MAKERphone::callNumber(String number) {
 			{
 				
 				display.setCursor(3, 9);
-				display.println("Couldn't dial number!");
-				display.drawBitmap(29, 24, call_icon, TFT_RED);
-				display.setCursor(int((80-textLength)/2), 20);
+				display.printCenter("Couldn't dial number!");
+				display.drawBitmap(29*scale, 24*scale, call_icon, TFT_RED, scale);
+				if(resolutionMode)
+					display.setCursor(11, 20);
+				else
+					display.setCursor(11, 28);
 				display.printCenter(number);
-				display.fillRect(0, 51, 80, 13, TFT_RED);
-				display.setCursor(2, 57);
-				display.print("Invalid number or");
-				display.setCursor(2, 63);
-				display.print("SIM card missing!");
+				display.fillRect(0, 51*scale, 80*scale, 13*scale, TFT_RED);
+				if(resolutionMode)
+				{
+					display.setCursor(2, 57);
+					display.print("Invalid number or");
+					display.setCursor(2, 63);
+					display.print("SIM card missing!");
+				}
+				else
+				{
+					display.setCursor(2, 100);
+					display.print("Invalid number or");
+					display.setCursor(2, 112);
+					display.print("SIM card missing!");
+				}
 				while (!buttons.released(BTN_B))
 					update();
 				break;
@@ -1227,16 +1276,30 @@ void MAKERphone::callNumber(String number) {
 			else
 			{
 				display.setCursor(25, 9);
-				display.println("Calling...");
-				display.drawBitmap(29, 24, call_icon, TFT_DARKGREY);
-				display.setCursor(int((80 - textLength) / 2), 20);
+				display.printCenter("Calling...");
+				display.drawBitmap(29*scale, 24*scale, call_icon, TFT_DARKGREY, scale);
+				if(resolutionMode)
+					display.setCursor(11, 20);
+				else
+					display.setCursor(11, 28);
 				display.printCenter(number);
-				display.fillRect(0, 51, 80, 13, TFT_RED);
-				display.setCursor(2, 62);
-				display.print("press");
-				display.drawBitmap(24, 52, letterB, TFT_BLACK);
-				display.setCursor(35, 62);
-				display.print("to hang up");
+				display.fillRect(0, 51*scale, 80*scale, 13*scale, TFT_RED);
+				if(resolutionMode)
+				{
+					display.setCursor(2, 62);
+					display.print("press");
+					display.drawBitmap(24, 52, letterB, TFT_BLACK);
+					display.setCursor(35, 62);
+					display.print("to hang up");
+				}
+				else
+				{
+					display.setCursor(2, 112);
+					display.print("press");
+					display.drawBitmap(37, 105, letterB, TFT_BLACK, scale);
+					display.setCursor(55, 112);
+					display.print("to hang up");
+				}
 			}
 		}
 		if (buttons.pressed(BTN_B)) // hanging up
@@ -1250,30 +1313,36 @@ void MAKERphone::callNumber(String number) {
 			display.fillScreen(TFT_WHITE);
 			display.setCursor(32, 9);
 			if (timeOffset == 0)
-				display.print("00:00");
+				display.printCenter("00:00");
 			else
 			{
+				temp = "";
 				if ((int((millis() - timeOffset) / 1000) / 60) > 9)
-					display.print(int((millis() - timeOffset) / 1000) / 60);
+					temp += (int((millis() - timeOffset) / 1000) / 60) ;
 				else
 				{
-					display.print("0");
-					display.print(int((millis() - timeOffset) / 1000) / 60);
+					temp += "0";
+					temp += (int((millis() - timeOffset) / 1000) / 60);
 				}
-				display.print(":");
-				if ((int((millis() - timeOffset) / 1000) % 60) > 9)
-					display.print(int((millis() - timeOffset) / 1000) % 60);
+				temp += ":";
+				if (int((millis() - timeOffset) / 1000) % 60 > 9)
+					temp += (int((millis() - timeOffset) / 1000) % 60);
 				else
 				{
-					display.print("0");
-					display.print(int((millis() - timeOffset) / 1000) % 60);
+					temp += "0";
+					temp += (int((millis() - timeOffset) / 1000) % 60);
 				}
+				display.setCursor(9, 9);
+				display.printCenter(temp);
 			}
-			display.drawBitmap(29, 24, call_icon, TFT_RED);
-			display.setCursor(11, 20);
+			display.drawBitmap(29*scale, 24*scale, call_icon, TFT_RED, scale);
+			if(resolutionMode)
+					display.setCursor(11, 20);
+			else
+				display.setCursor(11, 28);
 			display.printCenter(number);
-			display.fillRect(0, 51, 80, 13, TFT_RED);
-			display.setCursor(2, 62);
+			display.fillRect(0, 51*scale, 80*scale, 13*scale, TFT_RED);
+			display.setCursor(2, 112);
 			display.print("Call ended");
 			Serial.println("ENDED");
 			while (!update());
@@ -2760,17 +2829,40 @@ void MAKERphone::dialer() {
 	String callBuffer = "";
 	char key = NO_KEY;
 	display.setTextWrap(0);
-	
+	uint8_t scale;
+	if(resolutionMode)
+	{
+		display.setFreeFont(TT1);
+		scale = 1;
+	}
+	else
+	{
+		display.setTextFont(2);
+		scale = 2;
+	}
 	while (1)
 	{
+		Serial.println(display.cursor_x);
 		display.fillScreen(TFT_BLACK);
-		display.fillRect(0, 42, BUFWIDTH, 14, TFT_DARKGREY);
 		display.setTextSize(1);
-		display.setCursor(1, 62);
-		display.print("Press A to call");
-		display.setCursor(0, 6);
-		display.setTextColor(TFT_LIGHTGREY);
-		display.print("Dialer");
+		if(resolutionMode)
+		{
+			display.fillRect(0, 42, display.width(), 14, TFT_DARKGREY);
+			display.setCursor(1, 62);
+			display.print("Press A to call");
+			display.setCursor(0, 6);
+			display.setTextColor(TFT_LIGHTGREY);
+			display.print("Dialer");
+		}
+		else
+		{
+			display.fillRect(0, 79, display.width(), 26, TFT_DARKGREY);
+			display.setCursor(2, 112);
+			display.print("Press A to call");
+			display.setCursor(2, -1);
+			display.setTextColor(TFT_LIGHTGREY);
+			display.print("Dialer");
+		}
 		display.setTextColor(TFT_WHITE);
 
 
@@ -2781,25 +2873,37 @@ void MAKERphone::dialer() {
 			callBuffer.remove(callBuffer.length()-1);
 		if (key != NO_KEY && key!= 'A' && key != 'C')
 			callBuffer += key;
-		display.setCursor(1, 53);
+		if(resolutionMode)
+			display.setCursor(1, 53);
+		else
+			display.setCursor(0, 76);
 		display.setTextSize(2);
 		display.print(callBuffer);
 
-		if (display.cursor_x > BUFWIDTH)
+		if (display.cursor_x + 4  >= display.width())
 		{
-			display.fillRect(0, 42, BUFWIDTH, 14, TFT_DARKGREY);
-			display.setCursor(BUFWIDTH - display.cursor_x, 53);
+			if(resolutionMode)
+			{
+				display.fillRect(0, 42, BUFWIDTH, 14, TFT_DARKGREY);
+				display.setCursor(display.width() - display.cursor_x, 53);
+			}
+			else
+			{
+				display.fillRect(0, 79, display.width(), 26, TFT_DARKGREY);
+				display.setCursor(display.width() - display.cursor_x - 14, 76);
+			}
+			
 			display.print(callBuffer);
 		}
 		
 
-		if (buttons.kpd.pin_read(BTN_A) == 0)//initate call
+		if (buttons.pressed(BTN_A))//initate call
 		{
 			callNumber(callBuffer);
 			while (!update());
 			callBuffer = "";
 		}
-		if (buttons.released(BTN_B) == 1) //BACK BUTTON
+		if (buttons.released(BTN_B)) //BACK BUTTON
 			break;
 
 		update();
