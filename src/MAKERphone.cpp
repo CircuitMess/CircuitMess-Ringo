@@ -2911,14 +2911,27 @@ void MAKERphone::dialer() {
 }
 
 //Media app
-int16_t MAKERphone::mp3Menu(const char* title, String* items, uint8_t length) {/* 
+int16_t MAKERphone::mp3Menu(const char* title, String* items, uint8_t length) {
 	cursor = 0;
 	cameraY = 0;
 	cameraY_actual = 0;
 	String Name;
-
+	uint8_t scale;
+	uint8_t offset;
+	uint8_t boxHeight;
+	if(resolutionMode)
+	{
+		scale = 1;
+		offset = menuYOffset;
+		boxHeight = 7;
+	}
+	else
+	{
+		scale = 2;
+		offset = 19;
+		boxHeight = 15;
+	}
 	while (1) {
-		while (!update());
 		display.fillScreen(TFT_BLACK);
 		display.setCursor(0, 0);
 		cameraY_actual = (cameraY_actual + cameraY) / 2;
@@ -2936,41 +2949,51 @@ int16_t MAKERphone::mp3Menu(const char* title, String* items, uint8_t length) {/
 		gui.menuDrawCursor(cursor, cameraY_actual);
 
 		// last draw the top entry thing
-		display.fillRect(0, 0, display.width(), 7, TFT_DARKGREY);
+		if(resolutionMode)
+		{
+			display.fillRect(0, 0, display.width(), 6, TFT_DARKGREY);
+			display.setFreeFont(TT1);
+			display.setCursor(0,5);
+			display.drawFastHLine(0, 6, display.width(), TFT_WHITE);
+		}
+		else
+		{
+			display.fillRect(0, 0, display.width(), 14, TFT_DARKGREY);
+			display.setTextFont(2);
+			display.setCursor(0,-2);
+			display.drawFastHLine(0, 14, display.width(), TFT_WHITE);
+		}
+		display.setTextSize(1);
 		display.setTextColor(TFT_WHITE);
-		display.setCursor(1, 1);
-		display.drawString(title, 1, 1);
-		display.drawFastHLine(0, 7, LCDWIDTH, TFT_BLACK);
+		display.print(title);
 
-		if (buttons.kpd.pin_read(BTN_A) == 0) {   //BUTTON CONFIRM
-
-			while (buttons.kpd.pin_read(BTN_A) == 0);// Exit when pressed
+		if (buttons.released(BTN_A)) {   //BUTTON CONFIRM
+			while (!update());
 			break;
 		}
 
-		if (buttons.kpd.pin_read(JOYSTICK_D) == 0) {  //BUTTON DOWN
+		if (buttons.released(JOYSTICK_D)) {  //BUTTON UP
 
-			while (buttons.kpd.pin_read(JOYSTICK_D) == 0);
+			while (!update());
 			if (cursor == 0) {
 				cursor = length - 1;
-				if (length > 6) {
-					cameraY = -(cursor - 5) * 8;
+				if (length > 6*scale) {
+					cameraY = -(cursor - 5) * (boxHeight + 1);
 				}
 			}
 			else {
 				cursor--;
-				if (cursor > 0 && (cursor * 8 + cameraY + menuYOffset) < 14) {
-					cameraY += 8;
+				if (cursor > 0 && (cursor * (boxHeight + 1) + cameraY + offset) < boxHeight*2) {
+					cameraY += (boxHeight + 1);
 				}
 			}
 		}
 
-		if (buttons.kpd.pin_read(JOYSTICK_B) == 0) { //BUTTON UP
-			while (buttons.kpd.pin_read(JOYSTICK_B) == 0);
-
+		if (buttons.released(JOYSTICK_B)) { //BUTTON DOWN
+			while (!update());
 			cursor++;
-			if ((cursor * 8 + cameraY + menuYOffset) > 54) {
-				cameraY -= 8;
+			if ((cursor * (boxHeight + 1) + cameraY + offset) > 54*scale) {
+				cameraY -= (boxHeight + 1);
 			}
 			if (cursor >= length) {
 				cursor = 0;
@@ -2979,13 +3002,14 @@ int16_t MAKERphone::mp3Menu(const char* title, String* items, uint8_t length) {/
 			}
 
 		}
-		if (buttons.kpd.pin_read(BTN_B) == 0) //BUTTON BACK
+		if (buttons.released(BTN_B)) //BUTTON BACK
 		{
-			while (buttons.kpd.pin_read(BTN_B) == 0);
+			while (!update());
 			return -1;
 		}
+		update();
 	}
-	return cursor; */
+	return cursor;
 
 }
 void MAKERphone::listMP3(fs::FS &fs, const char * dirname, uint8_t levels) {
@@ -3367,19 +3391,19 @@ void MAKERphone::networkMenu() {
 		display.setCursor(16, 88);
 		display.print("Plane\n   mode");
 		
-		display.setTextFont(1);
-		display.setTextSize(2);
-		display.setCursor(76, 20);
+		display.setTextFont(2);
+		display.setTextSize(1);
+		display.setCursor(79, 19);
 		display.print("ON");
-		display.setCursor(118, 20);
+		display.setCursor(122, 19);
 		display.print("OFF");
-		display.setCursor(76, 58);
+		display.setCursor(79, 57);
 		display.print("ON");
-		display.setCursor(118, 58);
+		display.setCursor(122, 57);
 		display.print("OFF");
-		display.setCursor(76, 96);
+		display.setCursor(79, 95);
 		display.print("ON");
-		display.setCursor(118, 96);
+		display.setCursor(122, 95);
 		display.print("OFF");
 		switch (cursor) {
 
@@ -3387,22 +3411,18 @@ void MAKERphone::networkMenu() {
 			if (bt == 1)
 			{
 				display.drawRect(35*2, 27*2, 17*2, 11*2, TFT_BLACK);
-				display.drawRect(35*2-1, 27*2-1, 17*2+2, 11*2+2, TFT_BLACK);
 			}
 			else
 			{
-				display.drawRect(57*2, 27*2, 21*2, 11*2, TFT_BLACK);
-				display.drawRect(57*2-1, 27*2-1, 21*2+2, 11*2+2, TFT_BLACK);
+				display.drawRect(57*2, 27*2, 20*2, 11*2, TFT_BLACK);
 			}
 			if (airplaneMode == 1)
 			{
 				display.drawRect(35*2, 46*2, 17*2, 11*2, TFT_BLACK);
-				display.drawRect(35*2-1, 46*2-1, 17*2+2, 11*2+2, TFT_BLACK);
 			}
 			else
 			{
-				display.drawRect(57*2, 46*2, 21*2, 11*2, TFT_BLACK);
-				display.drawRect(57*2-1, 46*2-1, 21*2+2, 11*2+2, TFT_BLACK);
+				display.drawRect(57*2, 46*2, 20*2, 11*2, TFT_BLACK);
 			}
 			break;
 
@@ -3410,23 +3430,19 @@ void MAKERphone::networkMenu() {
 			if (wifi == 1)
 			{
 				display.drawRect(35*2, 8*2, 17*2, 11*2, TFT_BLACK);
-				display.drawRect(35*2-1, 8*2-1, 17*2+2, 11*2+2, TFT_BLACK);
 			}
 			else
 			{
-				display.drawRect(57*2, 8*2, 21*2, 11*2, TFT_BLACK);
-				display.drawRect(57*2-1, 8*2-1, 21*2+2, 11*2+2, TFT_BLACK);
+				display.drawRect(57*2, 8*2, 20*2, 11*2, TFT_BLACK);
 			}
 
 			if (airplaneMode == 1)
 			{
 				display.drawRect(35*2, 46*2, 17*2, 11*2, TFT_BLACK);
-				display.drawRect(35*2-1, 46*2-1, 17*2+2, 11*2+2, TFT_BLACK);
 			}
 			else
 			{
-				display.drawRect(57*2, 46*2, 21*2, 11*2, TFT_BLACK);
-				display.drawRect(57*2-1, 46*2-1, 21*2+2, 11*2+2, TFT_BLACK);
+				display.drawRect(57*2, 46*2, 20*2, 11*2, TFT_BLACK);
 			}
 			break;
 
@@ -3434,23 +3450,19 @@ void MAKERphone::networkMenu() {
 			if (wifi == 1)
 			{
 				display.drawRect(35*2, 8*2, 17*2, 11*2, TFT_BLACK);
-				display.drawRect(35*2-1, 8*2-1, 17*2+2, 11*2+2, TFT_BLACK);
 			}
 			else
 			{
-				display.drawRect(57*2, 8*2, 21*2, 11*2, TFT_BLACK);
-				display.drawRect(57*2-1, 8*2-1, 21*2+2, 11*2+2, TFT_BLACK);
+				display.drawRect(57*2, 8*2, 20*2, 11*2, TFT_BLACK);
 			}
 
 			if (bt == 1)
 			{
 				display.drawRect(35*2, 27*2, 17*2, 11*2, TFT_BLACK);
-				display.drawRect(35*2-1, 27*2-1, 17*2+2, 11*2+2, TFT_BLACK);
 			}
 			else
 			{
-				display.drawRect(57*2, 27*2, 21*2, 11*2, TFT_BLACK);
-				display.drawRect(57*2-1, 27*2-1, 21*2+2, 11*2+2, TFT_BLACK);
+				display.drawRect(57*2, 27*2, 20*2, 11*2, TFT_BLACK);
 			}
 		}
 
@@ -3462,12 +3474,10 @@ void MAKERphone::networkMenu() {
 			if (millis() % 500 <= 250 && wifi == 1)
 			{
 				display.drawRect(35*2, 8*2, 17*2, 11*2, TFT_BLACK);
-				display.drawRect(35*2-1, 8*2-1, 17*2+2, 11*2+2, TFT_BLACK);
 			}
 			else if (millis() % 500 <= 250 && wifi == 0)
 			{
-				display.drawRect(57*2, 8*2, 21*2, 11*2, TFT_BLACK);
-				display.drawRect(57*2-1, 8*2-1, 21*2+2, 11*2+2, TFT_BLACK);
+				display.drawRect(57*2, 8*2, 20*2, 11*2, TFT_BLACK);
 			}
 			if (buttons.kpd.pin_read(JOYSTICK_A) == 0 && wifi == 0)
 				wifi = !wifi;
@@ -3479,12 +3489,10 @@ void MAKERphone::networkMenu() {
 			if (millis() % 500 <= 250 && bt == 1)
 			{
 				display.drawRect(35*2, 27*2, 17*2, 11*2, TFT_BLACK);
-				display.drawRect(35*2-1, 27*2-1, 17*2+2, 11*2+2, TFT_BLACK);
 			}
 			else if (millis() % 500 <= 250 && bt == 0)
 			{
-				display.drawRect(57*2, 27*2, 21*2, 11*2, TFT_BLACK);
-				display.drawRect(57*2-1, 27*2-1, 21*2+2, 11*2+2, TFT_BLACK);
+				display.drawRect(57*2, 27*2, 20*2, 11*2, TFT_BLACK);
 			}
 			if (buttons.kpd.pin_read(JOYSTICK_A) == 0 && bt == 0)
 				bt = !bt;
@@ -3496,12 +3504,10 @@ void MAKERphone::networkMenu() {
 			if (millis() % 500 <= 250 && airplaneMode == 1)
 			{
 				display.drawRect(35*2, 46*2, 17*2, 11*2, TFT_BLACK);
-				display.drawRect(35*2-1, 46*2-1, 17*2+2, 11*2+2, TFT_BLACK);
 			}
 			else if (millis() % 500 <= 250 && airplaneMode == 0)
 			{
-				display.drawRect(57*2, 46*2, 21*2, 11*2, TFT_BLACK);
-				display.drawRect(57*2-1, 46*2-1, 21*2+2, 11*2+2, TFT_BLACK);
+				display.drawRect(57*2, 46*2, 20*2, 11*2, TFT_BLACK);
 			}
 			if (buttons.kpd.pin_read(JOYSTICK_A) == 0 && airplaneMode == 0)
 				airplaneMode = !airplaneMode;
@@ -3540,17 +3546,17 @@ void MAKERphone::displayMenu() {
 	uint8_t cursor = 0;
 	while (1)
 	{
-		display.setTextFont(1);
-		display.setTextSize(2);
+		display.setTextFont(2);
+		display.setTextSize(1);
 		display.fillScreen(0x8FEA);
 		display.setCursor(9*2, 2*2);
 		display.printCenter("Brightness");
-		display.drawBitmap(5*2, 15*2, noBrightness, TFT_BLACK, 2);
-		display.drawRect(14*2, 15*2, 47*2, 4*2, TFT_BLACK);
-		display.drawBitmap(65*2, 11*2, fullBrightness, TFT_BLACK, 2);
-		display.fillRect(15*2, 16*2, brightness * 9*2, 2*2, TFT_BLACK);
+		display.drawRect(33, 28, 47*2, 4*2, TFT_BLACK);
+		display.drawBitmap(12, 27, noBrightness, TFT_BLACK, 2);
+		display.drawBitmap(132, 21, fullBrightness, TFT_BLACK, 2);
+		display.fillRect(35, 30, brightness * 9*2, 2*2, TFT_BLACK);
 
-		String foo = "Sleep:";
+		String foo = "Sleep: ";
 		if (sleepTimeActualBuffer > 60)
 		{
 			foo += sleepTimeActualBuffer / 60;
@@ -3561,36 +3567,37 @@ void MAKERphone::displayMenu() {
 			foo += sleepTimeActualBuffer;
 			foo += "s";
 		}
-		display.setCursor(10*2, 23*2);
+		display.setCursor(10*2, 44);
 		display.printCenter(foo);
 
-		display.setTextFont(1);
-		display.drawRect(14*2, 35*2, 47*2, 4*2, TFT_BLACK);
-		display.fillRect(15*2, 36*2, sleepTimeBuffer* 9*2, 2*2, TFT_BLACK);
-		display.setCursor(1*2, 33*2);
+		display.drawRect(33, 65, 47*2, 4*2, TFT_BLACK);
+		display.fillRect(35, 67, sleepTimeBuffer * 9*2, 2*2, TFT_BLACK);
+
+		display.setCursor(12, 60);
 		display.print("0s");
-		display.setCursor(62*2, 33*2);
+		display.setCursor(132, 61);
 		display.print("30m");
 
-		display.setCursor(11*2, 43*2);
-		display.print("Background");
-		display.fillRect(16*2, 52*2, 48*2, 9*2, backgroundColors[backgroundIndex]);
-		display.setCursor(18*2, 53*2);
-		display.print(backgroundColorsNames[backgroundIndex]);
-		display.drawBitmap(11*2, 53*2, arrowLeft, TFT_BLACK, 2);
-		display.drawBitmap(65*2, 53*2, arrowRight, TFT_BLACK, 2);
+		display.setCursor(11*2, 80);
+		display.printCenter("Background");
+		display.fillRect(16*2, 100, 48*2, 9*2, backgroundColors[backgroundIndex]);
+		display.setCursor(18*2, 102);
+		display.printCenter(backgroundColorsNames[backgroundIndex]);
+		display.drawBitmap(11*2, 102, arrowLeft, TFT_BLACK, 2);
+		display.drawBitmap(65*2, 102, arrowRight, TFT_BLACK, 2);
 
 		if (cursor == 0)
 		{
 			if (millis() % 1000 <= 500)
 			{
-				display.drawBitmap(5*2, 15*2, noBrightness, TFT_BLACK, 2);
-				display.drawBitmap(65*2, 11*2, fullBrightness, TFT_BLACK, 2);
+				display.drawBitmap(12, 27, noBrightness, TFT_BLACK, 2);
+				display.drawBitmap(132, 21, fullBrightness, TFT_BLACK, 2);
+
 			}
 			else
 			{
-				display.drawBitmap(5*2, 15*2, noBrightness, 0x8FEA, 2);
-				display.drawBitmap(65*2, 11*2, fullBrightness, 0x8FEA, 2);
+				display.drawBitmap(12, 27, noBrightness, 0x8FEA, 2);
+				display.drawBitmap(132, 21, fullBrightness, 0x8FEA, 2);
 			}
 			if (buttons.released(JOYSTICK_A) && brightness != 0)
 			{
@@ -3607,15 +3614,19 @@ void MAKERphone::displayMenu() {
 		{
 			if (millis() % 1000 <= 500)
 			{
-				display.setCursor(1*2, 33*2);
+				display.setCursor(12, 60);
 				display.print("0s");
-				display.setCursor(62*2, 33*2);
+				display.setCursor(132, 61);
 				display.print("30m");
 			}
 			else
 			{
-				display.fillRect(1*2, 33*2, 12*2, 7*2, 0x8FEA);
-				display.fillRect(62*2, 33*2, 17*2, 7*2, 0x8FEA);
+				display.setTextColor(0x8FEA);
+				display.setCursor(12, 60);
+				display.print("0s");
+				display.setCursor(132, 61);
+				display.print("30m");
+				display.setTextColor(TFT_BLACK);
 			}
 			if (buttons.released(JOYSTICK_A) && sleepTimeBuffer!= 0)
 			{
@@ -3634,28 +3645,28 @@ void MAKERphone::displayMenu() {
 			{
 				if (backgroundIndex == 0)
 				{
-					display.fillRect(65*2 , 52*2, 20, 20, 0x8FEA);
-					display.drawBitmap(11*2, 53*2, arrowLeft, TFT_BLACK, 2);
-					display.drawBitmap(66*2, 53*2, arrowRight, TFT_BLACK, 2);
+					display.fillRect(65*2 , 100, 20, 20, 0x8FEA);
+					display.drawBitmap(11*2, 102, arrowLeft, TFT_BLACK, 2);
+					display.drawBitmap(66*2, 102, arrowRight, TFT_BLACK, 2);
 				}
 				else if (backgroundIndex == 6)
 				{
-					display.fillRect(5*2 , 52*2, 20, 20, 0x8FEA);
-					display.drawBitmap(10*2, 53*2, arrowLeft, TFT_BLACK, 2);
-					display.drawBitmap(65*2, 53*2, arrowRight, TFT_BLACK, 2);
+					display.fillRect(5*2 , 100, 20, 20, 0x8FEA);
+					display.drawBitmap(10*2, 102, arrowLeft, TFT_BLACK, 2);
+					display.drawBitmap(65*2, 102, arrowRight, TFT_BLACK, 2);
 				}
 				else
 				{
-					display.fillRect(65*2 , 52*2, 20, 20, 0x8FEA);
-					display.fillRect(5*2 , 52*2, 20, 20, 0x8FEA);
-					display.drawBitmap(10*2, 53*2, arrowLeft, TFT_BLACK, 2);
-					display.drawBitmap(66*2, 53*2, arrowRight, TFT_BLACK, 2);
+					display.fillRect(65*2 , 100, 20, 20, 0x8FEA);
+					display.fillRect(5*2, 100, 20, 20, 0x8FEA);
+					display.drawBitmap(10*2, 102, arrowLeft, TFT_BLACK, 2);
+					display.drawBitmap(66*2, 102, arrowRight, TFT_BLACK, 2);
 				}
 			}
 			else
 			{
-				display.drawBitmap(11*2, 53*2, arrowLeft, TFT_BLACK, 2);
-				display.drawBitmap(65*2, 53*2, arrowRight, TFT_BLACK, 2);
+				display.drawBitmap(11*2, 102, arrowLeft, TFT_BLACK, 2);
+				display.drawBitmap(65*2, 102, arrowRight, TFT_BLACK, 2);
 			}
 			if (buttons.released(JOYSTICK_A) && backgroundIndex != 0)
 			{
@@ -3743,71 +3754,59 @@ void MAKERphone::soundMenu() {
 	parsedNotification = notification.substring(start, notification.indexOf("."));
 	while (1)
 	{
-		display.setTextFont(1);
+		display.setTextFont(2);
 		display.fillScreen(0xA7FF);
-		display.setCursor(20, 2);
-		display.print("Volume");
-		display.drawBitmap(4, 10, noSound);
-		display.drawRect(16, 12, 47, 4, TFT_BLACK);
-		display.drawBitmap(67, 10, fullSound);
-		display.drawRect(17, 13, volume * 3, 2, TFT_BLACK);
-		display.setCursor(15, 19);
-		display.print("Ringtone");
-		display.drawRect(3, 28, 74, 11, TFT_BLACK);
-		display.setCursor(6, 30);
-		if (parsedRingtone.length() > 11)
-		{
-			display.print(parsedRingtone.substring(0, 10));
-			display.print("..");
-		}
-		else
-			display.print(parsedRingtone);
+		display.setCursor(20, 4);
+		display.printCenter("Volume");
+		display.drawRect(33, 12*2, 47*2, 4*2, TFT_BLACK);
+		display.drawBitmap(4*2, 10*2, noSound, TFT_BLACK, 2);
+		display.drawBitmap(67*2, 10*2, fullSound, TFT_BLACK, 2);
+		display.fillRect(35, 13*2, volume * 3*2, 2*2, TFT_BLACK);
+		display.setCursor(15, 37);
+		display.printCenter("Ringtone");
+		display.drawRect(3*2, 55, 74*2, 11*2, TFT_BLACK);
+		display.setCursor(6*2, 58);
+		display.print(parsedRingtone);
 
-		display.setCursor(5, 42);
-		display.print("Notification");
-		display.drawRect(3, 51, 74, 11, TFT_BLACK);
-		display.setCursor(6, 53);
-		if (parsedNotification.length() > 11)
-		{
-			display.print(parsedNotification.substring(0, 10));
-			display.print("..");
-		}
-		else
-			display.print(parsedNotification);
+		display.setCursor(5, 82);
+		display.printCenter("Notification");
+		display.drawRect(3*2, 100, 74*2, 11*2, TFT_BLACK);
+		display.setCursor(6*2, 103);
+		display.print(parsedNotification);
 
 		if (cursor == 0)
 		{
 			if (millis() % 1000 <= 500)
 			{
-				display.drawBitmap(4, 10, noSound);
-				display.drawBitmap(67, 10, fullSound);
+				display.drawBitmap(4*2, 10*2, noSound, TFT_BLACK, 2);
+				display.drawBitmap(67*2, 10*2, fullSound, TFT_BLACK, 2);
 			}
 			else
 			{
-				display.drawBitmap(4, 10, noSound, 0xA7FF);
-				display.drawBitmap(67, 10, fullSound, 0xA7FF);
+				display.drawBitmap(4*2, 10*2, noSound, 0xA7FF, 2);
+				display.drawBitmap(67*2, 10*2, fullSound, 0xA7FF, 2);
 			}
-			if (buttons.kpd.pin_read(JOYSTICK_A) == 0 && volume != 0)
+			if (buttons.released(JOYSTICK_A) && volume != 0)
 			{
-				while (buttons.kpd.pin_read(JOYSTICK_A) == 0);
 				volume--;
+				while(!update());
 			}
-			if (buttons.kpd.pin_read(JOYSTICK_C) == 0 && volume != 15)
+			if (buttons.released(JOYSTICK_C) && volume != 15)
 			{
-				while (buttons.kpd.pin_read(JOYSTICK_C) == 0);
 				volume++;
+				while(!update());
 			}
 		}
 		if (cursor == 1)
 		{
 			if (millis() % 1000 <= 500)
-				display.drawRect(3, 28, 74, 11, TFT_BLACK);
+				display.drawRect(3*2, 55, 74*2, 11*2, TFT_BLACK);
 			else
-				display.drawRect(3, 28, 74, 11, 0xA7FF);
+				display.drawRect(3*2, 55, 74*2, 11*2, 0xA7FF);
 
-			if (buttons.kpd.pin_read(BTN_A) == 0)
+			if (buttons.released(BTN_A))
 			{
-				while (buttons.kpd.pin_read(BTN_A) == 0);
+				while(!update());
 				display.setFreeFont(TT1);
 				Serial.println(ringtoneCount);
 				i = mp3Menu("Select ringtone:", ringtoneFiles, ringtoneCount);
@@ -3825,15 +3824,15 @@ void MAKERphone::soundMenu() {
 		if (cursor == 2)
 		{
 			if (millis() % 1000 <= 500)
-				display.drawRect(3, 51, 74, 11, TFT_BLACK);
+				display.drawRect(3*2, 100, 74*2, 11*2, TFT_BLACK);
 			else
-				display.drawRect(3, 51, 74, 11, 0xA7FF);
+				display.drawRect(3*2, 100, 74*2, 11*2, 0xA7FF);
 
-			if (buttons.kpd.pin_read(BTN_A) == 0)
+			if (buttons.released(BTN_A))
 			{
-				while (buttons.kpd.pin_read(BTN_A) == 0);
+				while(!update());
 				display.setFreeFont(TT1);
-				i = mp3Menu("Select ringtone:", notificationFiles, notificationCount);
+				i = mp3Menu("Select notification:", notificationFiles, notificationCount);
 				display.setTextColor(TFT_BLACK);
 				if (i >= 0)
 					notification = notificationFiles[i];
@@ -3844,21 +3843,21 @@ void MAKERphone::soundMenu() {
 			}
 		}
 
-		if (buttons.kpd.pin_read(JOYSTICK_D) == 0)
+		if (buttons.released(JOYSTICK_D))
 		{
-			while (buttons.kpd.pin_read(JOYSTICK_D) == 0);
 			if (cursor == 0)
 				cursor = 2;
 			else
 				cursor--;
+			while(!update());
 		}
-		if (buttons.kpd.pin_read(JOYSTICK_B) == 0)
+		if (buttons.released(JOYSTICK_B))
 		{
-			while (buttons.kpd.pin_read(JOYSTICK_B) == 0);
 			if (cursor == 2)
 				cursor = 0;
 			else
 				cursor++;
+			while(!update());
 		}
 		if (buttons.released(BTN_B)) //BUTTON BACK
 			break;
@@ -3946,8 +3945,18 @@ void MAKERphone::securityMenu() {
 	bool blinkState = 0;
 	while (!simReady)
 	{
+		if(resolutionMode)
+		{
+			display.setCursor(0, display.height()/2);
+			display.setFreeFont(TT1);
+		}
+		else
+		{
+			display.setCursor(0, display.height()/2 - 16);
+			display.setTextFont(2);
+		}
+		display.setTextColor(TFT_WHITE);
 		display.fillScreen(TFT_BLACK);
-		display.setCursor(34, 34);
 		display.printCenter("GSM still booting...");
 		update();
 	}
@@ -3965,7 +3974,8 @@ void MAKERphone::securityMenu() {
 	{
 		display.fillScreen(TFT_BLACK);
 		display.setTextColor(TFT_WHITE);
-		display.setCursor(34, 30);
+		display.setCursor(0, display.height()/2 - 16);
+		display.setTextFont(2);
 		display.printCenter("PUK lock");
 		while (!buttons.released(BTN_A))
 			update();
@@ -3982,8 +3992,8 @@ void MAKERphone::securityMenu() {
 		pinLock = 0;
 	else if (reply.indexOf("+CLCK: 1") != -1)
 		pinLock = 1;
-	
 	bool pinLockBuffer = pinLock;
+
 	while (1)
 	{
 		if (timesRemaining == 0) //PUK lock WIP
@@ -3999,42 +4009,38 @@ void MAKERphone::securityMenu() {
 		{
 			display.setTextColor(TFT_BLACK);
 			display.fillScreen(0xED1F);
-			display.setTextFont(1);
-			display.setCursor(4, 10);
-			display.print("PIN\n lock");
-			display.setCursor(38, 14);
+			display.setTextFont(2);
+			display.setCursor(8, 15);
+			display.print("PIN lock");
+			display.setCursor(78, 15);
 			display.print("ON");
-			display.setCursor(59, 14);
+			display.setCursor(120, 15);
 			display.print("OFF");
-			display.drawRect(3, 40, 74, 11, TFT_BLACK);
-
 
 			if (pinLockBuffer == 1)
 			{
 				display.setTextColor(TFT_BLACK);
-				display.drawRect(3, 40, 74, 11, TFT_BLACK);
+				display.drawRect(3*2, 40*2, 74*2, 11*2, TFT_BLACK);
 			}
 			else
 			{
 				display.setTextColor(TFT_DARKGREY);
-				display.fillRect(3, 40, 74, 11, TFT_DARKGREY);
+				display.fillRect(3*2, 40*2, 74*2, 11*2, TFT_DARKGREY);
 			}
-			display.setCursor(4, 31);
+			display.setCursor(4*2, 31*2);
 			display.print("PIN:");
-			display.setCursor(6, 42);
+			display.setCursor(6*2, 83);
 			if (pinBuffer != "")
 				display.printCenter(pinBuffer);
 			else if (pinBuffer == "" && cursor != 1)
 				display.printCenter("****");
 			if (pinLockBuffer == 1 && cursor != 0)
-				display.drawRect(35, 12, 17, 11, TFT_BLACK);
+				display.drawRect(69, 12, 17*2, 11*2, TFT_BLACK);
 			else if (pinLockBuffer == 0 && cursor != 0)
-				display.drawRect(57, 12, 21, 11, TFT_BLACK);
-			display.setCursor(2, 61);
-			display.setFreeFont(TT1);
+				display.drawRect(113, 12, 38, 11*2, TFT_BLACK);
+			display.setCursor(2, 111);
 			if (cursor == 1 && !errorMessage && !confirmMessage)
 				display.print("Press A to save PIN");
-			display.setTextFont(1);
 			if (millis() - blinkMillis >= multi_tap_threshold) //cursor blinking routine 
 			{
 				blinkMillis = millis();
@@ -4044,9 +4050,9 @@ void MAKERphone::securityMenu() {
 			if (cursor == 0)
 			{
 				if (millis() % 500 <= 250 && pinLockBuffer == 1)
-					display.drawRect(35, 12, 17, 11, TFT_BLACK);
+					display.drawRect(69, 12, 17*2, 11*2, TFT_BLACK);
 				else if (millis() % 500 <= 250 && pinLockBuffer == 0)
-					display.drawRect(57, 12, 21, 11, TFT_BLACK);
+					display.drawRect(113, 12, 38, 11*2, TFT_BLACK);
 				if (buttons.released(JOYSTICK_A) && pinLockBuffer == 0)
 					pinLockBuffer = !pinLockBuffer;
 				if (buttons.released(JOYSTICK_C) && pinLockBuffer == 1)
@@ -4056,23 +4062,22 @@ void MAKERphone::securityMenu() {
 					if (pinLock)
 						while (1)
 						{
-							display.setTextFont(1);
+							display.setTextFont(2);
 							display.setTextColor(TFT_WHITE);
 							display.fillScreen(TFT_BLACK);
-							display.setCursor(5, 5);
-							display.printCenter("Enter pin:");
-							display.setFreeFont(TT1);
-							display.setCursor(5, 19);
+							display.setCursor(5, 10);
+							display.printCenter("Enter PIN:");
+							display.setCursor(5, 40);
+							display.setTextFont(1);
 							String temp = "Remaining attempts: ";
 							temp += timesRemaining;
 							display.printCenter(temp);
-							display.setTextFont(1);
-							display.setCursor(1, 30);
+							display.setTextFont(2);
+							display.setCursor(1, 60);
 							display.printCenter(pinBuffer);
-							display.setCursor(1, 63);
-							display.setFreeFont(TT1);
+							display.setCursor(2, 111);
+							display.setTextFont(2);
 							display.print("Press A to confirm");
-							display.setCursor(5, 19);
 
 							key = buttons.kpdNum.getKey();
 							if (key == 'A') //clear number
@@ -4084,6 +4089,7 @@ void MAKERphone::securityMenu() {
 
 							if (buttons.released(BTN_A))//enter PIN
 							{
+								while(!update());
 								reply = "";
 								Serial1.print(F("AT+CLCK=\"SC\", 0, \""));
 								Serial1.print(pinBuffer);
@@ -4092,8 +4098,8 @@ void MAKERphone::securityMenu() {
 								while (reply.indexOf("OK", reply.indexOf("AT+CLCK")) == -1 && reply.indexOf("ERROR", reply.indexOf("AT+CLCK")) == -1)
 									reply = Serial1.readString();
 								display.fillScreen(TFT_BLACK);
-								display.setCursor(28, 28);
-								display.setTextFont(1);
+								display.setCursor(0, display.height()/2 - 16);
+								display.setTextFont(2);
 								if (reply.indexOf("OK", reply.indexOf("AT+CLCK")) != -1)
 								{
 									display.printCenter("PIN OK :)");
@@ -4158,10 +4164,11 @@ void MAKERphone::securityMenu() {
 					pinBuffer.remove(pinBuffer.length() - 1);
 				if (key != NO_KEY && isdigit(key) && pinBuffer.length() < 4)
 					pinBuffer += key;
-				display.setCursor(6, 42);
+				display.setCursor(6*2, 83);
+				display.setTextFont(2);
 				display.printCenter(pinBuffer);
 				if (blinkState == 1)
-					display.drawFastVLine(display.getCursorX(), display.getCursorY(), 7, TFT_BLACK);
+					display.drawFastVLine(display.getCursorX()+1, display.getCursorY()+2, 12, TFT_BLACK);
 				if (buttons.released(BTN_A) && pinBuffer.length() == 4 && confirmMessage == 0)
 				{
 
@@ -4171,27 +4178,25 @@ void MAKERphone::securityMenu() {
 					reply = "";
 
 					display.fillScreen(0xED1F);
-					display.setTextFont(1);
 
 					while (1)
 					{
-						display.setTextFont(1);
+						display.setTextFont(2);
 						display.setTextColor(TFT_WHITE);
 						display.fillScreen(TFT_BLACK);
-						display.setCursor(5, 5);
-						display.printCenter("Old PIN:");
-						display.setFreeFont(TT1);
-						display.setCursor(5, 19);
+						display.setCursor(5, 10);
+						display.printCenter("Enter old PIN:");
+						display.setCursor(5, 40);
+						display.setTextFont(1);
 						String temp = "Remaining attempts: ";
 						temp += timesRemaining;
 						display.printCenter(temp);
-						display.setTextFont(1);
-						display.setCursor(1, 30);
+						display.setTextFont(2);
+						display.setCursor(1, 60);
 						display.printCenter(oldPin);
-						display.setCursor(1, 63);
-						display.setFreeFont(TT1);
+						display.setCursor(2, 111);
+						display.setTextFont(2);
 						display.print("Press A to confirm");
-						display.setCursor(5, 19);
 
 						key = buttons.kpdNum.getKey();
 						if (key == 'A') //clear number
@@ -4203,6 +4208,7 @@ void MAKERphone::securityMenu() {
 
 						if (buttons.released(BTN_A))//enter PIN
 						{
+							while(!update());
 							if (pinLock)
 							{
 								reply = "";
@@ -4219,8 +4225,8 @@ void MAKERphone::securityMenu() {
 									delay(5);
 								}
 								display.fillScreen(TFT_BLACK);
-								display.setCursor(28, 28);
-								display.setTextFont(1);
+								display.setCursor(0, display.height()/2 - 16);
+								display.setTextFont(2);
 								if (reply.indexOf("OK", reply.indexOf("AT+CPWD")) != -1)
 								{
 									timesRemaining = 3;
@@ -4276,8 +4282,8 @@ void MAKERphone::securityMenu() {
 										delay(5);
 									}
 									display.fillScreen(TFT_BLACK);
-									display.setCursor(28, 28);
-									display.setTextFont(1);
+									display.setCursor(0, display.height()/2 - 16);
+									display.setTextFont(2);
 									if (reply.indexOf("OK", reply.indexOf("AT+CPWD")) != -1)
 									{
 										timesRemaining = 3;
@@ -4302,8 +4308,8 @@ void MAKERphone::securityMenu() {
 									saved = 0;
 										
 									display.fillScreen(TFT_BLACK);
-									display.setTextFont(1);
-									display.setCursor(30, 30);
+									display.setTextFont(2);
+									display.setCursor(0, display.height()/2 - 16);
 									if (reply.indexOf("incorrect") != -1)
 									{
 										timesRemaining--;
@@ -4342,11 +4348,9 @@ void MAKERphone::securityMenu() {
 					pinBuffer = "";
 					if (saved)
 					{
-						display.setCursor(2, 61);
-						display.setFreeFont(TT1);
-						display.fillRect(2, 57, 78, 5, 0xED1F);
+						display.setCursor(2, 111);
+						display.fillRect(2*2, 57*2, 78*2, 5*2, 0xED1F);
 						display.print("PIN saved!");
-						display.setTextFont(1);
 						elapsedMillis = millis();
 						confirmMessage = 1;
 						errorMessage = 0;
@@ -4361,56 +4365,50 @@ void MAKERphone::securityMenu() {
 					}
 				}
 				
-				if (buttons.kpd.pin_read(BTN_A) == 0 && pinBuffer.length() < 4 && errorMessage == 0)
+				if (buttons.released(BTN_A) && pinBuffer.length() < 4 && errorMessage == 0)
 				{
-					while (buttons.kpd.pin_read(BTN_A) == 0);
-					display.setCursor(2, 61);
-					display.setFreeFont(TT1);
+					while (!update());
+					display.setCursor(2, 111);
 					display.print("Pin must have 4+ digits");
-					display.setTextFont(1);
 					elapsedMillis = millis();
 					errorMessage = 1;
 					confirmMessage = 0;
 				}
 				if (millis() - elapsedMillis >= 2000 && errorMessage == 1)
 				{
-					display.fillRect(2, 57, 78, 5, 0xED1F);
+					display.fillRect(2*2, 57*2, 78*2, 5*2, 0xED1F);
 					errorMessage = 0;
 				}
 				else if (millis() - elapsedMillis < 2000 && errorMessage == 1)
 				{
-					display.fillRect(2, 57, 78, 5, 0xED1F);
-					display.setCursor(2, 61);
-					display.setFreeFont(TT1);
+					display.fillRect(2*2, 57*2, 78*2, 5*2, 0xED1F);
+					display.setCursor(2, 111);
 					display.print("Pin must have 4+ digits");
-					display.setTextFont(1);
 				}
 				if (millis() - elapsedMillis >= 2000 && confirmMessage == 1)
 				{
-					display.fillRect(2, 57, 78, 5, 0xED1F);
+					display.fillRect(2*2, 57*2, 78*2, 5*2, 0xED1F);
 					confirmMessage = 0;
 				}
 				else if (millis() - elapsedMillis < 2000 && confirmMessage == 1)
 				{
-					display.fillRect(2, 56, 78, 6, 0xED1F);
-					display.setCursor(2, 61);
-					display.setFreeFont(TT1);
+					display.fillRect(2*2, 56*2, 78*2, 6*2, 0xED1F);
+					display.setCursor(2, 111);
 					display.print("PIN saved!");
-					display.setTextFont(1);
 				}
 			}
 
-			if (buttons.kpd.pin_read(JOYSTICK_D) == 0)
+			if (buttons.released(JOYSTICK_D))
 			{
-				while (buttons.kpd.pin_read(JOYSTICK_D) == 0);
+				while (!update());
 				if (cursor == 0 && pinLockBuffer == 1)
 					cursor = 1;
 				else if (pinLockBuffer == 1 && cursor == 1)
 					cursor--;
 			}
-			if (buttons.kpd.pin_read(JOYSTICK_B) == 0)
+			if (buttons.released(JOYSTICK_B))
 			{
-				while (buttons.kpd.pin_read(JOYSTICK_B) == 0);
+				while (!update());
 				if (cursor == 1)
 					cursor = 0;
 				else if (pinLockBuffer == 1 && cursor == 0)
@@ -4754,21 +4752,54 @@ void GUI::drawNotificationWindow(uint8_t x, uint8_t y, uint8_t width, uint8_t he
 	mp.display.print(text);
 }
 void GUI::menuDrawBox(String text, uint8_t i, int32_t y) {
-	y += i * 8 + menuYOffset;
-	if (y < 0 || y > BUFHEIGHT) {
+	uint8_t scale;
+	uint8_t offset;
+	uint8_t boxHeight;
+	if(mp.resolutionMode)
+	{
+		scale = 1;
+		offset = menuYOffset;
+		boxHeight = 7;
+	}
+	else
+	{
+		scale = 2;
+		offset = 19;
+		boxHeight = 15;
+	}
+	y += i * (boxHeight + 1) + offset;
+	if (y < 0 || y > mp.display.height()) {
 		return;
 	}
-	mp.display.fillRect(1, y + 1, BUFWIDTH - 2, 7, TFT_DARKGREY);
+	mp.display.fillRect(1, y + 1, mp.display.width() - 2, boxHeight - (scale-1), TFT_DARKGREY);
 	mp.display.setTextColor(TFT_WHITE);
 	mp.display.setCursor(2, y + 2);
-	mp.display.drawString(text, 3, y + 2);
+	if(mp.resolutionMode)
+		mp.display.drawString(text, 3, y + 2);
+	else
+		mp.display.drawString(text, 3, y);
 }
 void GUI::menuDrawCursor(uint8_t i, int32_t y) {
+	uint8_t scale;
+	uint8_t offset;
+	uint8_t boxHeight;
+	if(mp.resolutionMode)
+	{
+		scale = 1;
+		offset = menuYOffset;
+		boxHeight = 7;
+	}
+	else
+	{
+		scale = 2;
+		offset = 19;
+		boxHeight = 15;
+	}
 	if (millis() % 500 <= 250) {
 		return;
 	}
-	y += i * 8 + menuYOffset;
-	mp.display.drawRect(0, y, mp.display.width(), 9, TFT_RED);
+	y += i * (boxHeight + 1) + offset;
+	mp.display.drawRect(0, y, mp.display.width(), boxHeight + 2, TFT_RED);
 }
 int8_t GUI::menu(const char* title, String* items, uint8_t length) {
 	long elapsedMillis = millis();
