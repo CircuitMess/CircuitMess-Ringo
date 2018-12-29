@@ -3270,18 +3270,15 @@ int8_t MAKERphone::settingsMenu(String* title, uint8_t length) {
 void MAKERphone::settingsMenuDrawBox(String title, uint8_t i, int32_t y) {
 	uint8_t scale;
 	uint8_t boxHeight;
-	uint8_t foo;
 	if(resolutionMode)
 	{
 		scale = 1;
 		boxHeight = 15;
-		foo=2;
 	}
 	else
 	{
 		scale = 2;
 		boxHeight = 20;
-		foo=5;
 	}
 	y += i * boxHeight + settingsMenuYOffset;
 	if (y < 0 || y > display.width()) {
@@ -3292,32 +3289,32 @@ void MAKERphone::settingsMenuDrawBox(String title, uint8_t i, int32_t y) {
 	if (title == "Network") //red
 	{
 		display.fillRect(2, y + 1, display.width() - 4, boxHeight-2, 0xFB6D);
-		display.drawBitmap(6, y + foo, network, 0x7800);
+		display.drawBitmap(6, y + 2*scale, network, 0x7800);
 	}
 	if (title == "Display") //green
 	{
 		display.fillRect(2, y + 1, display.width() - 4, boxHeight-2, 0x8FEA);
-		display.drawBitmap(6, y + foo, displayIcon, 0x0341);
+		display.drawBitmap(6, y + 2*scale, displayIcon, 0x0341);
 	}
 	if (title == "Storage") //yellow
 	{
 		display.fillRect(2, y + 1, display.width() - 4, boxHeight-2, 0xFFEC);
-		display.drawBitmap(6, y + foo, displayIcon, 0x6B60);
+		display.drawBitmap(6, y + 2*scale, storage1, 0x6B60);
 	}
 	if (title == "Sound")//blue
 	{
 		display.fillRect(2, y + 1, display.width() - 4, boxHeight-2, 0xA7FF);
-		display.drawBitmap(6, y + foo, soundIcon, 0x010F);
+		display.drawBitmap(6, y + 2*scale, soundIcon, 0x010F);
 	}
 	if (title == "Security")//purple
 	{
 		display.fillRect(2, y + 1, display.width() - 4, boxHeight-2, 0xED1F);
-		display.drawBitmap(6, y + foo, security, 0x600F);
+		display.drawBitmap(6, y + 2*scale, security, 0x600F);
 	}
 	if (title == "About")//orange
 	{
 		display.fillRect(2, y + 1, display.width() - 4, boxHeight-2, 0xFD29);
-		display.drawBitmap(6, y + foo, security, 0x8200);
+		display.drawBitmap(6, y + 2*scale, about, 0x8200);
 	}
 	display.setTextColor(TFT_BLACK);
 	display.setTextSize(1);
@@ -4420,6 +4417,55 @@ void MAKERphone::securityMenu() {
 		}
 
 	}
+}
+void MAKERphone::storageMenu()
+{
+	/* bool blinkState;
+	uint32_t blinkMillis = millis();
+	uint8_t cursor = 0;
+	display.setTextWrap(0);
+	while(1)
+	{
+		display.fillScreen(0xFFEC);
+		display.setTextFont(2);
+		display.setTextColor(TFT_BLACK);
+		display.setCursor(3, 15);
+		display.print("Used space:");
+		display.setCursor(3, 50);
+		display.print((uint32_t)(SD.usedBytes() / 1024^2));
+		display.print("kB used \n");
+		display.print((uint32_t)(SD.totalBytes() / 1024^2));
+		display.print("MB");
+		
+		if (millis() - blinkMillis >= multi_tap_threshold) //cursor blinking routine 
+		{
+			blinkMillis = millis();
+			blinkState = !blinkState;
+		}
+		if (buttons.released(JOYSTICK_D))
+		{
+			while (!update());
+			if (cursor == 0)
+				cursor = 1;
+			else
+				cursor--;
+		}
+		if (buttons.released(JOYSTICK_B))
+		{
+			while (!update());
+			if (cursor == 1)
+				cursor = 0;
+			else if (cursor == 0)
+				cursor++;
+		}
+		if (buttons.released(BTN_B)) //BUTTON BACK
+			break;
+		update();	
+	} */
+}
+void MAKERphone::updateMenu()
+{
+
 }
 void MAKERphone::saveSettings()
 {

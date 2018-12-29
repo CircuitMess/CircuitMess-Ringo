@@ -327,6 +327,8 @@ public:
 	void displayMenu();
 	void soundMenu();
 	void securityMenu();
+	void storageMenu();
+	void updateMenu();
 	void listRingtones(fs::FS &fs, const char * dirname, uint8_t levels);
 	void listNotifications(fs::FS &fs, const char * dirname, uint8_t levels);
 	void applySettings();
