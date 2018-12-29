@@ -203,8 +203,8 @@
   #define set_mask(C) xset_mask[C] // 63fps Sprite rendering test 33% faster, graphicstest only 1.8% faster than shifting in real time
 
   // Real-time shifting alternative to above to save 1KByte RAM, 47 fps Sprite rendering test
-  //#define set_mask(C) ((C&0x80)>>7)<<TFT_D7 | ((C&0x40)>>6)<<TFT_D6 | ((C&0x20)>>5)<<TFT_D5 | ((C&0x10)>>4)<<TFT_D4 | \
-                        ((C&0x08)>>3)<<TFT_D3 | ((C&0x04)>>2)<<TFT_D2 | ((C&0x02)>>1)<<TFT_D1 | ((C&0x01)>>0)<<TFT_D0
+  //#define set_mask(C) ((C&0x80)>>7)<<TFT_D7 | ((C&0x40)>>6)<<TFT_D6 | ((C&0x20)>>5)<<TFT_D5 | ((C&0x10)>>4)<<TFT_D4 |
+  //                    ((C&0x08)>>3)<<TFT_D3 | ((C&0x04)>>2)<<TFT_D2 | ((C&0x02)>>1)<<TFT_D1 | ((C&0x01)>>0)<<TFT_D0
 
   // Write 8 bits to TFT
   #define tft_Write_8(C)  GPIO.out_w1tc = clr_mask; GPIO.out_w1ts = set_mask((uint8_t)C); WR_H
@@ -565,7 +565,7 @@ class TFT_eSPI : public Print {
   uint16_t readcommand16(uint8_t cmd_function, uint8_t index);
   uint32_t readcommand32(uint8_t cmd_function, uint8_t index);
 
-           // Read the colour of a pixel at x,y and return value in 565 format 
+           // Read the colour of a pixel at x,y and return value in 565 format
   uint16_t readPixel(int32_t x0, int32_t y0);
 
            // The next functions can be used as a pair to copy screen blocks (or horizontal/vertical lines) to another location
@@ -635,7 +635,7 @@ class TFT_eSPI : public Print {
   size_t   write(uint8_t);
 
   void     getSetup(setup_t& tft_settings); // Sketch provides the instance to populate
-  
+
 
   int32_t  cursor_x, cursor_y, padX;
   uint32_t textcolor, textbgcolor;
@@ -778,7 +778,7 @@ public:
 	void     setRotation(uint8_t rotation);
 	uint8_t  getRotation(void);
 
-	// Read the colour of a pixel at x,y and return value in 565 format 
+	// Read the colour of a pixel at x,y and return value in 565 format
 	uint16_t readPixel(int32_t x0, int32_t y0);
 
 	// Write an image (colour bitmap) to the sprite

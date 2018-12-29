@@ -55,7 +55,7 @@ extern HardwareSerial Serial1;
 //#include "utility/AudioFileSourceSD.h"
 //#include "utility/AudioFileSourceBuffer.h"
 
-//PCF8574 0x21 defines (keys) 
+//PCF8574 0x21 defines (keys)
 #define JOYSTICK_A 0
 #define JOYSTICK_B 1
 #define JOYSTICK_C 2
@@ -74,12 +74,12 @@ extern HardwareSerial Serial1;
 #define colorSaturation 128
 
 #define LCDWIDTH  160
-#define LCDHEIGHT 128 
+#define LCDHEIGHT 128
 #define LCD_BL_PIN 12
 #define BUFWIDTH  80
-#define BUFHEIGHT 64 
+#define BUFHEIGHT 64
 #define BUF2WIDTH  160
-#define BUF2HEIGHT 128 
+#define BUF2HEIGHT 128
 
 #define menuYOffset 9
 #define settingsMenuYOffset 2
@@ -110,7 +110,7 @@ public:
 	///////////////////
 	//Keypad variables
 	//////////////////
-  
+
 	char keys[4][3] = {
 	{ '1','2','3' },
 	{ '4','5','6' },
@@ -137,7 +137,7 @@ public:
 	uint16_t timeHeld(uint8_t button);
 	uint16_t states[NUM_BTN];
 	void begin();
-    
+
 };
 class GUI {
 public:
@@ -149,7 +149,7 @@ public:
   void menuDrawCursor(uint8_t i, int32_t y);
   int8_t menu(const char* title, String* items, uint8_t length);
   //lock screen notifications
-  void drawNotificationWindow(uint8_t x, uint8_t y, uint8_t width, uint8_t height, String text); 
+  void drawNotificationWindow(uint8_t x, uint8_t y, uint8_t width, uint8_t height, String text);
   //popup GUI
   void popup(String text, uint8_t duration);
   void updatePopup();
@@ -189,10 +189,10 @@ public:
 	void incomingCall();
 	void checkSim();
 	void enterPin();
-	String textInput(String buffer);
+	String textInput(String buffer, int16_t length);
 	int textPointer = 0;
 	void debugMode();
-  
+
 	//SMS functions
 	uint8_t countSubstring(String string, String substring);
 	String readSerial();
@@ -207,7 +207,7 @@ public:
 	void messagesApp();
 	void composeSMS();
 	void incomingMessagePopup();
-  
+
 	void updateFromFS(fs::FS &fs, String FilePath);
 
 
@@ -228,7 +228,7 @@ public:
 	uint32_t end = 0;
 	String input;
 	String buffer;
-  
+
 	//NeoPixels...
 	int numberOfColors = 19;
 	uint32_t hslRed = pixels.Color(255, 0, 0);
@@ -251,8 +251,13 @@ public:
 
 	//Contacts app
 	void contactsMenuDrawBox(String contact, String number, uint8_t i, int32_t y);
+	uint8_t deleteContact(String contact, String number, String id);
+	uint8_t newContact();
+	void parse_contacts();
+	void contactsMenuNewBox(uint8_t i, int32_t y);
 	void contactsMenuDrawCursor(uint8_t i, int32_t y);
-	int8_t contactsMenu(const char* title, String* contact, String *number, uint8_t length);
+	void contactsMenuNewBoxCursor(uint8_t i, int32_t y);
+	int contactsMenu(const char* title, String* contact, String *number, uint8_t length);
 	void contactsApp();
 	String readAllContacts();
 	void callNumber(String number);
@@ -263,7 +268,7 @@ public:
 	void dialer();
 
 	//Settings variables
- 
+
 	bool wifi = 1;
 	bool bt = 0;
 	bool airplaneMode = 0;
@@ -308,7 +313,7 @@ public:
 	"Orange",
 	"Pink"
 	};
-  
+
 	void settingsApp();
 	int8_t settingsMenu(String* title, uint8_t length);
 	void settingsMenuDrawBox(String title, uint8_t i, int32_t y);
