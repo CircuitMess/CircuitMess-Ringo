@@ -27,7 +27,7 @@ void MAKERphone::begin(bool splash) {
 	esp_sleep_enable_ext0_wakeup(GPIO_NUM_35, 0); //1 = High, 0 = Low
 	//Initialize and start with the NeoPixels
 	pixels.begin();
-	Serial1.begin(9600, SERIAL_8N1, 17, 16);
+	Serial1.begin(115200, SERIAL_8N1, 17, 16);
 	//Serial1.println(F("AT+CFUN=1,1"));
 	//Serial1.println("AT+CMEE=2");
 	//Serial1.println(F("AT+CPIN?"));
@@ -2331,7 +2331,6 @@ void MAKERphone::contactsMenuDrawCursor(uint8_t i, int32_t y) {
 	y += i * 14 + menuYOffset;
 	display.drawRect(0, y, display.width(), 15, TFT_RED);
 }
-
 void MAKERphone::contactsMenuNewBoxCursor(uint8_t i, int32_t y) {
 	if (millis() % 500 <= 250) {
 		return;
@@ -2354,7 +2353,6 @@ void MAKERphone::contactsMenuNewBox(uint8_t i, int32_t y) {
 	display.setFreeFont(TT1);
 
 }
-
 int MAKERphone::contactsMenu(const char* title, String* contact, String *number, uint8_t length) {
 
 	uint8_t cursor = 0;
@@ -2404,10 +2402,9 @@ int MAKERphone::contactsMenu(const char* title, String* contact, String *number,
 		}
 
 		if (buttons.kpd.pin_read(JOYSTICK_D) == 0) {  //BUTTON UP
-
 			while (buttons.kpd.pin_read(JOYSTICK_D) == 0);
 			if (cursor == 0) {
-				cursor = length - 1;
+				cursor = length;
 				if (length > 2) {
 					cameraY = -(cursor - 2) * 14;
 				}
@@ -2450,6 +2447,7 @@ void MAKERphone::contactsApp() {
 	int count_try = 0;
 	while (input == "") {
 		if(count_try > 0) delay(1000);
+		if(count_try > 4) return;
 		Serial.println("try again");
 		input = readAllContacts();
 		count_try++;
@@ -2498,83 +2496,85 @@ void MAKERphone::contactsApp() {
 			end = input.indexOf("\"", start + 1);
 			contactName[i] = input.substring(start + 1, end);
 		}
+
 		while(1){
 			int menuChoice = -1;
-			if(change){
-				Serial.println("realoding data bullshit");
-				display.fillScreen(TFT_BLACK);
-				display.setFreeFont(TT1);
-				display.setCursor(34, 32);
-				display.printCenter("Reloading data...");
-				while (!update());
-
-				delay(1000);
-
-				input = "";
-				int count_try = 0;
-				bool flag = 0;
-				while (input == "") {
-					if(count_try > 4) { flag = 1; break; }
-					delay(1000);
-					Serial.println("try again");
-					input = readAllContacts();
-					count_try++;
-				}
-
-				if (input.indexOf("CPBR:") == -1 || flag) {
-					display.fillScreen(TFT_BLACK);
-					display.setCursor(16, 35);
-					display.setFreeFont(TT1);
-					display.print("No contacts  :(");
-					while (buttons.released(BTN_B) == 0)//BUTTON BACK
-						while (!update());
-					while (!update());
-					break;
-				}
-				else
+			if(change == 1 || change == -10){
+				if(change == 1)
 				{
-					uint8_t contactNumber = countSubstring(input, "CPBR:");
-					Serial.println(contactNumber);
+					Serial.println("realoding data bullshit");
+					display.fillScreen(TFT_BLACK);
+					display.setFreeFont(TT1);
+					display.setCursor(34, 32);
+					display.printCenter("Reloading data...");
+					while (!update());
 
-					/////////////////////////////////
-					//Variables for contact parsing
-					////////////////////////////////
-					String phoneNumber[contactNumber];
-					String contactName[contactNumber];
-					String contact_id[contactNumber];
-					uint16_t start;
-					uint16_t end = 0;
-					uint16_t foo = 0;
-					uint16_t bar = 0;
-					/////////////////////////////////////////////////////
-					//parsing the raw data input for contact number,
-					//date and text content
-					////////////////////////////////////////////////////
-					Serial.println(input);
-					for (uint8_t i = 0; i < contactNumber; i++)
-					{
-						foo = input.indexOf(" ", input.indexOf("CPBR:", end));
-						bar = input.indexOf("\"", input.indexOf("CPBR:", end));
-						contact_id[i] = input.substring(foo+1, bar-1);
+					delay(1000);
 
-						start = input.indexOf("\"", input.indexOf("CPBR:", end));
-						end = input.indexOf("\"", start + 1);
-						phoneNumber[i] = input.substring(start + 1, end);
-
-						start = input.indexOf("\"", end + 1);
-						end = input.indexOf("\"", start + 1);
-						contactName[i] = input.substring(start + 1, end);
+					input = "";
+					int count_try = 0;
+					bool flag = 0;
+					while (input == "") {
+						if(count_try > 4) { flag = 1; break; }
+						delay(1000);
+						Serial.println("try again");
+						input = readAllContacts();
+						count_try++;
 					}
 
-					Serial.println("done parsing data");
-
-					for(int i = 0; i<contactNumber; i++){
-						Serial.println(contactName[i]);
+					if (input.indexOf("CPBR:") == -1 || flag) {
+						display.fillScreen(TFT_BLACK);
+						display.setCursor(16, 35);
+						display.setFreeFont(TT1);
+						display.print("No contacts  :(");
+						while (buttons.released(BTN_B) == 0) //BUTTON BACK
+							while (!update());
+						while (!update());
+						break;
 					}
-
-					menuChoice = contactsMenu("Contacts", contactName, phoneNumber, contactNumber);
-					change = 0;
 				}
+
+				uint8_t contactNumber = countSubstring(input, "CPBR:");
+				Serial.println(contactNumber);
+
+				/////////////////////////////////
+				//Variables for contact parsing
+				////////////////////////////////
+				// String phoneNumber[contactNumber];
+				// String contactName[contactNumber];
+				// String contact_id[contactNumber];
+				uint16_t start;
+				uint16_t end = 0;
+				uint16_t foo = 0;
+				uint16_t bar = 0;
+				/////////////////////////////////////////////////////
+				//parsing the raw data input for contact number,
+				//date and text content
+				////////////////////////////////////////////////////
+				Serial.println(input);
+				for (uint8_t i = 0; i < contactNumber; i++)
+				{
+					foo = input.indexOf(" ", input.indexOf("CPBR:", end));
+					bar = input.indexOf("\"", input.indexOf("CPBR:", end));
+					contact_id[i] = input.substring(foo+1, bar-1);
+
+					start = input.indexOf("\"", input.indexOf("CPBR:", end));
+					end = input.indexOf("\"", start + 1);
+					phoneNumber[i] = input.substring(start + 1, end);
+
+					start = input.indexOf("\"", end + 1);
+					end = input.indexOf("\"", start + 1);
+					contactName[i] = input.substring(start + 1, end);
+				}
+
+				Serial.println("done parsing data");
+
+				for(int i = 0; i<contactNumber; i++){
+					Serial.println(contactName[i]);
+				}
+
+				menuChoice = contactsMenu("Contacts", contactName, phoneNumber, contactNumber);
+				change = -10;
 			} else menuChoice = contactsMenu("Contacts", contactName, phoneNumber, contactNumber);
 
 			update();

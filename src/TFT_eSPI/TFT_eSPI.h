@@ -565,7 +565,7 @@ class TFT_eSPI : public Print {
   uint16_t readcommand16(uint8_t cmd_function, uint8_t index);
   uint32_t readcommand32(uint8_t cmd_function, uint8_t index);
 
-           // Read the colour of a pixel at x,y and return value in 565 format 
+           // Read the colour of a pixel at x,y and return value in 565 format
   uint16_t readPixel(int32_t x0, int32_t y0);
 
            // The next functions can be used as a pair to copy screen blocks (or horizontal/vertical lines) to another location
@@ -635,7 +635,7 @@ class TFT_eSPI : public Print {
   size_t   write(uint8_t);
 
   void     getSetup(setup_t& tft_settings); // Sketch provides the instance to populate
-  
+
 
   int32_t  cursor_x, cursor_y, padX;
   uint32_t textcolor, textbgcolor;
@@ -659,7 +659,7 @@ class TFT_eSPI : public Print {
   void printCenter(char text);
  private:
 
-	 void printCenter(const char* text);
+	//  void printCenter(const char* text);
   inline void spi_begin() __attribute__((always_inline));
   inline void spi_end()   __attribute__((always_inline));
 
@@ -779,7 +779,7 @@ public:
 	void     setRotation(uint8_t rotation);
 	uint8_t  getRotation(void);
 
-	// Read the colour of a pixel at x,y and return value in 565 format 
+	// Read the colour of a pixel at x,y and return value in 565 format
 	uint16_t readPixel(int32_t x0, int32_t y0);
 
 	// Write an image (colour bitmap) to the sprite
