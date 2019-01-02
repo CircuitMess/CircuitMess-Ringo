@@ -1927,15 +1927,7 @@ void MAKERphone::messagesApp() {
 	{
 		input = readSerial();
 	}
-	input = input.substring(input.indexOf("+CPMS:"), input.indexOf("\n", input.indexOf("+CPMS:")));
-	uint16_t helper;
-	if (input.indexOf("SM") == -1)
-		helper = input.indexOf("+CPMS: ")+7;
-	else
-		helper = input.indexOf("+CPMS: \"SM\",")+12;	
-	currentMessageNumber=input.substring(helper, input.indexOf(",", helper + 1)).toInt();
-	//input = readAllSms();
-	while (input.indexOf("AT+CMGL") == -1)
+	if (input == "ERROR")
 	{
 		display.fillScreen(TFT_BLACK);
 		if(resolutionMode)
