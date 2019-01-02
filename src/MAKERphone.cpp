@@ -1921,12 +1921,14 @@ void MAKERphone::messagesApp() {
 	//sim800.flush();
 	/*while (sim800.available())
 	input += (char)sim800.read();*/
-
+	while(!simReady)
+		update();
 	input = readAllSms();
 	while (input == "")
 	{
 		input = readSerial();
 	}
+
 	if (input == "ERROR")
 	{
 		display.fillScreen(TFT_BLACK);
@@ -1976,7 +1978,8 @@ void MAKERphone::messagesApp() {
 		//parsing the raw input data for contact number,
 		//date and text content
 		////////////////////////////////////////////////////
-		for (uint8_t i = 0; i < smsNumber; i++)
+		uint16_t numberOfTexts = countSubstring(input, "+CMGL:");
+		for (uint8_t i = 0; i < numberOfTexts; i++)
 		{
 			start = input.indexOf("\n", input.indexOf("CMGL:", end));
 			end = input.indexOf("\n", start + 1);
@@ -1985,7 +1988,7 @@ void MAKERphone::messagesApp() {
 
 
 		end = 0;
-		for (uint8_t i = 0; i < smsNumber; i++)
+		for (uint8_t i = 0; i < numberOfTexts; i++)
 		{
 			start = input.indexOf("D\",\"", input.indexOf("CMGL:", end));
 			end = input.indexOf("\"", start + 4);
@@ -1995,7 +1998,7 @@ void MAKERphone::messagesApp() {
 		//Parsing for date and time of sending
 		////////////////////////////
 		end = 0;
-		for (uint8_t i = 0; i < smsNumber; i++)
+		for (uint8_t i = 0; i < numberOfTexts; i++)
 		{
 			start = input.indexOf("\"\",\"", input.indexOf("CMGL:", end));
 			end = input.indexOf("\"", start + 4);
@@ -2003,7 +2006,7 @@ void MAKERphone::messagesApp() {
 		}
 
 		int8_t index = -8;
-		for (uint8_t i = 0; i < smsNumber; i++)
+		for (uint8_t i = 0; i < numberOfTexts; i++)
 		{
 
 			char c1, c2; //buffer for saving date and time numerals in form of characters
@@ -2034,7 +2037,7 @@ void MAKERphone::messagesApp() {
 
 		while (1)
 		{
-			int16_t menuChoice = smsMenu("Messages", phoneNumber, tempDate, smsContent, smsNumber);
+			int16_t menuChoice = smsMenu("Messages", phoneNumber, tempDate, smsContent, numberOfTexts);
 			Serial.println(menuChoice);
 			if (menuChoice == -1)
 				break;
@@ -2045,7 +2048,7 @@ void MAKERphone::messagesApp() {
 		}
 	}
 }
-uint8_t MAKERphone::countSubstring(String string, String substring) {
+uint16_t MAKERphone::countSubstring(String string, String substring) {
 	if (substring.length() == 0) return 0;
 	int count = 0;
 	for (size_t offset = string.indexOf(substring); offset != -1;
@@ -2075,7 +2078,6 @@ String MAKERphone::readAllSms() {
 	Serial.begin(115200);
 	Serial1.print(F("AT+CMGL=\"ALL\"\r"));
 	buffer = readSerial();
-	Serial.println(buffer);
 	delay(10);
 	if (buffer.indexOf("CMGL:") != -1) {
 		return buffer;
@@ -2245,7 +2247,7 @@ void MAKERphone::smsMenuDrawBox(String contact, String date, String content, uin
 	else
 	{
 		String monthsList[] = {"JAN", "FEB", "MAR", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"};
-		display.fillRect(scale, y + 1, display.width() - 2, boxHeight-2, TFT_DARKGREY);
+		display.fillRect(1, y + 1, display.width() - 2, boxHeight-2, TFT_DARKGREY);
 		display.setTextColor(TFT_WHITE);
 		display.setCursor(4, y + 2);
 		display.drawString(contact, 3, y-1);
@@ -2342,7 +2344,7 @@ int16_t MAKERphone::smsMenu(const char* title, String* contact, String *date, St
 		{
 			display.fillRect(0, 0, display.width(), 14, TFT_DARKGREY);
 			display.setTextFont(2);
-			display.setCursor(0,-2);
+			display.setCursor(1,-2);
 			display.drawFastHLine(0, 14, BUF2WIDTH, TFT_WHITE);
 		}
 		display.setTextSize(1);
@@ -2446,7 +2448,7 @@ void MAKERphone::smsMenuComposeBox(uint8_t i, int32_t y) {
 	if (y < 0 || y > display.height()) {
 		return;
 	}
-	display.fillRect(scale, y + 1, display.width() - 2, boxHeight-1, TFT_DARKGREY);
+	display.fillRect(1, y + 1, display.width() - 2, boxHeight-1, TFT_DARKGREY);
 	display.drawBitmap(2*scale, y + 2, composeIcon, TFT_WHITE, scale);
 	display.setTextColor(TFT_WHITE);
 	display.drawString("New SMS", 20*scale, y+3);

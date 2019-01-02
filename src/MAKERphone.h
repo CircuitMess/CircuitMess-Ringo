@@ -199,7 +199,7 @@ public:
 	void debugMode();
 
 	//SMS functions
-	uint8_t countSubstring(String string, String substring);
+	uint16_t countSubstring(String string, String substring);
 	String readSerial();
 	String readSms(uint8_t index);
 	String readAllSms();
