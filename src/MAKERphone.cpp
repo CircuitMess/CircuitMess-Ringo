@@ -3845,7 +3845,7 @@ void MAKERphone::settingsMenuDrawBox(String title, uint8_t i, int32_t y) {
 	}
 	if (title == "Date & time") //yellow
 	{
-		display.fillRect(2, y + 1, display.width() - 4, boxHeight-2, 0xFFEC);
+		display.fillRect(2, y + 1, display.width() - 4, boxHeight-2, 0xFE71);
 		display.drawBitmap(6, y + 2*scale, timeIcon, 0x6B60);
 	}
 	if (title == "Sound")//blue
@@ -4977,7 +4977,7 @@ void MAKERphone::timeMenu()
 	display.setTextWrap(0);
 	while(1)
 	{
-		display.fillScreen(0xFFEC);
+		display.fillScreen(0xFE71);
 		display.setTextFont(2);
 		display.setTextColor(TFT_BLACK);
 
@@ -5022,15 +5022,19 @@ void MAKERphone::timeMenu()
 		if(cursor == 0)
 		{
 			if(!blinkState)
-				display.drawRect(46,63, 68, 20, 0xFFEC);
+				display.drawRect(46,63, 68, 20, 0xFE71);
 			if(buttons.released(BTN_A))
 			{
 				while(!update());
-				String inputBuffer= String(clockHour);
+				String inputBuffer;
+				if(clockHour == 0)
+					inputBuffer = "";
+				else
+					inputBuffer = String(clockHour);
 				
 				while(1)
 				{
-					display.fillScreen(0xFFEC);
+					display.fillScreen(0xFE71);
 					display.setCursor(2, 98);
 					display.print("Press A to save");
 					display.setCursor(2, 110);
@@ -5652,11 +5656,41 @@ void MAKERphone::timeMenu()
 		else if(cursor == 1)
 		{
 			if(!blinkState)
-				display.drawRect(23, 93, 110, 20, 0xFFEC);
+				display.drawRect(23, 93, 110, 20, 0xFE71);
 			if(buttons.released(BTN_A))
 			{
-				while(clockYear >= 80 || clockYear < 18 )
+				clockYear = 0;
+				previousMillis = millis();
+				while(1)
+				{
+					display.fillScreen(0xFE71);
+					display.setCursor(0, display.height()/2 - 16);
+					display.printCenter("Fetching time...");
+					if(millis() - previousMillis >= 4000)
+					{
+						display.fillScreen(0xFE71);
+						display.setCursor(0, display.height()/2 - 20);
+						display.printCenter("Couldn't fetch time");
+						display.setCursor(0, display.height()/2);
+						display.printCenter("Set it manually");
+						while(!update());
+						delay(2000);
+						break;
+					}
 					updateTimeGSM();
+					if(clockYear < 80 && clockYear >= 19)
+					{
+						delay(200);
+						display.fillScreen(0xFE71);
+						display.setCursor(0, display.height()/2 - 16);
+						display.printCenter("Time fetched over GSM!");
+						while(!update());
+						delay(1500);
+						break;
+					}
+				}
+
+					
 			}
 		}
 
