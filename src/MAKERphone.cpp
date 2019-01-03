@@ -438,8 +438,7 @@ void MAKERphone::lockScreen() {
 	//pixels.show();
 	while (1)
 	{
-		if (clockYear != 4 && clockYear != 80)
-			updateTimeRTC();
+		
 
 
 		display.fillScreen(backgroundColors[backgroundIndex]);
@@ -560,6 +559,8 @@ void MAKERphone::lockScreen() {
 		if (millis() - elapsedMillis >= 500) {
 			elapsedMillis = millis();
 			blinkState = !blinkState;
+			if (clockYear != 4 && clockYear != 80)
+				updateTimeRTC();
 		}
 
 
@@ -810,7 +811,6 @@ void MAKERphone::updateTimeGSM() {
 	Serial.println(F("CLOCK SECOND:"));
 	Serial.println(clockSecond);
 
-	//TO-DO: UPDATE THE RTC HERE
 
 	buttons.kpd.setHour(clockHour);
 	buttons.kpd.setMinute(clockMinute);
@@ -819,6 +819,7 @@ void MAKERphone::updateTimeGSM() {
 	buttons.kpd.setMonth(clockMonth);
 	buttons.kpd.setYear(clockYear);
 	Serial.println(F("\nRTC TIME UPDATE OVER GSM DONE!"));
+	delay(5);
 }
 void MAKERphone::updateTimeRTC() {
 	clockHour = buttons.kpd.getHour(h12, PM);
@@ -3842,10 +3843,10 @@ void MAKERphone::settingsMenuDrawBox(String title, uint8_t i, int32_t y) {
 		display.fillRect(2, y + 1, display.width() - 4, boxHeight-2, 0x8FEA);
 		display.drawBitmap(6, y + 2*scale, displayIcon, 0x0341);
 	}
-	if (title == "Storage") //yellow
+	if (title == "Date & time") //yellow
 	{
 		display.fillRect(2, y + 1, display.width() - 4, boxHeight-2, 0xFFEC);
-		display.drawBitmap(6, y + 2*scale, storage1, 0x6B60);
+		display.drawBitmap(6, y + 2*scale, timeIcon, 0x6B60);
 	}
 	if (title == "Sound")//blue
 	{
@@ -3901,8 +3902,8 @@ void MAKERphone::settingsApp() {
 			networkMenu();
 		if (input == 1)
 			displayMenu();
-		/* if (input == 2)
-			storageMenu(); */
+		if (input == 2)
+			timeMenu(); 
 		if (input == 3)
 			soundMenu();
 		if (input == 4)
@@ -4964,50 +4965,727 @@ void MAKERphone::securityMenu() {
 
 	}
 }
-void MAKERphone::storageMenu()
+void MAKERphone::timeMenu()
 {
-	/* bool blinkState;
-	uint32_t blinkMillis = millis();
+	bool blinkState = 0;
+	uint8_t pastSecond=clockSecond;
+	uint32_t previousMillis = millis();
 	uint8_t cursor = 0;
+	uint8_t editCursor = 0;
+	String foo="";
+	char key;
 	display.setTextWrap(0);
 	while(1)
 	{
 		display.fillScreen(0xFFEC);
 		display.setTextFont(2);
 		display.setTextColor(TFT_BLACK);
-		display.setCursor(3, 15);
-		display.print("Used space:");
-		display.setCursor(3, 50);
-		display.print((uint32_t)(SD.usedBytes() / 1024^2));
-		display.print("kB used \n");
-		display.print((uint32_t)(SD.totalBytes() / 1024^2));
-		display.print("MB");
+
+		display.setCursor(52,10);
+		if (clockHour < 10)
+			display.print("0");
+		display.print(clockHour);
+		if(blinkState)
+			display.print(":");
+		else
+			display.setCursor(display.cursor_x + 3, 10);
+		if (clockMinute < 10)
+			display.print("0");
+		display.print(clockMinute);
+		if(blinkState)
+			display.print(":");
+		else
+			display.setCursor(display.cursor_x + 3, 10);
+		if (clockSecond < 10)
+			display.print("0");
+		display.print(clockSecond);
+
+		display.setCursor(40,30);
+		if (clockDay < 10)
+			display.print("0");
+		display.print(clockDay);
+		display.print("/");
+			
+		if (clockMonth < 10)
+			display.print("0");
+		display.print(clockMonth);
+		display.print("/");
+		display.print(2000 + clockYear);
+
+		display.setCursor( 0, 65);
+		display.printCenter("Edit time");
+		display.drawRect(46,63, 68, 20, TFT_BLACK);
+		display.setCursor( 40, 95);
+		display.printCenter("Force time sync");
+		display.drawRect(23, 93, 110, 20, TFT_BLACK);
+
+		if(cursor == 0)
+		{
+			if(!blinkState)
+				display.drawRect(46,63, 68, 20, 0xFFEC);
+			if(buttons.released(BTN_A))
+			{
+				while(!update());
+				String inputBuffer= String(clockHour);
+				
+				while(1)
+				{
+					display.fillScreen(0xFFEC);
+					display.setCursor(2, 98);
+					display.print("Press A to save");
+					display.setCursor(2, 110);
+					display.print("Press B to cancel");
+					switch (editCursor)
+					{
+						case 0:
+							display.setCursor(52,10);
+							if(inputBuffer == "")
+								display.cursor_x+=16;
+							else if (inputBuffer.length() == 1)
+							{
+								display.print("0"); display.print(inputBuffer);
+							}
+							else
+								display.print(inputBuffer);
+							if(blinkState)
+								display.drawFastVLine(display.getCursorX() - 1, display.getCursorY() + 3, 11, TFT_BLACK);
+							
+							display.print(":");
+							if (clockMinute < 10)
+								display.print("0");
+							display.print(clockMinute);
+							display.print(":");
+							if (clockSecond < 10)
+								display.print("0");
+							display.print(clockSecond);
+
+							display.setCursor(40,30);
+							if (clockDay < 10)
+								display.print("0");
+							display.print(clockDay);
+							display.print("/");
+							if (clockMonth < 10)
+								display.print("0");
+							display.print(clockMonth);
+							display.print("/");
+							display.print(2000 + clockYear);
+							break;
+
+						case 1:
+							display.setCursor(52,10);
+							if(clockHour < 10)
+								display.print("0");
+							display.print(clockHour);
+							display.print(":");
+							if(inputBuffer == "")
+								display.cursor_x+=16;
+							else if (inputBuffer.length() == 1)
+							{
+								display.print("0"); display.print(inputBuffer);
+							}
+							else
+								display.print(inputBuffer);
+							if(blinkState)
+								display.drawFastVLine(display.getCursorX() - 1, display.getCursorY() + 3, 11, TFT_BLACK);
+							display.print(":");
+							if (clockSecond < 10)
+								display.print("0");
+							display.print(clockSecond);
+
+							display.setCursor(40,30);
+							if (clockDay < 10)
+								display.print("0");
+							display.print(clockDay);
+							display.print("/");
+							if (clockMonth < 10)
+								display.print("0");
+							display.print(clockMonth);
+							display.print("/");
+							display.print(2000 + clockYear);
+							break;
+
+						case 2:
+							display.setCursor(52,10);
+							if(clockHour < 10)
+								display.print("0");
+							display.print(clockHour);
+							display.print(":");
+							if(clockMinute < 10)
+								display.print("0");
+							display.print(clockMinute);
+							display.print(":");
+							if(inputBuffer == "")
+								display.cursor_x+=16;
+							if (inputBuffer.length() == 1)
+							{
+								display.print("0"); display.print(inputBuffer);
+							}
+							else
+								display.print(inputBuffer);
+							if(blinkState)
+								display.drawFastVLine(display.getCursorX() - 1, display.getCursorY() + 3, 11, TFT_BLACK);
+
+							display.setCursor(40,30);
+							if (clockDay < 10)
+								display.print("0");
+							display.print(clockDay);
+							display.print("/");
+							if (clockMonth < 10)
+								display.print("0");
+							display.print(clockMonth);
+							display.print("/");
+							display.print(2000 + clockYear);
+							break;
+
+						case 3:
+							display.setCursor(52,10);
+							if(clockHour < 10)
+								display.print("0");
+							display.print(clockHour);
+							display.print(":");
+							if(clockMinute < 10)
+								display.print("0");
+							display.print(clockMinute);
+							display.print(":");
+							if (clockSecond < 10)
+								display.print("0");
+							display.print(clockSecond);
+
+							display.setCursor(40,30);
+							if(inputBuffer == "")
+								display.cursor_x+=16;
+							else if (inputBuffer.length() == 1)
+							{
+								display.print("0"); display.print(inputBuffer);
+							}
+							else
+								display.print(inputBuffer);
+							if(blinkState)
+								display.drawFastVLine(display.getCursorX() - 1, display.getCursorY() + 3, 11, TFT_BLACK);
+
+							display.print("/");
+							if (clockMonth < 10)
+								display.print("0");
+							display.print(clockMonth);
+							display.print("/");
+							display.print(2000 + clockYear);
+							break;
+
+						case 4:
+							display.setCursor(52,10);
+							if(clockHour < 10)
+								display.print("0");
+							display.print(clockHour);
+							display.print(":");
+							if(clockMinute < 10)
+								display.print("0");
+							display.print(clockMinute);
+							display.print(":");
+							if (clockSecond < 10)
+								display.print("0");
+							display.print(clockSecond);
+
+							display.setCursor(40,30);
+							if (clockDay < 10)
+								display.print("0");
+							display.print(clockDay);
+							display.print("/");
+							if(inputBuffer == "")
+								display.cursor_x+=16;
+							else if (inputBuffer.length() == 1)
+							{
+								display.print("0"); display.print(inputBuffer);
+							}
+							else
+								display.print(inputBuffer);
+							if(blinkState)
+								display.drawFastVLine(display.getCursorX() - 1, display.getCursorY() + 3, 11, TFT_BLACK);
+
+							display.print("/");
+							display.print(2000 + clockYear);
+							break;
+
+						case 5:
+							display.setCursor(52,10);
+							if(clockHour < 10)
+								display.print("0");
+							display.print(clockHour);
+							display.print(":");
+							if(clockMinute < 10)
+								display.print("0");
+							display.print(clockMinute);
+							display.print(":");
+							if (clockSecond < 10)
+								display.print("0");
+							display.print(clockSecond);
+
+							display.setCursor(40,30);
+							if (clockDay < 10)
+								display.print("0");
+							display.print(clockDay);
+							display.print("/");
+							if (clockMonth < 10)
+								display.print("0");
+							display.print(clockMonth);
+							display.print("/");
+							if(inputBuffer == "")
+								display.print(2000);
+							else
+								display.print(2000 + inputBuffer.toInt());
+							if(blinkState)
+								display.drawFastVLine(display.getCursorX() - 1, display.getCursorY() + 3, 11, TFT_BLACK);
+							break;
+
+					}
+					key = buttons.kpdNum.getKey();
+					if (key == 'A') //clear number
+						inputBuffer = "";
+					else if (key == 'C')
+						inputBuffer.remove(inputBuffer.length() - 1);
+					if (key != NO_KEY && isdigit(key) && inputBuffer.length() < 2)
+						inputBuffer += key;
+					if(millis()-previousMillis >= 500)
+					{
+						previousMillis = millis();
+						blinkState = !blinkState;
+					}
+					update();
+					if(buttons.released(JOYSTICK_C) && editCursor < 5) //RIGHT
+					{
+						blinkState = 1;
+						previousMillis = millis();
+						while(!update());
+						if(inputBuffer == "")
+						{
+							switch (editCursor)
+							{
+								case 0:
+									clockHour = 0;
+									break;
+								case 1:
+									clockMinute = 0;
+									break;
+								case 2:
+									clockSecond = 0;
+									break;
+								case 3:
+									clockDay = 0;
+									break;
+								case 4:
+									clockMonth = 0;
+									break;
+								case 5:
+									clockYear = 0;
+									break;
+							}
+						}
+						else
+						{
+							switch (editCursor)
+							{
+								case 0:
+									clockHour = inputBuffer.toInt();
+									break;
+								case 1:
+									clockMinute = inputBuffer.toInt();
+									break;
+								case 2:
+									clockSecond = inputBuffer.toInt();
+									break;
+								case 3:
+									clockDay = inputBuffer.toInt();
+									break;
+								case 4:
+									clockMonth = inputBuffer.toInt();
+									break;
+								case 5:
+									clockYear = inputBuffer.toInt();
+									break;
+							}
+						}
+						switch (editCursor)
+						{
+							case 0:
+								if(clockMinute != 0)
+									inputBuffer = String(clockMinute);
+								else
+									inputBuffer = "";
+								break;
+							case 1:
+								if(clockSecond != 0)
+									inputBuffer = String(clockSecond);
+								else
+									inputBuffer = "";
+								break;
+							case 2:
+								if(clockDay != 0)
+									inputBuffer = String(clockDay);
+								else
+									inputBuffer = "";
+								break;
+							case 3:
+								if(clockMonth != 0)
+									inputBuffer = String(clockMonth);
+								else
+									inputBuffer = "";
+								break;
+							case 4:
+								if(clockYear != 0)
+									inputBuffer = String(clockYear);
+								else
+									inputBuffer = "";
+								break;
+						}
+						editCursor++;
+
+					}
+					if(buttons.released(JOYSTICK_A) && editCursor > 0) //LEFT
+					{
+						while(!update());
+						blinkState = 1;
+						previousMillis = millis();
+						if(inputBuffer == "")
+						{
+							switch (editCursor)
+							{
+								case 0:
+									clockHour = 0;
+									break;
+								case 1:
+									clockMinute = 0;
+									break;
+								case 2:
+									clockSecond = 0;
+									break;
+								case 3:
+									clockDay = 0;
+									break;
+								case 4:
+									clockMonth = 0;
+									break;
+								case 5:
+									clockYear = 0;
+									break;
+							}
+						}
+						else
+						{
+							switch (editCursor)
+							{
+								case 0:
+									clockHour = inputBuffer.toInt();
+									break;
+								case 1:
+									clockMinute = inputBuffer.toInt();
+									break;
+								case 2:
+									clockSecond = inputBuffer.toInt();
+									break;
+								case 3:
+									clockDay = inputBuffer.toInt();
+									break;
+								case 4:
+									clockMonth = inputBuffer.toInt();
+									break;
+								case 5:
+									clockYear = inputBuffer.toInt();
+									break;
+							}
+						}
+						switch (editCursor)
+						{
+							case 1:
+								if(clockHour != 0)
+									inputBuffer = String(clockHour);
+								else
+									inputBuffer = "";
+								break;
+							case 2:
+								if(clockMinute != 0)
+									inputBuffer = String(clockMinute);
+								else
+									inputBuffer = "";
+								break;
+							case 3:
+								if(clockSecond != 0)
+									inputBuffer = String(clockSecond);
+								else
+									inputBuffer = "";
+								break;
+							case 4:
+								if(clockDay != 0)
+									inputBuffer = String(clockDay);
+								else
+									inputBuffer = "";
+								break;
+							case 5:
+								if(clockMonth != 0)
+									inputBuffer = String(clockMonth);
+								else
+									inputBuffer = "";
+								break;
+						}
+						editCursor--;
+
+					}
+
+					if(buttons.released(JOYSTICK_D) && editCursor > 2) //UP
+					{
+						while(!update());
+						blinkState = 1;
+						previousMillis = millis();
+						if(inputBuffer == "")
+						{
+							switch (editCursor)
+							{
+								case 0:
+									clockHour = 0;
+									break;
+								case 1:
+									clockMinute = 0;
+									break;
+								case 2:
+									clockSecond = 0;
+									break;
+								case 3:
+									clockDay = 0;
+									break;
+								case 4:
+									clockMonth = 0;
+									break;
+								case 5:
+									clockYear = 0;
+									break;
+							}
+						}
+						else
+						{
+							switch (editCursor)
+							{
+								case 0:
+									clockHour = inputBuffer.toInt();
+									break;
+								case 1:
+									clockMinute = inputBuffer.toInt();
+									break;
+								case 2:
+									clockSecond = inputBuffer.toInt();
+									break;
+								case 3:
+									clockDay = inputBuffer.toInt();
+									break;
+								case 4:
+									clockMonth = inputBuffer.toInt();
+									break;
+								case 5:
+									clockYear = inputBuffer.toInt();
+									break;
+							}
+						}
+						switch (editCursor)
+						{
+							case 3:
+								if(clockHour != 0)
+									inputBuffer = String(clockHour);
+								else
+									inputBuffer = "";
+								break;
+							case 4:
+								if(clockMinute != 0)
+									inputBuffer = String(clockMinute);
+								else
+									inputBuffer = "";
+								break;
+							case 5:
+								if(clockSecond != 0)
+									inputBuffer = String(clockSecond);
+								else
+									inputBuffer = "";
+								break;
+						}
+						editCursor-=3;
+					}
+					if(buttons.released(JOYSTICK_B) && editCursor < 3) //DOWN
+					{
+						while(!update());
+						blinkState = 1;
+						previousMillis = millis();
+						if(inputBuffer == "")
+						{
+							switch (editCursor)
+							{
+								case 0:
+									clockHour = 0;
+									break;
+								case 1:
+									clockMinute = 0;
+									break;
+								case 2:
+									clockSecond = 0;
+									break;
+								case 3:
+									clockDay = 0;
+									break;
+								case 4:
+									clockMonth = 0;
+									break;
+								case 5:
+									clockYear = 0;
+									break;
+							}
+						}
+						else
+						{
+							switch (editCursor)
+							{
+								case 0:
+									clockHour = inputBuffer.toInt();
+									break;
+								case 1:
+									clockMinute = inputBuffer.toInt();
+									break;
+								case 2:
+									clockSecond = inputBuffer.toInt();
+									break;
+								case 3:
+									clockDay = inputBuffer.toInt();
+									break;
+								case 4:
+									clockMonth = inputBuffer.toInt();
+									break;
+								case 5:
+									clockYear = inputBuffer.toInt();
+									break;
+							}
+						}
+						switch (editCursor)
+						{
+							case 0:
+								if(clockDay != 0)
+									inputBuffer = String(clockDay);
+								else
+									inputBuffer = "";
+								break;
+							case 1:
+								if(clockMonth != 0)
+									inputBuffer = String(clockMonth);
+								else
+									inputBuffer = "";
+								break;
+							case 2:
+								if(clockYear != 0)
+									inputBuffer = String(clockYear);
+								else
+									inputBuffer = "";
+								break;
+						}
+						editCursor+=3;
+					}
+
+					if(buttons.released(BTN_A))
+					{
+						if(inputBuffer == "")
+						{
+							switch (editCursor)
+							{
+								case 0:
+									clockHour = 0;
+									break;
+								case 1:
+									clockMinute = 0;
+									break;
+								case 2:
+									clockSecond = 0;
+									break;
+								case 3:
+									clockDay = 0;
+									break;
+								case 4:
+									clockMonth = 0;
+									break;
+								case 5:
+									clockYear = 0;
+									break;
+							}
+						}
+						else
+						{
+							switch (editCursor)
+							{
+								case 0:
+									clockHour = inputBuffer.toInt();
+									break;
+								case 1:
+									clockMinute = inputBuffer.toInt();
+									break;
+								case 2:
+									clockSecond = inputBuffer.toInt();
+									break;
+								case 3:
+									clockDay = inputBuffer.toInt();
+									break;
+								case 4:
+									clockMonth = inputBuffer.toInt();
+									break;
+								case 5:
+									clockYear = inputBuffer.toInt();
+									break;
+							}
+						}
+						buttons.kpd.setHour(clockHour);
+						buttons.kpd.setMinute(clockMinute);
+						buttons.kpd.setSecond(clockSecond);
+						buttons.kpd.setDate(clockDay);
+						buttons.kpd.setMonth(clockMonth);
+						buttons.kpd.setYear(clockYear);
+						break;
+					}
+
+
+					if(buttons.released(BTN_B))
+						break;
+					
+				}
+				while(!update());
+			}
+		}
+		else if(cursor == 1)
+		{
+			if(!blinkState)
+				display.drawRect(23, 93, 110, 20, 0xFFEC);
+			if(buttons.released(BTN_A))
+			{
+				while(clockYear >= 80 || clockYear < 18 )
+					updateTimeGSM();
+			}
+		}
+
 		
-		if (millis() - blinkMillis >= multi_tap_threshold) //cursor blinking routine 
+		if(millis()-previousMillis >= 500)
 		{
-			blinkMillis = millis();
+			previousMillis = millis();
 			blinkState = !blinkState;
+			updateTimeRTC();
 		}
-		if (buttons.released(JOYSTICK_D))
+		if (buttons.released(JOYSTICK_D) && cursor > 0)
 		{
-			while (!update());
-			if (cursor == 0)
-				cursor = 1;
-			else
-				cursor--;
+			blinkState = 1;
+			previousMillis = millis() + 400;
+			while (!update());		
+			cursor--;
 		}
-		if (buttons.released(JOYSTICK_B))
+		if (buttons.released(JOYSTICK_B) && cursor < 1)
 		{
+			blinkState = 1;
+			previousMillis = millis() + 400;
 			while (!update());
-			if (cursor == 1)
-				cursor = 0;
-			else if (cursor == 0)
-				cursor++;
+			cursor++;
 		}
 		if (buttons.released(BTN_B)) //BUTTON BACK
 			break;
 		update();	
-	} */
+	}
+
 }
 void MAKERphone::updateMenu()
 {

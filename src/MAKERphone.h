@@ -324,7 +324,7 @@ public:
 	String settingsItems[6] = {
 	"Network",
 	"Display",
-	"Storage",
+	"Date & time",
 	"Sound",
 	"Security",
 	"About"};
@@ -332,7 +332,7 @@ public:
 	void displayMenu();
 	void soundMenu();
 	void securityMenu();
-	void storageMenu();
+	void timeMenu();
 	void updateMenu();
 	void listRingtones(fs::FS &fs, const char * dirname, uint8_t levels);
 	void listNotifications(fs::FS &fs, const char * dirname, uint8_t levels);
