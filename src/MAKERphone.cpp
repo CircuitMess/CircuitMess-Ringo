@@ -1009,10 +1009,8 @@ void MAKERphone::bigIconsMainMenu() {
 
 			if (index != -1) {  //IF BUTTON "BACK" WAS NOT PRESSED
 				display.fillScreen(TFT_BLACK);
-				display.setCursor(0, 0);
-				display.print("You picked:");
-				display.println(BinaryFiles[index]);
-				display.print("LOADING NOW...");
+				display.setCursor(0,display.height() / 2 - 16);
+				display.printCenter("LOADING NOW...");
 				update();
 				delay(1000);
 				if (!SD.begin(5, SD_SCK_MHZ(8))) {
@@ -6089,11 +6087,21 @@ int8_t GUI::menu(const char* title, String* items, uint8_t length) {
 		menuDrawCursor(cursor, cameraY_actual);
 
 		// last draw the top entry thing
-		mp.display.fillRect(0, 0, mp.display.width(), 7, TFT_DARKGREY);
-		mp.display.setTextColor(TFT_WHITE);
-		mp.display.setCursor(1, 1);
-		mp.display.drawString(title, 1, 1);
-		mp.display.drawFastHLine(0, 7, LCDWIDTH, TFT_BLACK);
+		if(mp.resolutionMode)
+		{
+			mp.display.fillRect(0, 0, mp.display.width(), 6, TFT_DARKGREY);
+			mp.display.setFreeFont(TT1);
+			mp.display.setCursor(0,5);
+			mp.display.drawFastHLine(0, 6, mp.display.width(), TFT_WHITE);
+		}
+		else
+		{
+			mp.display.fillRect(0, 0, mp.display.width(), 14, TFT_DARKGREY);
+			mp.display.setTextFont(2);
+			mp.display.setCursor(1,-2);
+			mp.display.drawFastHLine(0, 14, mp.display.width(), TFT_WHITE);
+		}
+		mp.display.print(title);
 
 		if (mp.buttons.kpd.pin_read(BTN_A) == 0) {   //BUTTON CONFIRM
 
