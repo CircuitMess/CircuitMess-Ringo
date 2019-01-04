@@ -246,7 +246,7 @@ public:
 	uint8_t smsMinute[smsNumber];
 	uint8_t smsSecond[smsNumber];
 	uint8_t smsHour[smsNumber];
-	uint32_t start;
+	uint32_t start = 0;
 	uint32_t end = 0;
 	String input;
 	String buffer;

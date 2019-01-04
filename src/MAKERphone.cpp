@@ -910,76 +910,78 @@ void MAKERphone::updateFromFS(String FilePath) {
 		Serial.println("Could not load update.bin from sd root");
 	}
 }
-//void MAKERphone::mainMenu() {
-//	while (buttons.kpd.pin_read(BTN_A) == 0);
-//	Serial.println("entered main menu");
-//
-//	uint8_t index = gui.drawCursor(width + 1, width + 1, 3, 2, 0, 7);
-//	Serial.println(simInserted);
-//	Serial.println(airplaneMode);
-//	delay(5);
-//	if (titles[index] == "Apps")
-//	{
-//		display.fillScreen(TFT_BLACK);
-//		update();
-//		if (!SD.begin(5, SD_SCK_MHZ(8)5, SD_SCK_MHZ(8))) {
-//			display.setCursor(0, 0);
-//			display.println("\nCard Mount Failed");
-//			update();
-//			return;
-//		}
-//		listDir(SD, "/", 0);
-//
-//		update();
-//		int8_t index = gui.menu("Load from SD", BinaryFiles, binaryCount);
-//
-//		if (index != -1) {  //IF BUTTON "BACK" WAS NOT PRESSED
-//			display.fillScreen(TFT_BLACK);
-//			display.setCursor(0, 0);
-//			display.print("You picked:");
-//			display.println(BinaryFiles[index]);
-//			display.print("LOADING NOW...");
-//			update();
-//			delay(1000);
-//			if (!SD.begin(5, SD_SCK_MHZ(8)5, SD_SCK_MHZ(8))) {
-//				display.println("Card Mount Failed");
-//				return;
-//			}
-//			listDir(SD, "/", 0);
-//			updateFromFS(SD, BinaryFiles[index]);
-//		}
-//
-//
-//	}
-//
-//	if (titles[index] == "Messages" && simInserted && !airplaneMode)
-//	{
-//		display.fillScreen(TFT_BLACK);
-//		display.setCursor(22, 30);
-//		display.print("Loading");
-//		display.setCursor(20, 36);
-//		display.print("messages...");
-//		update();
-//		messagesApp();
-//	}
-//
-//	if (titles[index] == "Media")
-//		mediaApp();
-//	if (titles[index] == "Phone" && simInserted && !airplaneMode)
-//		phoneApp();
-//	if (titles[index] == "Contacts" && simInserted && !airplaneMode)
-//		contactsApp();
-//	if (titles[index] == "Settings")
-//	{
-//		settingsApp();
-//		Serial.println(brightness);
-//		applySettings();
-//
-//	}
-//
-//
-//
-//}
+void MAKERphone::mainMenu()
+{
+	
+	//	while (buttons.kpd.pin_read(BTN_A) == 0);
+	//	Serial.println("entered main menu");
+	//
+	//	uint8_t index = gui.drawCursor(width + 1, width + 1, 3, 2, 0, 7);
+	//	Serial.println(simInserted);
+	//	Serial.println(airplaneMode);
+	//	delay(5);
+	//	if (titles[index] == "Apps")
+	//	{
+	//		display.fillScreen(TFT_BLACK);
+	//		update();
+	//		if (!SD.begin(5, SD_SCK_MHZ(8)5, SD_SCK_MHZ(8))) {
+	//			display.setCursor(0, 0);
+	//			display.println("\nCard Mount Failed");
+	//			update();
+	//			return;
+	//		}
+	//		listDir(SD, "/", 0);
+	//
+	//		update();
+	//		int8_t index = gui.menu("Load from SD", BinaryFiles, binaryCount);
+	//
+	//		if (index != -1) {  //IF BUTTON "BACK" WAS NOT PRESSED
+	//			display.fillScreen(TFT_BLACK);
+	//			display.setCursor(0, 0);
+	//			display.print("You picked:");
+	//			display.println(BinaryFiles[index]);
+	//			display.print("LOADING NOW...");
+	//			update();
+	//			delay(1000);
+	//			if (!SD.begin(5, SD_SCK_MHZ(8)5, SD_SCK_MHZ(8))) {
+	//				display.println("Card Mount Failed");
+	//				return;
+	//			}
+	//			listDir(SD, "/", 0);
+	//			updateFromFS(SD, BinaryFiles[index]);
+	//		}
+	//
+	//
+	//	}
+	//
+	//	if (titles[index] == "Messages" && simInserted && !airplaneMode)
+	//	{
+	//		display.fillScreen(TFT_BLACK);
+	//		display.setCursor(22, 30);
+	//		display.print("Loading");
+	//		display.setCursor(20, 36);
+	//		display.print("messages...");
+	//		update();
+	//		messagesApp();
+	//	}
+	//
+	//	if (titles[index] == "Media")
+	//		mediaApp();
+	//	if (titles[index] == "Phone" && simInserted && !airplaneMode)
+	//		phoneApp();
+	//	if (titles[index] == "Contacts" && simInserted && !airplaneMode)
+	//		contactsApp();
+	//	if (titles[index] == "Settings")
+	//	{
+	//		settingsApp();
+	//		Serial.println(brightness);
+	//		applySettings();
+	//
+	//	}
+	//
+	//
+	//
+}
 void MAKERphone::bigIconsMainMenu() {
 	Serial.begin(115200);
 	while (buttons.kpd.pin_read(BTN_A) == 0);
@@ -3809,7 +3811,7 @@ void MAKERphone::settingsMenuDrawBox(String title, uint8_t i, int32_t y) {
 	}
 	if (title == "Date & time") //yellow
 	{
-		display.fillRect(2, y + 1, display.width() - 4, boxHeight-2, 0xFE71);
+		display.fillRect(2, y + 1, display.width() - 4, boxHeight-2, 0xFFED);
 		display.drawBitmap(6, y + 2*scale, timeIcon, 0x6B60);
 	}
 	if (title == "Sound")//blue
@@ -3872,8 +3874,8 @@ void MAKERphone::settingsApp() {
 			soundMenu();
 		if (input == 4)
 			securityMenu();
-		/* if (input == 5)
-			aboutMenu(); */
+		if (input == 5)
+			updateMenu(); 
 	}
 	applySettings();
 	if(SDinsertedFlag)
@@ -4942,7 +4944,7 @@ void MAKERphone::timeMenu()
 	display.setTextWrap(0);
 	while(1)
 	{
-		display.fillScreen(0xFE71);
+		display.fillScreen(0xFFED);
 		display.setTextFont(2);
 		display.setTextColor(TFT_BLACK);
 
@@ -4987,7 +4989,7 @@ void MAKERphone::timeMenu()
 		if(cursor == 0)
 		{
 			if(!blinkState)
-				display.drawRect(46,63, 68, 20, 0xFE71);
+				display.drawRect(46,63, 68, 20, 0xFFED);
 			if(buttons.released(BTN_A))
 			{
 				while(!update());
@@ -4999,7 +5001,7 @@ void MAKERphone::timeMenu()
 				
 				while(1)
 				{
-					display.fillScreen(0xFE71);
+					display.fillScreen(0xFFED);
 					display.setCursor(2, 98);
 					display.print("Press A to save");
 					display.setCursor(2, 110);
@@ -5621,19 +5623,19 @@ void MAKERphone::timeMenu()
 		else if(cursor == 1)
 		{
 			if(!blinkState)
-				display.drawRect(23, 93, 110, 20, 0xFE71);
+				display.drawRect(23, 93, 110, 20, 0xFFED);
 			if(buttons.released(BTN_A))
 			{
 				clockYear = 0;
 				previousMillis = millis();
 				while(1)
 				{
-					display.fillScreen(0xFE71);
+					display.fillScreen(0xFFED);
 					display.setCursor(0, display.height()/2 - 16);
 					display.printCenter("Fetching time...");
 					if(millis() - previousMillis >= 4000)
 					{
-						display.fillScreen(0xFE71);
+						display.fillScreen(0xFFED);
 						display.setCursor(0, display.height()/2 - 20);
 						display.printCenter("Couldn't fetch time");
 						display.setCursor(0, display.height()/2);
@@ -5646,7 +5648,7 @@ void MAKERphone::timeMenu()
 					if(clockYear < 80 && clockYear >= 19)
 					{
 						delay(200);
-						display.fillScreen(0xFE71);
+						display.fillScreen(0xFFED);
 						display.setCursor(0, display.height()/2 - 16);
 						display.printCenter("Time fetched over GSM!");
 						while(!update());
@@ -5688,7 +5690,83 @@ void MAKERphone::timeMenu()
 }
 void MAKERphone::updateMenu()
 {
+	bool blinkState = 0;
+	uint8_t pastSecond=clockSecond;
+	uint32_t previousMillis = millis();
+	uint8_t cursor = 0;
+	String foo="";
+	char key;
+	display.setTextWrap(0);
+	display.setTextFont(2);
+	
+	while(1)
+	{
+		display.fillScreen(0xFD29);
+		display.setTextColor(TFT_BLACK);
+		display.setCursor(10, 20);
+		display.printCenter("Check for update");
+		display.setCursor(40, 50);
+		display.printCenter("Factory reset");
+		display.setCursor(90, 100);
+		display.setTextColor(TFT_DARKGREY);
+		foo = "Version: " + (String)((int)firmware_version / 100) + "." + (String)((int)firmware_version / 10) + "." + (String)(firmware_version % 10);
+		display.printCenter(foo);
+		if(cursor == 0)
+		{
+			if(blinkState)
+				display.drawRect(20,18,117, 20, TFT_BLACK);
+			else
+				display.drawRect(20,18,117, 20, 0xFD29);
+			if(buttons.released(BTN_A))
+			{
 
+			}
+		}
+		else if (cursor == 1)
+		{
+			if(blinkState)
+				display.drawRect(30, 48, 96, 20, TFT_BLACK);
+			else
+				display.drawRect(30, 48, 96, 20, 0xFD29);
+			if(buttons.released(BTN_A))
+			{
+				while(!update());
+				if(SDinsertedFlag)
+				{
+					while(!SD.begin(5, SD_SCK_MHZ(8)));
+					SD.remove("settings.json");
+					SD.remove("contacts.json");
+					SD.remove("db.json");
+					SD.remove("messages.json");
+					//TODO: Add json defaults to files
+				}
+
+			}
+		}
+		if(millis()-previousMillis >= 250)
+		{
+			previousMillis = millis();
+			blinkState = !blinkState;
+		}
+		if (buttons.released(JOYSTICK_D) && cursor > 0)
+		{
+			blinkState = 1;
+			previousMillis = millis();
+			while (!update());		
+			cursor--;
+		}
+		if (buttons.released(JOYSTICK_B) && cursor < 1)
+		{
+			blinkState = 1;
+			previousMillis = millis();
+			while (!update());
+			cursor++;
+		}
+		if (buttons.released(BTN_B)) //BUTTON BACK
+			break;
+		update();	
+	}
+	while(!update());
 }
 void MAKERphone::saveSettings()
 {
