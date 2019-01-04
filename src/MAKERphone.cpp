@@ -20,6 +20,7 @@ Authors:
 #include "MAKERphone.h"
 extern MAKERphone mp;
 void MAKERphone::begin(bool splash) {
+	Serial.begin(115200);
 	String input="";
 	dataRefreshFlag = 0;
 	pinMode(SIM800_DTR, OUTPUT);
@@ -64,15 +65,24 @@ void MAKERphone::begin(bool splash) {
 	ledcSetup(LEDC_CHANNEL, LEDC_BASE_FREQ, LEDC_TIMER);
 	ledcAttachPin(LCD_BL_PIN, LEDC_CHANNEL);
 	ledcAnalogWrite(LEDC_CHANNEL, 255);
-
-	if (SD.begin())
+	uint32_t tempMillis = millis();
+	SDinsertedFlag = 1;
+	while (!SD.begin(5, SD_SCK_MHZ(8)))
 	{
-		SDinsertedFlag = 1;
-		loadSettings();
-		applySettings();
+		if(millis()-tempMillis > 2000)
+		{
+			SDinsertedFlag = 0;
+			break;
+		}
 	}
 
-	Serial.begin(115200);
+
+	
+	loadSettings();
+	applySettings();
+	
+
+	
 
 	//display initialization
 	tft.init();
@@ -912,7 +922,7 @@ void MAKERphone::updateFromFS(String FilePath) {
 //	{
 //		display.fillScreen(TFT_BLACK);
 //		update();
-//		if (!SD.begin()) {
+//		if (!SD.begin(5, SD_SCK_MHZ(8)5, SD_SCK_MHZ(8))) {
 //			display.setCursor(0, 0);
 //			display.println("\nCard Mount Failed");
 //			update();
@@ -931,7 +941,7 @@ void MAKERphone::updateFromFS(String FilePath) {
 //			display.print("LOADING NOW...");
 //			update();
 //			delay(1000);
-//			if (!SD.begin()) {
+//			if (!SD.begin(5, SD_SCK_MHZ(8)5, SD_SCK_MHZ(8))) {
 //				display.println("Card Mount Failed");
 //				return;
 //			}
@@ -986,7 +996,7 @@ void MAKERphone::bigIconsMainMenu() {
 		{
 			display.fillScreen(TFT_BLACK);
 			update();
-			if (!SD.begin()) {
+			if (!SD.begin(5, SD_SCK_MHZ(8))) {
 				display.setCursor(0, 0);
 				display.println("\nCard Mount Failed");
 				update();
@@ -1005,7 +1015,7 @@ void MAKERphone::bigIconsMainMenu() {
 				display.print("LOADING NOW...");
 				update();
 				delay(1000);
-				if (!SD.begin()) {
+				if (!SD.begin(5, SD_SCK_MHZ(8))) {
 					display.println("Card Mount Failed");
 					return;
 				}
@@ -3655,7 +3665,7 @@ void MAKERphone::mp3player(String songName) {
 	} */
 }
 void MAKERphone::mediaApp() {
-	/* if (!SD.begin())
+	/* if (!SD.begin(5, SD_SCK_MHZ(8)))
 		Serial.println("SD card error");
 	listMP3(SD, "/", 0);
 	while (1)
@@ -3878,6 +3888,7 @@ void MAKERphone::networkMenu() {
 		scale = 2;
 	while (1)
 	{
+		Serial.println(airplaneMode);
 		display.setTextColor(TFT_BLACK);
 		display.fillScreen(0xFB6D);
 		display.setTextFont(2);
@@ -4230,7 +4241,7 @@ void MAKERphone::displayMenu() {
 	sleepTimeActual = sleepTimeActualBuffer;
 }
 void MAKERphone::soundMenu() {
-	SD.begin();
+	SD.begin(5, SD_SCK_MHZ(8));
 	listRingtones("/ringtones", 0);
 	listNotifications("/notifications", 0);
 	Serial.begin(115200);
@@ -5681,10 +5692,13 @@ void MAKERphone::updateMenu()
 }
 void MAKERphone::saveSettings()
 {
-
 	const char * path = "/settings.mph";
+	SD.remove(path);
 	char helper[20] = "";
 	writeFile(path, "MAKERphone settings file\n");
+	String buffer = readFile(path);
+	Serial.println(buffer);
+	delay(5);
 	appendFile(path, "Wifi: ");
 	switch (wifi)
 	{
@@ -5793,7 +5807,7 @@ void MAKERphone::applySettings()
 void MAKERphone::loadSettings()
 {
 	Serial.begin(115200);
-	while (!SD.begin());
+	while (!SD.begin(5, SD_SCK_MHZ(8)));
 	const char * path = "/settings.mph";
 	String buffer = readFile(path);
 	Serial.println(buffer);
@@ -5816,10 +5830,8 @@ void MAKERphone::loadSettings()
 	Serial.println(bt);
 	delay(5);
 	indexHelper = buffer.indexOf("Airplane mode");
-	if (buffer.indexOf("0", indexHelper) < buffer.indexOf("1", indexHelper) && buffer.indexOf("0", indexHelper) != -1 || buffer.indexOf("1") == -1)
-		airplaneMode = 0;
-	else
-		airplaneMode = 1;
+	String air = buffer.substring(indexHelper, buffer.indexOf("\n", indexHelper));
+	airplaneMode = (air.indexOf("0") == -1);
 	Serial.print("Airplane mode:");
 	Serial.println(airplaneMode);
 	delay(5);
@@ -5829,7 +5841,7 @@ void MAKERphone::loadSettings()
 	Serial.print("Brightness:");
 	Serial.println(brightness);
 	delay(5);
-
+	
 	indexHelper = buffer.indexOf("Background color: ") + sizeof("Background color: ") - 1;
 	backgroundIndex = buffer.substring(indexHelper, buffer.indexOf("\n", indexHelper)).toInt();
 	Serial.print("BG color:");
@@ -5933,10 +5945,10 @@ bool MAKERphone::collidePointCircle(int16_t pointX, int16_t pointY, int16_t cent
 //SD operations
 void MAKERphone::writeFile(const char * path, const char * message)
 {
-	while (!SD.begin());
+	while (!SD.begin(5, SD_SCK_MHZ(8)));
 	Serial.printf("Writing file: %s\n", path);
 
-	File file = SD.open(path, FILE_WRITE);
+	File file = SD.open(path, FILE_REWRITE);
 	if (!file) {
 		Serial.println("Failed to open file for writing");
 		return;
@@ -5968,7 +5980,7 @@ void MAKERphone::appendFile(const char * path, const char * message) {
 	file.close();
 }
 String MAKERphone::readFile(const char * path) {
-	while (!SD.begin());
+	while (!SD.begin(5, SD_SCK_MHZ(8)));
 	Serial.printf("Reading file: %s\n", path);
 	String helper="";
 	File file = SD.open(path);

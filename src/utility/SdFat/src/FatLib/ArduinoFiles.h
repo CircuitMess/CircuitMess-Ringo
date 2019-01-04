@@ -37,6 +37,7 @@
 #define FILE_READ READ
 /** Arduino SD.h style flag for open at EOF for read/write with create. */
 #define FILE_WRITE (O_RDWR | CREAT | AT_END)
+#define FILE_REWRITE (O_RDWR | CREAT | TRUNC)
 //==============================================================================
 /**
  * \class PrintFile
