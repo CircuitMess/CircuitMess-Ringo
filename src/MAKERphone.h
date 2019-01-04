@@ -20,14 +20,13 @@ Authors:
 #ifndef MAKERphone_h
 #define MAKERphone_h
 
-#include <FastLED.h>
-
 #include <WiFi.h>
 #include <esp32-hal-bt.h>
 #include <stdint.h>
 #include <EEPROM.h>
 //#include <Arduino.h>
 #include "utility/Adafruit_NeoPixel.h"
+#include "FastLED/FastLED.h"
 extern HardwareSerial Serial1;
 #include "TFT_eSPI/TFT_eSPI.h" // Graphics and font library for ST7735 driver chip
 #include <SPI.h>

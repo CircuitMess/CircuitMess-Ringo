@@ -379,7 +379,7 @@ void MAKERphone::tone2(int pin, int freq, int duration) {
 }
 void MAKERphone::vibration(int duration) {
 	kpd.pin_write(VIBRATION_MOTOR, 1);
-	//delay(duration);
+	delay(duration);
 	kpd.pin_write(VIBRATION_MOTOR, 0);
 }
 void MAKERphone::ledcAnalogWrite(uint8_t channel, uint32_t value, uint32_t valueMax) {
@@ -395,6 +395,8 @@ void MAKERphone::sleep() {
 	/*for (uint8_t i = 0; i < NUMPIXELS; i++)
 		//pixels.setPixelColor(i, hslBlack);
 	//pixels.show();*/
+
+	FastLED.clear();
 
 	ledcAnalogWrite(LEDC_CHANNEL, 255);
 	for (uint8_t i = actualBrightness; i < 255; i++) {
@@ -417,6 +419,9 @@ void MAKERphone::sleep() {
 	//pixels.clear();
 	delay(2);
 	//pixels.show();
+
+	FastLED.clear();
+
 	while (!update());
 	if (buttons.pressed(BTN_A))
 		while (!buttons.released(BTN_A))
@@ -443,6 +448,9 @@ void MAKERphone::lockScreen() {
 	////pixels.clear();
 	//delay(1);
 	////pixels.show();
+
+	FastLED.clear();
+
 	while (1)
 	{
 		if (clockYear != 4 && clockYear != 80)
@@ -738,9 +746,12 @@ void MAKERphone::lockScreen() {
 						Serial.println("Pixels.show()");
 						updatePixels = 4;
 					}*/
-					update();
 
-					vibration(200);
+					FastLED.show();
+
+					// update();
+
+					vibration(220);
 					Serial.println(millis() - buttonHeld);
 					goOut = 1;
 					delay(10);
@@ -775,6 +786,9 @@ void MAKERphone::lockScreen() {
 			break;
 	}
 }
+
+// TODO FastLED from now on
+
 void MAKERphone::updateTimeGSM() {
 	Serial1.write("AT+CCLK?\r");
 	//Serial1.flush();
@@ -5461,11 +5475,15 @@ int8_t GUI::menu(const char* title, String* items, uint8_t length) {
 
 		if (mp.buttons.kpd.pin_read(JOYSTICK_D) == 0) {  //BUTTON DOWN
 			//mp.pixels.setPixelColor(3, mp.hslBlue);
+			mp.leds[3] = CRGB::Blue;
 			//mp.pixels.setPixelColor(4, mp.hslBlue);
+			mp.leds[4] = CRGB::Blue;
 			while(!mp.update());
 			mp.vibration(200);
 			for (uint8_t i = 0; i < NUMPIXELS; i++)
 				//mp.pixels.setPixelColor(i, mp.hslBlack);
+				// mp.leds[i] = CRGB::Black;
+			FastLED.clear();
 			while (!mp.update());
 
 			while (mp.buttons.kpd.pin_read(JOYSTICK_D) == 0);
@@ -5485,11 +5503,14 @@ int8_t GUI::menu(const char* title, String* items, uint8_t length) {
 
 		if (mp.buttons.kpd.pin_read(JOYSTICK_B) == 0) { //BUTTON UP
 			//mp.pixels.setPixelColor(0, mp.hslBlue);
+			mp.leds[0] = CRGB::Blue;
 			//mp.pixels.setPixelColor(7, mp.hslBlue);
+			mp.leds[7] = CRGB::Blue;
 			while (!mp.update());
 			mp.vibration(200);
 			for (uint8_t i = 0; i < NUMPIXELS; i++)
 				//mp.pixels.setPixelColor(i, mp.hslBlack);
+			FastLED.clear();
 			while (!mp.update());
 
 			while (mp.buttons.kpd.pin_read(JOYSTICK_B) == 0);
@@ -5562,12 +5583,17 @@ uint8_t GUI::drawCursor(uint8_t xoffset, uint8_t yoffset, uint8_t xelements, uin
 		{
 
 			//mp.pixels.setPixelColor(0, mp.hslBlue);
+			mp.leds[0] = CRGB::Black;
 			//mp.pixels.setPixelColor(7, mp.hslBlue);
+			mp.leds[7] = CRGB::Black;
 			//mp.pixels.show();
+			FastLED.show();
 			mp.vibration(200);
 			for (uint8_t i = 0; i < NUMPIXELS; i++)
 				//mp.pixels.setPixelColor(i, mp.hslBlack);
 			//mp.pixels.show();
+
+			FastLED.clear();
 
 			while (mp.buttons.kpd.pin_read(JOYSTICK_B) == 0);
 			mp.display.drawRect(xstart + cursorX * xoffset, ystart + cursorY * yoffset, width + 2, height + 2, TFT_BLACK);
@@ -5583,12 +5609,17 @@ uint8_t GUI::drawCursor(uint8_t xoffset, uint8_t yoffset, uint8_t xelements, uin
 		{
 
 			//mp.pixels.setPixelColor(3, mp.hslBlue);
+			mp.leds[3] = CRGB::Blue;
 			//mp.pixels.setPixelColor(4, mp.hslBlue);
+			mp.leds[4] = CRGB::Blue;
 			//mp.pixels.show();
+			FastLED.show();
 			mp.vibration(200);
 			for (uint8_t i = 0; i < NUMPIXELS; i++)
 				//mp.pixels.setPixelColor(i, mp.hslBlack);
 			//mp.pixels.show();
+
+			FastLED.clear();
 
 			while (mp.buttons.kpd.pin_read(JOYSTICK_D) == 0);
 			mp.display.drawRect(xstart + cursorX * xoffset, ystart + cursorY * yoffset, width + 2, height + 2, TFT_BLACK);
@@ -5603,12 +5634,17 @@ uint8_t GUI::drawCursor(uint8_t xoffset, uint8_t yoffset, uint8_t xelements, uin
 		if (mp.buttons.kpd.pin_read(JOYSTICK_A) == 0) //LEFT
 		{
 			//mp.pixels.setPixelColor(6, mp.hslBlue);
+			mp.leds[6] = CRGB::Blue;
 			//mp.pixels.setPixelColor(5, mp.hslBlue);
+			mp.leds[5] = CRGB::Blue;
 			//mp.pixels.show();
+			FastLED.show();
 			mp.vibration(200);
 			for (uint8_t i = 0; i < NUMPIXELS; i++)
 				//mp.pixels.setPixelColor(i, mp.hslBlack);
 			//mp.pixels.show();
+
+			FastLED.clear();
 
 			while (mp.buttons.kpd.pin_read(JOYSTICK_A) == 0);
 			mp.display.drawRect(xstart + cursorX * xoffset, ystart + cursorY * yoffset, width + 2, height + 2, TFT_BLACK);
@@ -5623,12 +5659,17 @@ uint8_t GUI::drawCursor(uint8_t xoffset, uint8_t yoffset, uint8_t xelements, uin
 		if (mp.buttons.kpd.pin_read(JOYSTICK_C) == 0)//RIGHT
 		{
 			//mp.pixels.setPixelColor(1, mp.hslBlue);
+			mp.leds[1] = CRGB::Blue;
 			//mp.pixels.setPixelColor(2, mp.hslBlue);
+			mp.leds[2] = CRGB::Blue;
 			//mp.pixels.show();
+			FastLED.show();
 			mp.vibration(200);
 			for (uint8_t i = 0; i < NUMPIXELS; i++)
 				//mp.pixels.setPixelColor(i, mp.hslBlack);
 			//mp.pixels.show();
+
+			FastLED.clear();
 
 			while (mp.buttons.kpd.pin_read(JOYSTICK_C) == 0);
 			mp.display.drawRect(xstart + cursorX * xoffset, ystart + cursorY * yoffset, width + 2, height + 2, TFT_BLACK);
@@ -5643,12 +5684,17 @@ uint8_t GUI::drawCursor(uint8_t xoffset, uint8_t yoffset, uint8_t xelements, uin
 		if (mp.buttons.kpd.pin_read(BTN_B) == 0 && previousButtonState == 1)//LOCK BUTTON
 		{
 			//mp.pixels.setPixelColor(0, mp.hslRed);
+			mp.leds[0] = CRGB::Red;
 			//mp.pixels.setPixelColor(7, mp.hslRed);
+			mp.leds[7] = CRGB::Red;
 			//mp.pixels.show();
+			FastLED.show();
 			mp.vibration(200);
 			for (uint8_t i = 0; i < NUMPIXELS; i++)
 				//mp.pixels.setPixelColor(i, mp.hslBlack);
 			//mp.pixels.show();
+
+			FastLED.clear();
 
 			Serial.println("entered lock screen");
 			mp.lockScreen();
@@ -5732,11 +5778,15 @@ int8_t GUI::drawBigIconsCursor(uint8_t xoffset, uint8_t yoffset, uint8_t xelemen
 			passcode += "DOWN";
 			passcodeMillis = millis();
 			//mp.pixels.setPixelColor(0, mp.hslBlue);
+			mp.leds[0] = CRGB::Blue;
 			//mp.pixels.setPixelColor(7, mp.hslBlue);
+			mp.leds[7] = CRGB::Blue;
 			while(!mp.update());
 			mp.vibration(200);
 			for (uint8_t i = 0; i < NUMPIXELS; i++)
 				//mp.pixels.setPixelColor(i, mp.hslBlack);
+				// leds[i] = CRGB::Black;
+			FastLED.clear();
 			while (!mp.update());
 
 			while (mp.buttons.kpd.pin_read(JOYSTICK_B) == 0);
@@ -5754,11 +5804,14 @@ int8_t GUI::drawBigIconsCursor(uint8_t xoffset, uint8_t yoffset, uint8_t xelemen
 			passcode += "UP";
 			passcodeMillis = millis();
 			//mp.pixels.setPixelColor(3, mp.hslBlue);
+			mp.leds[3] = CRGB::Blue;
 			//mp.pixels.setPixelColor(4, mp.hslBlue);
+			mp.leds[4] = CRGB::Blue;
 			while (!mp.update());
 			mp.vibration(200);
 			for (uint8_t i = 0; i < NUMPIXELS; i++)
 				//mp.pixels.setPixelColor(i, mp.hslBlack);
+			FastLED.clear();
 			while (!mp.update());
 
 			while (mp.buttons.kpd.pin_read(JOYSTICK_D) == 0);
@@ -5776,11 +5829,14 @@ int8_t GUI::drawBigIconsCursor(uint8_t xoffset, uint8_t yoffset, uint8_t xelemen
 			passcode += "LEFT";
 			passcodeMillis = millis();
 			//mp.pixels.setPixelColor(6, mp.hslBlue);
+			mp.leds[6] = CRGB::Blue;
 			//mp.pixels.setPixelColor(5, mp.hslBlue);
+			mp.leds[5] = CRGB::Blue;
 			while (!mp.update());
 			mp.vibration(200);
 			for (uint8_t i = 0; i < NUMPIXELS; i++)
 				//mp.pixels.setPixelColor(i, mp.hslBlack);
+			FastLED.clear();
 			while (!mp.update());
 
 			while (mp.buttons.kpd.pin_read(JOYSTICK_A) == 0);
@@ -5798,12 +5854,15 @@ int8_t GUI::drawBigIconsCursor(uint8_t xoffset, uint8_t yoffset, uint8_t xelemen
 			passcode += "RIGHT";
 			passcodeMillis = millis();
 			//mp.pixels.setPixelColor(1, mp.hslBlue);
+			mp.leds[1] = CRGB::Blue;
 			//mp.pixels.setPixelColor(2, mp.hslBlue);
+			mp.leds[2] = CRGB::Blue;
 			//mp.pixels.show();
 			while (!mp.update());
 			mp.vibration(200);
 			for (uint8_t i = 0; i < NUMPIXELS; i++)
 				//mp.pixels.setPixelColor(i, mp.hslBlack);
+			FastLED.clear();
 			while (!mp.update());
 
 			while (mp.buttons.kpd.pin_read(JOYSTICK_C) == 0);
@@ -5820,13 +5879,18 @@ int8_t GUI::drawBigIconsCursor(uint8_t xoffset, uint8_t yoffset, uint8_t xelemen
 		{
 
 			//mp.pixels.setPixelColor(0, mp.hslRed);
+			mp.leds[0] = CRGB::Red;
 			//mp.pixels.setPixelColor(7, mp.hslRed);
+			mp.leds[7] = CRGB::Red;
 			//mp.pixels.show();
+			FastLED.show();
 			mp.vibration(200);
 
 			for (uint8_t i = 0; i < NUMPIXELS; i++)
 				//mp.pixels.setPixelColor(i, mp.hslBlack);
 			//mp.pixels.show();
+
+			FastLED.clear();
 
 			return -2;
 		}
