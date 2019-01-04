@@ -668,6 +668,7 @@ void MAKERphone::lockScreen() {
 					leds[3] = CRGB::Red;
 					leds[4] = CRGB::Red;
 
+					FastLED.show();
 					update();
 
 					vibration(200);
