@@ -77,12 +77,12 @@ void MAKERphone::begin(bool splash) {
 	}
 
 
-	
+
 	loadSettings();
 	applySettings();
-	
 
-	
+
+
 
 	//display initialization
 	tft.init();
@@ -123,7 +123,7 @@ void MAKERphone::begin(bool splash) {
 		checkSim();
 	}
 
-	updateTimeGSM();
+	// updateTimeGSM();
 	Serial1.println(F("AT+CMEE=2"));
 	Serial1.println(F("AT+CLVL=100"));
 	Serial1.println(F("AT+CRSL=100"));
@@ -140,8 +140,43 @@ void MAKERphone::begin(bool splash) {
 	//  }
 	//Serial1.println(F("AT&W")); //Save  all settings in SIM's non-volatile memory
 	Serial.println("Serial1 up and running...");
-
 }
+
+void MAKERphone::test() {
+	Serial.println("|----------TEST----------|");
+
+	File file = SD.open("/contacts.json");
+	JsonArray& jarr = mp.jb.parseArray(file);
+
+	Serial.println("Read from .json");
+	for (JsonObject& elem : jarr) {
+		Serial.println(elem["name"].as<char*>());
+		Serial.println(elem["number"].as<char*>());
+	}
+	Serial.println("---------");
+
+	JsonObject& new_cont = mp.jb.createObject();
+	new_cont["name"] = "Foobar";
+	new_cont["number"] = "0983171730";
+	jarr.add(new_cont);
+
+	Serial.println("Add contact");
+	for (JsonObject& elem : jarr) {
+		Serial.println(elem["name"].as<char*>());
+		Serial.println(elem["number"].as<char*>());
+	}
+	Serial.println("---------");
+
+	jarr.remove(1);
+
+	Serial.println("Remove second contact");
+	for (JsonObject& elem : jarr) {
+		Serial.println(elem["name"].as<char*>());
+		Serial.println(elem["number"].as<char*>());
+	}
+	Serial.println("---------");
+}
+
 bool MAKERphone::update() {
 	bool pressed = 0;
 	//if (digitalRead(INTERRUPT_PIN) == 0) //message is received or incoming call
@@ -435,7 +470,7 @@ void MAKERphone::lockScreen() {
 
 	while (1)
 	{
-		
+
 
 		display.fillScreen(backgroundColors[backgroundIndex]);
 
@@ -968,7 +1003,7 @@ void MAKERphone::updateFromFS(String FilePath) {
 //	if (titles[index] == "Phone" && simInserted && !airplaneMode)
 //		phoneApp();
 //	if (titles[index] == "Contacts" && simInserted && !airplaneMode)
-//		contactsApp();
+//		contactsAppSD();
 //	if (titles[index] == "Settings")
 //	{
 //		settingsApp();
@@ -1058,7 +1093,7 @@ void MAKERphone::bigIconsMainMenu() {
 				display.printCenter("Loading contacts...");
 			}
 			update();
-			contactsApp();
+			contactsAppSD();
 		}
 
 		if (titles[index] == "Settings")
@@ -1602,9 +1637,6 @@ void MAKERphone::enterPin()
 				while (!update());
 				delay(2000);
 			}
-
-
-
 		}
 		if (buttons.released(BTN_B) == 1) //sleeps
 			sleep();
@@ -1613,9 +1645,6 @@ void MAKERphone::enterPin()
 }
 String MAKERphone::textInput(String buffer, int16_t length = -1)
 {
-	Serial.print("text pointer ");
-	Serial.println(textPointer);
-	Serial.println(buffer);
 	int ret = 0;
 	byte key = mp.buttons.kpdNum.getKey(); // Get a key press from the keypad
 	if (key == 'C' && buffer != "")
@@ -2712,7 +2741,7 @@ uint8_t MAKERphone::deleteContact(String contact, String number, String id)
 			display.setTextColor(TFT_RED);
 			display.setCursor(28*2, 103);
 			display.printCenter("DELETE");
-		} 
+		}
 		else {
 			display.fillRect(display.width() / 2 - 29, 102, 30*2, 9*2, TFT_RED);
 			display.setTextColor(TFT_WHITE);
@@ -3281,7 +3310,7 @@ void MAKERphone::contactsApp() {
 					Serial.println(contactName[i]);
 					delay(5);
 				}
-				
+
 				menuChoice = contactsMenu("Contacts", contactName, phoneNumber, contactNumber);
 				change = -10;
 			} else menuChoice = contactsMenu("Contacts", contactName, phoneNumber, contactNumber);
@@ -3312,8 +3341,461 @@ void MAKERphone::contactsApp() {
 	}
 }
 
-// todo
-void parse_contacts(){
+uint8_t MAKERphone::deleteContactSD(String name, String number)
+{
+	uint8_t scale;
+	uint8_t offset;
+	uint8_t boxHeight;
+	uint8_t composeHeight;
+	if(resolutionMode)
+	{
+		scale = 1;
+		offset = menuYOffset;
+		composeHeight=12;
+		boxHeight = 21;
+	}
+	else
+	{
+		scale = 2;
+		offset = 19;
+		composeHeight=21;
+		boxHeight = 30;
+	}
+	uint16_t contentCursor = 0;
+	unsigned long elapsedMillis = millis();
+	bool blinkState = 1;
+	while (1)
+	{
+		display.fillScreen(TFT_BLACK);
+		if(resolutionMode)
+		{
+			display.fillRect(0, 0, display.width(), 6, TFT_DARKGREY);
+			display.setFreeFont(TT1);
+			display.setCursor(0,5);
+			display.drawFastHLine(0, 6, BUF2WIDTH, TFT_WHITE);
+		}
+		else
+		{
+			display.fillRect(0, 0, display.width(), 14, TFT_DARKGREY);
+			display.setTextFont(2);
+			display.setCursor(0,-2);
+			display.drawFastHLine(0, 14, BUF2WIDTH, TFT_WHITE);
+		}
+		display.setTextColor(TFT_WHITE);
+		display.print("Delete contact");
+
+		if (millis() - elapsedMillis >= multi_tap_threshold) {
+		elapsedMillis = millis();
+		blinkState = !blinkState;
+		}
+
+		display.setTextColor(TFT_WHITE);
+		display.setCursor(4, 17);
+		display.print("Are you sure?");
+		display.setCursor(4, 33);
+		display.print(name);
+		display.setCursor(4, 49);
+		display.print(number);
+
+		if (blinkState){
+			display.drawRect(display.width() / 2 - 29, 102, 30*2, 9*2, TFT_RED);
+			display.setTextColor(TFT_RED);
+			display.setCursor(28*2, 103);
+			display.printCenter("DELETE");
+		}
+		else {
+			display.fillRect(display.width() / 2 - 29, 102, 30*2, 9*2, TFT_RED);
+			display.setTextColor(TFT_WHITE);
+			display.setCursor(28*2, 103);
+			display.print("DELETE");
+		}
+
+
+
+		if (buttons.released(BTN_B)) //BUTTON BACK
+		{
+			Serial.println("Go back");
+			while (!update());
+			break;
+		}
+		if (buttons.released(BTN_A)) // DELETE
+		{
+			Serial.println("DElete");
+			display.fillScreen(TFT_BLACK);
+			display.setTextFont(2);
+			display.setCursor(34, display.height()/2 -16);
+			display.printCenter("Deleting contact...");
+			while (!update());
+			return 1;
+		}
+		update();
+	}
+	return 0;
+}
+
+void MAKERphone::contactsAppSD(){
+	File file = SD.open("/contacts.json");
+
+	if(file.size() < 2 || !file){ // empty -> FILL
+		file.close();
+		JsonArray& jarr = mp.jb.parseArray("[{\"name\":\"foo\", \"number\":\"099\"}]");
+		SD.remove("/contacts.json");
+		File file1 = SD.open("/contacts.json", FILE_WRITE);
+		jarr.prettyPrintTo(file1);
+		file1.close();
+		file = SD.open("/contacts.json");
+	}
+
+	JsonArray& jarr = mp.jb.parseArray(file);
+
+	if(!jarr.success())
+	{
+		Serial.println("Error");
+		display.fillScreen(TFT_YELLOW);
+		if(resolutionMode)
+		{
+			display.setCursor(0, display.height()/2);
+			display.setFreeFont(TT1);
+		}
+		else
+		{
+			display.setCursor(0, display.height()/2 - 16);
+			display.setTextFont(2);
+		}
+		display.printCenter("Error loading contacts");
+		while (buttons.released(BTN_B) == 0)//BUTTON BACK
+		while (!update());
+		while (!update());
+	}
+	else
+	{
+		// Maybe later read from core.json
+		// uint8_t contactNumber = countSubstring(input, "CPBR:");
+		// Serial.println(contactNumber);
+
+		Serial.println("Read from .json");
+		for (JsonObject& elem : jarr) {
+			Serial.println(elem["name"].as<char*>());
+			Serial.println(elem["number"].as<char*>());
+		}
+
+		while(1){
+			int menuChoice = -1;
+			menuChoice = contactsMenuSD(&jarr);
+
+			update();
+			if (menuChoice != -2)
+			{
+				if (menuChoice == 0){
+					String name, number;
+					if(newContactSD(&name, &number)){
+						JsonObject& newContact = mp.jb.createObject();
+						newContact["name"] = name;
+						newContact["number"] = number;
+						jarr.add(newContact);
+						SD.remove("/contacts.json");
+						File file = SD.open("/contacts.json", FILE_WRITE);
+						jarr.prettyPrintTo(file);
+						file.close();
+					}
+				} else if (menuChoice < -10){
+					int id = menuChoice + 1000 - 1;
+					if(deleteContactSD(jarr[id]["name"], jarr[id]["number"])){
+						jarr.remove(id);
+						SD.remove("/contacts.json");
+						File file = SD.open("/contacts.json", FILE_WRITE);
+						jarr.prettyPrintTo(file);
+						file.close();
+					}
+				// EDIT
+				} else {
+					callNumber(jarr[menuChoice - 1]["number"].as<char*>());
+					while(!update());
+				}
+			} else {
+				break;
+			}
+		}
+	}
+}
+
+uint8_t MAKERphone::newContactSD(String *name, String *number)
+{
+	textPointer = 0;
+	y = 20;  //Beggining point
+	String content = "";
+	String contact = "";
+	String prevContent = "";
+	char key = NO_KEY;
+	bool cursor = 0; //editing contacts or text content
+	uint16_t contentCursor = 0;
+	unsigned long elapsedMillis = millis();
+	bool blinkState = 1;
+	while (1)
+	{
+		display.fillScreen(TFT_BLACK);
+		if(resolutionMode)
+		{
+			display.fillRect(0, 0, display.width(), 6, TFT_DARKGREY);
+			display.setFreeFont(TT1);
+			display.setCursor(0,5);
+			display.drawFastHLine(0, 6, BUF2WIDTH, TFT_WHITE);
+		}
+		else
+		{
+			display.fillRect(0, 0, display.width(), 14, TFT_DARKGREY);
+			display.setTextFont(2);
+			display.setCursor(0,-2);
+			display.drawFastHLine(0, 14, BUF2WIDTH, TFT_WHITE);
+		}
+		display.setTextColor(TFT_WHITE);
+		display.print("Contacts");
+		if (millis() - elapsedMillis >= multi_tap_threshold) //cursor blinking routine
+		{
+		elapsedMillis = millis();
+		blinkState = !blinkState;
+		}
+		if (cursor == 0) //inputting the contact number
+		{
+			key = buttons.kpdNum.getKey();
+			if (key == 'A') //clear number
+				contact = "";
+			else if (key == 'C')
+				contact.remove(contact.length() - 1);
+			if (key != NO_KEY && isdigit(key) && contact.length() < 14)
+				contact += key;
+			display.setTextWrap(1);
+			display.setCursor(4, 20);
+			display.setTextFont(2);
+			if (content == "")
+			{
+				display.setTextColor(TFT_LIGHTGREY);
+				display.print(F("Name"));
+				display.setTextColor(TFT_WHITE);
+			}
+			else
+				display.print(content);
+			display.setTextFont(2);
+			display.setCursor(4, 38);
+			display.print("Num: ");
+			display.print(contact);
+			if (blinkState == 1)
+				display.drawFastVLine(display.getCursorX() + 1, display.getCursorY() + 3, 11, TFT_WHITE);
+		}
+		else //inputting contact name
+		{
+			display.setTextColor(TFT_WHITE);
+			display.setCursor(2*2, 38);
+			display.print("Num: ");
+			if (contact == "")
+			{
+				display.setTextColor(TFT_LIGHTGREY);
+				display.print(F("xxxxxxxx"));
+				display.setTextColor(TFT_WHITE);
+			}
+			else
+				display.print(contact);
+			prevContent = content;
+			content = textInput(content, 12);
+			if (prevContent != content)
+			{
+				blinkState = 1;
+				elapsedMillis = millis();
+			}
+			display.setTextColor(TFT_LIGHTGREY);
+			display.setTextWrap(1);
+			display.setCursor(2*2, 10*2);
+			display.print(content);
+			display.setTextColor(TFT_WHITE);
+			if(blinkState == 1)
+				display.drawFastVLine(display.getCursorX() + 1, display.getCursorY() + 3, 11, TFT_WHITE);
+		}
+
+		display.fillRect(display.width() / 2 - 29, 102, 30*2, 9*2, TFT_GREENYELLOW);
+		display.setTextColor(TFT_WHITE);
+		display.setCursor(31*2, 103);
+		display.printCenter("SAVE");
+
+		if (buttons.kpd.pin_read(JOYSTICK_B) == 0 && cursor == 1) { //BUTTON UP
+		cursor = 0;
+		}
+
+		if (buttons.kpd.pin_read(JOYSTICK_D) == 0 && cursor == 0) { //BUTTON DOWN
+		cursor = 1;
+		}
+
+		if (buttons.released(BTN_B)) //BUTTON BACK
+		{
+		while (!update());
+		break;
+		}
+		if (buttons.released(BTN_A)) // SAVE CONTACT
+		{
+			if(contact != "" && content != "")
+			{
+				*name = contact;
+				*number = content;
+				return 1;
+			}
+		}
+		update();
+	}
+	return 0;
+}
+
+int MAKERphone::contactsMenuSD(JsonArray *contacts){
+	uint8_t cursor = 0;
+	int32_t cameraY = 0;
+	int32_t cameraY_actual = 0;
+	uint8_t offset;
+	uint8_t boxHeight;
+	uint8_t scale;
+	uint8_t length = contacts->size();
+	if(resolutionMode)
+	{
+		scale = 1;
+		offset = menuYOffset;
+		boxHeight = 14;
+	}
+	else
+	{
+		scale = 2;
+		offset = 19;
+		boxHeight = 28;
+	}
+	while (1) {
+		while (!update());
+		display.fillScreen(TFT_BLACK);
+		display.setCursor(0, 0);
+		cameraY_actual = (cameraY_actual + cameraY) / 2;
+		if (cameraY_actual - cameraY == 1) {
+		cameraY_actual = cameraY;
+		}
+
+		contactsMenuNewBox(0, cameraY_actual);
+
+		int i = 0;
+		for (JsonObject& elem : *contacts) {
+			contactsMenuDrawBoxSD(elem["name"].as<char*>(), elem["number"].as<char*>(), i+1, cameraY_actual);
+			i++;
+		}
+		if(cursor == 0){
+			contactsMenuNewBoxCursor(cursor, cameraY_actual);
+		} else {
+			contactsMenuDrawCursor(cursor, cameraY_actual);
+		}
+
+		// last draw the top entry thing
+		if(resolutionMode)
+		{
+			display.fillRect(0, 0, display.width(), 6, TFT_DARKGREY);
+			display.setFreeFont(TT1);
+			display.setCursor(0,5);
+			display.drawFastHLine(0, 6, BUF2WIDTH, TFT_WHITE);
+		}
+		else
+		{
+			display.fillRect(0, 0, display.width(), 14, TFT_DARKGREY);
+			display.setTextFont(2);
+			display.setCursor(0,-2);
+			display.drawFastHLine(0, 14, BUF2WIDTH, TFT_WHITE);
+		}
+		display.setTextSize(1);
+		display.setTextColor(TFT_WHITE);
+		display.print("Contacts");
+
+		if (buttons.kpd.pin_read(BTN_A) == 0) {   //BUTTON CONFIRM
+		while (buttons.kpd.pin_read(BTN_A) == 0);// Exit when pressed
+		break;
+		}
+		if (buttons.kpd.pin_read(JOYSTICK_A) == 0 && cursor != 0) {
+		while (buttons.kpd.pin_read(JOYSTICK_A) == 0); // Delete
+		return -1000 + cursor;
+		}
+		if (buttons.kpd.pin_read(JOYSTICK_C) == 0 && cursor != 0) {
+		while (buttons.kpd.pin_read(JOYSTICK_C) == 0); // Edit contact
+		return -3000 + cursor;
+		}
+
+		if (buttons.kpd.pin_read(JOYSTICK_D) == 0) {  //BUTTON UP
+		while (buttons.kpd.pin_read(JOYSTICK_D) == 0);
+		if (cursor == 0) {
+			cursor = length;
+			if (length > 2) {
+			cameraY = -(cursor - 2) * (boxHeight+1);
+			}
+		}
+		else {
+			cursor--;
+			if (cursor > 0 && (cursor * (boxHeight+1) + cameraY + offset) < (boxHeight+1)) {
+			cameraY += (boxHeight+1);
+			}
+		}
+		}
+
+		if (buttons.kpd.pin_read(JOYSTICK_B) == 0) { //BUTTON DOWN
+		while (buttons.kpd.pin_read(JOYSTICK_B) == 0);
+
+		cursor++;
+		if ((cursor * (boxHeight+1) + cameraY + offset) > 48) {
+			cameraY -= (boxHeight+1);
+		}
+		if (cursor >= length + 1) {
+			cursor = 0;
+			cameraY = 0;
+
+		}
+
+		}
+		if (buttons.released(BTN_B) == 1) //BUTTON BACK
+		{
+		while (!update());
+		return -2;
+		}
+	}
+	return cursor;
+}
+
+void MAKERphone::contactsMenuDrawBoxSD(String name, String number, uint8_t i, int32_t y) {
+	uint8_t offset;
+	uint8_t boxHeight;
+	uint8_t scale;
+	if(resolutionMode)
+	{
+		scale = 1;
+		offset = menuYOffset;
+		boxHeight = 14;
+	}
+	else
+	{
+		scale = 2;
+		offset = 19;
+		boxHeight = 28;
+	}
+	y += i * boxHeight + offset;
+	if (y < 0 || y > display.height()) {
+		return;
+	}
+	if(resolutionMode)
+	{
+		display.setTextSize(1);
+		display.setFreeFont(TT1);
+		display.fillRect(1, y + 1, display.width() - 2, 13, TFT_DARKGREY);
+		display.setTextColor(TFT_WHITE);
+		display.setCursor(2, y + 2);
+		display.drawString(name, 3, y + 2);
+		display.drawString(number, 3, y + 8);
+	}
+	else
+	{
+		display.setTextSize(1);
+		display.setTextFont(2);
+		display.fillRect(1, y + 1, display.width() - 2, boxHeight-1, TFT_DARKGREY);
+		display.setTextColor(TFT_WHITE);
+		display.setCursor(2, y + 2);
+		display.drawString(name, 4, y);
+		display.drawString(number, 4, y + 12);
+	}
 
 }
 
@@ -3327,9 +3809,6 @@ String MAKERphone::readAllContacts() {
 	}
 	else return "";
 }
-
-
-
 
 
 //Phone app
@@ -3867,7 +4346,7 @@ void MAKERphone::settingsApp() {
 		if (input == 1)
 			displayMenu();
 		if (input == 2)
-			timeMenu(); 
+			timeMenu();
 		if (input == 3)
 			soundMenu();
 		if (input == 4)
@@ -4970,7 +5449,7 @@ void MAKERphone::timeMenu()
 			display.print("0");
 		display.print(clockDay);
 		display.print("/");
-			
+
 		if (clockMonth < 10)
 			display.print("0");
 		display.print(clockMonth);
@@ -4996,7 +5475,7 @@ void MAKERphone::timeMenu()
 					inputBuffer = "";
 				else
 					inputBuffer = String(clockHour);
-				
+
 				while(1)
 				{
 					display.fillScreen(0xFE71);
@@ -5018,7 +5497,7 @@ void MAKERphone::timeMenu()
 								display.print(inputBuffer);
 							if(blinkState)
 								display.drawFastVLine(display.getCursorX() - 1, display.getCursorY() + 3, 11, TFT_BLACK);
-							
+
 							display.print(":");
 							if (clockMinute < 10)
 								display.print("0");
@@ -5613,7 +6092,7 @@ void MAKERphone::timeMenu()
 
 					if(buttons.released(BTN_B))
 						break;
-					
+
 				}
 				while(!update());
 			}
@@ -5655,11 +6134,11 @@ void MAKERphone::timeMenu()
 					}
 				}
 
-					
+
 			}
 		}
 
-		
+
 		if(millis()-previousMillis >= 500)
 		{
 			previousMillis = millis();
@@ -5670,7 +6149,7 @@ void MAKERphone::timeMenu()
 		{
 			blinkState = 1;
 			previousMillis = millis() + 400;
-			while (!update());		
+			while (!update());
 			cursor--;
 		}
 		if (buttons.released(JOYSTICK_B) && cursor < 1)
@@ -5682,7 +6161,7 @@ void MAKERphone::timeMenu()
 		}
 		if (buttons.released(BTN_B)) //BUTTON BACK
 			break;
-		update();	
+		update();
 	}
 
 }
@@ -5841,7 +6320,7 @@ void MAKERphone::loadSettings()
 	Serial.print("Brightness:");
 	Serial.println(brightness);
 	delay(5);
-	
+
 	indexHelper = buffer.indexOf("Background color: ") + sizeof("Background color: ") - 1;
 	backgroundIndex = buffer.substring(indexHelper, buffer.indexOf("\n", indexHelper)).toInt();
 	Serial.print("BG color:");
