@@ -25,7 +25,7 @@ Authors:
 #include <stdint.h>
 #include <EEPROM.h>
 //#include <Arduino.h>
-#include "utility/Adafruit_NeoPixel.h"
+#include "FastLED/FastLED.h"
 extern HardwareSerial Serial1;
 #include "TFT_eSPI/TFT_eSPI.h" // Graphics and font library for ST7735 driver chip
 #include <SPI.h>
@@ -178,7 +178,7 @@ public:
 	bool resolutionMode=1; //0 is native, 1 is halved
 	void setResolution(bool res = 1);
 	bool spriteCreated = 0;
-	
+
 	void begin(bool splash = 1);
 	void tone2(int pin, int freq, int duration);
 	void vibration(int duration);
@@ -234,11 +234,8 @@ public:
 
 	//NeoPixels...
 	int numberOfColors = 19;
-	uint32_t hslRed = pixels.Color(255, 0, 0);
-	uint32_t hslBlack = pixels.Color(0, 0, 0);
-	uint32_t hslBlue = pixels.Color(0, 0, 255);
 	uint8_t pixelState;
-	Adafruit_NeoPixel pixels = Adafruit_NeoPixel(NUMPIXELS, PIXELPIN, NEO_GRB + NEO_KHZ800);
+	CRGB leds[NUMPIXELS];
 
 	//Media app
 	uint8_t cursor = 0;
