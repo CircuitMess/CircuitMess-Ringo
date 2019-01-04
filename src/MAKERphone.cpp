@@ -989,7 +989,7 @@ void MAKERphone::bigIconsMainMenu() {
 	{
 
 		//Serial.println(index);
-		int8_t index = gui.drawBigIconsCursor(width + 2, bigIconHeight + 1, 3, 2, 1, 8);
+		int8_t index = gui.drawBigIconsCursor((width+2)*2, (bigIconHeight*2 + 3), 3, 2, 3, 17);
 		Serial.flush();
 		delay(10);
 		if (titles[index] == "Apps")
@@ -6316,9 +6316,9 @@ int8_t GUI::drawBigIconsCursor(uint8_t xoffset, uint8_t yoffset, uint8_t xelemen
 		mp.display.drawIcon(bigMessages, 2*scale, 9*scale, width, bigIconHeight, scale);
 		mp.display.drawIcon(bigMedia, 28*scale, 9*scale, width, bigIconHeight, scale);
 		mp.display.drawIcon(bigContacts, 54*scale, 9*scale, width, bigIconHeight, scale);
-		mp.display.drawIcon(bigSettings, 2*scale, 36*scale, width, bigIconHeight, scale);
-		mp.display.drawIcon(bigPhone, 28*scale, 36*scale, width, bigIconHeight, scale);
-		mp.display.drawIcon(bigApps, 54*scale, 36*scale, width, bigIconHeight, scale);
+		mp.display.drawIcon(bigSettings, 2*scale, 36*scale+1, width, bigIconHeight, scale);
+		mp.display.drawIcon(bigPhone, 28*scale, 36*scale+1, width, bigIconHeight, scale);
+		mp.display.drawIcon(bigApps, 54*scale, 36*scale+1, width, bigIconHeight, scale);
 
 		mp.display.fillRect(0, 0, 80*scale, 6*scale, TFT_BLACK);
 		index = cursorY * xelements + cursorX;
@@ -6348,13 +6348,21 @@ int8_t GUI::drawBigIconsCursor(uint8_t xoffset, uint8_t yoffset, uint8_t xelemen
 			passcode = "";
 
 		if (cursorState == 1)
-			mp.display.drawRect((xstart + cursorX * xoffset)*scale, (ystart + cursorY * yoffset)*scale, (width + 2)*scale, (bigIconHeight + 2)*scale, TFT_RED);
+		{
+			// mp.display.drawRect((xstart + cursorX * xoffset)*scale, (ystart + cursorY * yoffset)*scale+1, (width + 2)*scale, (bigIconHeight + 2)*scale-1, TFT_RED);
+			mp.display.drawRect((xstart + cursorX * xoffset), (ystart + cursorY * yoffset), (width + 1)*scale, (bigIconHeight + 1)*scale+1, TFT_RED);
+			mp.display.drawRect((xstart + cursorX * xoffset)-1, (ystart + cursorY * yoffset)-1, (width + 2)*scale, (bigIconHeight + 2)*scale+1, TFT_RED);
+		}
 		else
-			mp.display.drawRect((xstart + cursorX * xoffset)*scale, (ystart + cursorY * yoffset)*scale, (width + 2)*scale, (bigIconHeight + 2)*scale, TFT_BLACK);
+		{
+			// mp.display.drawRect((xstart + cursorX * xoffset)*scale, (ystart + cursorY * yoffset)*scale + 1, (width + 2)*scale, (bigIconHeight + 2)*scale-1, TFT_BLACK);
+			mp.display.drawRect((xstart + cursorX * xoffset), (ystart + cursorY * yoffset), (width + 1)*scale, (bigIconHeight + 1)*scale+1, TFT_BLACK);
+			mp.display.drawRect((xstart + cursorX * xoffset)-1, (ystart + cursorY * yoffset)-1, (width + 2)*scale, (bigIconHeight + 2)*scale+1, TFT_BLACK);
+		}
 
-		///////////////////////////////
-		//////Checking for button input
-		///////////////////////////////
+		///////////////////////////////////////
+		//////Checking for button input////////
+		///////////////////////////////////////
 		if (mp.buttons.kpd.pin_read(BTN_A) == 0) //CONFIRM
 		{
 			while (mp.buttons.kpd.pin_read(BTN_A) == 0);
@@ -6373,7 +6381,7 @@ int8_t GUI::drawBigIconsCursor(uint8_t xoffset, uint8_t yoffset, uint8_t xelemen
 			while (!mp.update());
 
 			while (mp.buttons.kpd.pin_read(JOYSTICK_B) == 0);
-			mp.display.drawRect((xstart + cursorX * xoffset)*scale, (ystart + cursorY * yoffset)*scale, (width + 2)*scale, (bigIconHeight + 2)*scale, TFT_BLACK);
+			mp.display.drawRect((xstart + cursorX * xoffset), (ystart + cursorY * yoffset), (width + 2)*scale, (bigIconHeight + 2)*scale, TFT_BLACK);
 			if (cursorY == 0) {
 				cursorY = yelements - 1;
 			}
@@ -6394,7 +6402,7 @@ int8_t GUI::drawBigIconsCursor(uint8_t xoffset, uint8_t yoffset, uint8_t xelemen
 			while (!mp.update());
 
 			while (mp.buttons.kpd.pin_read(JOYSTICK_D) == 0);
-			mp.display.drawRect((xstart + cursorX * xoffset)*scale, (ystart + cursorY * yoffset)*scale, (width + 2)*scale, (bigIconHeight + 2)*scale, TFT_BLACK);
+			mp.display.drawRect((xstart + cursorX * xoffset), (ystart + cursorY * yoffset), (width + 2)*scale, (bigIconHeight + 2)*scale, TFT_BLACK);
 			if (cursorY == yelements - 1) {
 				cursorY = 0;
 			}
@@ -6415,7 +6423,7 @@ int8_t GUI::drawBigIconsCursor(uint8_t xoffset, uint8_t yoffset, uint8_t xelemen
 			while (!mp.update());
 
 			while (mp.buttons.kpd.pin_read(JOYSTICK_A) == 0);
-			mp.display.drawRect((xstart + cursorX * xoffset)*scale, (ystart + cursorY * yoffset)*scale, (width + 2)*scale, (bigIconHeight + 2)*scale, TFT_BLACK);
+			mp.display.drawRect((xstart + cursorX * xoffset), (ystart + cursorY * yoffset), (width + 2)*scale, (bigIconHeight + 2)*scale, TFT_BLACK);
 			if (cursorX == 0) {
 				cursorX = xelements - 1;
 			}
@@ -6436,7 +6444,7 @@ int8_t GUI::drawBigIconsCursor(uint8_t xoffset, uint8_t yoffset, uint8_t xelemen
 			while (!mp.update());
 
 			while (mp.buttons.kpd.pin_read(JOYSTICK_C) == 0);
-			mp.display.drawRect((xstart + cursorX * xoffset)*scale, (ystart + cursorY * yoffset)*scale, (width + 2)*scale, (bigIconHeight + 2)*scale, TFT_BLACK);
+			mp.display.drawRect((xstart + cursorX * xoffset), (ystart + cursorY * yoffset), (width + 2)*scale, (bigIconHeight + 2)*scale, TFT_BLACK);
 			if (cursorX == xelements - 1) {
 				cursorX = 0;
 			}
