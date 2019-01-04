@@ -20,8 +20,6 @@ Authors:
 #ifndef MAKERphone_h
 #define MAKERphone_h
 
-#include <ArduinoJson.h>
-
 #include <WiFi.h>
 #include <esp32-hal-bt.h>
 #include <stdint.h>
@@ -32,6 +30,8 @@ Authors:
 extern HardwareSerial Serial1;
 #include "TFT_eSPI/TFT_eSPI.h" // Graphics and font library for ST7735 driver chip
 #include <SPI.h>
+
+#include "utility/ArduinoJson.h"
 
 //Includes for SD firmware update
 //#include <SysCall.h>

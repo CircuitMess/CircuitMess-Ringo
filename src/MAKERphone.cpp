@@ -1079,19 +1079,19 @@ void MAKERphone::bigIconsMainMenu() {
 			phoneApp();
 		if (titles[index] == "Contacts" && simInserted && !airplaneMode) {
 			Serial.println("Begin contacst");
-			display.fillScreen(TFT_BLACK);
-			if(resolutionMode)
-			{
-				display.setCursor(22, 30);
-				display.print("Loading");
-				display.setCursor(20, 36);
-				display.print("contacts...");
-			}
-			else
-			{
-				display.setCursor(0,display.height()/2 -16);
-				display.printCenter("Loading contacts...");
-			}
+			// display.fillScreen(TFT_BLACK);
+			// if(resolutionMode)
+			// {
+			// 	display.setCursor(22, 30);
+			// 	display.print("Loading");
+			// 	display.setCursor(20, 36);
+			// 	display.print("contacts...");
+			// }
+			// else
+			// {
+			// 	display.setCursor(0,display.height()/2 -16);
+			// 	display.printCenter("Loading contacts...");
+			// }
 			update();
 			contactsAppSD();
 		}
