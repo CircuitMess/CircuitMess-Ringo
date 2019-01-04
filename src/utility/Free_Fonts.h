@@ -79,7 +79,7 @@
 //#define FMBO18 &FreeMonoBoldOblique18pt7b
 //#define FMBO24 &FreeMonoBoldOblique24pt7b
 //
-//#define FSS9 &FreeSans9pt7b
+#define FSS9 &FreeSans9pt7b
 //#define FSS12 &FreeSans12pt7b
 //#define FSS18 &FreeSans18pt7b
 //#define FSS24 &FreeSans24pt7b
@@ -99,7 +99,7 @@
 //#define FSSBO18 &FreeSansBoldOblique18pt7b
 //#define FSSBO24 &FreeSansBoldOblique24pt7b
 //
-//#define FS9 &FreeSerif9pt7b
+#define FS9 &FreeSerif9pt7b
 //#define FS12 &FreeSerif12pt7b
 //#define FS18 &FreeSerif18pt7b
 //#define FS24 &FreeSerif24pt7b

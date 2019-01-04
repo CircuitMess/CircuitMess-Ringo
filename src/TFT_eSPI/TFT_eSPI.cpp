@@ -17,9 +17,9 @@
 #include "TFT_eSPI.h"
 
 #include <pgmspace.h>
-extern TFT_eSPI tft = TFT_eSPI();  // Invoke library, pins defined in User_Setup.h
+/* extern TFT_eSPI tft = TFT_eSPI();  // Invoke library, pins defined in User_Setup.h
 extern TFT_eSprite buf = TFT_eSprite(&tft);
-extern TFT_eSprite buf2 = TFT_eSprite(&tft);
+extern TFT_eSprite buf2 = TFT_eSprite(&tft); */
 #ifndef ESP32_PARALLEL
   #include <SPI.h>
 #endif
@@ -1589,10 +1589,10 @@ void TFT_eSPI::fillEllipse(int16_t x0, int16_t y0, int16_t rx, int16_t ry, uint1
 ** Function name:           fillScreen
 ** Description:             Clear the screen to defined colour
 ***************************************************************************************/
-void TFT_eSPI::fillScreen(uint32_t color)
+/* void TFT_eSPI::fillScreen(uint32_t color)
 {
   fillRect(0, 0, _width, _height, color);
-}
+} */
 
 
 /***************************************************************************************
@@ -1767,7 +1767,7 @@ void TFT_eSPI::fillTriangle ( int32_t x0, int32_t y0, int32_t x1, int32_t y1, in
 ** Function name:           drawBitmap
 ** Description:             Draw an image stored in an array on the TFT
 ***************************************************************************************/
-void TFT_eSPI::drawBitmap(int16_t x, int16_t y, const uint8_t *bitmap, int16_t w, int16_t h, uint16_t color)
+/* void TFT_eSPI::drawBitmap(int16_t x, int16_t y, const uint8_t *bitmap, int16_t w, int16_t h, uint16_t color)
 {
   spi_begin();
   inTransaction = true;
@@ -1785,7 +1785,7 @@ void TFT_eSPI::drawBitmap(int16_t x, int16_t y, const uint8_t *bitmap, int16_t w
   inTransaction = false;
   spi_end();
 }
-
+ */
 
 /***************************************************************************************
 ** Function name:           drawXBitmap
@@ -4751,37 +4751,39 @@ void TFT_eSPI::getSetup(setup_t &tft_settings)
 #ifdef SMOOTH_FONT
   #include "Extensions/Smooth_font.cpp"
 #endif
+
+////////////////////////////////////////////////////////////////////////////////////////
 //Custom functions
 ////////////////////////////////////////////////////////////////////////////////////////
 
-void TFT_eSPI::drawBitmap(int8_t x, int8_t y, const byte *bitmap, uint16_t color) {
-	uint8_t w = *(bitmap++);
-	uint8_t h = *(bitmap++);
+void TFT_eSPI::drawBitmap(int16_t x, int16_t y, const byte *bitmap, uint16_t color, uint8_t scale) {
+	uint16_t w = *(bitmap++);
+	uint16_t h = *(bitmap++);
 
-	uint8_t byteWidth = (w + 7) / 8;
-	uint8_t _x = x;
-	uint8_t dw = 8 - (w % 8);
-	for (uint8_t j = 0; j < h; j++) {
+	uint16_t byteWidth = (w + 7) / 8;
+	uint16_t _x = x;
+	uint16_t dw = 8 - (w % 8);
+	for (uint16_t j = 0; j < h; j++) {
 		x = _x;
-		for (uint8_t i = 0; i < byteWidth;) {
-			uint8_t b = *(bitmap++);
+		for (uint16_t i = 0; i < byteWidth;) {
+			uint16_t b = *(bitmap++);
 			i++;
-			for (uint8_t k = 0; k < 8; k++) {
+			for (uint16_t k = 0; k < 8; k++) {
 				if (i == byteWidth && k == dw) {
 					x += (w % 8);
 					break;
 				}
 				if (b & 0x80) {
-					drawPixel(x, y, color);
-				}
+					fillRect(x, y, scale, scale, color);
+				} 
 				b <<= 1;
-				x++;
+				x+=scale;
 			}
 		}
-		y++;
+		y+=scale;
 	}
 }
-void TFT_eSPI::drawBitmap(int8_t x, int8_t y, const byte *bitmap) {
+/* void TFT_eSPI::drawBitmap(int8_t x, int8_t y, const byte *bitmap) {
 	uint8_t w = *(bitmap++);
 	uint8_t h = *(bitmap++);
 
@@ -4807,62 +4809,62 @@ void TFT_eSPI::drawBitmap(int8_t x, int8_t y, const byte *bitmap) {
 		}
 		y++;
 	}
-}
-void TFT_eSPI::drawIcon(const unsigned short* icon, int16_t x, int16_t y, uint16_t width, uint16_t height) {
+} */
+void TFT_eSPI::drawIcon(const unsigned short* icon, int16_t x, int16_t y, uint16_t width, uint16_t height, uint8_t scale) {
 	for (int i = 0; i < width; i++) {
 		for (int j = 0; j < height; j++) {
-			drawPixel(x + i, y + j, pgm_read_word(&icon[j * width + i]));
+			fillRect(x + i*scale, y + j*scale, scale, scale, pgm_read_word(&icon[j * width + i]));
 		}
 	}
 }
 void TFT_eSPI::printCenter(const char* text)
 {
 	int8_t cursorBuffer = cursor_y;
-	setCursor(-10, -10);
+	setCursor(-50, -50);
 	uint16_t textLength = cursor_x;
   print(text);
   textLength = cursor_x - textLength;
-	setCursor(int((80 - textLength) / 2), cursorBuffer); //TO-DO: change this to the sprite width value
+	setCursor(int((width() - textLength) / 2), cursorBuffer); //TO-DO: change this to the sprite width value
 	print(text);
 }
 void TFT_eSPI::printCenter(String text)
 {
 	int8_t cursorBuffer = cursor_y;
-	setCursor(-10, -10);
+	setCursor(-50, -50);
 	uint16_t textLength = cursor_x;
 	print(text);
 	textLength = cursor_x - textLength;
-	setCursor(int((80 - textLength) / 2), cursorBuffer); //TO-DO: change this to the sprite width value
+	setCursor(int((width() - textLength) / 2), cursorBuffer); //TO-DO: change this to the sprite width value
 	print(text);
 }
 void TFT_eSPI::printCenter(int text)
 {
 	int8_t cursorBuffer = cursor_y;
-	setCursor(-10, -10);
+	setCursor(-50, -50);
 	uint16_t textLength = cursor_x;
 	print(text);
 	textLength = cursor_x - textLength;
-	setCursor(int((80 - textLength) / 2), cursorBuffer); //TO-DO: change this to the sprite width value
+	setCursor(int((width() - textLength) / 2), cursorBuffer); //TO-DO: change this to the sprite width value
 	print(text);
 }
 void TFT_eSPI::printCenter(float text)
 {
 	int8_t cursorBuffer = cursor_y;
-	setCursor(-10, -10);
+	setCursor(-50, -50);
 	uint16_t textLength = cursor_x;
 	print(text);
 	textLength = cursor_x - textLength;
-	setCursor(int((80 - textLength) / 2), cursorBuffer); //TO-DO: change this to the sprite width value
+	setCursor(int((width() - textLength) / 2), cursorBuffer); //TO-DO: change this to the sprite width value
 	print(text);
 }
 void TFT_eSPI::printCenter(char text)
 {
 	int8_t cursorBuffer = cursor_y;
-	setCursor(-10, -10);
+	setCursor(-50, -50);
 	uint16_t textLength = cursor_x;
 	print(text);
 	textLength = cursor_x - textLength;
-	setCursor(int((80 - textLength) / 2), cursorBuffer); //TO-DO: change this to the sprite width value
+	setCursor(int((width() - textLength) / 2), cursorBuffer); //TO-DO: change this to the sprite width value
 	print(text);
 }
 
@@ -5510,10 +5512,10 @@ void TFT_eSprite::scroll(int16_t dx, int16_t dy)
 
 
 /***************************************************************************************
-** Function name:           fillSprite
+** Function name:           fillScreen
 ** Description:             Fill the whole sprite with defined colour
 *************************************************************************************x*/
-void TFT_eSprite::fillSprite(uint32_t color)
+void TFT_eSprite::fillScreen(uint32_t color)
 {
 	if (!_created) return;
 
@@ -6360,7 +6362,7 @@ void TFT_eSprite::drawGlyph(uint16_t code)
 		if (newSprite)
 		{
 			createSprite(this->gWidth[gNum], this->gFont.yAdvance);
-			if (bg) fillSprite(bg);
+			if (bg) fillScreen(bg);
 			this->cursor_x = -this->gdX[gNum];
 			this->cursor_y = 0;
 		}
@@ -6470,7 +6472,7 @@ void TFT_eSprite::printToSprite(char *cbuffer, int len) //String string)
 		createSprite(sWidth, this->gFont.yAdvance);
 		uint16_t transparent = TFT_BLACK;
 
-		if (this->textbgcolor != TFT_BLACK) fillSprite(this->textbgcolor);
+		if (this->textbgcolor != TFT_BLACK) fillScreen(this->textbgcolor);
 	}
 
 	n = 0;
@@ -6506,7 +6508,7 @@ int16_t TFT_eSprite::printToSprite(int16_t x, int16_t y, uint16_t index)
 	{
 		createSprite(sWidth, this->gFont.yAdvance);
 		uint16_t transparent = TFT_BLACK;
-		if (this->textbgcolor != TFT_BLACK) fillSprite(this->textbgcolor);
+		if (this->textbgcolor != TFT_BLACK) fillScreen(this->textbgcolor);
 
 		drawGlyph(this->gUnicode[index]);
 
