@@ -528,11 +528,13 @@ void MAKERphone::lockScreen() {
 		}
 		else
 		{
-			display.drawBitmap(helper*scale, 1*scale, airplaneModeIcon, TFT_BLACK, scale);
+			display.drawBitmap(scale, scale, airplaneModeIcon, TFT_BLACK, scale);
 			helper += 10;
 		}
+
 		if(!SDinsertedFlag)
 			display.drawBitmap(helper*scale, 1*scale, noSDIcon, TFT_BLACK, scale);
+
 		if (batteryVoltage > 4000)
 			display.drawBitmap(74*scale, 1*scale, batteryCharging, TFT_BLACK, scale);
 		else if (batteryVoltage <= 4000 && batteryVoltage >= 3800)
@@ -1005,7 +1007,7 @@ void MAKERphone::bigIconsMainMenu() {
 					display.fillScreen(TFT_BLACK);
 					display.setCursor(0,display.height() / 2 - 16);
 					display.printCenter("LOADING NOW...");
-					update();
+					while(!update());
 					
 					
 					updateFromFS(BinaryFiles[index]);
@@ -1040,7 +1042,7 @@ void MAKERphone::bigIconsMainMenu() {
 				else
 					display.setCursor(0, display.height()/2 - 16);
 				display.printCenter("Loading messages...");
-				update();
+				while(!update());
 				messagesApp();
 			}
 			else if(!simInserted)
@@ -2180,45 +2182,43 @@ void MAKERphone::viewSms(String content, String contact, String date) {
 
 		display.setCursor(1, y);
 		display.print(content);
-		if (buttons.kpd.pin_read(JOYSTICK_D) == 0) { //BUTTON DOWN
+		if (buttons.kpd.pin_read(JOYSTICK_B) == 0) { //BUTTON DOWN
 			Serial.println(display.cursor_y);
-			if (display.cursor_y >= 64)
+			if (display.cursor_y >= 128)
 			{
-				buttonHeld = millis();
-
-				if (buttons.kpd.pin_read(JOYSTICK_D) == 1)
-				{
-					y -= 2;
-					break;
-				}
-
-				while (buttons.kpd.pin_read(JOYSTICK_D) == 0)
-				{
-					if (millis() - buttonHeld > 100) {
-						y -= 2;
-						break;
-					}
-				}
-			}
-		}
-
-		if (buttons.kpd.pin_read(JOYSTICK_B) == 0) { //BUTTON UP
-			if (y < 14)
-			{
-
-
 				buttonHeld = millis();
 
 				if (buttons.kpd.pin_read(JOYSTICK_B) == 1)
 				{
-					y += 2;
+					y -= 4;
 					break;
 				}
 
 				while (buttons.kpd.pin_read(JOYSTICK_B) == 0)
 				{
 					if (millis() - buttonHeld > 100) {
-						y += 2;
+						y -= 4;
+						break;
+					}
+				}
+			}
+		}
+
+		if (buttons.kpd.pin_read(JOYSTICK_D) == 0) { //BUTTON UP
+			if (y < 14)
+			{
+				buttonHeld = millis();
+
+				if (buttons.kpd.pin_read(JOYSTICK_D) == 1)
+				{
+					y += 4;
+					break;
+				}
+
+				while (buttons.kpd.pin_read(JOYSTICK_D) == 0)
+				{
+					if (millis() - buttonHeld > 100) {
+						y += 4;
 						break;
 					}
 				}
