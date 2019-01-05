@@ -69,16 +69,14 @@ void MAKERphone::begin(bool splash) {
 	SDinsertedFlag = 1;
 	while (!SD.begin(5, SD_SCK_MHZ(8)))
 	{
-		if(millis()-tempMillis > 2000)
+		if(millis()-tempMillis > 5)
 		{
 			SDinsertedFlag = 0;
 			break;
 		}
 	}
-
-
-	
-	loadSettings();
+	if(SDinsertedFlag)
+		loadSettings();
 	applySettings();
 	
 
@@ -680,14 +678,17 @@ void MAKERphone::lockScreen() {
 					leds[4] = CRGB::Red;
 
 					FastLED.show();
-					update();
-
-					vibration(200);
-					Serial.println(millis() - buttonHeld);
-					goOut = 1;
-					FastLED.clear();
-					delay(10);
-					break;
+					
+					while(!update());
+					if(buttons.released(BTN_A))
+					{
+						vibration(200);
+						Serial.println(millis() - buttonHeld);
+						goOut = 1;
+						FastLED.clear();
+						delay(10);
+						break;
+					}
 				}
 				update();
 			}
@@ -702,7 +703,7 @@ void MAKERphone::lockScreen() {
 			sleep();
 		}
 
-		if (goOut == 1)
+		if (goOut == 1 && buttons.released(BTN_A))
 			break;
 	}
 }
@@ -990,73 +991,181 @@ void MAKERphone::bigIconsMainMenu() {
 
 		//Serial.println(index);
 		int8_t index = gui.drawBigIconsCursor((width+2)*2, (bigIconHeight*2 + 3), 3, 2, 3, 17);
-		Serial.flush();
-		delay(10);
 		if (titles[index] == "Apps")
 		{
 			display.fillScreen(TFT_BLACK);
 			update();
-			if (!SD.begin(5, SD_SCK_MHZ(8))) {
-				display.setCursor(0, 0);
-				display.println("\nCard Mount Failed");
-				update();
-				return;
-			}
-			listDir("/", 0);
-
-			update();
-			int8_t index = gui.menu("Load from SD", BinaryFiles, binaryCount);
-
-			if (index != -1) {  //IF BUTTON "BACK" WAS NOT PRESSED
-				display.fillScreen(TFT_BLACK);
-				display.setCursor(0,display.height() / 2 - 16);
-				display.printCenter("LOADING NOW...");
-				update();
-				delay(1000);
-				if (!SD.begin(5, SD_SCK_MHZ(8))) {
-					display.println("Card Mount Failed");
-					return;
-				}
+			if(SDinsertedFlag)
+			{
+				while(!SD.begin(5, SD_SCK_MHZ(8)));
 				listDir("/", 0);
-				updateFromFS(BinaryFiles[index]);
+				int8_t index = gui.menu("Load from SD", BinaryFiles, binaryCount);
+
+				if (index != -1) {  //IF BUTTON "BACK" WAS NOT PRESSED
+					display.fillScreen(TFT_BLACK);
+					display.setCursor(0,display.height() / 2 - 16);
+					display.printCenter("LOADING NOW...");
+					update();
+					
+					
+					updateFromFS(BinaryFiles[index]);
+				}
 			}
+			else
+			{
+				display.setCursor(0, display.height()/2 - 20);
+				display.setTextFont(2);
+				display.printCenter("No SD inserted!");
+				display.setCursor(0, display.height()/2);
+				display.printCenter("Insert SD card and reset");
+				uint32_t tempMillis = millis();
+				while(millis() < tempMillis + 2000 && !buttons.released(BTN_A) && !buttons.released(BTN_B))
+					update();
+				while(!update());
+			}
+		
 
 
 		}
 
-		if (titles[index] == "Messages" && simInserted && !airplaneMode)
+		if (titles[index] == "Messages")
 		{
 			display.fillScreen(TFT_BLACK);
-			if(resolutionMode)
+			display.setTextColor(TFT_WHITE);
+			if(simInserted && !airplaneMode)
+			{
+				display.fillScreen(TFT_BLACK);
+				if(resolutionMode)
+					display.setCursor(0, display.height()/2);
+				else
+					display.setCursor(0, display.height()/2 - 16);
+				display.printCenter("Loading messages...");
+				update();
+				messagesApp();
+			}
+			else if(!simInserted)
+			{
+				display.setCursor(0, display.height()/2 - 20);
+				display.setTextFont(2);
+				display.printCenter("No SIM inserted!");
 				display.setCursor(0, display.height()/2);
-			else
-				display.setCursor(0, display.height()/2 - 16);
-			display.printCenter("Loading messages...");
-			update();
-			messagesApp();
+				display.printCenter("Insert SIM and reset");
+				uint32_t tempMillis = millis();
+				while(millis() < tempMillis + 2000 && !buttons.released(BTN_A) && !buttons.released(BTN_B))
+					update();
+				while(!update());
+			}
+			else if(airplaneMode)
+			{
+				display.setCursor(0, display.height()/2 - 20);
+				display.setTextFont(2);
+				display.printCenter("Can't access SMS!");
+				display.setCursor(0, display.height()/2);
+				display.printCenter("Turn off airplane mode");
+				uint32_t tempMillis = millis();
+				while(millis() < tempMillis + 2000 && !buttons.released(BTN_A) && !buttons.released(BTN_B))
+					update();
+				while(!update());
+			}
+			
 		}
 
 		if (titles[index] == "Media")
-			mediaApp();
-		if (titles[index] == "Phone" && simInserted && !airplaneMode)
-			phoneApp();
-		if (titles[index] == "Contacts" && simInserted && !airplaneMode) {
-			Serial.println("Begin contacst");
+		{
 			display.fillScreen(TFT_BLACK);
-			if(resolutionMode)
-			{
-				display.setCursor(22, 30);
-				display.print("Loading");
-				display.setCursor(20, 36);
-				display.print("contacts...");
-			}
+			display.setTextColor(TFT_WHITE);
+			if(SDinsertedFlag)
+				mediaApp();
 			else
 			{
-				display.setCursor(0,display.height()/2 -16);
-				display.printCenter("Loading contacts...");
+				display.setCursor(0, display.height()/2 - 20);
+				display.setTextFont(2);
+				display.printCenter("No SD inserted!");
+				display.setCursor(0, display.height()/2);
+				display.printCenter("Insert SD card and reset");
+				uint32_t tempMillis = millis();
+				while(millis() < tempMillis + 2000 && !buttons.released(BTN_A) && !buttons.released(BTN_B))
+					update();
+				while(!update());
 			}
-			update();
-			contactsApp();
+		}
+
+		if (titles[index] == "Phone")
+		{
+			display.fillScreen(TFT_BLACK);
+			display.setTextColor(TFT_WHITE);
+			if(simInserted && !airplaneMode)
+				phoneApp();
+			else if(!simInserted)
+			{
+				display.setCursor(0, display.height()/2 - 20);
+				display.setTextFont(2);
+				display.printCenter("No SIM inserted!");
+				display.setCursor(0, display.height()/2);
+				display.printCenter("Insert SIM and reset");
+				uint32_t tempMillis = millis();
+				while(millis() < tempMillis + 2000 && !buttons.released(BTN_A) && !buttons.released(BTN_B))
+					update();
+				while(!update());
+			}
+			else if(airplaneMode)
+			{
+				display.setCursor(0, display.height()/2 - 20);
+				display.setTextFont(2);
+				display.printCenter("Can't dial numbers");
+				display.setCursor(0, display.height()/2);
+				display.printCenter("Turn off airplane mode");
+				uint32_t tempMillis = millis();
+				while(millis() < tempMillis + 2000 && !buttons.released(BTN_A) && !buttons.released(BTN_B))
+					update();
+				while(!update());
+			}
+		}
+		if (titles[index] == "Contacts") {
+			display.fillScreen(TFT_BLACK);
+			display.setTextColor(TFT_WHITE);
+			if(simInserted && !airplaneMode)
+			{
+				display.fillScreen(TFT_BLACK);
+				if(resolutionMode)
+				{
+					display.setCursor(22, 30);
+					display.print("Loading");
+					display.setCursor(20, 36);
+					display.print("contacts...");
+				}
+				else
+				{
+					display.setCursor(0,display.height()/2 -16);
+					display.printCenter("Loading contacts...");
+				}
+				contactsApp();
+			}
+			else if(!simInserted)
+			{
+				display.setCursor(0, display.height()/2 - 20);
+				display.setTextFont(2);
+				display.printCenter("No SIM inserted!");
+				display.setCursor(0, display.height()/2);
+				display.printCenter("Insert SIM and reset");
+				uint32_t tempMillis = millis();
+				while(millis() < tempMillis + 2000 && !buttons.released(BTN_A) && !buttons.released(BTN_B))
+					update();
+				while(!update());
+			}
+			else if(airplaneMode)
+			{
+				display.setCursor(0, display.height()/2 - 20);
+				display.setTextFont(2);
+				display.printCenter("Can't access contacts!");
+				display.setCursor(0, display.height()/2);
+				display.printCenter("Turn off airplane mode");
+				uint32_t tempMillis = millis();
+				while(millis() < tempMillis + 2000 && !buttons.released(BTN_A) && !buttons.released(BTN_B))
+					update();
+				while(!update());
+			}
+			
 		}
 
 		if (titles[index] == "Settings")
@@ -3874,8 +3983,32 @@ void MAKERphone::settingsApp() {
 			aboutMenu(); */
 	}
 	applySettings();
+	display.fillScreen(TFT_BLACK);
+	display.setTextColor(TFT_WHITE);
 	if(SDinsertedFlag)
+	{
 		saveSettings();
+		display.setCursor(0, display.height()/2 - 16);
+		display.setTextFont(2);
+		display.printCenter("Settings saved!");
+		uint32_t tempMillis = millis();
+		while(millis() < tempMillis + 2000 && !buttons.pressed(BTN_A) && !buttons.pressed(BTN_B))
+			update();
+		while(!update());
+	}
+	else
+	{
+		display.setCursor(0, display.height()/2 - 20);
+		display.setTextFont(2);
+		display.printCenter("Can't save - No SD!");
+		display.setCursor(0, display.height()/2);
+		display.printCenter("Insert SD card and reset");
+		uint32_t tempMillis = millis();
+		while(millis() < tempMillis + 2000 && !buttons.pressed(BTN_A) && !buttons.pressed(BTN_B))
+			update();
+		while(!update());
+	}
+		
 }
 void MAKERphone::networkMenu() {
 	uint8_t cursor = 0;
@@ -6312,7 +6445,7 @@ int8_t GUI::drawBigIconsCursor(uint8_t xoffset, uint8_t yoffset, uint8_t xelemen
 		scale = 1;
 	else
 		scale = 2;
-
+	while(!mp.update());
 	while (1)
 	{
 		mp.display.fillScreen(TFT_BLACK);
@@ -6371,9 +6504,9 @@ int8_t GUI::drawBigIconsCursor(uint8_t xoffset, uint8_t yoffset, uint8_t xelemen
 		///////////////////////////////////////
 		//////Checking for button input////////
 		///////////////////////////////////////
-		if (mp.buttons.kpd.pin_read(BTN_A) == 0) //CONFIRM
+		if (mp.buttons.released(BTN_A)) //CONFIRM
 		{
-			while (mp.buttons.kpd.pin_read(BTN_A) == 0);
+			while (!mp.update());
 			return cursorY * xelements + cursorX;  //returns index of selected icon
 
 		}
