@@ -363,10 +363,8 @@ public:
 	void timeMenu();
 	bool updateMenu();
 	void applySettings();
-	void saveSettings();
-	void saveSettingsSD(bool debug = false);
-	void loadSettings();
-	void loadSettingsSD(bool debug = false);
+	void saveSettings(bool debug = false);
+	void loadSettings(bool debug = false);
 	void wifiMenu();
 
 	void listRingtones(const char * dirname, uint8_t levels);

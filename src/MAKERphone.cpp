@@ -76,7 +76,7 @@ void MAKERphone::begin(bool splash) {
 		}
 	}
 	if(SDinsertedFlag)
-		loadSettingsSD(1);
+		loadSettings(1);
 	applySettings();
 
 	//display initialization
@@ -162,7 +162,7 @@ void MAKERphone::test() {
 }
 
 bool MAKERphone::update() {
-	bool pressed = 0;
+	// bool pressed = 0;
 	//if (digitalRead(INTERRUPT_PIN) == 0) //message is received or incoming call
 	//{
 	//	Serial.println("INTERRUPTED");
@@ -442,7 +442,6 @@ void MAKERphone::lockScreen() {
 	dataRefreshFlag = 1;
 	Serial.begin(115200);
 	bool goOut = 0;
-	uint8_t updatePixels = 0;
 	uint32_t elapsedMillis = millis();
 	uint8_t scale;
 	if(resolutionMode)
@@ -454,8 +453,6 @@ void MAKERphone::lockScreen() {
 
 	while (1)
 	{
-
-
 		display.fillScreen(backgroundColors[backgroundIndex]);
 
 		display.setFreeFont(TT1);
@@ -717,10 +714,7 @@ void MAKERphone::lockScreen() {
 			}
 		}
 		if (buttons.released(BTN_A))
-		{
 			FastLED.clear();
-			updatePixels = 0;
-		}
 		if (buttons.pressed(BTN_B)) {
 			while (buttons.kpd.pin_read(BTN_B) == 0);
 			sleep();
@@ -1231,7 +1225,6 @@ void MAKERphone::callNumber(String number) {
 	}
 	display.setTextSize(1);
 
-	Serial.println(textLength);
 	display.printCenter(number);
 	textLength = display.cursor_x - textLength;
 	while (1)
@@ -1478,6 +1471,7 @@ String MAKERphone::readSerial() {
 	if (Serial1.available()) {
 		return Serial1.readString();
 	}
+	return "";
 }
 void MAKERphone::incomingCall()
 {
@@ -1652,7 +1646,7 @@ void MAKERphone::checkSim()
 		Serial.println(input);
 		delay(10);
 	}
-	if (input.indexOf("NOT READY", input.indexOf("+CPIN:")) != -1 || input.indexOf("ERROR") != -1 && input.indexOf("+CPIN:") == -1
+	if (input.indexOf("NOT READY", input.indexOf("+CPIN:")) != -1 || (input.indexOf("ERROR") != -1 && input.indexOf("+CPIN:") == -1)
 		|| input.indexOf("NOT INSERTED") != -1)
 	{
 		simInserted = 0;
@@ -2193,7 +2187,6 @@ void MAKERphone::viewSms(String content, String contact, String date) {
 	{
 		display.fillScreen(TFT_DARKGREY);
 		display.setTextWrap(1);
-		uint16_t x = 0;
 		//while (kpd.pin_read(3))
 		//{
 
@@ -2354,13 +2347,11 @@ void MAKERphone::smsMenuDrawBox(String contact, String date, String content, uin
 
 }
 void MAKERphone::smsMenuDrawCursor(uint8_t i, int32_t y) {
-	uint8_t scale;
 	uint8_t offset;
 	uint8_t boxHeight;
 	uint8_t composeHeight;
 	if(resolutionMode)
 	{
-		scale = 1;
 		offset = menuYOffset;
 		composeHeight=12;
 		boxHeight = 21;
@@ -2368,7 +2359,6 @@ void MAKERphone::smsMenuDrawCursor(uint8_t i, int32_t y) {
 	}
 	else
 	{
-		scale = 2;
 		offset = 19;
 		composeHeight=21;
 		boxHeight = 30;
@@ -2387,19 +2377,16 @@ int16_t MAKERphone::smsMenu(const char* title, String* contact, String *date, St
 	uint8_t scale;
 	uint8_t offset;
 	uint8_t boxHeight;
-	uint8_t composeHeight;
 	if(resolutionMode)
 	{
 		scale = 1;
 		offset = menuYOffset;
-		composeHeight=12;
 		boxHeight = 21;
 	}
 	else
 	{
 		scale = 2;
 		offset = 19;
-		composeHeight=21;
 		boxHeight = 30;
 	}
 	while (1) {
@@ -2494,18 +2481,15 @@ int16_t MAKERphone::smsMenu(const char* title, String* contact, String *date, St
 
 }
 void MAKERphone::smsMenuComposeBoxCursor(uint8_t i, int32_t y) {
-	uint8_t scale;
 	uint8_t offset;
 	uint8_t boxHeight;
 	if(resolutionMode)
 	{
-		scale = 1;
 		offset = menuYOffset;
 		boxHeight=composeBoxHeight;
 	}
 	else
 	{
-		scale = 2;
 		offset = 19;
 		boxHeight=21;
 	}
@@ -2558,7 +2542,6 @@ void MAKERphone::composeSMS()
 	String prevContent = "";
 	char key = NO_KEY;
 	bool cursor = 0; //editing contacts or text content
-	uint16_t contentCursor = 0;
 	unsigned long elapsedMillis = millis();
 	bool blinkState = 1;
 	uint8_t scale;
@@ -2777,25 +2760,6 @@ void MAKERphone::composeSMS()
 
 uint8_t MAKERphone::deleteContact(String contact, String number, String id)
 {
-	uint8_t scale;
-	uint8_t offset;
-	uint8_t boxHeight;
-	uint8_t composeHeight;
-	if(resolutionMode)
-	{
-		scale = 1;
-		offset = menuYOffset;
-		composeHeight=12;
-		boxHeight = 21;
-	}
-	else
-	{
-		scale = 2;
-		offset = 19;
-		composeHeight=21;
-		boxHeight = 30;
-	}
-	uint16_t contentCursor = 0;
 	unsigned long elapsedMillis = millis();
 	bool blinkState = 1;
 	while (1)
@@ -2889,7 +2853,6 @@ uint8_t MAKERphone::newContact()
 	String prevContent = "";
 	char key = NO_KEY;
 	bool cursor = 0; //editing contacts or text content
-	uint16_t contentCursor = 0;
 	unsigned long elapsedMillis = millis();
 	bool blinkState = 1;
 	while (1)
@@ -3020,22 +2983,20 @@ uint8_t MAKERphone::newContact()
 		update();
 	}
 	return 0;
+
 }
 
 
 void MAKERphone::contactsMenuDrawBox(String contact, String number, uint8_t i, int32_t y) {
 	uint8_t offset;
 	uint8_t boxHeight;
-	uint8_t scale;
 	if(resolutionMode)
 	{
-		scale = 1;
 		offset = menuYOffset;
 		boxHeight = 14;
 	}
 	else
 	{
-		scale = 2;
 		offset = 19;
 		boxHeight = 28;
 	}
@@ -3068,16 +3029,13 @@ void MAKERphone::contactsMenuDrawBox(String contact, String number, uint8_t i, i
 void MAKERphone::contactsMenuDrawCursor(uint8_t i, int32_t y) {
 	uint8_t offset;
 	uint8_t boxHeight;
-	uint8_t scale;
 	if(resolutionMode)
 	{
-		scale = 1;
 		offset = menuYOffset;
 		boxHeight = 14;
 	}
 	else
 	{
-		scale = 2;
 		offset = 19;
 		boxHeight = 28;
 	}
@@ -3090,16 +3048,13 @@ void MAKERphone::contactsMenuDrawCursor(uint8_t i, int32_t y) {
 void MAKERphone::contactsMenuNewBoxCursor(uint8_t i, int32_t y) {
 	uint8_t offset;
 	uint8_t boxHeight;
-	uint8_t scale;
 	if(resolutionMode)
 	{
-		scale = 1;
 		offset = menuYOffset;
 		boxHeight = 14;
 	}
 	else
 	{
-		scale = 2;
 		offset = 19;
 		boxHeight = 28;
 	}
@@ -3112,16 +3067,13 @@ void MAKERphone::contactsMenuNewBoxCursor(uint8_t i, int32_t y) {
 void MAKERphone::contactsMenuNewBox(uint8_t i, int32_t y) {
 	uint8_t offset;
 	uint8_t boxHeight;
-	uint8_t scale;
 	if(resolutionMode)
 	{
-		scale = 1;
 		offset = menuYOffset;
 		boxHeight = 14;
 	}
 	else
 	{
-		scale = 2;
 		offset = 19;
 		boxHeight = 28;
 	}
@@ -3158,16 +3110,13 @@ int MAKERphone::contactsMenu(const char* title, String* contact, String *number,
 	int32_t cameraY_actual = 0;
 	uint8_t offset;
 	uint8_t boxHeight;
-	uint8_t scale;
 	if(resolutionMode)
 	{
-		scale = 1;
 		offset = menuYOffset;
 		boxHeight = 14;
 	}
 	else
 	{
-		scale = 2;
 		offset = 19;
 		boxHeight = 28;
 	}
@@ -3438,25 +3387,6 @@ void MAKERphone::contactsApp() {
 
 uint8_t MAKERphone::deleteContactSD(String name, String number)
 {
-	uint8_t scale;
-	uint8_t offset;
-	uint8_t boxHeight;
-	uint8_t composeHeight;
-	if(resolutionMode)
-	{
-		scale = 1;
-		offset = menuYOffset;
-		composeHeight=12;
-		boxHeight = 21;
-	}
-	else
-	{
-		scale = 2;
-		offset = 19;
-		composeHeight=21;
-		boxHeight = 30;
-	}
-	uint16_t contentCursor = 0;
 	unsigned long elapsedMillis = millis();
 	bool blinkState = 1;
 	while (1)
@@ -3625,7 +3555,6 @@ uint8_t MAKERphone::newContactSD(String *name, String *number)
 	String prevContent = "";
 	char key = NO_KEY;
 	bool cursor = 0; //editing contacts or text content
-	uint16_t contentCursor = 0;
 	unsigned long elapsedMillis = millis();
 	bool blinkState = 1;
 	while (1)
@@ -3746,17 +3675,14 @@ int MAKERphone::contactsMenuSD(JsonArray *contacts){
 	int32_t cameraY_actual = 0;
 	uint8_t offset;
 	uint8_t boxHeight;
-	uint8_t scale;
 	uint8_t length = contacts->size();
 	if(resolutionMode)
 	{
-		scale = 1;
 		offset = menuYOffset;
 		boxHeight = 14;
 	}
 	else
 	{
-		scale = 2;
 		offset = 19;
 		boxHeight = 28;
 	}
@@ -3856,16 +3782,13 @@ int MAKERphone::contactsMenuSD(JsonArray *contacts){
 void MAKERphone::contactsMenuDrawBoxSD(String name, String number, uint8_t i, int32_t y) {
 	uint8_t offset;
 	uint8_t boxHeight;
-	uint8_t scale;
 	if(resolutionMode)
 	{
-		scale = 1;
 		offset = menuYOffset;
 		boxHeight = 14;
 	}
 	else
 	{
-		scale = 2;
 		offset = 19;
 		boxHeight = 28;
 	}
@@ -3918,17 +3841,10 @@ void MAKERphone::dialer() {
 	String callBuffer = "";
 	char key = NO_KEY;
 	display.setTextWrap(0);
-	uint8_t scale;
 	if(resolutionMode)
-	{
 		display.setFreeFont(TT1);
-		scale = 1;
-	}
 	else
-	{
 		display.setTextFont(2);
-		scale = 2;
-	}
 	while (1)
 	{
 		Serial.println(display.cursor_x);
@@ -4280,18 +4196,11 @@ int8_t MAKERphone::settingsMenu(String* title, uint8_t length) {
 	int32_t cameraY_actual = 0;
 	dataRefreshFlag = 0;
 
-	uint8_t scale;
 	uint8_t boxHeight;
 	if(resolutionMode)
-	{
-		scale = 1;
 		boxHeight = 15;
-	}
 	else
-	{
-		scale = 2;
 		boxHeight = 20; //actually 2 less than that
-	}
 	while (1) {
 		while (!update());
 		display.fillScreen(TFT_BLACK);
@@ -4411,18 +4320,11 @@ void MAKERphone::settingsMenuDrawBox(String title, uint8_t i, int32_t y) {
 	display.setFreeFont(TT1);
 }
 void MAKERphone::settingsMenuDrawCursor(uint8_t i, int32_t y, bool pressed) {
-	uint8_t scale;
 	uint8_t boxHeight;
 	if(resolutionMode)
-	{
-		scale = 1;
 		boxHeight = 15;
-	}
 	else
-	{
-		scale = 2;
 		boxHeight = 20;
-	}
 	if (millis() % 500 <= 250 && pressed == 0) {
 		return;
 	}
@@ -4451,14 +4353,13 @@ bool MAKERphone::settingsApp() {
 		if (input == 5)
 			if(updateMenu())
 				return true;
-	}
+
 	applySettings();
 	display.fillScreen(TFT_BLACK);
 	display.setTextColor(TFT_WHITE);
 	if(SDinsertedFlag)
 	{
-		Serial.println("saving or some bullshit that i fucekd up");
-		saveSettingsSD(1);
+		saveSettings(1);
 		display.setCursor(0, display.height()/2 - 16);
 		display.setTextFont(2);
 		display.printCenter("Settings saved!");
@@ -4483,11 +4384,6 @@ bool MAKERphone::settingsApp() {
 }
 void MAKERphone::networkMenu() {
 	uint8_t cursor = 0;
-	uint8_t scale;
-	if(resolutionMode)
-		scale = 1;
-	else
-		scale = 2;
 	while (1)
 	{
 		Serial.println(airplaneMode);
@@ -5535,7 +5431,6 @@ void MAKERphone::securityMenu() {
 void MAKERphone::timeMenu()
 {
 	bool blinkState = 0;
-	uint8_t pastSecond=clockSecond;
 	uint32_t previousMillis = millis();
 	uint8_t cursor = 0;
 	uint8_t editCursor = 0;
@@ -6291,11 +6186,9 @@ void MAKERphone::timeMenu()
 bool MAKERphone::updateMenu()
 {
 	bool blinkState = 0;
-	uint8_t pastSecond=clockSecond;
 	uint32_t previousMillis = millis();
 	uint8_t cursor = 0;
 	String foo="";
-	char key;
 	display.setTextWrap(0);
 	display.setTextFont(2);
 
@@ -6398,62 +6291,8 @@ bool MAKERphone::updateMenu()
 	while(!update());
 	return false;
 }
-void MAKERphone::saveSettings()
-{
-	const char * path = "/settings.mph";
-	SD.remove(path);
-	char helper[20] = "";
-	writeFile(path, "MAKERphone settings file\n");
-	String buffer = readFile(path);
-	Serial.println(buffer);
-	delay(5);
-	appendFile(path, "Wifi: ");
-	switch (wifi)
-	{
-	case 0:
-		appendFile(path, "0\n");
-		break;
 
-	case 1:
-		appendFile(path, "1\n");
-		break;
-	}
-	appendFile(path, "Bluetooth: ");
-	switch (bt)
-	{
-	case 0:
-		appendFile(path, "0\n");
-		break;
-	case 1:
-		appendFile(path, "1\n");
-		break;
-	}
-	appendFile(path, "Airplane mode: ");
-	switch (airplaneMode)
-	{
-	case 0:
-		appendFile(path, "0\n");
-		break;
-
-	case 1:
-		appendFile(path, "1\n");
-		break;
-	}
-	appendFile(path, "Brightness: ");
-	itoa(brightness, helper, 10);
-	appendFile(path, helper);
-	appendFile(path, "\nSleep time: ");
-	itoa(sleepTime, helper, 10);
-	appendFile(path, helper);
-	appendFile(path, "\nBackground color: ");
-	itoa(backgroundIndex, helper, 10);
-	appendFile(path, helper);
-
-	Serial.println(readFile(path));
-	delay(5);
-}
-
-void MAKERphone::saveSettingsSD(bool debug)
+void MAKERphone::saveSettings(bool debug)
 {
 	const char * path = "/settings.json";
 	Serial.println("");
@@ -6492,7 +6331,7 @@ void MAKERphone::saveSettingsSD(bool debug)
 	}
 }
 
-void MAKERphone::loadSettingsSD(bool debug)
+void MAKERphone::loadSettings(bool debug)
 {
 	const char * path = "/settings.json";
 	Serial.println("");
@@ -6530,37 +6369,26 @@ void MAKERphone::loadSettingsSD(bool debug)
 
 void MAKERphone::applySettings()
 {
-	switch (wifi)
+	if(wifi)
 	{
-	case 0:
-		//WiFi.disconnect(true); delay(1); // disable WIFI altogether
-		//WiFi.mode(WIFI_MODE_NULL); delay(1);
-		break;
-
-	case 1:
-		//WiFi.begin();
-		//delay(1);
-		break;
+		// WiFi.begin();
+		// delay(1);
 	}
-	switch (bt)
+	else
 	{
-	case 0:
-		//btStop();
-		break;
-	case 1:
-		//btStart();
-		break;
+		// WiFi.disconnect(true); delay(1); // disable WIFI altogether
+		// WiFi.mode(WIFI_MODE_NULL); delay(1);
 	}
-	switch (airplaneMode)
-	{
-	case 0:
-		Serial1.println("AT+CFUN=1");
-		break;
 
-	case 1:
+	if(bt)
+		btStart();
+	else
+		btStop();
+	if(airplaneMode)
 		Serial1.println("AT+CFUN=4");
-		break;
-	}
+	else
+		Serial1.println("AT+CFUN=1");
+
 	if (brightness == 0)
 		actualBrightness = 230;
 	else
@@ -6588,50 +6416,6 @@ void MAKERphone::applySettings()
 	}
 
 }
-void MAKERphone::loadSettings()
-{
-	Serial.begin(115200);
-	while (!SD.begin(5, SD_SCK_MHZ(8)));
-	const char * path = "/settings.mph";
-	String buffer = readFile(path);
-	Serial.println(buffer);
-	delay(5);
-	uint16_t indexHelper;
-	indexHelper = buffer.indexOf("Wifi");
-	if (buffer.indexOf("0", indexHelper) < buffer.indexOf("1", indexHelper) && buffer.indexOf("0", indexHelper) != -1 || buffer.indexOf("1") == -1)
-		wifi = 0;
-	else
-		wifi = 1;
-	Serial.print("Wifi:");
-	Serial.println(wifi);
-	delay(5);
-	indexHelper = buffer.indexOf("Bluetooth");
-	if (buffer.indexOf("0", indexHelper) < buffer.indexOf("1", indexHelper) && buffer.indexOf("0", indexHelper) != -1 || buffer.indexOf("1") == -1)
-		bt = 0;
-	else
-		bt = 1;
-	Serial.print("BT:");
-	Serial.println(bt);
-	delay(5);
-	indexHelper = buffer.indexOf("Airplane mode");
-	String air = buffer.substring(indexHelper, buffer.indexOf("\n", indexHelper));
-	airplaneMode = (air.indexOf("0") == -1);
-	Serial.print("Airplane mode:");
-	Serial.println(airplaneMode);
-	delay(5);
-
-	indexHelper = buffer.indexOf("Brightness: ") + sizeof("Brightness: ")-1;
-	brightness = buffer.substring(indexHelper, buffer.indexOf("\n", indexHelper)).toInt();
-	Serial.print("Brightness:");
-	Serial.println(brightness);
-	delay(5);
-
-	indexHelper = buffer.indexOf("Background color: ") + sizeof("Background color: ") - 1;
-	backgroundIndex = buffer.substring(indexHelper, buffer.indexOf("\n", indexHelper)).toInt();
-	Serial.print("BG color:");
-	Serial.println(backgroundIndex);
-	delay(5);
-}
 
 //Buttons class
 bool Buttons::pressed(uint8_t button) {
@@ -6642,8 +6426,7 @@ void Buttons::begin() {
 	kpdNum.begin(14, 27);
 }
 void Buttons::update() {
-
-	byte buttonsData;
+	byte buttonsData = 0b0000000;
 
 	for (uint8_t i = 0; i < 8; i++)
 		bitWrite(buttonsData, i, (bool)kpd.pin_read(i));
@@ -6834,18 +6617,15 @@ void GUI::menuDrawBox(String text, uint8_t i, int32_t y) {
 		mp.display.drawString(text, 3, y);
 }
 void GUI::menuDrawCursor(uint8_t i, int32_t y) {
-	uint8_t scale;
 	uint8_t offset;
 	uint8_t boxHeight;
 	if(mp.resolutionMode)
 	{
-		scale = 1;
 		offset = menuYOffset;
 		boxHeight = 7;
 	}
 	else
 	{
-		scale = 2;
 		offset = 19;
 		boxHeight = 15;
 	}
@@ -6856,8 +6636,6 @@ void GUI::menuDrawCursor(uint8_t i, int32_t y) {
 	mp.display.drawRect(0, y, mp.display.width(), boxHeight + 2, TFT_RED);
 }
 int8_t GUI::menu(const char* title, String* items, uint8_t length) {
-	long elapsedMillis = millis();
-	long elapsedMillis2 = millis();
 	while (1) {
 		while (!mp.update());
 		mp.display.fillScreen(TFT_BLACK);
