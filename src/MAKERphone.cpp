@@ -120,20 +120,20 @@ void MAKERphone::begin(bool splash) {
 	else
 	{
 		delay(500);
-		checkSim();
+		// checkSim();
 	}
 
 	// updateTimeGSM();
-	Serial1.println(F("AT+CMEE=2"));
-	Serial1.println(F("AT+CLVL=100"));
-	Serial1.println(F("AT+CRSL=100"));
-	Serial1.println(F("AT+CMIC=0,6"));
-	Serial1.println(F("AT+CMGF=1"));
-	Serial1.println(F("AT+CNMI=1,1,0,0,0"));
-	Serial1.println(F("AT+CLTS=1")); //Enable local Timestamp mode (used for syncrhonising RTC with GSM time
-	Serial1.println(F("AT+CPMS=\"SM\",\"SM\",\"SM\""));
-	Serial1.println(F("AT+CLCC=1"));
-	Serial1.println(F("AT&W"));
+	// Serial1.println(F("AT+CMEE=2"));
+	// Serial1.println(F("AT+CLVL=100"));
+	// Serial1.println(F("AT+CRSL=100"));
+	// Serial1.println(F("AT+CMIC=0,6"));
+	// Serial1.println(F("AT+CMGF=1"));
+	// Serial1.println(F("AT+CNMI=1,1,0,0,0"));
+	// Serial1.println(F("AT+CLTS=1")); //Enable local Timestamp mode (used for syncrhonising RTC with GSM time
+	// Serial1.println(F("AT+CPMS=\"SM\",\"SM\",\"SM\""));
+	// Serial1.println(F("AT+CLCC=1"));
+	// Serial1.println(F("AT&W"));
 	//  while(1){
 	//    if(Serial1.available())
 	//      Serial.println(Serial1.read());
@@ -144,37 +144,65 @@ void MAKERphone::begin(bool splash) {
 
 void MAKERphone::test() {
 	Serial.println("|----------TEST----------|");
+	const char file_path[] = "/contacts.json";
 
-	File file = SD.open("/contacts.json");
-	JsonArray& jarr = mp.jb.parseArray(file);
+	String input = "[{\"name\":\"Someone\", \"number\":\"123123123\"}, {\"name\":\"Me\", \"number\":\"0992010102\"}]";
+	JsonArray& jarr = mp.jb.parseArray(input);
+
+	for (JsonObject& elem : jarr) {
+		Serial.println(elem["name"].as<char*>());
+		Serial.println(elem["number"].as<char*>());
+	}
+	while(!SD.begin(5, SD_SCK_MHZ(8)))
+	SD.remove(file_path);
+	delay(1000);
+	File file = SD.open(file_path, FILE_REWRITE);
+	jarr.prettyPrintTo(file);
+	file.close();
+	delay(1000);
+
+	Serial.println("Print done");
+
+	File file1 = SD.open(file_path);
+	JsonArray& new_jarr = mp.jb.parseArray(file1);
 
 	Serial.println("Read from .json");
-	for (JsonObject& elem : jarr) {
+	for (JsonObject& elem : new_jarr) {
 		Serial.println(elem["name"].as<char*>());
 		Serial.println(elem["number"].as<char*>());
 	}
 	Serial.println("---------");
 
-	JsonObject& new_cont = mp.jb.createObject();
-	new_cont["name"] = "Foobar";
-	new_cont["number"] = "0983171730";
-	jarr.add(new_cont);
+	// JsonObject& new_cont = mp.jb.createObject();
+	// new_cont["name"] = "Foobar";
+	// new_cont["number"] = "0983171730";
+	// new_jarr.add(new_cont);
+	// JsonObject& new_cont1 = mp.jb.createObject();
+	// new_cont1["name"] = "Bar";
+	// new_cont1["number"] = "0992010102";
+	// new_jarr.add(new_cont1);
 
-	Serial.println("Add contact");
-	for (JsonObject& elem : jarr) {
-		Serial.println(elem["name"].as<char*>());
-		Serial.println(elem["number"].as<char*>());
-	}
-	Serial.println("---------");
+	// Serial.println("Add contact");
+	// for (JsonObject& elem : new_jarr) {
+	// 	Serial.println(elem["name"].as<char*>());
+	// 	Serial.println(elem["number"].as<char*>());
+	// }
+	// Serial.println("---------");
 
-	jarr.remove(1);
+	// new_jarr.remove(0);
 
-	Serial.println("Remove second contact");
-	for (JsonObject& elem : jarr) {
-		Serial.println(elem["name"].as<char*>());
-		Serial.println(elem["number"].as<char*>());
-	}
-	Serial.println("---------");
+	// Serial.println("Remove second contact");
+	// for (JsonObject& elem : new_jarr) {
+	// 	Serial.println(elem["name"].as<char*>());
+	// 	Serial.println(elem["number"].as<char*>());
+	// }
+	// Serial.println("---------");
+
+	// file1.close();
+	// SD.remove(file_path);
+	// File file = SD.open(file_path, FILE_WRITE);
+	// new_jarr.prettyPrintTo(file);
+	// file.close();
 }
 
 bool MAKERphone::update() {
@@ -1093,6 +1121,7 @@ void MAKERphone::bigIconsMainMenu() {
 			// 	display.printCenter("Loading contacts...");
 			// }
 			update();
+			Serial.println("Hello world");
 			contactsAppSD();
 		}
 
@@ -3434,16 +3463,21 @@ uint8_t MAKERphone::deleteContactSD(String name, String number)
 }
 
 void MAKERphone::contactsAppSD(){
+	Serial.println("");
+	Serial.println("Begin contacts");
 	File file = SD.open("/contacts.json");
 
-	if(file.size() < 2 || !file){ // empty -> FILL
+	if(file.size() < 2){ // empty -> FILL
+		Serial.println("Override");
 		file.close();
 		JsonArray& jarr = mp.jb.parseArray("[{\"name\":\"foo\", \"number\":\"099\"}]");
+		delay(10);
 		SD.remove("/contacts.json");
 		File file1 = SD.open("/contacts.json", FILE_WRITE);
 		jarr.prettyPrintTo(file1);
 		file1.close();
 		file = SD.open("/contacts.json");
+		while(!file) {}
 	}
 
 	JsonArray& jarr = mp.jb.parseArray(file);
@@ -3451,7 +3485,7 @@ void MAKERphone::contactsAppSD(){
 	if(!jarr.success())
 	{
 		Serial.println("Error");
-		display.fillScreen(TFT_YELLOW);
+		display.fillScreen(TFT_BLACK);
 		if(resolutionMode)
 		{
 			display.setCursor(0, display.height()/2);
