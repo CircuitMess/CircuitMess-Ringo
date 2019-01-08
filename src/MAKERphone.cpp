@@ -1684,7 +1684,7 @@ void MAKERphone::checkSim()
 		Serial.println(input);
 		delay(10);
 	}
-	if ((input.indexOf("NOT READY", input.indexOf("+CPIN:")) != -1 || input.indexOf("ERROR") != -1) && input.indexOf("+CPIN:") == -1
+	if (input.indexOf("NOT READY", input.indexOf("+CPIN:")) != -1 || (input.indexOf("ERROR") != -1 && input.indexOf("+CPIN:") == -1)
 		|| input.indexOf("NOT INSERTED") != -1)
 	{
 		simInserted = 0;
@@ -2580,7 +2580,6 @@ void MAKERphone::composeSMS()
 	String prevContent = "";
 	char key = NO_KEY;
 	bool cursor = 0; //editing contacts or text content
-	uint16_t contentCursor = 0;
 	unsigned long elapsedMillis = millis();
 	bool blinkState = 1;
 	uint8_t scale;
@@ -2799,25 +2798,6 @@ void MAKERphone::composeSMS()
 
 uint8_t MAKERphone::deleteContact(String contact, String number, String id)
 {
-	uint8_t scale;
-	uint8_t offset;
-	uint8_t boxHeight;
-	uint8_t composeHeight;
-	if(resolutionMode)
-	{
-		scale = 1;
-		offset = menuYOffset;
-		composeHeight=12;
-		boxHeight = 21;
-	}
-	else
-	{
-		scale = 2;
-		offset = 19;
-		composeHeight=21;
-		boxHeight = 30;
-	}
-	uint16_t contentCursor = 0;
 	unsigned long elapsedMillis = millis();
 	bool blinkState = 1;
 	while (1)
@@ -2911,7 +2891,6 @@ uint8_t MAKERphone::newContact()
 	String prevContent = "";
 	char key = NO_KEY;
 	bool cursor = 0; //editing contacts or text content
-	uint16_t contentCursor = 0;
 	unsigned long elapsedMillis = millis();
 	bool blinkState = 1;
 	while (1)
@@ -3042,6 +3021,7 @@ uint8_t MAKERphone::newContact()
 		update();
 	}
 	return 0;
+
 }
 
 
