@@ -141,66 +141,66 @@ void MAKERphone::begin(bool splash) {
 }
 
 void MAKERphone::test() {
-	Serial.println("|----------TEST----------|");
-	const char file_path[] = "/contacts.json";
+	// Serial.println("|----------TEST----------|");
+	// const char file_path[] = "/contacts.json";
 
-	String input = "[{\"name\":\"Someone\", \"number\":\"123123123\"}, {\"name\":\"Me\", \"number\":\"0992010102\"}]";
-	JsonArray& jarr = mp.jb.parseArray(input);
+	// String input = "[{\"name\":\"Someone\", \"number\":\"123123123\"}, {\"name\":\"Me\", \"number\":\"0992010102\"}]";
+	// JsonArray& jarr = mp.jb.parseArray(input);
 
-	for (JsonObject& elem : jarr) {
-		Serial.println(elem["name"].as<char*>());
-		Serial.println(elem["number"].as<char*>());
-	}
-	while(!SD.begin(5, SD_SCK_MHZ(8)))
-	SD.remove(file_path);
-	delay(1000);
-	File file = SD.open(file_path, FILE_REWRITE);
-	jarr.prettyPrintTo(file);
-	file.close();
-	delay(1000);
+	// for (JsonObject& elem : jarr) {
+	// 	Serial.println(elem["name"].as<char*>());
+	// 	Serial.println(elem["number"].as<char*>());
+	// }
+	// while(!SD.begin(5, SD_SCK_MHZ(8)))
+	// SD.remove(file_path);
+	// delay(1000);
+	// File file = SD.open(file_path, FILE_REWRITE);
+	// jarr.prettyPrintTo(file);
+	// file.close();
+	// delay(1000);
 
-	Serial.println("Print done");
+	// Serial.println("Print done");
 
-	File file1 = SD.open(file_path);
-	JsonArray& new_jarr = mp.jb.parseArray(file1);
+	// File file1 = SD.open(file_path);
+	// JsonArray& new_jarr = mp.jb.parseArray(file1);
 
-	Serial.println("Read from .json");
-	for (JsonObject& elem : new_jarr) {
-		Serial.println(elem["name"].as<char*>());
-		Serial.println(elem["number"].as<char*>());
-	}
-	Serial.println("---------");
+	// Serial.println("Read from .json");
+	// for (JsonObject& elem : new_jarr) {
+	// 	Serial.println(elem["name"].as<char*>());
+	// 	Serial.println(elem["number"].as<char*>());
+	// }
+	// Serial.println("---------");
 
-	JsonObject& new_cont = mp.jb.createObject();
-	new_cont["name"] = "Foobar";
-	new_cont["number"] = "0983171730";
-	new_jarr.add(new_cont);
-	JsonObject& new_cont1 = mp.jb.createObject();
-	new_cont1["name"] = "Bar";
-	new_cont1["number"] = "0992010102";
-	new_jarr.add(new_cont1);
+	// JsonObject& new_cont = mp.jb.createObject();
+	// new_cont["name"] = "Foobar";
+	// new_cont["number"] = "0983171730";
+	// new_jarr.add(new_cont);
+	// JsonObject& new_cont1 = mp.jb.createObject();
+	// new_cont1["name"] = "Bar";
+	// new_cont1["number"] = "0992010102";
+	// new_jarr.add(new_cont1);
 
-	Serial.println("Add contact");
-	for (JsonObject& elem : new_jarr) {
-		Serial.println(elem["name"].as<char*>());
-		Serial.println(elem["number"].as<char*>());
-	}
-	Serial.println("---------");
+	// Serial.println("Add contact");
+	// for (JsonObject& elem : new_jarr) {
+	// 	Serial.println(elem["name"].as<char*>());
+	// 	Serial.println(elem["number"].as<char*>());
+	// }
+	// Serial.println("---------");
 
-	new_jarr.remove(0);
+	// new_jarr.remove(0);
 
-	Serial.println("Remove second contact");
-	for (JsonObject& elem : new_jarr) {
-		Serial.println(elem["name"].as<char*>());
-		Serial.println(elem["number"].as<char*>());
-	}
-	Serial.println("---------");
+	// Serial.println("Remove second contact");
+	// for (JsonObject& elem : new_jarr) {
+	// 	Serial.println(elem["name"].as<char*>());
+	// 	Serial.println(elem["number"].as<char*>());
+	// }
+	// Serial.println("---------");
 
-	file1.close();
-	SD.remove(file_path);
-	File file = SD.open(file_path, FILE_WRITE);
-	new_jarr.prettyPrintTo(file);
-	file.close();
+	// file1.close();
+	// SD.remove(file_path);
+	// File file = SD.open(file_path, FILE_WRITE);
+	// new_jarr.prettyPrintTo(file);
+	// file.close();
 }
 
 bool MAKERphone::update() {
