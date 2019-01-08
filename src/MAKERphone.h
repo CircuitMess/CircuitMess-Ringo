@@ -196,8 +196,8 @@ public:
 	TFT_eSprite buf = TFT_eSprite(&tft);
 	const esp_partition_t* partition;
 	const esp_partition_t* partition2;
-	bool resolutionMode=1; //0 is native, 1 is halved
-	void setResolution(bool res = 1);
+	bool resolutionMode = 0; //0 is native, 1 is halved
+	void setResolution(bool res);
 	bool spriteCreated = 0;
 
 	void begin(bool splash = 1);
