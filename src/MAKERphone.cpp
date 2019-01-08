@@ -6340,7 +6340,7 @@ bool MAKERphone::updateMenu()
 					while(!update());
 
 					String contacts_default = "[{\"name\":\"Foobar\", \"number\":\"099123123\"}]";
-					String settings_default = "{ \"wifi\": 0, \"bluetooth\": 0, \"airplane_mode\": 0, \"brightness\": 0, \"sleep_time\": 0, \"background_color\": 0 }";
+					String settings_default = "{ \"wifi\": 0, \"bluetooth\": 0, \"airplane_mode\": 0, \"brightness\": 5, \"sleep_time\": 0, \"background_color\": 0 }";
 
 					const char contacts_path[] = "/contacts.json";
 					const char settings_path[] = "/settings.json";
