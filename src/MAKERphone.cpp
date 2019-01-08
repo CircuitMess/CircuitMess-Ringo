@@ -4686,8 +4686,8 @@ void MAKERphone::networkMenu() {
 void MAKERphone::displayMenu() {
 	display.setTextFont(1);
 	display.setTextColor(TFT_BLACK);
-	uint8_t sleepTimeBuffer = 0;
-	uint16_t sleepTimeActualBuffer = 0;
+	uint8_t sleepTimeBuffer = sleepTime;
+	uint16_t sleepTimeActualBuffer = sleepTimeActual;
 	uint8_t cursor = 0;
 	while (1)
 	{
