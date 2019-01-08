@@ -138,66 +138,27 @@ void MAKERphone::begin(bool splash) {
 }
 
 void MAKERphone::test() {
-	// Serial.println("|----------TEST----------|");
-	// const char file_path[] = "/contacts.json";
+	// Serial.println("|------Test------|");
 
-	// String input = "[{\"name\":\"Someone\", \"number\":\"123123123\"}, {\"name\":\"Me\", \"number\":\"0992010102\"}]";
-	// JsonArray& jarr = mp.jb.parseArray(input);
+	// String contacts_default = "[{\"name\":\"Foobar\", \"number\":\"099123123\"}]";
+	// String settings_default = "{ \"wifi\": 0, \"bluetooth\": 0, \"airplane_mode\": 0, \"brightness\": 0, \"sleep_time\": 0, \"background_color\": 0 }";
 
-	// for (JsonObject& elem : jarr) {
-	// 	Serial.println(elem["name"].as<char*>());
-	// 	Serial.println(elem["number"].as<char*>());
-	// }
-	// while(!SD.begin(5, SD_SCK_MHZ(8)))
-	// SD.remove(file_path);
-	// delay(1000);
-	// File file = SD.open(file_path, FILE_REWRITE);
-	// jarr.prettyPrintTo(file);
-	// file.close();
-	// delay(1000);
+	// const char contacts_path[] = "/contacts.json";
+	// const char settings_path[] = "/settings.json";
 
-	// Serial.println("Print done");
+	// JsonArray& contacts = mp.jb.parseArray(contacts_default);
+	// JsonObject& settings = mp.jb.parseObject(settings_default);
 
-	// File file1 = SD.open(file_path);
-	// JsonArray& new_jarr = mp.jb.parseArray(file1);
+	// SD.remove(contacts_path);
+	// SD.remove(settings_path);
 
-	// Serial.println("Read from .json");
-	// for (JsonObject& elem : new_jarr) {
-	// 	Serial.println(elem["name"].as<char*>());
-	// 	Serial.println(elem["number"].as<char*>());
-	// }
-	// Serial.println("---------");
+	// File contacts_file = SD.open(contacts_path, FILE_REWRITE);
+	// contacts.prettyPrintTo(contacts_file);
+	// contacts_file.close();
 
-	// JsonObject& new_cont = mp.jb.createObject();
-	// new_cont["name"] = "Foobar";
-	// new_cont["number"] = "0983171730";
-	// new_jarr.add(new_cont);
-	// JsonObject& new_cont1 = mp.jb.createObject();
-	// new_cont1["name"] = "Bar";
-	// new_cont1["number"] = "0992010102";
-	// new_jarr.add(new_cont1);
-
-	// Serial.println("Add contact");
-	// for (JsonObject& elem : new_jarr) {
-	// 	Serial.println(elem["name"].as<char*>());
-	// 	Serial.println(elem["number"].as<char*>());
-	// }
-	// Serial.println("---------");
-
-	// new_jarr.remove(0);
-
-	// Serial.println("Remove second contact");
-	// for (JsonObject& elem : new_jarr) {
-	// 	Serial.println(elem["name"].as<char*>());
-	// 	Serial.println(elem["number"].as<char*>());
-	// }
-	// Serial.println("---------");
-
-	// file1.close();
-	// SD.remove(file_path);
-	// File file = SD.open(file_path, FILE_REWRITE);
-	// new_jarr.prettyPrintTo(file);
-	// file.close();
+	// File settings_file = SD.open(settings_path, FILE_REWRITE);
+	// settings.prettyPrintTo(settings_file);
+	// settings_file.close();
 }
 
 bool MAKERphone::update() {
@@ -974,7 +935,7 @@ void MAKERphone::updateFromFS(String FilePath) {
 }
 void MAKERphone::mainMenu()
 {
-	
+
 	//	while (buttons.kpd.pin_read(BTN_A) == 0);
 	//	Serial.println("entered main menu");
 	//
@@ -1232,7 +1193,8 @@ void MAKERphone::bigIconsMainMenu() {
 		}
 
 		if (titles[index] == "Settings")
-			settingsApp();
+			if(settingsApp())
+				return;
 		if (index == -2)
 		{
 			Serial.println("pressed");
@@ -4468,7 +4430,7 @@ void MAKERphone::settingsMenuDrawCursor(uint8_t i, int32_t y, bool pressed) {
 	display.drawRect(0, y-1, display.width()-1, boxHeight+2, TFT_RED);
 	display.drawRect(1, y, display.width()-3, boxHeight, TFT_RED);
 }
-void MAKERphone::settingsApp() {
+bool MAKERphone::settingsApp() {
 	while (!update());
 	Serial.begin(115200);
 	while (1)
@@ -4487,13 +4449,15 @@ void MAKERphone::settingsApp() {
 		if (input == 4)
 			securityMenu();
 		if (input == 5)
-			updateMenu(); 
+			if(updateMenu())
+				return true;
 	}
 	applySettings();
 	display.fillScreen(TFT_BLACK);
 	display.setTextColor(TFT_WHITE);
 	if(SDinsertedFlag)
 	{
+		Serial.println("saving or some bullshit that i fucekd up");
 		saveSettingsSD(1);
 		display.setCursor(0, display.height()/2 - 16);
 		display.setTextFont(2);
@@ -4515,7 +4479,7 @@ void MAKERphone::settingsApp() {
 			update();
 		while(!update());
 	}
-
+	return false;
 }
 void MAKERphone::networkMenu() {
 	uint8_t cursor = 0;
@@ -6324,7 +6288,7 @@ void MAKERphone::timeMenu()
 	}
 
 }
-void MAKERphone::updateMenu()
+bool MAKERphone::updateMenu()
 {
 	bool blinkState = 0;
 	uint8_t pastSecond=clockSecond;
@@ -6334,7 +6298,7 @@ void MAKERphone::updateMenu()
 	char key;
 	display.setTextWrap(0);
 	display.setTextFont(2);
-	
+
 	while(1)
 	{
 		display.fillScreen(0xFD29);
@@ -6369,14 +6333,43 @@ void MAKERphone::updateMenu()
 				while(!update());
 				if(SDinsertedFlag)
 				{
-					while(!SD.begin(5, SD_SCK_MHZ(8)));
-					SD.remove("settings.json");
-					SD.remove("contacts.json");
-					SD.remove("db.json");
-					SD.remove("messages.json");
-					//TODO: Add json defaults to files
-				}
+					display.fillScreen(0xFD29);
+					display.setTextColor(TFT_BLACK);
+					display.setCursor(10, 20);
+					display.printCenter("Erasing in progress...");
+					while(!update());
 
+					String contacts_default = "[{\"name\":\"Foobar\", \"number\":\"099123123\"}]";
+					String settings_default = "{ \"wifi\": 0, \"bluetooth\": 0, \"airplane_mode\": 0, \"brightness\": 0, \"sleep_time\": 0, \"background_color\": 0 }";
+
+					const char contacts_path[] = "/contacts.json";
+					const char settings_path[] = "/settings.json";
+
+					JsonArray& contacts = mp.jb.parseArray(contacts_default);
+					JsonObject& settings = mp.jb.parseObject(settings_default);
+
+					SD.remove(contacts_path);
+					SD.remove(settings_path);
+
+					File contacts_file = SD.open(contacts_path, FILE_REWRITE);
+					contacts.prettyPrintTo(contacts_file);
+					contacts_file.close();
+
+					File settings_file = SD.open(settings_path, FILE_REWRITE);
+					settings.prettyPrintTo(settings_file);
+					settings_file.close();
+
+					wifi = settings["wifi"];
+					bt = settings["bluetooth"];
+					airplaneMode = settings["airplane_mode"];
+					brightness = settings["brightness"];
+					sleepTime = settings["sleep_time"];
+					backgroundIndex = settings["background_color"];
+
+					applySettings();
+
+					return true;
+				}
 			}
 		}
 		if(millis()-previousMillis >= 250)
@@ -6388,7 +6381,7 @@ void MAKERphone::updateMenu()
 		{
 			blinkState = 1;
 			previousMillis = millis();
-			while (!update());		
+			while (!update());
 			cursor--;
 		}
 		if (buttons.released(JOYSTICK_B) && cursor < 1)
@@ -6400,9 +6393,10 @@ void MAKERphone::updateMenu()
 		}
 		if (buttons.released(BTN_B)) //BUTTON BACK
 			break;
-		update();	
+		update();
 	}
 	while(!update());
+	return false;
 }
 void MAKERphone::saveSettings()
 {
