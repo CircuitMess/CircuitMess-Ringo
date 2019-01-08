@@ -345,7 +345,7 @@ public:
 	};
 	uint16_t firmware_version = 1;
 
-	void settingsApp();
+	bool settingsApp();
 	int8_t settingsMenu(String* title, uint8_t length);
 	void settingsMenuDrawBox(String title, uint8_t i, int32_t y);
 	void settingsMenuDrawCursor(uint8_t i, int32_t y,  bool pressed);
@@ -361,7 +361,7 @@ public:
 	void soundMenu();
 	void securityMenu();
 	void timeMenu();
-	void updateMenu();
+	bool updateMenu();
 	void applySettings();
 	void saveSettings(bool debug = false);
 	void loadSettings(bool debug = false);
