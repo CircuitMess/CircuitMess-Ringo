@@ -31,6 +31,8 @@ extern HardwareSerial Serial1;
 #include "TFT_eSPI/TFT_eSPI.h" // Graphics and font library for ST7735 driver chip
 #include <SPI.h>
 
+#include "utility/ArduinoJson.h"
+
 //Includes for SD firmware update
 //#include <SysCall.h>
 //#include <sdios.h>
@@ -109,14 +111,16 @@ extern HardwareSerial Serial1;
 #define COLS 4
 
 #define NUM_BTN 8
-
-
 #define soundPin 32
 
 #define LEDC_CHANNEL 1 // use second channel of 16 channels(started from zero)
 #define LEDC_TIMER  13 // use 13 bit precission for LEDC timer
 #define LEDC_BASE_FREQ  5000 // use 5000 Hz as a LEDC base frequency
 
+// capacity = JSON_ARRAY_SIZE(number_of_contacts) + number_of_contacts*JSON_OBJECT_SIZE(2);
+// The following size is calculated of 100 contracts and the formula is ^
+#define capacity 5208
+#define number_of_contacts 100
 
 #define smsNumber 22
 class Buttons
@@ -192,11 +196,12 @@ public:
 	TFT_eSprite buf = TFT_eSprite(&tft);
 	const esp_partition_t* partition;
 	const esp_partition_t* partition2;
-	bool resolutionMode=1; //0 is native, 1 is halved
-	void setResolution(bool res = 1);
+	bool resolutionMode = 0; //0 is native, 1 is halved
+	void setResolution(bool res);
 	bool spriteCreated = 0;
 
 	void begin(bool splash = 1);
+	void test();
 	void tone2(int pin, int freq, int duration);
 	void vibration(int duration);
 	void ledcAnalogWrite(uint8_t channel, uint32_t value, uint32_t valueMax = 255);
@@ -216,7 +221,7 @@ public:
 	void debugMode();
 	void loader();
 	void popupMenu();
-  
+
 	//SMS functions
 	uint16_t countSubstring(String string, String substring);
 	String readSerial();
@@ -231,7 +236,7 @@ public:
 	void messagesApp();
 	void composeSMS();
 	void incomingMessagePopup();
-  
+
 	void updateFromFS(String FilePath);
 
 
@@ -270,17 +275,23 @@ public:
 
 	//Contacts app
 	void contactsMenuDrawBox(String contact, String number, uint8_t i, int32_t y);
+	void contactsMenuDrawBoxSD(String name, String number, uint8_t i, int32_t y);
 	uint8_t deleteContact(String contact, String number, String id);
+	uint8_t deleteContactSD(String name, String number);
 	uint8_t newContact();
+	uint8_t newContactSD(String *name, String *number);
 	void parse_contacts();
 	void contactsMenuNewBox(uint8_t i, int32_t y);
 	void contactsMenuDrawCursor(uint8_t i, int32_t y);
 	void contactsMenuNewBoxCursor(uint8_t i, int32_t y);
 	int contactsMenu(const char* title, String* contact, String *number, uint8_t length);
+	int contactsMenuSD(JsonArray *contacts);
 	void contactsApp();
+	void contactsAppSD();
 	String readAllContacts();
 	void callNumber(String number);
 
+	StaticJsonBuffer<capacity> jb;
 
 	//Phone app
 	void phoneApp();
@@ -353,9 +364,11 @@ public:
 	void updateMenu();
 	void applySettings();
 	void saveSettings();
+	void saveSettingsSD(bool debug = false);
 	void loadSettings();
+	void loadSettingsSD(bool debug = false);
 	void wifiMenu();
-	
+
 	void listRingtones(const char * dirname, uint8_t levels);
 	void listNotifications(const char * dirname, uint8_t levels);
 
@@ -420,10 +433,6 @@ private:
 	bool clockDy, clock12h, clockpm;
 	void updateTimeGSM();
 	void updateTimeRTC();
-
-
-
-
 
 	int colorArray[19] = {
 	TFT_BLACK,
