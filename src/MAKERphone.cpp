@@ -118,20 +118,20 @@ void MAKERphone::begin(bool splash) {
 	else
 	{
 		delay(500);
-		// checkSim();
+		checkSim();
 	}
 
-	// updateTimeGSM();
-	// Serial1.println(F("AT+CMEE=2"));
-	// Serial1.println(F("AT+CLVL=100"));
-	// Serial1.println(F("AT+CRSL=100"));
-	// Serial1.println(F("AT+CMIC=0,6"));
-	// Serial1.println(F("AT+CMGF=1"));
-	// Serial1.println(F("AT+CNMI=1,1,0,0,0"));
-	// Serial1.println(F("AT+CLTS=1")); //Enable local Timestamp mode (used for syncrhonising RTC with GSM time
-	// Serial1.println(F("AT+CPMS=\"SM\",\"SM\",\"SM\""));
-	// Serial1.println(F("AT+CLCC=1"));
-	// Serial1.println(F("AT&W"));
+	updateTimeGSM();
+	Serial1.println(F("AT+CMEE=2"));
+	Serial1.println(F("AT+CLVL=100"));
+	Serial1.println(F("AT+CRSL=100"));
+	Serial1.println(F("AT+CMIC=0,6"));
+	Serial1.println(F("AT+CMGF=1"));
+	Serial1.println(F("AT+CNMI=1,1,0,0,0"));
+	Serial1.println(F("AT+CLTS=1")); //Enable local Timestamp mode (used for syncrhonising RTC with GSM time
+	Serial1.println(F("AT+CPMS=\"SM\",\"SM\",\"SM\""));
+	Serial1.println(F("AT+CLCC=1"));
+	Serial1.println(F("AT&W"));
 	//  while(1){
 	//    if(Serial1.available())
 	//      Serial.println(Serial1.read());
@@ -171,36 +171,36 @@ void MAKERphone::test() {
 	}
 	Serial.println("---------");
 
-	// JsonObject& new_cont = mp.jb.createObject();
-	// new_cont["name"] = "Foobar";
-	// new_cont["number"] = "0983171730";
-	// new_jarr.add(new_cont);
-	// JsonObject& new_cont1 = mp.jb.createObject();
-	// new_cont1["name"] = "Bar";
-	// new_cont1["number"] = "0992010102";
-	// new_jarr.add(new_cont1);
+	JsonObject& new_cont = mp.jb.createObject();
+	new_cont["name"] = "Foobar";
+	new_cont["number"] = "0983171730";
+	new_jarr.add(new_cont);
+	JsonObject& new_cont1 = mp.jb.createObject();
+	new_cont1["name"] = "Bar";
+	new_cont1["number"] = "0992010102";
+	new_jarr.add(new_cont1);
 
-	// Serial.println("Add contact");
-	// for (JsonObject& elem : new_jarr) {
-	// 	Serial.println(elem["name"].as<char*>());
-	// 	Serial.println(elem["number"].as<char*>());
-	// }
-	// Serial.println("---------");
+	Serial.println("Add contact");
+	for (JsonObject& elem : new_jarr) {
+		Serial.println(elem["name"].as<char*>());
+		Serial.println(elem["number"].as<char*>());
+	}
+	Serial.println("---------");
 
-	// new_jarr.remove(0);
+	new_jarr.remove(0);
 
-	// Serial.println("Remove second contact");
-	// for (JsonObject& elem : new_jarr) {
-	// 	Serial.println(elem["name"].as<char*>());
-	// 	Serial.println(elem["number"].as<char*>());
-	// }
-	// Serial.println("---------");
+	Serial.println("Remove second contact");
+	for (JsonObject& elem : new_jarr) {
+		Serial.println(elem["name"].as<char*>());
+		Serial.println(elem["number"].as<char*>());
+	}
+	Serial.println("---------");
 
-	// file1.close();
-	// SD.remove(file_path);
-	// File file = SD.open(file_path, FILE_WRITE);
-	// new_jarr.prettyPrintTo(file);
-	// file.close();
+	file1.close();
+	SD.remove(file_path);
+	File file = SD.open(file_path, FILE_WRITE);
+	new_jarr.prettyPrintTo(file);
+	file.close();
 }
 
 bool MAKERphone::update() {
