@@ -76,11 +76,8 @@ void MAKERphone::begin(bool splash) {
 		}
 	}
 	if(SDinsertedFlag)
-		loadSettings();
+		loadSettingsSD(1);
 	applySettings();
-
-
-
 
 	//display initialization
 	tft.init();
@@ -121,7 +118,7 @@ void MAKERphone::begin(bool splash) {
 		checkSim();
 	}
 
-	updateTimeGSM();
+	// updateTimeGSM();
 	Serial1.println(F("AT+CMEE=2"));
 	Serial1.println(F("AT+CLVL=100"));
 	Serial1.println(F("AT+CRSL=100"));
@@ -198,7 +195,7 @@ void MAKERphone::test() {
 
 	// file1.close();
 	// SD.remove(file_path);
-	// File file = SD.open(file_path, FILE_WRITE);
+	// File file = SD.open(file_path, FILE_REWRITE);
 	// new_jarr.prettyPrintTo(file);
 	// file.close();
 }
@@ -3577,8 +3574,7 @@ void MAKERphone::contactsAppSD(){
 		file.close();
 		JsonArray& jarr = mp.jb.parseArray("[{\"name\":\"foo\", \"number\":\"099\"}]");
 		delay(10);
-		SD.remove("/contacts.json");
-		File file1 = SD.open("/contacts.json", FILE_WRITE);
+		File file1 = SD.open("/contacts.json", FILE_REWRITE);
 		jarr.prettyPrintTo(file1);
 		file1.close();
 		file = SD.open("/contacts.json");
@@ -3632,8 +3628,7 @@ void MAKERphone::contactsAppSD(){
 						newContact["name"] = name;
 						newContact["number"] = number;
 						jarr.add(newContact);
-						SD.remove("/contacts.json");
-						File file = SD.open("/contacts.json", FILE_WRITE);
+						File file = SD.open("/contacts.json", FILE_REWRITE);
 						jarr.prettyPrintTo(file);
 						file.close();
 					}
@@ -3641,8 +3636,7 @@ void MAKERphone::contactsAppSD(){
 					int id = menuChoice + 1000 - 1;
 					if(deleteContactSD(jarr[id]["name"], jarr[id]["number"])){
 						jarr.remove(id);
-						SD.remove("/contacts.json");
-						File file = SD.open("/contacts.json", FILE_WRITE);
+						File file = SD.open("/contacts.json", FILE_REWRITE);
 						jarr.prettyPrintTo(file);
 						file.close();
 					}
@@ -4498,7 +4492,7 @@ void MAKERphone::settingsApp() {
 	display.setTextColor(TFT_WHITE);
 	if(SDinsertedFlag)
 	{
-		saveSettings();
+		saveSettingsSD(1);
 		display.setCursor(0, display.height()/2 - 16);
 		display.setTextFont(2);
 		display.printCenter("Settings saved!");
@@ -6386,6 +6380,82 @@ void MAKERphone::saveSettings()
 	Serial.println(readFile(path));
 	delay(5);
 }
+
+void MAKERphone::saveSettingsSD(bool debug)
+{
+	const char * path = "/settings.json";
+	Serial.println("");
+	File file = SD.open(path);
+	JsonObject& settings = mp.jb.parseObject(file);
+	file.close();
+
+	if (settings.success()) {
+		if(debug){
+			Serial.print("wifi: ");
+			Serial.println(settings["wifi"].as<bool>());
+			Serial.print("bluetooth: ");
+			Serial.println(settings["bluetooth"].as<bool>());
+			Serial.print("airplane_mode: ");
+			Serial.println(settings["airplane_mode"].as<bool>());
+			Serial.print("brightness: ");
+			Serial.println(settings["brightness"].as<int>());
+			Serial.print("sleep_time: ");
+			Serial.println(settings["sleep_time"].as<int>());
+			Serial.print("background_color: ");
+			Serial.println(settings["background_color"].as<int>());
+		}
+
+		settings["wifi"] = wifi;
+		settings["bluetooth"] = bt;
+		settings["airplane_mode"] = airplaneMode;
+		settings["brightness"] = brightness;
+		settings["sleep_time"] = sleepTime;
+		settings["background_color"] = backgroundIndex;
+
+		File file1 = SD.open(path, FILE_REWRITE);
+		settings.prettyPrintTo(file1);
+		file1.close();
+	} else {
+		Serial.println("Error saving new settings");
+	}
+}
+
+void MAKERphone::loadSettingsSD(bool debug)
+{
+	const char * path = "/settings.json";
+	Serial.println("");
+	File file = SD.open(path);
+	JsonObject& settings = mp.jb.parseObject(file);
+	file.close();
+
+	if (settings.success()) {
+		if(debug){
+			Serial.print("wifi: ");
+			Serial.println(settings["wifi"].as<bool>());
+			Serial.print("bluetooth: ");
+			Serial.println(settings["bluetooth"].as<bool>());
+			Serial.print("airplane_mode: ");
+			Serial.println(settings["airplane_mode"].as<bool>());
+			Serial.print("brightness: ");
+			Serial.println(settings["brightness"].as<int>());
+			Serial.print("sleep_time: ");
+			Serial.println(settings["sleep_time"].as<int>());
+			Serial.print("background_color: ");
+			Serial.println(settings["background_color"].as<int>());
+		}
+
+		wifi = settings["wifi"];
+		bt = settings["bluetooth"];
+		airplaneMode = settings["airplane_mode"];
+		brightness = settings["brightness"];
+		sleepTime = settings["sleep_time"];
+		backgroundIndex = settings["background_color"];
+	} else {
+		Serial.println("Error saving new settings");
+	}
+}
+
+
 void MAKERphone::applySettings()
 {
 	switch (wifi)
