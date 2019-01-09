@@ -54,7 +54,7 @@ extern HardwareSerial Serial1;
 //Fonts and sprites to use
 #include "utility/Free_Fonts.h"
 #include "utility/sprites.c"
-
+#include "utility/JPEGDecoder.h"
 
 //Setup for MP3 playback
 
@@ -271,7 +271,21 @@ public:
 	void listMP3(const char * dirname, uint8_t levels);
 	void mp3player(String songName);
 	void mediaApp();
+	int8_t mediaMenu(String* title, uint8_t length);
+	void mediaMenuDrawBox(String title, uint8_t i, int32_t y);
+	void mediaMenuDrawCursor(uint8_t i, int32_t y,  bool pressed);
 	void MDCallback(void *cbData, const char *type, bool isUnicode, const char *string);
+	String mediaItems[3] = {
+		"Music",
+		"Photo",
+		"Video",
+	};
+	String photoFiles[255];
+	void listPhotos(const char *dirname, uint8_t levels);
+	void drawJpeg(String filename, int xpos, int ypos);
+	void jpegRender(int xpos, int ypos);
+	void jpegInfo();
+	uint8_t photoCount = 0;
 
 	//Contacts app
 	void contactsMenuDrawBox(String contact, String number, uint8_t i, int32_t y);

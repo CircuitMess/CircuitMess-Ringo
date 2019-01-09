@@ -89,7 +89,6 @@ void MAKERphone::begin(bool splash) {
 	display.setTextWrap(0);             //setRotation(1);
 	display.setTextSize(1); // landscape
 
-	buf.setColorDepth(8); // Set colour depth of Sprite to 8 (or 16) bits
 	buf.createSprite(BUF2WIDTH, BUF2HEIGHT); // Create the sprite and clear background to black
 	buf.setTextSize(1);
 
@@ -4018,7 +4017,7 @@ int16_t MAKERphone::mp3Menu(const char* title, String* items, uint8_t length) {
 
 }
 void MAKERphone::listMP3(const char * dirname, uint8_t levels) {
-	/*mp3Count = 0;
+	mp3Count = 0;
 	Serial.begin(115200);
 	Serial.printf("Listing directory: %s\n", dirname);
 	File root = SD.open(dirname);
@@ -4034,7 +4033,10 @@ void MAKERphone::listMP3(const char * dirname, uint8_t levels) {
 	uint8_t start = 0;
 	File file = root.openNextFile();
 	while (file) {
-		String Name = file.name();
+		char temp[50];
+		file.getName(temp,  50);
+		String Name(temp);
+		Serial.println(Name);
 		if (Name.endsWith(F(".MP3")) || Name.endsWith(F(".mp3")))
 		{
 			Serial.print(counter);
@@ -4046,7 +4048,41 @@ void MAKERphone::listMP3(const char * dirname, uint8_t levels) {
 			counter++;
 		}
 		file = root.openNextFile();
-	}*/
+	}
+}
+void MAKERphone::listPhotos(const char * dirname, uint8_t levels) {
+	photoCount = 0;
+	Serial.begin(115200);
+	Serial.printf("Listing directory: %s\n", dirname);
+	File root = SD.open(dirname);
+	if (!root) {
+		Serial.println("Failed to open directory");
+		return;
+	}
+	if (!root.isDirectory()) {
+		Serial.println("Not a directory");
+		return;
+	}
+	int counter = 1;
+	uint8_t start = 0;
+	File file = root.openNextFile();
+	while (file) {
+		char temp[50];
+		file.getName(temp,  50);
+		String Name(temp);
+		Serial.println(Name);
+		if (Name.endsWith(F(".jpeg")) || Name.endsWith(F(".JPEG")) || Name.endsWith(F(".jpg")) || Name.endsWith(F(".JPG")))
+		{
+			Serial.print(counter);
+			Serial.print(".   ");
+			Serial.println(Name);
+			photoFiles[counter - 1] = Name;
+			Serial.println(Name);
+			photoCount++;
+			counter++;
+		}
+		file = root.openNextFile();
+	}
 }
 void MAKERphone::mp3player(String songName) {
 	/* Serial.begin(115200);
@@ -4157,17 +4193,291 @@ void MAKERphone::mp3player(String songName) {
 	} */
 }
 void MAKERphone::mediaApp() {
-	/* if (!SD.begin(5, SD_SCK_MHZ(8)))
-		Serial.println("SD card error");
-	listMP3(SD, "/", 0);
-	while (1)
+	while(1)
 	{
-		int16_t index = mp3Menu("Select file to play:", mp3Files, mp3Count);
-		if (index == -1)
+		int8_t input = mediaMenu(mediaItems, 3);
+
+		if(input == 0)
+		{
+			if (!SD.begin(5, SD_SCK_MHZ(8)))
+				Serial.println("SD card error");
+			listMP3("/", 1);
+			while (1)
+			{
+				int16_t index = mp3Menu("Select file to play:", mp3Files, mp3Count);
+				if (index == -1)
+					break;
+				display.fillScreen(TFT_LIGHTGREY);
+				mp3player(mp3Files[index]);
+			} 
+		}
+		if(input == 1)
+		{
+			while (!SD.begin(5, SD_SCK_MHZ(8)))
+				Serial.println("SD card error");
+			listPhotos("/", 0);
+			while (1)
+			{
+				int16_t index = gui.menu("Select photo to open:", photoFiles, photoCount);
+				if (index == -1)
+					break;
+				Serial.println(index);
+				drawJpeg(photoFiles[index], 0, 0);
+				while(!buttons.released(BTN_A))
+					update();
+			} 
+		}
+	}
+}
+void MAKERphone::drawJpeg(String filename, int xpos, int ypos) {
+
+  Serial.println("===========================");
+  Serial.print("Drawing file: "); Serial.println(filename);
+  Serial.println("===========================");
+
+  // Open the named file (the Jpeg decoder library will close it after rendering image)
+  File jpegFile = SD.open( filename, FILE_READ);    // File handle reference for SPIFFS
+  //  File jpegFile = SD.open( filename, FILE_READ);  // or, file handle reference for SD library
+
+  if ( !jpegFile ) {
+    Serial.print("ERROR: File \""); Serial.print(filename); Serial.println ("\" not found!");
+    return;
+  }
+
+  // Use one of the three following methods to initialise the decoder:
+  //boolean decoded = JpegDec.decodeFsFile(jpegFile); // Pass a SPIFFS file handle to the decoder,
+  //boolean decoded = JpegDec.decodeSdFile(jpegFile); // or pass the SD file handle to the decoder,
+  boolean decoded = JpegDec.decodeSdFile(jpegFile);  // or pass the filename (leading / distinguishes SPIFFS files)
+  // Note: the filename can be a String or character array type
+  if (decoded) {
+    // print information about the image to the serial port
+    jpegInfo();
+
+    // render the image onto the screen at given coordinates
+    jpegRender(xpos, ypos);
+  }
+  else {
+    Serial.println("Jpeg file format not supported!");
+  }
+}
+void MAKERphone::jpegRender(int xpos, int ypos) {
+	Serial.println("JPEG render");
+	delay(5);
+
+	// retrieve infomration about the image
+	uint16_t *pImg;
+	uint16_t mcu_w = JpegDec.MCUWidth;
+	uint16_t mcu_h = JpegDec.MCUHeight;
+	uint32_t max_x = JpegDec.width;
+	uint32_t max_y = JpegDec.height;
+
+	// Jpeg images are drawn as a set of image block (tiles) called Minimum Coding Units (MCUs)
+	// Typically these MCUs are 16x16 pixel blocks
+	// Determine the width and height of the right and bottom edge image blocks
+	Serial.println("Here");
+	delay(5);
+	uint32_t min_w = min(mcu_w, max_x % mcu_w);
+	
+	uint32_t min_h = min(mcu_h, max_y % mcu_h);
+
+	// save the current image block size
+	uint32_t win_w = mcu_w;
+	uint32_t win_h = mcu_h;
+
+	// record the current time so we can measure how long it takes to draw an image
+	uint32_t drawTime = millis();
+
+	// save the coordinate of the right and bottom edges to assist image cropping
+	// to the screen size
+	max_x += xpos;
+	max_y += ypos;
+	
+	// read each MCU block until there are no more
+	while (JpegDec.readSwappedBytes())
+	{ // Swap byte order so the SPI buffer can be used
+
+		// save a pointer to the image block
+		pImg = JpegDec.pImage;
+
+		// calculate where the image block should be drawn on the screen
+		int mcu_x = JpegDec.MCUx * mcu_w + xpos; // Calculate coordinates of top left corner of current MCU
+		int mcu_y = JpegDec.MCUy * mcu_h + ypos;
+
+		// check if the image block size needs to be changed for the right edge
+		if (mcu_x + mcu_w <= max_x)
+			win_w = mcu_w;
+		else
+			win_w = min_w;
+
+		// check if the image block size needs to be changed for the bottom edge
+		if (mcu_y + mcu_h <= max_y)
+			win_h = mcu_h;
+		else
+			win_h = min_h;
+
+		// copy pixels into a contiguous block
+		if (win_w != mcu_w)
+		{
+			uint16_t *cImg;
+			int p = 0;
+			cImg = pImg + win_w;
+			for (int h = 1; h < win_h; h++)
+			{
+				p += mcu_w;
+				for (int w = 0; w < win_w; w++)
+				{
+					*cImg = *(pImg + w + p);
+					cImg++;
+				}
+			}
+		}
+
+		// draw image MCU block only if it will fit on the screen
+		if ((mcu_x + win_w) <= display.width() && (mcu_y + win_h) <= display.height())
+		{
+			display.setSwapBytes(1);
+			display.pushImage(mcu_x, mcu_y, win_w, win_h, pImg);
+		}
+
+		else if ((mcu_y + win_h) >= display.height())
+			JpegDec.abort();
+
+  }
+
+  // calculate how long it took to draw the image
+  drawTime = millis() - drawTime; // Calculate the time it took
+
+  // print the results to the serial port
+  Serial.print  ("Total render time was    : "); Serial.print(drawTime); Serial.println(" ms");
+  Serial.println("=====================================");
+
+}
+void MAKERphone::jpegInfo() {
+
+  Serial.println("===============");
+  Serial.println("JPEG image info");
+  Serial.println("===============");
+  Serial.print  ("Width      :"); Serial.println(JpegDec.width);
+  Serial.print  ("Height     :"); Serial.println(JpegDec.height);
+  Serial.print  ("Components :"); Serial.println(JpegDec.comps);
+  Serial.print  ("MCU / row  :"); Serial.println(JpegDec.MCUSPerRow);
+  Serial.print  ("MCU / col  :"); Serial.println(JpegDec.MCUSPerCol);
+  Serial.print  ("Scan type  :"); Serial.println(JpegDec.scanType);
+  Serial.print  ("MCU width  :"); Serial.println(JpegDec.MCUWidth);
+  Serial.print  ("MCU height :"); Serial.println(JpegDec.MCUHeight);
+  Serial.println("===============");
+  Serial.println("");
+}
+int8_t MAKERphone::mediaMenu(String* title, uint8_t length) {
+	bool pressed = 0;
+	uint8_t cursor = 0;
+	int32_t cameraY = 0;
+	int32_t cameraY_actual = 0;
+	dataRefreshFlag = 0;
+
+	uint8_t boxHeight;
+	boxHeight = 40; //actually 2 less than that
+	while (1) {
+		while (!update());
+		display.fillScreen(TFT_BLACK);
+		display.setCursor(0, 0);
+		cameraY_actual = (cameraY_actual + cameraY) / 2;
+		if (cameraY_actual - cameraY == 1) {
+			cameraY_actual = cameraY;
+		}
+
+		for (uint8_t i = 0; i < length; i++) {
+			mediaMenuDrawBox(title[i], i, cameraY_actual);
+		}
+		mediaMenuDrawCursor(cursor, cameraY_actual, pressed);
+
+		if (buttons.kpd.pin_read(JOYSTICK_B) == 1 && buttons.kpd.pin_read(JOYSTICK_D) == 1)
+			pressed = 0;
+
+		if (buttons.released(BTN_A)) {   //BUTTON CONFIRM
+
+			while (!update());// Exit when pressed
 			break;
-		display.fillScreen(TFT_LIGHTGREY);
-		mp3player(mp3Files[index]);
-	} */
+		}
+
+		if (buttons.released(JOYSTICK_D)) {  //BUTTON UP
+			if (cursor == 0) {
+				cursor = length - 1;
+				if (length > 6) {
+					cameraY = -(cursor - 2) * boxHeight;
+				}
+			}
+			else {
+				cursor--;
+				if (cursor > 0 && (cursor * boxHeight + cameraY + settingsMenuYOffset) < boxHeight) {
+					cameraY += 15;
+				}
+			}
+			pressed = 1;
+		}
+
+		if (buttons.released(JOYSTICK_B)) { //BUTTON DOWN
+			cursor++;
+			if ((cursor * boxHeight + cameraY + settingsMenuYOffset) > 128) {
+				cameraY -= boxHeight;
+			}
+			if (cursor >= length) {
+				cursor = 0;
+				cameraY = 0;
+
+			}
+			pressed = 1;
+		}
+
+
+		if (buttons.released(BTN_B) == 1) //BUTTON BACK
+		{
+			return -1;
+		}
+	}
+
+	return cursor;
+
+}
+void MAKERphone::mediaMenuDrawBox(String title, uint8_t i, int32_t y) {
+	uint8_t scale;
+	uint8_t boxHeight;
+	scale = 2;
+	boxHeight = 40;
+	y += i * boxHeight + settingsMenuYOffset;
+	if (y < 0 || y > display.width()) {
+		return;
+	}
+
+
+	if (title == "Music") //red
+	{
+		display.fillRect(2, y + 1, display.width() - 4, boxHeight-2, TFT_DARKGREY);
+	}
+	if (title == "Photo") //green
+	{
+		display.fillRect(2, y + 1, display.width() - 4, boxHeight-2, TFT_DARKGREY);
+	}
+	if (title == "Video") //yellow
+	{
+		display.fillRect(2, y + 1, display.width() - 4, boxHeight-2, TFT_DARKGREY);
+	}
+	display.setTextColor(TFT_BLACK);
+	display.setTextSize(2);
+	display.setTextFont(2);
+	display.drawString(title, 60, y +  5);
+	display.setTextColor(TFT_WHITE);
+	display.setTextSize(1);
+}
+void MAKERphone::mediaMenuDrawCursor(uint8_t i, int32_t y, bool pressed) {
+	uint8_t boxHeight;
+	boxHeight = 40;
+	if (millis() % 500 <= 250 && pressed == 0) {
+		return;
+	}
+	y += i * boxHeight + settingsMenuYOffset;
+	display.drawRect(0, y-1, display.width()-1, boxHeight+2, TFT_RED);
+	display.drawRect(1, y, display.width()-3, boxHeight, TFT_RED);
 }
 void MAKERphone::MDCallback(void *cbData, const char *type, bool isUnicode, const char *string) {
 	/* (void)cbData;
@@ -4187,6 +4497,7 @@ void MAKERphone::MDCallback(void *cbData, const char *type, bool isUnicode, cons
 	Serial.printf("'\n");
 	Serial.flush();
 */}
+
 
 //Settings app
 int8_t MAKERphone::settingsMenu(String* title, uint8_t length) {
@@ -4381,6 +4692,7 @@ bool MAKERphone::settingsApp() {
 		while(!update());
 	}
 	return false;
+	}
 }
 void MAKERphone::networkMenu() {
 	uint8_t cursor = 0;
@@ -4690,7 +5002,7 @@ void MAKERphone::displayMenu() {
 		if (buttons.released(JOYSTICK_D))
 		{
 			while (!update());
-			if (cursor == 0)
+  		if (cursor == 0)
 				cursor = 2;
 			else
 				cursor--;
@@ -6362,7 +6674,7 @@ void MAKERphone::loadSettings(bool debug)
 		sleepTime = settings["sleep_time"];
 		backgroundIndex = settings["background_color"];
 	} else {
-		Serial.println("Error saving new settings");
+		Serial.println("Error loading new settings");
 	}
 }
 
@@ -6667,9 +6979,9 @@ int8_t GUI::menu(const char* title, String* items, uint8_t length) {
 		}
 		mp.display.print(title);
 
-		if (mp.buttons.kpd.pin_read(BTN_A) == 0) {   //BUTTON CONFIRM
+		if (mp.buttons.released(BTN_A)) {   //BUTTON CONFIRM
 
-			while (mp.buttons.kpd.pin_read(BTN_A) == 0);// Exit when pressed
+			while (!mp.update());// Exit when pressed
 			break;
 		}
 		if (mp.buttons.kpd.pin_read(BTN_B) == 0) {   //BUTTON BACK
