@@ -4211,7 +4211,7 @@ void MAKERphone::mediaApp() {
 				mp3player(mp3Files[index]);
 			} 
 		}
-		if(input == 1)
+		else if(input == 1)
 		{
 			while (!SD.begin(5, SD_SCK_MHZ(8)))
 				Serial.println("SD card error");
@@ -4223,10 +4223,13 @@ void MAKERphone::mediaApp() {
 					break;
 				Serial.println(index);
 				drawJpeg(photoFiles[index], 0, 0);
-				while(!buttons.released(BTN_A))
+				while(!buttons.released(BTN_A) && !buttons.released(BTN_B))
 					update();
 			} 
+			while(!update());
 		}
+		else if(input == -1)
+			break;
 	}
 }
 void MAKERphone::drawJpeg(String filename, int xpos, int ypos) {
@@ -4664,6 +4667,8 @@ bool MAKERphone::settingsApp() {
 		if (input == 5)
 			if(updateMenu())
 				return true;
+	}
+	
 
 	applySettings();
 	display.fillScreen(TFT_BLACK);
@@ -4692,7 +4697,7 @@ bool MAKERphone::settingsApp() {
 		while(!update());
 	}
 	return false;
-	}
+	
 }
 void MAKERphone::networkMenu() {
 	uint8_t cursor = 0;
@@ -4834,7 +4839,7 @@ void MAKERphone::networkMenu() {
 				airplaneMode = !airplaneMode;
 		}
 
-		if (buttons.kpd.pin_read(JOYSTICK_D) == 0)
+		if (buttons.kpd.pin_read(JOYSTICK_D) == 0) 
 		{
 			while (buttons.kpd.pin_read(JOYSTICK_D) == 0);
 			if (cursor == 0)
@@ -4852,7 +4857,11 @@ void MAKERphone::networkMenu() {
 
 		}
 		if (buttons.released(BTN_B)) //BUTTON BACK
+		{
+			while(!update());
 			break;
+		}
+			
 
 		update();
 	}
