@@ -183,6 +183,7 @@ bool MAKERphone::update() {
 	//		//handleCall();
 	//	}
 	//}
+	 DacAudio.FillBuffer(); // Fill the sound buffer with data
 	char c;
 	uint16_t refreshInterval = 3000;
 	if(!spriteCreated)

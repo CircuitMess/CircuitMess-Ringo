@@ -30,6 +30,7 @@ Authors:
 extern HardwareSerial Serial1;
 #include "TFT_eSPI/TFT_eSPI.h" // Graphics and font library for ST7735 driver chip
 #include <SPI.h>
+#include "utility/XT_DAC_Audio.h"
 
 #include "utility/ArduinoJson.h"
 
@@ -159,37 +160,42 @@ public:
 
 };
 class GUI {
-public:
-	//main menu GUI
-  uint8_t drawCursor(uint8_t xoffset, uint8_t yoffset, uint8_t xelements, uint8_t yelements, uint8_t xstart, uint8_t ystart);
-  int8_t drawBigIconsCursor(uint8_t xoffset, uint8_t yoffset, uint8_t xelements, uint8_t yelements, uint8_t xstart, uint8_t ystart);
-  //generic menu GUI
-  void menuDrawBox(String text, uint8_t i, int32_t y);
-  void menuDrawCursor(uint8_t i, int32_t y);
-  int8_t menu(const char* title, String* items, uint8_t length);
-  //lock screen notifications
-  void drawNotificationWindow(uint8_t x, uint8_t y, uint8_t width, uint8_t height, String text);
-  //popup GUI
-  void popup(String text, uint8_t duration);
-  void updatePopup();
-  String popupText;
-  uint8_t popupTimeLeft;
-  uint8_t popupTotalTime;
+	public:
+		//main menu GUI
+	uint8_t drawCursor(uint8_t xoffset, uint8_t yoffset, uint8_t xelements, uint8_t yelements, uint8_t xstart, uint8_t ystart);
+	int8_t drawBigIconsCursor(uint8_t xoffset, uint8_t yoffset, uint8_t xelements, uint8_t yelements, uint8_t xstart, uint8_t ystart);
+	//generic menu GUI
+	void menuDrawBox(String text, uint8_t i, int32_t y);
+	void menuDrawCursor(uint8_t i, int32_t y);
+	int8_t menu(const char* title, String* items, uint8_t length);
+	//lock screen notifications
+	void drawNotificationWindow(uint8_t x, uint8_t y, uint8_t width, uint8_t height, String text); 
+	//popup GUI
+	void popup(String text, uint8_t duration);
+	void updatePopup();
+	String popupText;
+	uint8_t popupTimeLeft;
+	uint8_t popupTotalTime;
 
-private:
-  uint8_t cursorX = 0;
-  uint8_t cursorY = 0;
-  bool cursorState = 1;
-  uint8_t index;
-  bool previousButtonState = 0;
-  uint8_t cursor = 0;
-  int32_t cameraY = 0;
-  int32_t cameraY_actual = 0;
+	private:
+	uint8_t cursorX = 0;
+	uint8_t cursorY = 0;
+	bool cursorState = 1;
+	uint8_t index;
+	bool previousButtonState = 0;
+	uint8_t cursor = 0;
+	int32_t cameraY = 0;
+	int32_t cameraY_actual = 0;
 };
 
 class MAKERphone:public Buttons, public GUI
 {
 public:
+	XT_DAC_Audio_Class DacAudio = XT_DAC_Audio_Class(25,0);    // Create the main player class object. 
+                                      // Use GPIO 25, one of the 2 DAC pins and timer 0
+                                      
+	XT_Wav_Class StarWars = XT_Wav_Class(StarWarsWav);   // create an object of type XT_Wav_Class that is used by 
+                                      // the dac audio class (above), passing wav data as parameter.
 	SdFat SD;
 	TFT_eSPI tft = TFT_eSPI();  // Invoke library, pins defined in User_Setup.h
 	TFT_eSprite display = TFT_eSprite(&tft);
