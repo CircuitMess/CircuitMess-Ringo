@@ -160,7 +160,7 @@ void MAKERphone::test() {
 	// settings_file.close();
 }
 
-bool MAKERphone::update() {
+bool MAKERphone::update(AudioGeneratorMP3 *mp3) {
 	// bool pressed = 0;
 	//if (digitalRead(INTERRUPT_PIN) == 0) //message is received or incoming call
 	//{
@@ -183,7 +183,7 @@ bool MAKERphone::update() {
 	//		//handleCall();
 	//	}
 	//}
-	 DacAudio.FillBuffer(); // Fill the sound buffer with data
+	 //DacAudio.FillBuffer(); // Fill the sound buffer with data
 	char c;
 	uint16_t refreshInterval = 3000;
 	if(!spriteCreated)
@@ -317,14 +317,16 @@ bool MAKERphone::update() {
 		}
 	}
 	///////////////////////////////////////////////
+	if(mp3 != NULL)
+		mp3->loop();
 	if (millis() - lastFrameCount2 >= frameSpeed) {
 		lastFrameCount2 = millis();
 		if(resolutionMode == 0) //native res mode
 			display.pushSprite(0, 0);
-
 		else//halved res mode
 			buf.pushSprite(0,0);
-
+		if(mp3 != NULL)
+			mp3->loop();
 		buttons.update();
 		gui.updatePopup();
 		FastLED.show();

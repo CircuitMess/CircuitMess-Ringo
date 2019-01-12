@@ -30,7 +30,7 @@ Authors:
 extern HardwareSerial Serial1;
 #include "TFT_eSPI/TFT_eSPI.h" // Graphics and font library for ST7735 driver chip
 #include <SPI.h>
-#include "utility/XT_DAC_Audio.h"
+// #include "utility/XT_DAC_Audio.h"
 
 #include "utility/ArduinoJson.h"
 
@@ -61,7 +61,7 @@ extern HardwareSerial Serial1;
 
 //#include <AudioFileSource.h>
 //#include <AudioFileSourceID3.h>
-//#include <AudioGeneratorMP3.h>
+#include <AudioGeneratorMP3.h>
 //#include <AudioOutputI2S.h>
 //#include <AudioFileSourceSD.h>
 //#include <AudioFileSourceBuffer.h>
@@ -191,10 +191,10 @@ class GUI {
 class MAKERphone:public Buttons, public GUI
 {
 public:
-	XT_DAC_Audio_Class DacAudio = XT_DAC_Audio_Class(25,0);    // Create the main player class object. 
-                                      // Use GPIO 25, one of the 2 DAC pins and timer 0
+	// XT_DAC_Audio_Class DacAudio = XT_DAC_Audio_Class(25,0);    // Create the main player class object. 
+    //                                   // Use GPIO 25, one of the 2 DAC pins and timer 0
                                       
-	XT_Wav_Class StarWars = XT_Wav_Class(StarWarsWav);   // create an object of type XT_Wav_Class that is used by 
+	// XT_Wav_Class StarWars = XT_Wav_Class(StarWarsWav);   // create an object of type XT_Wav_Class that is used by 
                                       // the dac audio class (above), passing wav data as parameter.
 	SdFat SD;
 	TFT_eSPI tft = TFT_eSPI();  // Invoke library, pins defined in User_Setup.h
@@ -211,7 +211,7 @@ public:
 	void tone2(int pin, int freq, int duration);
 	void vibration(int duration);
 	void ledcAnalogWrite(uint8_t channel, uint32_t value, uint32_t valueMax = 255);
-	bool update();
+	bool update(AudioGeneratorMP3 *mp3 = NULL);
 	void splashScreen();
 	void lockScreen();
 	void mainMenu();
