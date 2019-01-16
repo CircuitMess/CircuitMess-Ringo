@@ -27,6 +27,7 @@ void MAKERphone::begin(bool splash) {
 	digitalWrite(SIM800_DTR, 0);
 	pinMode(INTERRUPT_PIN, INPUT_PULLUP);
 	esp_sleep_enable_ext0_wakeup(GPIO_NUM_35, 0); //1 = High, 0 = Low
+	
 	//Initialize and start with the NeoPixels
 	FastLED.addLeds<NEOPIXEL, 33>(leds, 8);
 	Serial1.begin(9600, SERIAL_8N1, 17, 16);
@@ -75,10 +76,12 @@ void MAKERphone::begin(bool splash) {
 			break;
 		}
 	}
+	
 	if(SDinsertedFlag)
 		loadSettings(1);
 	applySettings();
-
+	audio.begin();
+	
 	//display initialization
 	tft.init();
 
@@ -91,7 +94,6 @@ void MAKERphone::begin(bool splash) {
 
 	buf.createSprite(BUF2WIDTH, BUF2HEIGHT); // Create the sprite and clear background to black
 	buf.setTextSize(1);
-
 	if (splash == 1)
 	{
 		display.fillScreen(TFT_RED);
@@ -101,7 +103,7 @@ void MAKERphone::begin(bool splash) {
 		display.fillScreen(TFT_BLACK);
 		while (!update());
 	}
-
+	
 	ledcAnalogWrite(LEDC_CHANNEL, 255);
 	for (uint8_t i = 255; i > actualBrightness; i--) {
 		ledcAnalogWrite(LEDC_CHANNEL, i);
@@ -116,7 +118,6 @@ void MAKERphone::begin(bool splash) {
 		delay(500);
 		checkSim();
 	}
-
 	// updateTimeGSM();
 	Serial1.println(F("AT+CMEE=2"));
 	Serial1.println(F("AT+CLVL=100"));
@@ -134,6 +135,7 @@ void MAKERphone::begin(bool splash) {
 	//  }
 	//Serial1.println(F("AT&W")); //Save  all settings in SIM's non-volatile memory
 	Serial.println("Serial1 up and running...");
+	
 }
 
 void MAKERphone::test() {
@@ -160,7 +162,7 @@ void MAKERphone::test() {
 	// settings_file.close();
 }
 
-bool MAKERphone::update(AudioGeneratorMP3 *mp3) {
+bool MAKERphone::update() {
 	// bool pressed = 0;
 	//if (digitalRead(INTERRUPT_PIN) == 0) //message is received or incoming call
 	//{
@@ -317,22 +319,37 @@ bool MAKERphone::update(AudioGeneratorMP3 *mp3) {
 		}
 	}
 	///////////////////////////////////////////////
-	if(mp3 != NULL)
-		mp3->loop();
+	if(millis()-audioMillis >= 29 + 40 && (audio.wavrunning == 1 || audio.sfxrunning == 1)) //29 - sample execution time, 40 - interval time
+	{
+		if(audio.wavrunning)
+			audio.wav->loop();
+		if(audio.sfxrunning)
+			audio.sfx->loop();
+		audioMillis = millis();
+	}
+	Serial.println(audio.mp3running);
+	if(audio.mp3running == 1)
+	{
+		audio.mp3->loop();
+	}
+
 	if (millis() - lastFrameCount2 >= frameSpeed) {
 		lastFrameCount2 = millis();
-		if(resolutionMode == 0) //native res mode
-			display.pushSprite(0, 0);
-		else//halved res mode
-			buf.pushSprite(0,0);
-		if(mp3 != NULL)
-			mp3->loop();
+		if(audio.mp3running == 0)
+		{
+			if(resolutionMode == 0) //native res mode
+				display.pushSprite(0, 0);
+			else//halved res mode
+				buf.pushSprite(0,0);
+		}
 		buttons.update();
 		gui.updatePopup();
 		FastLED.show();
 		delay(1);
 
 		FastLED.clear();
+
+		
 		return true;
 	}
 	else
@@ -4088,112 +4105,105 @@ void MAKERphone::listPhotos(const char * dirname, uint8_t levels) {
 	}
 }
 void MAKERphone::mp3player(String songName) {
-	/* Serial.begin(115200);
-	char test[songName.length() + 1];
-	songName.toCharArray(test, songName.length() + 1);
+	// uint8_t scale;
+	// if(resolutionMode)
+	// 	scale = 1;
+	// else
+	// 	scale = 2;
+	//  Serial.begin(115200);
+	// char test[songName.length() + 1];
+	// songName.toCharArray(test, songName.length() + 1);
 
-	Serial.println(test);
+	// Serial.println(test);
 
-	uint8_t x = 1;
-	uint8_t y = 53;
-	int8_t i = 0;
+	// uint8_t x = 1;
+	// uint8_t y = 53;
+	// int8_t i = 0;
 
-	bool playState = 1;
-	long elapsedMillis = millis();
+	// bool playState = 1;
+	// long elapsedMillis = millis();
 
-	file = new AudioFileSourceSD(test);
-	//buff = new AudioFileSourceBuffer(file, 4056);
-	id3 = new AudioFileSourceID3(file);
-	//id3->RegisterMetadataCB(MDCallback, (void*)"ID3TAG");
-	out = new AudioOutputI2S();
-	mp3 = new AudioGeneratorMP3();
-	mp3->begin(id3, out);
-	Serial.println("Audio files setup complete");
-	//out->SetRate(44100);
+	// file = new AudioFileSourceSD(test);
+	// buff = new AudioFileSourceBuffer(file, 4056);
+	// //id3->RegisterMetadataCB(MDCallback, (void*)"ID3TAG");
+	// out = new AudioOutputI2S();
+	// mp3 = new AudioGeneratorMP3();
+	// mp3->begin(file, out);
+	// Serial.println("Audio files setup complete");
+	// out->SetRate(22050);
 
-	while (1) {
-		display.fillScreen(TFT_LIGHTGREY);
+	// while (1) {
+	// 	display.fillScreen(TFT_LIGHTGREY);
 
-		//draw bitmaps
-		display.drawBitmap(2, 20, previous);
-		display.drawBitmap(65, 20, next);
-		display.drawBitmap(2, 37, repeatSprite);
-		display.drawBitmap(66, 37, shuffle);
-		display.drawBitmap(37, 19, play);
-		display.drawBitmap(17, 2, cover2);
-
-
-
-		//prepare for text printing
-		display.setTextColor(TFT_BLACK);
-		display.setTextSize(1);
-		display.setTextWrap(0);
-
-		//drawtext
-		display.setCursor(x - i, y + 5);
-		display.print(songName);
-		display.fillRect(0, y, x - 1, 5, TFT_LIGHTGREY);
-		display.fillRect(BUFWIDTH, y, BUFWIDTH - x - width, 5, TFT_LIGHTGREY);
-		if (millis() - elapsedMillis > 200) {
-			i += 3;
-			elapsedMillis = millis();
-			update();
-
-		}
-		if (i >= display.textWidth(songName) + 3) {
-			i = -80;
-		}
+	// 	//draw bitmaps
+	// 	display.drawBitmap(2, 20, previous);
+	// 	display.drawBitmap(65, 20, next);
+	// 	display.drawBitmap(2, 37, repeatSprite);
+	// 	display.drawBitmap(66, 37, shuffle);
+	// 	display.drawBitmap(37, 19, play);
+	// 	display.drawBitmap(17, 2, cover2);
 
 
-		if (buttons.kpd.pin_read(BTN_B) == 0)
-		{
 
-			mp3->stop();
-			while (buttons.kpd.pin_read(BTN_B) == 0);
-			break;
-		}
+	// 	//prepare for text printing
+	// 	display.setTextColor(TFT_BLACK);
+	// 	display.setTextSize(1);
+	// 	display.setTextWrap(0);
 
-		if (buttons.kpd.pin_read(BTN_A) == 0) //PLAY/PAUSE BUTTON
-		{
-			while (buttons.kpd.pin_read(BTN_A) == 0);
-			playState = !playState;
-		}
+	// 	//drawtext
+	// 	display.setCursor(x - i, y + 5);
+	// 	display.print(songName);
+	// 	display.fillRect(0, y, x - 1, 5, TFT_LIGHTGREY);
+	// 	display.fillRect(BUFWIDTH, y, BUFWIDTH - x - width, 5, TFT_LIGHTGREY);
+	// 	if (millis() - elapsedMillis > 200) {
+	// 		i += 3;
+	// 		elapsedMillis = millis();
+			
 
-		if (buttons.kpd.pin_read(JOYSTICK_D) == 0) //DOWN
-		{
-			while (buttons.kpd.pin_read(JOYSTICK_D) == 0);
+	// 	}
+	// 	if (i >= display.textWidth(songName) + 3) {
+	// 		i = -80;
+	// 	}
 
-			volume--;
-			Serial.print("volume:");
-			Serial.print(volume);
-			buttons.kpd.writeVolumeRight(volume);
-		}
 
-		if (buttons.kpd.pin_read(JOYSTICK_B) == 0) //UP
-		{
-			while (buttons.kpd.pin_read(JOYSTICK_B) == 0);
+	// 	if (buttons.kpd.pin_read(BTN_B) == 0)
+	// 	{
 
-			volume++;
-			Serial.print("volume:");
-			Serial.print(volume);
-			buttons.kpd.writeVolumeRight(volume);
-		}
+	// 		mp3->stop();
+	// 		while (buttons.kpd.pin_read(BTN_B) == 0);
+	// 		break;
+	// 	}
 
-		if (playState == 1)
-		{
-			if (mp3->isRunning()) {
-				if (!mp3->loop())
-					mp3->stop();
-			}
-			else {
-				display.fillScreen(TFT_BLACK);
-				display.setCursor(0, 5);
-				display.printf("MP3 done\n");
-			}
-		}
-		else
-			out->stop();
-	} */
+	// 	if (buttons.kpd.pin_read(BTN_A) == 0) //PLAY/PAUSE BUTTON
+	// 	{
+	// 		while (buttons.kpd.pin_read(BTN_A) == 0);
+	// 		playState = !playState;
+	// 	}
+
+	// 	if (buttons.kpd.pin_read(JOYSTICK_D) == 0) //DOWN
+	// 	{
+	// 		while (buttons.kpd.pin_read(JOYSTICK_D) == 0);
+
+	// 		volume--;
+	// 		Serial.print("volume:");
+	// 		Serial.print(volume);
+	// 		buttons.kpd.writeVolumeRight(volume);
+	// 	}
+
+	// 	if (buttons.kpd.pin_read(JOYSTICK_B) == 0) //UP
+	// 	{
+	// 		while (buttons.kpd.pin_read(JOYSTICK_B) == 0);
+
+	// 		volume++;
+	// 		Serial.print("volume:");
+	// 		Serial.print(volume);
+	// 		buttons.kpd.writeVolumeRight(volume);
+	// 	}
+
+	// 	if (!playState)
+	// 		out->stop();
+	// 	//update(mp3);	
+	// } 
 }
 void MAKERphone::mediaApp() {
 	while(1)
@@ -4207,7 +4217,7 @@ void MAKERphone::mediaApp() {
 			listMP3("/", 1);
 			while (1)
 			{
-				int16_t index = mp3Menu("Select file to play:", mp3Files, mp3Count);
+				int16_t index = mp3Menu("Select song to play:", mp3Files, mp3Count);
 				if (index == -1)
 					break;
 				display.fillScreen(TFT_LIGHTGREY);

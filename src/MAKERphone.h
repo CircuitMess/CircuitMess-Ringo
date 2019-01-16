@@ -31,7 +31,7 @@ extern HardwareSerial Serial1;
 #include "TFT_eSPI/TFT_eSPI.h" // Graphics and font library for ST7735 driver chip
 #include <SPI.h>
 // #include "utility/XT_DAC_Audio.h"
-
+#include "utility/Audio/Audio.h"
 #include "utility/ArduinoJson.h"
 
 //Includes for SD firmware update
@@ -61,17 +61,13 @@ extern HardwareSerial Serial1;
 
 //#include <AudioFileSource.h>
 //#include <AudioFileSourceID3.h>
-#include <AudioGeneratorMP3.h>
+// #include <AudioGeneratorMP3.h>
 //#include <AudioOutputI2S.h>
 //#include <AudioFileSourceSD.h>
 //#include <AudioFileSourceBuffer.h>
+// #include <AudioGeneratorWAV.h>
 //#include "src/ESP8266Audio.h"
-//#include "utility/AudioFileSource.h"
-//#include "utility/AudioFileSourceID3.h"
-//#include "utility/AudioGeneratorMP3.h"
-//#include "utility/AudioOutputI2S.h"
-//#include "utility/AudioFileSourceSD.h"
-//#include "utility/AudioFileSourceBuffer.h"
+
 
 //PCF8574 0x21 defines (keys)
 #define JOYSTICK_A 0
@@ -188,7 +184,7 @@ class GUI {
 	int32_t cameraY_actual = 0;
 };
 
-class MAKERphone:public Buttons, public GUI
+class MAKERphone:public Buttons, public GUI, private Audio
 {
 public:
 	// XT_DAC_Audio_Class DacAudio = XT_DAC_Audio_Class(25,0);    // Create the main player class object. 
@@ -206,12 +202,14 @@ public:
 	void setResolution(bool res);
 	bool spriteCreated = 0;
 
+	Audio audio;
+
 	void begin(bool splash = 1);
 	void test();
 	void tone2(int pin, int freq, int duration);
 	void vibration(int duration);
 	void ledcAnalogWrite(uint8_t channel, uint32_t value, uint32_t valueMax = 255);
-	bool update(AudioGeneratorMP3 *mp3 = NULL);
+	bool update();
 	void splashScreen();
 	void lockScreen();
 	void mainMenu();
@@ -419,6 +417,7 @@ public:
 	bool receivedFlag = 0;
 	bool SDinsertedFlag = 0;
 	bool popupMenuFlag = 1;
+	uint32_t audioMillis = millis();
 	/////////////////////////////////////////
 	///////////////COLLISION//////////////////
 	//////////////////////////////////////////
@@ -476,13 +475,6 @@ private:
 
 	//SIM800 setup
 //	HardwareSerial sim800 = HardwareSerial(1);
-
-	//Audio objects
-	/*AudioGeneratorMP3 *mp3;
-	AudioFileSourceSD *file;
-	AudioOutputI2S *out;
-	AudioFileSourceID3 *id3;
-	AudioFileSourceBuffer *buff;*/
 };
 
 #endif
