@@ -206,6 +206,7 @@ bool MAKERphone::update() {
 				buf.fillRect(x * 2, y * 2, 2, 2, display.readPixel(x, y));
 			}
 		}
+		audioMillis-=5;
 	}
 	//buf2.invertDisplay(1);
 	if (digitalRead(35) && sleepTime)
@@ -319,29 +320,34 @@ bool MAKERphone::update() {
 		}
 	}
 	///////////////////////////////////////////////
-	if(millis()-audioMillis >= 29 + 40 && (audio.wavrunning == 1 || audio.sfxrunning == 1)) //29 - sample execution time, 40 - interval time
+	if((millis() - audioMillis >= (29 + 35)) && (audio.wavrunning == 1 || audio.sfxrunning == 1)) //29 - sample execution time, 40 - interval time
 	{
-		if(audio.wavrunning)
+		Serial.println("WAVLOOP");
+		if(audio.wavrunning == 1)
 			audio.wav->loop();
-		if(audio.sfxrunning)
+		if(audio.sfxrunning == 1)
 			audio.sfx->loop();
 		audioMillis = millis();
 	}
-	Serial.println(audio.mp3running);
 	if(audio.mp3running == 1)
-	{
 		audio.mp3->loop();
-	}
-
 	if (millis() - lastFrameCount2 >= frameSpeed) {
 		lastFrameCount2 = millis();
-		if(audio.mp3running == 0)
+		
+		if(audio.mp3running < 1)
 		{
 			if(resolutionMode == 0) //native res mode
+			{
 				display.pushSprite(0, 0);
+				audioMillis-=18;
+			}
 			else//halved res mode
+			{
 				buf.pushSprite(0,0);
+				audioMillis-=10;
+			}
 		}
+		
 		buttons.update();
 		gui.updatePopup();
 		FastLED.show();

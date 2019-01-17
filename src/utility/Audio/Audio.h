@@ -25,20 +25,20 @@ class Audio
         int8_t isRunningMP3();
 
         //WAV functions
-        void playWAV(char *path);
+        void playWAV(char *path = NULL);
         void pauseWAV();
         void stopWAV();
         void setVolumeWAV(uint8_t gain);
         void setLoopWAV(bool loop = 1);
-        bool isRunningWAV();
+        int8_t isRunningWAV();
 
         //SFX functions
-        void playSFX(char *path);
+        void playSFX(char *path = NULL);
         void pauseSFX();
         void stopSFX();
         void setVolumeSFX(uint8_t gain);
         void setLoopSFX(bool loop = 1);
-        bool isRunningSFX();
+        int8_t isRunningSFX();
 
     protected:
         AudioGeneratorWAV *wav;
@@ -56,7 +56,8 @@ class Audio
         AudioFileSourceSD *mp3File;
         AudioOutputI2S *out;
         AudioOutputMixer *mixer;
-        AudioOutputMixerStub *stub[2];
+        AudioOutputMixerStub *wavStub;
+        AudioOutputMixerStub *sfxStub;
 
 
 };
