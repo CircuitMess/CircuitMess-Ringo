@@ -320,13 +320,21 @@ bool MAKERphone::update() {
 		}
 	}
 	///////////////////////////////////////////////
-	if((millis() - audioMillis >= (29 + 35)) && (audio.wavrunning == 1 || audio.sfxrunning == 1)) //29 - sample execution time, 40 - interval time
+	if((millis() - audioMillis >= (29+40)) && (audio.wavrunning == 1 || audio.sfxrunning == 1)) //29 - sample execution time, 40 - interval time
 	{
-		Serial.println("WAVLOOP");
 		if(audio.wavrunning == 1)
-			audio.wav->loop();
+			if(!audio.wav->loop())
+				audio.stopWAV();
+
 		if(audio.sfxrunning == 1)
-			audio.sfx->loop();
+		{
+			if(!audio.sfx->loop())
+			{
+				Serial.println("STOPPED");
+				delay(5);
+				audio.stopSFX();
+			}
+		}
 		audioMillis = millis();
 	}
 	if(audio.mp3running == 1)
