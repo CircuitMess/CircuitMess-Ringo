@@ -353,12 +353,12 @@ char * TwoWire::getErrorText(uint8_t err)
 
 /*stickbreaker Dump i2c Interrupt buffer, i2c isr Debugging
  */
-void TwoWire::dumpInts()
-{
-    i2cDumpInts(num);
-}
+// void TwoWire::dumpInts()
+// {
+//     i2cDumpInts(num);
+// }
 
-void TwoWire::dumpI2C()
-{
-    i2cDumpI2c(i2c);
-}
+// void TwoWire::dumpI2C()
+// {
+//     i2cDumpI2c(i2c);
+// }
