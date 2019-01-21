@@ -20,7 +20,7 @@ Authors:
 #include "MAKERphone.h"
 extern MAKERphone mp;
 void MAKERphone::begin(bool splash) {
-	Serial.begin(115200);
+	
 	String input="";
 	dataRefreshFlag = 0;
 	pinMode(SIM800_DTR, OUTPUT);
@@ -439,7 +439,7 @@ void MAKERphone::sleep() {
 }
 void MAKERphone::lockScreen() {
 	dataRefreshFlag = 1;
-	Serial.begin(115200);
+	
 	bool goOut = 0;
 	uint32_t elapsedMillis = millis();
 	uint8_t scale;
@@ -821,7 +821,7 @@ void MAKERphone::updateTimeRTC() {
 	//Serial.println(F("\nGLOBAL TIME UPDATE OVER RTC DONE!"));
 }
 void MAKERphone::listDir(const char * dirname, uint8_t levels) {
-	Serial.begin(115200);
+	
 	binaryCount = 0;
 	Serial.printf("Listing directory: %s\n", dirname);
 
@@ -999,15 +999,17 @@ void MAKERphone::mainMenu()
 	//
 }
 void MAKERphone::bigIconsMainMenu() {
-	Serial.begin(115200);
+	
 	while (buttons.kpd.pin_read(BTN_A) == 0);
 	Serial.println("entered main menu");
 	Serial.flush();
 	while (1)
 	{
 
-		//Serial.println(index);
+		
 		int8_t index = gui.drawBigIconsCursor((width+2)*2, (bigIconHeight*2 + 3), 3, 2, 3, 17);
+		Serial.println(index);
+		delay(5);
 		if (titles[index] == "Apps")
 		{
 			display.fillScreen(TFT_BLACK);
@@ -1186,8 +1188,12 @@ void MAKERphone::bigIconsMainMenu() {
 		}
 
 		if (titles[index] == "Settings")
+		{
+			Serial.println("entering");
+			delay(5);
 			if(settingsApp())
 				return;
+		}
 		if (index == -2)
 		{
 			Serial.println("pressed");
@@ -1200,7 +1206,7 @@ void MAKERphone::bigIconsMainMenu() {
 }
 void MAKERphone::callNumber(String number) {
 	dataRefreshFlag = 0;
-	Serial.begin(115200);
+	
 	String localBuffer = "";
 	Serial1.print(F("ATD"));
 	Serial1.print(number);
@@ -2001,7 +2007,7 @@ void MAKERphone::debugMode()
 
 //Messages app
 void MAKERphone::messagesApp() {
-	Serial.begin(115200);
+	
 	dataRefreshFlag = 0;
 	//sim800.println("AT+CMGL=\"REC READ\"");
 	//sim800.flush();
@@ -2161,7 +2167,7 @@ String MAKERphone::readSms(uint8_t index) {
 		return "";
 }
 String MAKERphone::readAllSms() {
-	Serial.begin(115200);
+	
 	Serial1.print(F("AT+CMGL=\"ALL\"\r"));
 	buffer = readSerial();
 	delay(10);
@@ -4018,7 +4024,7 @@ int16_t MAKERphone::mp3Menu(const char* title, String* items, uint8_t length) {
 }
 void MAKERphone::listMP3(const char * dirname, uint8_t levels) {
 	mp3Count = 0;
-	Serial.begin(115200);
+	
 	Serial.printf("Listing directory: %s\n", dirname);
 	File root = SD.open(dirname);
 	if (!root) {
@@ -4052,7 +4058,7 @@ void MAKERphone::listMP3(const char * dirname, uint8_t levels) {
 }
 void MAKERphone::listPhotos(const char * dirname, uint8_t levels) {
 	photoCount = 0;
-	Serial.begin(115200);
+	
 	Serial.printf("Listing directory: %s\n", dirname);
 	File root = SD.open(dirname);
 	if (!root) {
@@ -4085,7 +4091,7 @@ void MAKERphone::listPhotos(const char * dirname, uint8_t levels) {
 	}
 }
 void MAKERphone::mp3player(String songName) {
-	/* Serial.begin(115200);
+	/* 
 	char test[songName.length() + 1];
 	songName.toCharArray(test, songName.length() + 1);
 
@@ -4570,6 +4576,7 @@ int8_t MAKERphone::settingsMenu(String* title, uint8_t length) {
 
 		if (buttons.released(BTN_B) == 1) //BUTTON BACK
 		{
+			while(!update());
 			return -1;
 		}
 	}
@@ -4648,7 +4655,6 @@ void MAKERphone::settingsMenuDrawCursor(uint8_t i, int32_t y, bool pressed) {
 }
 bool MAKERphone::settingsApp() {
 	while (!update());
-	Serial.begin(115200);
 	while (1)
 	{
 		int8_t input = settingsMenu(settingsItems, 6);
@@ -4680,7 +4686,7 @@ bool MAKERphone::settingsApp() {
 		display.setTextFont(2);
 		display.printCenter("Settings saved!");
 		uint32_t tempMillis = millis();
-		while(millis() < tempMillis + 2000 && !buttons.pressed(BTN_A) && !buttons.pressed(BTN_B))
+		while(millis() < tempMillis + 2000 && !buttons.released(BTN_A) && !buttons.released(BTN_B))
 			update();
 		while(!update());
 	}
@@ -5063,7 +5069,7 @@ void MAKERphone::soundMenu() {
 	SD.begin(5, SD_SCK_MHZ(8));
 	listRingtones("/ringtones", 0);
 	listNotifications("/notifications", 0);
-	Serial.begin(115200);
+	
 	ringtone = "/ringtones/chiptune.mp3";
 	notification = "/notifications/to-the-point.mp3";
 	String parsedRingtone;
@@ -5194,7 +5200,7 @@ void MAKERphone::soundMenu() {
 }
 void MAKERphone::listRingtones(const char * dirname, uint8_t levels) {
 	ringtoneCount = 0;
-	Serial.begin(115200);
+	
 	Serial.printf("Listing directory: %s\n", dirname);
 
 	File root = SD.open(dirname);
@@ -5226,7 +5232,7 @@ void MAKERphone::listRingtones(const char * dirname, uint8_t levels) {
 }
 void MAKERphone::listNotifications(const char * dirname, uint8_t levels) {
 	notificationCount = 0;
-	Serial.begin(115200);
+	
 	Serial.printf("Listing directory: %s\n", dirname);
 
 	File root = SD.open(dirname);
@@ -5257,7 +5263,7 @@ void MAKERphone::listNotifications(const char * dirname, uint8_t levels) {
 	}
 }
 void MAKERphone::securityMenu() {
-	Serial.begin(115200);
+	
 	pinNumber = 1234;
 
 	String pinBuffer = "";
@@ -7048,7 +7054,7 @@ int8_t GUI::menu(const char* title, String* items, uint8_t length) {
 
 }
 uint8_t GUI::drawCursor(uint8_t xoffset, uint8_t yoffset, uint8_t xelements, uint8_t yelements, uint8_t xstart, uint8_t ystart) {
-	Serial.begin(115200);
+	
 	long elapsedMillis = millis();
 	long elapsedMillis2 = millis();
 	while (1)
@@ -7189,7 +7195,6 @@ uint8_t GUI::drawCursor(uint8_t xoffset, uint8_t yoffset, uint8_t xelements, uin
 int8_t GUI::drawBigIconsCursor(uint8_t xoffset, uint8_t yoffset, uint8_t xelements, uint8_t yelements, uint8_t xstart, uint8_t ystart) {
 	String passcode = "";
 	uint32_t passcodeMillis = millis();
-	Serial.begin(115200);
 	long elapsedMillis = millis();
 	long elapsedMillis2 = millis();
 	uint8_t scale;
@@ -7200,6 +7205,7 @@ int8_t GUI::drawBigIconsCursor(uint8_t xoffset, uint8_t yoffset, uint8_t xelemen
 	while(!mp.update());
 	while (1)
 	{
+		
 		mp.display.fillScreen(TFT_BLACK);
 
 		mp.display.setTextSize(1);
@@ -7346,7 +7352,7 @@ int8_t GUI::drawBigIconsCursor(uint8_t xoffset, uint8_t yoffset, uint8_t xelemen
 			elapsedMillis = millis();
 			cursorState = 1;
 		}
-		if (mp.buttons.states[BTN_B] == 1)//LOCK BUTTON
+		if (mp.buttons.released(BTN_B))//LOCK BUTTON
 		{
 
 			mp.leds[0] = CRGB::Red;
@@ -7354,7 +7360,7 @@ int8_t GUI::drawBigIconsCursor(uint8_t xoffset, uint8_t yoffset, uint8_t xelemen
 			FastLED.show();
 			mp.vibration(200);
 			FastLED.clear();
-
+			while(!mp.update());
 			return -2;
 		}
 		if (passcode == "UPUPDOWNDOWNLEFTRIGHTLEFTRIGHT")
