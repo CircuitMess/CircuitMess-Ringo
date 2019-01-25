@@ -47,7 +47,6 @@ AudioGeneratorMP3::AudioGeneratorMP3(void *space, int size)
 
 AudioGeneratorMP3::~AudioGeneratorMP3()
 {
-  Serial.begin(115200);
   if (!preallocateSpace) {
     free(buff);
     free(synth);

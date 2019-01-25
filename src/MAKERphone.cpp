@@ -20,7 +20,7 @@ Authors:
 #include "MAKERphone.h"
 extern MAKERphone mp;
 void MAKERphone::begin(bool splash) {
-	Serial.begin(115200);
+	
 	String input="";
 	dataRefreshFlag = 0;
 	pinMode(SIM800_DTR, OUTPUT);
@@ -338,7 +338,9 @@ bool MAKERphone::update() {
 		audioMillis = millis();
 	}
 	if(audio.mp3running == 1)
-		audio.mp3->loop();
+		if(!audio.mp3->loop())
+			audio.stopMP3();
+
 	if (millis() - lastFrameCount2 >= frameSpeed) {
 		lastFrameCount2 = millis();
 		
@@ -473,7 +475,7 @@ void MAKERphone::sleep() {
 }
 void MAKERphone::lockScreen() {
 	dataRefreshFlag = 1;
-	Serial.begin(115200);
+	
 	bool goOut = 0;
 	uint32_t elapsedMillis = millis();
 	uint8_t scale;
@@ -855,7 +857,7 @@ void MAKERphone::updateTimeRTC() {
 	//Serial.println(F("\nGLOBAL TIME UPDATE OVER RTC DONE!"));
 }
 void MAKERphone::listDir(const char * dirname, uint8_t levels) {
-	Serial.begin(115200);
+	
 	binaryCount = 0;
 	Serial.printf("Listing directory: %s\n", dirname);
 
@@ -1033,7 +1035,7 @@ void MAKERphone::mainMenu()
 	//
 }
 void MAKERphone::bigIconsMainMenu() {
-	Serial.begin(115200);
+	
 	while (buttons.kpd.pin_read(BTN_A) == 0);
 	Serial.println("entered main menu");
 	Serial.flush();
@@ -1234,7 +1236,7 @@ void MAKERphone::bigIconsMainMenu() {
 }
 void MAKERphone::callNumber(String number) {
 	dataRefreshFlag = 0;
-	Serial.begin(115200);
+	
 	String localBuffer = "";
 	Serial1.print(F("ATD"));
 	Serial1.print(number);
@@ -2035,7 +2037,7 @@ void MAKERphone::debugMode()
 
 //Messages app
 void MAKERphone::messagesApp() {
-	Serial.begin(115200);
+	
 	dataRefreshFlag = 0;
 	//sim800.println("AT+CMGL=\"REC READ\"");
 	//sim800.flush();
@@ -2195,7 +2197,7 @@ String MAKERphone::readSms(uint8_t index) {
 		return "";
 }
 String MAKERphone::readAllSms() {
-	Serial.begin(115200);
+	
 	Serial1.print(F("AT+CMGL=\"ALL\"\r"));
 	buffer = readSerial();
 	delay(10);
@@ -4052,7 +4054,7 @@ int16_t MAKERphone::mp3Menu(const char* title, String* items, uint8_t length) {
 }
 void MAKERphone::listMP3(const char * dirname, uint8_t levels) {
 	mp3Count = 0;
-	Serial.begin(115200);
+	
 	Serial.printf("Listing directory: %s\n", dirname);
 	File root = SD.open(dirname);
 	if (!root) {
@@ -4086,7 +4088,7 @@ void MAKERphone::listMP3(const char * dirname, uint8_t levels) {
 }
 void MAKERphone::listPhotos(const char * dirname, uint8_t levels) {
 	photoCount = 0;
-	Serial.begin(115200);
+	
 	Serial.printf("Listing directory: %s\n", dirname);
 	File root = SD.open(dirname);
 	if (!root) {
@@ -4118,108 +4120,364 @@ void MAKERphone::listPhotos(const char * dirname, uint8_t levels) {
 		file = root.openNextFile();
 	}
 }
-void MAKERphone::mp3player(String songName) {
-	// uint8_t scale;
-	// if(resolutionMode)
-	// 	scale = 1;
-	// else
-	// 	scale = 2;
-	//  Serial.begin(115200);
-	// char test[songName.length() + 1];
-	// songName.toCharArray(test, songName.length() + 1);
+void MAKERphone::mp3player(uint16_t index) {
+	uint8_t scale;
+	if(resolutionMode)
+		scale = 1;
+	else
+		scale = 2;
+	bool out = 0;
+	char c = NO_KEY;
+	bool playState = 1;
+	bool loop = 0;
+	bool shuffleReset = 0;
+	bool allTrue = 0;
+	bool shuffle = 0;
+	bool shuffleList[mp3Count];
+	
+	memset(shuffleList, 0, sizeof(shuffleList));
+	randomSeed(millis());
+	uint32_t buttonsRefreshMillis = millis();
+	while(1)
+	{
+		String songName = mp3Files[index];
+		Serial.println(index);
+		delay(5);
+		char test[songName.length() + 1];
+		songName.toCharArray(test, songName.length() + 1);
 
-	// Serial.println(test);
+		uint8_t x = 1;
+		uint8_t y = 53;
+		int8_t i = 0;
 
-	// uint8_t x = 1;
-	// uint8_t y = 53;
-	// int8_t i = 0;
+		
+		long elapsedMillis = millis();
+		display.fillScreen(backgroundColors[backgroundIndex]);
+		//draw bitmaps
+		display.drawBitmap(2*scale, 20*scale, previous, TFT_BLACK, scale);
+		display.drawBitmap(65*scale, 20*scale, next, TFT_BLACK, scale);
+		display.drawBitmap(2*scale, 75, repeatSprite, TFT_BLACK, scale);
+		display.drawBitmap(66*scale, 37*scale, shuffleIcon, TFT_BLACK, scale);
+		if(playState)
+			display.drawBitmap(37*scale, 19*scale, play, TFT_BLACK, scale);
+		else
+			display.drawBitmap(72, 40, pause2, TFT_BLACK, scale);
+		display.drawBitmap(17*scale, 2*scale, cover2, TFT_BLACK, scale);
+		//prepare for text printing
+		display.setTextColor(TFT_BLACK);
+		display.setTextSize(1);
+		display.setTextWrap(0);
+		//drawtext
+		display.setCursor(4, 2);
+		display.print(volume);
+		display.setCursor(1, 111);
+		if(songName.length() > 20)
+			display.print(songName);
+		else
+			display.printCenter(songName);
+		display.fillRect(141,74, 4,4, shuffle ? TFT_BLACK : backgroundColors[backgroundIndex]);
+		display.fillRect(14,73, 4,4, loop ? TFT_BLACK : backgroundColors[backgroundIndex]);
 
-	// bool playState = 1;
-	// long elapsedMillis = millis();
+		while(!update());
+		char foo[100];
+		sprintf(foo, "%s%s", "/ringtones/", test);
+		Serial.println(foo);
+		audio.playMP3(foo);
+		audio.out->SetGain((float)((2.0/14)*volume));
+		while (1) 
+		{
+			if(millis()-buttonsRefreshMillis >= 5)
+			{
+				c = buttons.kpdNum.getKey();
+				buttonsRefreshMillis = millis();
+			}
+			if (buttons.released(BTN_B))
+			{
 
-	// file = new AudioFileSourceSD(test);
-	// buff = new AudioFileSourceBuffer(file, 4056);
-	// //id3->RegisterMetadataCB(MDCallback, (void*)"ID3TAG");
-	// out = new AudioOutputI2S();
-	// mp3 = new AudioGeneratorMP3();
-	// mp3->begin(file, out);
-	// Serial.println("Audio files setup complete");
-	// out->SetRate(22050);
-
-	// while (1) {
-	// 	display.fillScreen(TFT_LIGHTGREY);
-
-	// 	//draw bitmaps
-	// 	display.drawBitmap(2, 20, previous);
-	// 	display.drawBitmap(65, 20, next);
-	// 	display.drawBitmap(2, 37, repeatSprite);
-	// 	display.drawBitmap(66, 37, shuffle);
-	// 	display.drawBitmap(37, 19, play);
-	// 	display.drawBitmap(17, 2, cover2);
-
-
-
-	// 	//prepare for text printing
-	// 	display.setTextColor(TFT_BLACK);
-	// 	display.setTextSize(1);
-	// 	display.setTextWrap(0);
-
-	// 	//drawtext
-	// 	display.setCursor(x - i, y + 5);
-	// 	display.print(songName);
-	// 	display.fillRect(0, y, x - 1, 5, TFT_LIGHTGREY);
-	// 	display.fillRect(BUFWIDTH, y, BUFWIDTH - x - width, 5, TFT_LIGHTGREY);
-	// 	if (millis() - elapsedMillis > 200) {
-	// 		i += 3;
-	// 		elapsedMillis = millis();
+				audio.stopMP3();
+				Serial.println("Stopped");
+				delay(5);
+				while (!update());
 			
+				out = 1;
+				break;
+			}
 
-	// 	}
-	// 	if (i >= display.textWidth(songName) + 3) {
-	// 		i = -80;
-	// 	}
+			if (buttons.released(BTN_A)) //PLAY/PAUSE BUTTON
+			{
+				
+				if(playState)
+				{
+					audio.pauseMP3();
+					display.fillScreen(backgroundColors[backgroundIndex]);
+
+					//draw bitmaps
+					display.drawBitmap(2*scale, 20*scale, previous, TFT_BLACK, scale);
+					display.drawBitmap(65*scale, 20*scale, next, TFT_BLACK, scale);
+					display.drawBitmap(2*scale, 75, repeatSprite, TFT_BLACK, scale);
+					display.drawBitmap(66*scale, 37*scale, shuffleIcon, TFT_BLACK, scale);
+					display.drawBitmap(72, 40, pause2, TFT_BLACK, scale);
+					display.drawBitmap(17*scale, 2*scale, cover2, TFT_BLACK, scale);
 
 
-	// 	if (buttons.kpd.pin_read(BTN_B) == 0)
-	// 	{
 
-	// 		mp3->stop();
-	// 		while (buttons.kpd.pin_read(BTN_B) == 0);
-	// 		break;
-	// 	}
+					//prepare for text printing
+					display.setTextColor(TFT_BLACK);
+					display.setTextSize(1);
+					display.setTextWrap(0);
 
-	// 	if (buttons.kpd.pin_read(BTN_A) == 0) //PLAY/PAUSE BUTTON
-	// 	{
-	// 		while (buttons.kpd.pin_read(BTN_A) == 0);
-	// 		playState = !playState;
-	// 	}
+					//drawtext
+					display.setCursor(1, 111);
+					if(songName.length() > 20)
+						display.print(songName);
+					else
+						display.printCenter(songName);
+					display.setCursor(4, 2);
+					display.print(volume);
+					display.fillRect(141,74, 4,4, shuffle ? TFT_BLACK : backgroundColors[backgroundIndex]);
+					display.fillRect(14,73, 4,4, loop ? TFT_BLACK : backgroundColors[backgroundIndex]);
+				
+				}
+				else
+				{
+					shuffleReset = 0;
+					display.fillScreen(backgroundColors[backgroundIndex]);
 
-	// 	if (buttons.kpd.pin_read(JOYSTICK_D) == 0) //DOWN
-	// 	{
-	// 		while (buttons.kpd.pin_read(JOYSTICK_D) == 0);
+					//draw bitmaps
+					display.drawBitmap(2*scale, 20*scale, previous, TFT_BLACK, scale);
+					display.drawBitmap(65*scale, 20*scale, next, TFT_BLACK, scale);
+					display.drawBitmap(2*scale, 75, repeatSprite, TFT_BLACK, scale);
+					display.drawBitmap(66*scale, 37*scale, shuffleIcon, TFT_BLACK, scale);
+					display.drawBitmap(37*scale, 19*scale, play, TFT_BLACK, scale);
+					display.drawBitmap(17*scale, 2*scale, cover2, TFT_BLACK, scale);
 
-	// 		volume--;
-	// 		Serial.print("volume:");
-	// 		Serial.print(volume);
-	// 		buttons.kpd.writeVolumeRight(volume);
-	// 	}
 
-	// 	if (buttons.kpd.pin_read(JOYSTICK_B) == 0) //UP
-	// 	{
-	// 		while (buttons.kpd.pin_read(JOYSTICK_B) == 0);
 
-	// 		volume++;
-	// 		Serial.print("volume:");
-	// 		Serial.print(volume);
-	// 		buttons.kpd.writeVolumeRight(volume);
-	// 	}
+					//prepare for text printing
+					display.setTextColor(TFT_BLACK);
+					display.setTextSize(1);
+					display.setTextWrap(0);
 
-	// 	if (!playState)
-	// 		out->stop();
-	// 	//update(mp3);	
-	// } 
+					//drawtext
+					display.setCursor(1, 111);
+					if(songName.length() > 20)
+						display.print(songName);
+					else
+						display.printCenter(songName);
+					display.setCursor(4, 2);
+					display.print(volume);
+					display.fillRect(141,74, 4,4, shuffle ? TFT_BLACK : backgroundColors[backgroundIndex]);
+					display.fillRect(14,73, 4,4, loop ? TFT_BLACK : backgroundColors[backgroundIndex]);
+					while(!update());
+					audio.playMP3();
+				}
+				playState = !playState;
+				while (!update());
+			}
+
+			if (buttons.released(JOYSTICK_B) && volume > 0) //DOWN
+			{
+				
+				volume--;
+				audio.out->SetGain((float)((2.0/14)*volume));
+				//prepare for text printing
+				tft.setTextColor(TFT_BLACK);
+				tft.setTextFont(2);
+				tft.setTextSize(1);
+				tft.setTextWrap(0);
+				tft.fillRect(4,2, 15, 15, backgroundColors[backgroundIndex]);
+				//drawtext
+				tft.setCursor(4, 2);
+				tft.print(volume);
+
+				//prepare for text printing
+				display.setTextColor(TFT_BLACK);
+				display.setTextFont(2);
+				display.setTextSize(1);
+				display.setTextWrap(0);
+				display.fillRect(4,2, 15, 15, backgroundColors[backgroundIndex]);
+				//drawtext
+				display.setCursor(4, 2);
+				display.print(volume);
+				while (!update());
+			}
+
+			if (buttons.released(JOYSTICK_D) && volume < 14) //UP
+			{
+				
+				volume++;
+				audio.out->SetGain((float)((2.0/14)*volume));
+				//prepare for text printing
+				tft.setTextColor(TFT_BLACK);
+				tft.setTextFont(2);
+				tft.setTextSize(1);
+				tft.setTextWrap(0);
+				tft.fillRect(4,2, 15, 15, backgroundColors[backgroundIndex]);
+				//drawtext
+				tft.setCursor(4, 2);
+				tft.print(volume);
+				//prepare for text printing
+				display.setTextColor(TFT_BLACK);
+				display.setTextFont(2);
+				display.setTextSize(1);
+				display.setTextWrap(0);
+				display.fillRect(4,2, 15, 15, backgroundColors[backgroundIndex]);
+				//drawtext
+				display.setCursor(4, 2);
+				display.print(volume);
+				while (!update());
+			}
+			if(buttons.released(JOYSTICK_A)) //previous
+			{
+				if(shuffle && !shuffleReset)
+				{
+					bool allTrue=1;
+					for(int i = 0; i < mp3Count;i++)
+						if(!shuffleList[i])
+							allTrue = 0;
+					if(allTrue)
+					{
+						memset(shuffleList, 0, sizeof(shuffleList));
+						if(!loop)
+						{
+							playState = 0;
+							shuffleReset = 1;
+						}
+					}
+					uint16_t randNumber = random(0,mp3Count);
+					
+					while(shuffleList[randNumber])
+						randNumber = random(0,mp3Count);
+					index = randNumber;
+					shuffleList[randNumber] = 1;
+				}
+				else
+				{
+					if(!loop && !shuffleReset)
+					{
+						if(index > 0)
+							index--;
+						else
+						{
+							playState = 0;
+							index = mp3Count-1;
+						}
+					}
+				}
+				audio.stopMP3();
+				while(!update());
+				break;
+			}
+			if(buttons.released(JOYSTICK_C)) //next
+			{
+				if(shuffle && !shuffleReset)
+				{
+					bool allTrue=1;
+					for(int i = 0; i < mp3Count;i++)
+						if(!shuffleList[i])
+							allTrue = 0;
+					if(allTrue)
+					{
+						memset(shuffleList, 0, sizeof(shuffleList));
+						if(!loop)
+						{
+							playState = 0;
+							shuffleReset = 1;
+						}
+					}
+					uint16_t randNumber = random(0,mp3Count);
+					
+					while(shuffleList[randNumber] == 1 || index == randNumber)
+						randNumber = random(0,mp3Count);
+					index = randNumber;
+					shuffleList[randNumber] = 1;
+				}
+				else if(!shuffle)
+				{
+					if(!loop && !shuffleReset)
+					{
+						if(index < mp3Count - 1)
+							index++;
+						else
+						{
+							index = 0;
+							playState = 0;
+						}
+					}
+					// index = (index < mp3Count - 1) ? index++ : 0;
+				}
+				audio.stopMP3();
+				while(!update());
+				break;
+			}
+			if(c == 'A') //shuffle button
+			{
+				if(!shuffle)
+					memset(shuffleList, 0, sizeof(shuffleList));
+				shuffle = !shuffle;
+				tft.fillRect(141,74, 4,4, shuffle ? TFT_BLACK : backgroundColors[backgroundIndex]);
+				display.fillRect(141,74, 4,4, shuffle ? TFT_BLACK : backgroundColors[backgroundIndex]);
+				shuffleList[index] = 1;
+
+			}
+			if(c == 'C') //loop button
+			{
+				loop = !loop;
+				tft.fillRect(14,73, 4,4, loop ? TFT_BLACK : backgroundColors[backgroundIndex]);
+				display.fillRect(14,73, 4,4, loop ? TFT_BLACK : backgroundColors[backgroundIndex]);
+			}
+			if(playState)
+				audio.playMP3();
+			else
+				audio.pauseMP3();
+			update();
+			if(audio.mp3running < 1 && playState) //if the current song is finished, play the next one
+			{
+				if(shuffle && !shuffleReset)
+				{
+					allTrue=1;
+					for(int i = 0; i < mp3Count;i++)
+						if(!shuffleList[i])
+							allTrue = 0;
+					if(allTrue)
+					{
+						memset(shuffleList, 0, sizeof(shuffleList));
+						if(!loop)
+						{
+							playState = 0;
+							shuffleReset = 1;
+						}
+					}
+					uint16_t randNumber = random(0,mp3Count);
+					
+					while(shuffleList[randNumber] || index == randNumber)
+						randNumber = random(0,mp3Count);
+					index = randNumber;
+					shuffleList[randNumber] = 1;
+				}
+				else if(!shuffle && !shuffleReset)
+				{
+					if(!loop)
+					{
+						if(index < mp3Count - 1)
+							index++;
+						else
+						{
+							index = 0;
+							playState = 0;
+						}
+					}
+				}
+				break;
+			}
+		}
+		if(out)
+			break;
+	}
 }
+
 void MAKERphone::mediaApp() {
+	dataRefreshFlag = 0;
 	while(1)
 	{
 		int8_t input = mediaMenu(mediaItems, 3);
@@ -4228,14 +4486,14 @@ void MAKERphone::mediaApp() {
 		{
 			if (!SD.begin(5, SD_SCK_MHZ(8)))
 				Serial.println("SD card error");
-			listMP3("/", 1);
+			listMP3("/ringtones", 1);
 			while (1)
 			{
 				int16_t index = mp3Menu("Select song to play:", mp3Files, mp3Count);
 				if (index == -1)
 					break;
 				display.fillScreen(TFT_LIGHTGREY);
-				mp3player(mp3Files[index]);
+				mp3player(index);
 			} 
 		}
 		else if(input == 1)
@@ -4675,7 +4933,7 @@ void MAKERphone::settingsMenuDrawCursor(uint8_t i, int32_t y, bool pressed) {
 }
 bool MAKERphone::settingsApp() {
 	while (!update());
-	Serial.begin(115200);
+	
 	while (1)
 	{
 		int8_t input = settingsMenu(settingsItems, 6);
@@ -5090,7 +5348,7 @@ void MAKERphone::soundMenu() {
 	SD.begin(5, SD_SCK_MHZ(8));
 	listRingtones("/ringtones", 0);
 	listNotifications("/notifications", 0);
-	Serial.begin(115200);
+	
 	ringtone = "/ringtones/chiptune.mp3";
 	notification = "/notifications/to-the-point.mp3";
 	String parsedRingtone;
@@ -5221,7 +5479,7 @@ void MAKERphone::soundMenu() {
 }
 void MAKERphone::listRingtones(const char * dirname, uint8_t levels) {
 	ringtoneCount = 0;
-	Serial.begin(115200);
+	
 	Serial.printf("Listing directory: %s\n", dirname);
 
 	File root = SD.open(dirname);
@@ -5253,7 +5511,7 @@ void MAKERphone::listRingtones(const char * dirname, uint8_t levels) {
 }
 void MAKERphone::listNotifications(const char * dirname, uint8_t levels) {
 	notificationCount = 0;
-	Serial.begin(115200);
+	
 	Serial.printf("Listing directory: %s\n", dirname);
 
 	File root = SD.open(dirname);
@@ -5284,7 +5542,7 @@ void MAKERphone::listNotifications(const char * dirname, uint8_t levels) {
 	}
 }
 void MAKERphone::securityMenu() {
-	Serial.begin(115200);
+	
 	pinNumber = 1234;
 
 	String pinBuffer = "";
@@ -7075,7 +7333,7 @@ int8_t GUI::menu(const char* title, String* items, uint8_t length) {
 
 }
 uint8_t GUI::drawCursor(uint8_t xoffset, uint8_t yoffset, uint8_t xelements, uint8_t yelements, uint8_t xstart, uint8_t ystart) {
-	Serial.begin(115200);
+	
 	long elapsedMillis = millis();
 	long elapsedMillis2 = millis();
 	while (1)
@@ -7216,7 +7474,7 @@ uint8_t GUI::drawCursor(uint8_t xoffset, uint8_t yoffset, uint8_t xelements, uin
 int8_t GUI::drawBigIconsCursor(uint8_t xoffset, uint8_t yoffset, uint8_t xelements, uint8_t yelements, uint8_t xstart, uint8_t ystart) {
 	String passcode = "";
 	uint32_t passcodeMillis = millis();
-	Serial.begin(115200);
+	
 	long elapsedMillis = millis();
 	long elapsedMillis2 = millis();
 	uint8_t scale;

@@ -273,7 +273,7 @@ public:
 	uint8_t mp3Count = 0;
 	int16_t mp3Menu(const char* title, String* items, uint8_t length);
 	void listMP3(const char * dirname, uint8_t levels);
-	void mp3player(String songName);
+	void mp3player(uint16_t index);
 	void mediaApp();
 	int8_t mediaMenu(String* title, uint8_t length);
 	void mediaMenuDrawBox(String title, uint8_t i, int32_t y);

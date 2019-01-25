@@ -86,7 +86,10 @@ AudioOutputMixer::AudioOutputMixer(int buffSizeSamples, AudioOutput *dest) : Aud
 AudioOutputMixer::~AudioOutputMixer()
 {
   free(leftAccum);
+ 
   free(rightAccum);
+   Serial.println("right freed");
+  delay(5);
 }
 
 

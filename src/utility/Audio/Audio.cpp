@@ -5,9 +5,6 @@ void Audio::begin()
 	
     mp3 = new AudioGeneratorMP3();
 	out = new AudioOutputI2S();
-    mixer = new AudioOutputMixer(4096, out);
-    sfxStub = mixer->NewInput();
-    wavStub = mixer->NewInput();
 	out->SetOutputModeMono(1);
     
     
@@ -28,7 +25,6 @@ void Audio::playMP3(char * path)
        
     else if (mp3running == -1 && path != NULL)
     {
-        mixer->~AudioOutputMixer();
         mp3 = new AudioGeneratorMP3();
         mp3File = new AudioFileSourceSD(path);
         mp3Buff = new AudioFileSourceBuffer(mp3File, 4096);
@@ -47,9 +43,11 @@ void Audio::stopMP3()
 {
     if(mp3->isRunning())
     {
+        mp3->stop();
         out->stop();
     }
     mp3->~AudioGeneratorMP3();
+    mp3Buff->~AudioFileSourceBuffer();
     mp3File->~AudioFileSourceSD();
     mp3running = -1;
 }
