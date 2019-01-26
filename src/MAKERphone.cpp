@@ -6799,8 +6799,17 @@ void MAKERphone::saveSettings(bool debug)
 
 void MAKERphone::loadSettings(bool debug)
 {
+	//create default folders if not present
+	if(!SD.chdir("/Music"))
+		SD.mkdir("Music");
+	if(!SD.chdir("/Images"))
+		SD.mkdir("Images");
+	if(!SD.chdir("/Video"))
+		SD.mkdir("Video");
+	listDir("/", 1);
+	SD.chdir("/");
 	const char * path = "/settings.json";
-	Serial.println("");
+	Serial.println(""); 
 	File file = SD.open(path);
 	JsonObject& settings = mp.jb.parseObject(file);
 	file.close();
@@ -6830,6 +6839,7 @@ void MAKERphone::loadSettings(bool debug)
 	} else {
 		Serial.println("Error loading new settings");
 	}
+	
 }
 
 
