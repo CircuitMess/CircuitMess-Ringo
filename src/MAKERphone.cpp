@@ -4392,7 +4392,7 @@ void MAKERphone::mp3player(uint16_t index) {
 					index = randNumber;
 					shuffleList[randNumber] = 1;
 				}
-				else if(!shuffle)
+				else if(!shuffle && !shuffleReset)
 				{
 					if(!loop && !shuffleReset)
 					{
@@ -4400,6 +4400,7 @@ void MAKERphone::mp3player(uint16_t index) {
 							index++;
 						else
 						{
+							shuffleReset = 1;
 							index = 0;
 							playState = 0;
 						}
