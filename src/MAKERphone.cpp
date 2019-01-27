@@ -1008,8 +1008,6 @@ void MAKERphone::bigIconsMainMenu() {
 
 		
 		int8_t index = gui.drawBigIconsCursor((width+2)*2, (bigIconHeight*2 + 3), 3, 2, 3, 17);
-		Serial.println(index);
-		delay(5);
 		if (titles[index] == "Apps")
 		{
 			display.fillScreen(TFT_BLACK);
@@ -1018,16 +1016,37 @@ void MAKERphone::bigIconsMainMenu() {
 			{
 				while(!SD.begin(5, SD_SCK_MHZ(8)));
 				listDir("/", 0);
-				int8_t index = gui.menu("Load from SD", BinaryFiles, binaryCount);
+				if(binaryCount > 0)
+				{
+					int8_t index = gui.menu("Load from SD", BinaryFiles, binaryCount);
 
-				if (index != -1) {  //IF BUTTON "BACK" WAS NOT PRESSED
-					display.fillScreen(TFT_BLACK);
-					display.setCursor(0,display.height() / 2 - 16);
-					display.printCenter("LOADING NOW...");
+					if (index != -1) {  //IF BUTTON "BACK" WAS NOT PRESSED
+						display.fillScreen(TFT_BLACK);
+						display.setCursor(0,display.height() / 2 - 16);
+						display.printCenter("LOADING NOW...");
+						while(!update());
+
+
+						updateFromFS(BinaryFiles[index]);
+					}
+				}
+				else
+				{
+					display.setCursor(0, display.height()/2 - 16);
+					display.setTextFont(2);
+					display.printCenter("No .BIN files!");
+					uint32_t tempMillis = millis();
+					while(millis() < tempMillis + 2000)
+					{
+						update();
+						if(buttons.pressed(BTN_A) || buttons.pressed(BTN_B))
+						{
+							while(!buttons.released(BTN_A) && !buttons.released(BTN_B))
+								update();
+							break;
+						}
+					}
 					while(!update());
-
-
-					updateFromFS(BinaryFiles[index]);
 				}
 			}
 			else
@@ -1038,17 +1057,23 @@ void MAKERphone::bigIconsMainMenu() {
 				display.setCursor(0, display.height()/2);
 				display.printCenter("Insert SD card and reset");
 				uint32_t tempMillis = millis();
-				while(millis() < tempMillis + 2000 && !buttons.released(BTN_A) && !buttons.released(BTN_B))
+				while(millis() < tempMillis + 2000)
+				{
 					update();
+					if(buttons.pressed(BTN_A) || buttons.pressed(BTN_B))
+					{
+						while(!buttons.released(BTN_A) && !buttons.released(BTN_B))
+							update();
+						break;
+					}
+				}
 				while(!update());
 			}
-
-
-
 		}
 
 		if (titles[index] == "Messages")
 		{
+			
 			display.fillScreen(TFT_BLACK);
 			display.setTextColor(TFT_WHITE);
 			if(simInserted && !airplaneMode)
@@ -1070,8 +1095,16 @@ void MAKERphone::bigIconsMainMenu() {
 				display.setCursor(0, display.height()/2);
 				display.printCenter("Insert SIM and reset");
 				uint32_t tempMillis = millis();
-				while(millis() < tempMillis + 2000 && !buttons.released(BTN_A) && !buttons.released(BTN_B))
+				while(millis() < tempMillis + 2000)
+				{
 					update();
+					if(buttons.pressed(BTN_A) || buttons.pressed(BTN_B))
+					{
+						while(!buttons.released(BTN_A) && !buttons.released(BTN_B))
+							update();
+						break;
+					}
+				}
 				while(!update());
 			}
 			else if(airplaneMode)
@@ -1082,8 +1115,16 @@ void MAKERphone::bigIconsMainMenu() {
 				display.setCursor(0, display.height()/2);
 				display.printCenter("Turn off airplane mode");
 				uint32_t tempMillis = millis();
-				while(millis() < tempMillis + 2000 && !buttons.released(BTN_A) && !buttons.released(BTN_B))
+				while(millis() < tempMillis + 2000)
+				{
 					update();
+					if(buttons.pressed(BTN_A) || buttons.pressed(BTN_B))
+					{
+						while(!buttons.released(BTN_A) && !buttons.released(BTN_B))
+							update();
+						break;
+					}
+				}
 				while(!update());
 			}
 
@@ -1103,9 +1144,16 @@ void MAKERphone::bigIconsMainMenu() {
 				display.setCursor(0, display.height()/2);
 				display.printCenter("Insert SD card and reset");
 				uint32_t tempMillis = millis();
-				while(millis() < tempMillis + 2000 && !buttons.released(BTN_A) && !buttons.released(BTN_B))
+				while(millis() < tempMillis + 2000)
+				{
 					update();
-				while(!update());
+					if(buttons.pressed(BTN_A) || buttons.pressed(BTN_B))
+					{
+						while(!buttons.released(BTN_A) && !buttons.released(BTN_B))
+							update();
+						break;
+					}
+				}while(!update());
 			}
 		}
 
@@ -1123,8 +1171,16 @@ void MAKERphone::bigIconsMainMenu() {
 				display.setCursor(0, display.height()/2);
 				display.printCenter("Insert SIM and reset");
 				uint32_t tempMillis = millis();
-				while(millis() < tempMillis + 2000 && !buttons.released(BTN_A) && !buttons.released(BTN_B))
+				while(millis() < tempMillis + 2000)
+				{
 					update();
+					if(buttons.pressed(BTN_A) || buttons.pressed(BTN_B))
+					{
+						while(!buttons.released(BTN_A) && !buttons.released(BTN_B))
+							update();
+						break;
+					}
+				}
 				while(!update());
 			}
 			else if(airplaneMode)
@@ -1135,8 +1191,16 @@ void MAKERphone::bigIconsMainMenu() {
 				display.setCursor(0, display.height()/2);
 				display.printCenter("Turn off airplane mode");
 				uint32_t tempMillis = millis();
-				while(millis() < tempMillis + 2000 && !buttons.released(BTN_A) && !buttons.released(BTN_B))
+				while(millis() < tempMillis + 2000)
+				{
 					update();
+					if(buttons.pressed(BTN_A) || buttons.pressed(BTN_B))
+					{
+						while(!buttons.released(BTN_A) && !buttons.released(BTN_B))
+							update();
+						break;
+					}
+				}
 				while(!update());
 			}
 		}
@@ -1168,8 +1232,16 @@ void MAKERphone::bigIconsMainMenu() {
 				display.setCursor(0, display.height()/2);
 				display.printCenter("Insert SD and reset");
 				uint32_t tempMillis = millis();
-				while(millis() < tempMillis + 2000 && !buttons.released(BTN_A) && !buttons.released(BTN_B))
+				while(millis() < tempMillis + 2000)
+				{
 					update();
+					if(buttons.pressed(BTN_A) || buttons.pressed(BTN_B))
+					{
+						while(!buttons.released(BTN_A) && !buttons.released(BTN_B))
+							update();
+						break;
+					}
+				}
 				while(!update());
 			}
 			else if(airplaneMode)
@@ -1180,8 +1252,16 @@ void MAKERphone::bigIconsMainMenu() {
 				display.setCursor(0, display.height()/2);
 				display.printCenter("Turn off airplane mode");
 				uint32_t tempMillis = millis();
-				while(millis() < tempMillis + 2000 && !buttons.released(BTN_A) && !buttons.released(BTN_B))
+				while(millis() < tempMillis + 2000)
+				{
 					update();
+					if(buttons.pressed(BTN_A) || buttons.pressed(BTN_B))
+					{
+						while(!buttons.released(BTN_A) && !buttons.released(BTN_B))
+							update();
+						break;
+					}
+				}
 				while(!update());
 			}
 
@@ -4208,30 +4288,73 @@ void MAKERphone::mediaApp() {
 			if (!SD.begin(5, SD_SCK_MHZ(8)))
 				Serial.println("SD card error");
 			listMP3("/", 1);
-			while (1)
+			if(mp3Count > 0)
 			{
-				int16_t index = mp3Menu("Select file to play:", mp3Files, mp3Count);
-				if (index == -1)
-					break;
-				display.fillScreen(TFT_LIGHTGREY);
-				mp3player(mp3Files[index]);
-			} 
+				while (1)
+				{
+					int16_t index = mp3Menu("Select file to play:", mp3Files, mp3Count);
+					if (index == -1)
+						break;
+					display.fillScreen(TFT_LIGHTGREY);
+					mp3player(mp3Files[index]);
+				} 
+			}
+			else
+			{
+				display.fillScreen(TFT_BLACK);
+				display.setCursor(0, display.height()/2 - 16);
+				display.setTextFont(2);
+				display.printCenter("No MP3 files!");
+				uint32_t tempMillis = millis();
+				while(millis() < tempMillis + 2000)
+				{
+					update();
+					if(buttons.pressed(BTN_A) || buttons.pressed(BTN_B))
+					{
+						while(!buttons.released(BTN_A) && !buttons.released(BTN_B))
+							update();
+						break;
+					}
+				}
+				while(!update());
+			}
 		}
 		else if(input == 1)
 		{
 			while (!SD.begin(5, SD_SCK_MHZ(8)))
 				Serial.println("SD card error");
 			listPhotos("/", 0);
-			while (1)
+			if(photoCount > 0)
 			{
-				int16_t index = gui.menu("Select photo to open:", photoFiles, photoCount);
-				if (index == -1)
-					break;
-				Serial.println(index);
-				drawJpeg(photoFiles[index], 0, 0);
-				while(!buttons.released(BTN_A) && !buttons.released(BTN_B))
+				while (1)
+				{
+					int16_t index = gui.menu("Select photo to open:", photoFiles, photoCount);
+					if (index == -1)
+						break;
+					Serial.println(index);
+					drawJpeg(photoFiles[index], 0, 0);
+					while(!buttons.released(BTN_A) && !buttons.released(BTN_B))
+						update();
+				} 
+			}
+			else
+			{
+				display.setCursor(0, display.height()/2 - 16);
+				display.setTextFont(2);
+				display.printCenter("No MP3 files!");
+				uint32_t tempMillis = millis();
+				while(millis() < tempMillis + 2000)
+				{
 					update();
-			} 
+					if(buttons.pressed(BTN_A) || buttons.pressed(BTN_B))
+					{
+						while(!buttons.released(BTN_A) && !buttons.released(BTN_B))
+							update();
+						break;
+					}
+				}
+				while(!update());
+			}
 			while(!update());
 		}
 		else if(input == -1)
@@ -4686,8 +4809,16 @@ bool MAKERphone::settingsApp() {
 		display.setTextFont(2);
 		display.printCenter("Settings saved!");
 		uint32_t tempMillis = millis();
-		while(millis() < tempMillis + 2000 && !buttons.released(BTN_A) && !buttons.released(BTN_B))
+		while(millis() < tempMillis + 2000)
+		{
 			update();
+			if(buttons.pressed(BTN_A) || buttons.pressed(BTN_B))
+			{
+				while(!buttons.released(BTN_A) && !buttons.released(BTN_B))
+					update();
+				break;
+			}
+		}
 		while(!update());
 	}
 	else
@@ -4698,8 +4829,16 @@ bool MAKERphone::settingsApp() {
 		display.setCursor(0, display.height()/2);
 		display.printCenter("Insert SD card and reset");
 		uint32_t tempMillis = millis();
-		while(millis() < tempMillis + 2000 && !buttons.pressed(BTN_A) && !buttons.pressed(BTN_B))
+		while(millis() < tempMillis + 2000)
+		{
 			update();
+			if(buttons.pressed(BTN_A) || buttons.pressed(BTN_B))
+			{
+				while(!buttons.released(BTN_A) && !buttons.released(BTN_B))
+					update();
+				break;
+			}
+		}
 		while(!update());
 	}
 	return false;
@@ -6660,8 +6799,17 @@ void MAKERphone::saveSettings(bool debug)
 
 void MAKERphone::loadSettings(bool debug)
 {
+	//create default folders if not present
+	if(!SD.chdir("/Music"))
+		SD.mkdir("Music");
+	if(!SD.chdir("/Images"))
+		SD.mkdir("Images");
+	if(!SD.chdir("/Video"))
+		SD.mkdir("Video");
+	listDir("/", 1);
+	SD.chdir("/");
 	const char * path = "/settings.json";
-	Serial.println("");
+	Serial.println(""); 
 	File file = SD.open(path);
 	JsonObject& settings = mp.jb.parseObject(file);
 	file.close();
@@ -6691,6 +6839,7 @@ void MAKERphone::loadSettings(bool debug)
 	} else {
 		Serial.println("Error loading new settings");
 	}
+	
 }
 
 
