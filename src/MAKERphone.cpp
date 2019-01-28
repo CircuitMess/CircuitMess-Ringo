@@ -7562,6 +7562,12 @@ int16_t GUI::scrollingMainMenu()
 				case 5:
 					mp.display.drawIcon(bigApps, 4 + tempX*52, 18 + tempY*56, width, bigIconHeight, 2);
 					break;
+				case 6:
+					mp.display.drawIcon(clock_icon, 4 + tempX*52, 18 + tempY*56, width, bigIconHeight, 2);
+					break;
+				case 7:
+					mp.display.drawIcon(calculator_icon, 4 + tempX*52, 18 + tempY*56, width, bigIconHeight, 2);
+					break;
 				default:
 					if(pageIndex * 3 + i < elements)
 						mp.display.fillRect(4 + tempX*52, 18 + tempY*56, 48, 52, TFT_CYAN);
