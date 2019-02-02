@@ -4752,8 +4752,9 @@ void TFT_eSPI::getSetup(setup_t &tft_settings)
   #include "Extensions/Smooth_font.cpp"
 #endif
 
+
 ////////////////////////////////////////////////////////////////////////////////////////
-//Custom functions
+//Added functions
 ////////////////////////////////////////////////////////////////////////////////////////
 
 void TFT_eSPI::drawBitmap(int16_t x, int16_t y, const byte *bitmap, uint16_t color, uint8_t scale) {
@@ -4866,6 +4867,215 @@ void TFT_eSPI::printCenter(char text)
 	textLength = cursor_x - textLength;
 	setCursor(int((width() - textLength) / 2), cursorBuffer); //TO-DO: change this to the sprite width value
 	print(text);
+}
+void TFT_eSprite::drawBmp(File bmpFS, int16_t x, int16_t y, uint8_t scale) {
+  if ((x >= width()) || (y >= height())) return;
+
+  // Open requested file on SD card
+  // File bmpFS = file;
+  if (!bmpFS)
+  {
+    Serial.print("File not found");
+    return;
+  }
+
+  uint32_t seekOffset;
+  uint16_t w, h, row, col;
+  uint8_t  r, g, b;
+  
+
+  uint32_t startTime = millis();
+
+  if (read16(bmpFS) == 0x4D42)
+  {
+    read32(bmpFS);
+    read32(bmpFS);
+    seekOffset = read32(bmpFS);
+    read32(bmpFS);
+    w = read32(bmpFS);
+    h = read32(bmpFS);
+    if ((read16(bmpFS) == 1) && (read16(bmpFS) == 24) && (read32(bmpFS) == 0))
+    {
+      y += h - 1;
+
+      setSwapBytes(false);
+      bmpFS.seek(seekOffset);
+
+      uint16_t padding = (4 - ((w * 3) & 3)) & 3;
+      uint8_t lineBuffer[w * 3];
+
+      for (row = 0; row < h; row++) {
+        bmpFS.read(lineBuffer, sizeof(lineBuffer));
+        uint8_t*  bptr = lineBuffer;
+        uint16_t* tptr = (uint16_t*)lineBuffer;
+        // Convert 24 to 16 bit colours
+        for (uint16_t col = 0; col < w; col++)
+        {
+          b = *bptr++;
+          g = *bptr++;
+          r = *bptr++;
+          *tptr++ = ((r & 0xF8) << 8) | ((g & 0xFC) << 3) | (b >> 3);
+        }
+        // Read any line padding
+        if (padding) bmpFS.read((uint8_t*)tptr, padding);
+        // Push the pixel row to screen, pushImage will crop the line if needed
+        for (int i = 0; i <= w-1;i++)
+        {
+          fillRect(x+i*scale, y, scale, scale, ((uint16_t *)lineBuffer)[i]);
+        }
+        y-=1;
+        // pushImage(x, y--, w, 1, (uint16_t*)lineBuffer);
+        // delay(10);
+        // mp.update();
+      }
+      // Serial.print("Loaded in "); Serial.print(millis() - startTime);
+      // Serial.println(" ms");                                                              
+    }
+    else Serial.println("BMP format not recognized.");
+  }
+  bmpFS.close();
+}
+void TFT_eSprite::drawBmp(const char * path, int16_t x, int16_t y, uint8_t scale) {
+  if ((x >= width()) || (y >= height())) return;
+  SdFat SD;
+  while(!SD.begin(5, SD_SCK_MHZ(8)))
+    Serial.println("SD error");
+
+  File bmpFS = SD.open(path);
+  // Open requested file on SD card
+  // File bmpFS = file;
+  if (!bmpFS)
+  {
+    Serial.print("File not found");
+    return;
+  }
+
+  uint32_t seekOffset;
+  uint16_t w, h, row, col;
+  uint8_t  r, g, b;
+  
+
+  uint32_t startTime = millis();
+
+  if (read16(bmpFS) == 0x4D42)
+  {
+    read32(bmpFS);
+    read32(bmpFS);
+    seekOffset = read32(bmpFS);
+    read32(bmpFS);
+    w = read32(bmpFS);
+    h = read32(bmpFS);
+    if ((read16(bmpFS) == 1) && (read16(bmpFS) == 24) && (read32(bmpFS) == 0))
+    {
+      y += h*scale - 1;
+
+      setSwapBytes(false);
+      bmpFS.seek(seekOffset);
+
+      uint16_t padding = (4 - ((w * 3) & 3)) & 3;
+      uint8_t lineBuffer[w * 3];
+
+      for (row = 0; row < h; row++) {
+        bmpFS.read(lineBuffer, sizeof(lineBuffer));
+        uint8_t*  bptr = lineBuffer;
+        uint16_t* tptr = (uint16_t*)lineBuffer;
+        // Convert 24 to 16 bit colours
+        for (uint16_t col = 0; col < w; col++)
+        {
+          b = *bptr++;
+          g = *bptr++;
+          r = *bptr++;
+          *tptr++ = ((r & 0xF8) << 8) | ((g & 0xFC) << 3) | (b >> 3);
+        }
+        // Read any line padding
+        if (padding) bmpFS.read((uint8_t*)tptr, padding);
+        // Push the pixel row to screen, pushImage will crop the line if needed
+        for (int i = 0; i <= w-1;i++)
+        {
+          fillRect(x+i*scale, y, scale, scale, ((uint16_t *)lineBuffer)[i]);
+        }
+        y-=scale;
+        // pushImage(x, y--, w, 1, (uint16_t*)lineBuffer);
+        // delay(10);
+        // mp.update();
+      }
+      // Serial.print("Loaded in "); Serial.print(millis() - startTime);
+      // Serial.println(" ms");                                                              
+    }
+    else Serial.println("BMP format not recognized.");
+  }
+  bmpFS.close();
+}
+void TFT_eSprite::drawBmp(String path, int16_t x, int16_t y, uint8_t scale) {
+  if ((x >= width()) || (y >= height())) return;
+  SdFat SD;
+  while(!SD.begin(5, SD_SCK_MHZ(8)))
+    Serial.println("SD error");
+
+  File bmpFS = SD.open(path);
+  // Open requested file on SD card
+  // File bmpFS = file;
+  if (!bmpFS)
+  {
+    Serial.print("File not found");
+    return;
+  }
+
+  uint32_t seekOffset;
+  uint16_t w, h, row, col;
+  uint8_t  r, g, b;
+  
+
+  uint32_t startTime = millis();
+
+  if (read16(bmpFS) == 0x4D42)
+  {
+    read32(bmpFS);
+    read32(bmpFS);
+    seekOffset = read32(bmpFS);
+    read32(bmpFS);
+    w = read32(bmpFS);
+    h = read32(bmpFS);
+    if ((read16(bmpFS) == 1) && (read16(bmpFS) == 24) && (read32(bmpFS) == 0))
+    {
+      y += h*scale - 1;
+
+      setSwapBytes(false);
+      bmpFS.seek(seekOffset);
+
+      uint16_t padding = (4 - ((w * 3) & 3)) & 3;
+      uint8_t lineBuffer[w * 3];
+
+      for (row = 0; row < h; row++) {
+        bmpFS.read(lineBuffer, sizeof(lineBuffer));
+        uint8_t*  bptr = lineBuffer;
+        uint16_t* tptr = (uint16_t*)lineBuffer;
+        // Convert 24 to 16 bit colours
+        for (uint16_t col = 0; col < w; col++)
+        {
+          b = *bptr++;
+          g = *bptr++;
+          r = *bptr++;
+          *tptr++ = ((r & 0xF8) << 8) | ((g & 0xFC) << 3) | (b >> 3);
+        }
+        // Read any line padding
+        if (padding) bmpFS.read((uint8_t*)tptr, padding);
+        // Push the pixel row to screen, pushImage will crop the line if needed
+        for (int i = 0; i <= w-1;i++)
+        {
+          fillRect(x+i*scale, y, scale, scale, ((uint16_t *)lineBuffer)[i]);
+        }
+        y-=scale;
+        // pushImage(x, y--, w, 1, (uint16_t*)lineBuffer);
+        // delay(10);
+        // mp.update();
+      }
+      // Serial.print("Loaded in "); Serial.print(millis() - startTime);
+      // Serial.println(" ms");                                                              
+    }
+    else Serial.println("BMP format not recognized.");
+  }
+  bmpFS.close();
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////

@@ -161,6 +161,7 @@ public:
 class GUI {
 public:
 	//main menu GUI
+  int16_t scrollingMainMenu();
   uint8_t drawCursor(uint8_t xoffset, uint8_t yoffset, uint8_t xelements, uint8_t yelements, uint8_t xstart, uint8_t ystart);
   int8_t drawBigIconsCursor(uint8_t xoffset, uint8_t yoffset, uint8_t xelements, uint8_t yelements, uint8_t xstart, uint8_t ystart);
   //generic menu GUI
@@ -177,10 +178,9 @@ public:
   uint8_t popupTotalTime;
 
 private:
-  uint8_t cursorX = 0;
-  uint8_t cursorY = 0;
+  
   bool cursorState = 1;
-  uint8_t index;
+  
   bool previousButtonState = 0;
   uint8_t cursor = 0;
   int32_t cameraY = 0;
@@ -210,7 +210,8 @@ public:
 	void lockScreen();
 	void mainMenu();
 	void bigIconsMainMenu();
-	void listDir(const char * dirname, uint8_t levels);
+	void listDirectories(const char *dirname);
+	void listBinaries(const char * dirname, uint8_t levels);
 	void sleep();
 	void checkSMS();
 	void incomingCall();
@@ -389,16 +390,19 @@ public:
 	//Display display;
 
 	////////////////////////////////Main_menu.ino variables
-	String titles[6] = {
+	String titles[10] = {
 	"Messages",
 	"Media",
 	"Contacts",
 	"Settings",
 	"Phone",
 	"Apps",
+	"Clock", "Calculator", "Flashlight", "Calendar"
 	};
 	String BinaryFiles[255];
 	uint8_t binaryCount = 0;//Number of binary files available for loading
+	String directories[255];
+	uint8_t directoryCount = 0;//Number of binary files available for loading
 
 	//update() variables
 
