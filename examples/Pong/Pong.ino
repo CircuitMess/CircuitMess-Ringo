@@ -28,42 +28,117 @@ int ball_vx = 3;
 int ball_vy = 3;
 
 extern const byte font5x7[]; //get the default large font
-
+const byte title[] PROGMEM = {56,20,
+  B11111100,B00000000,B11110000,B00001100,B00110000,B00001111,B10000000,
+  B11100110,B00000001,B11111000,B00001100,B00110000,B00011111,B10000000,
+  B11100011,B00000011,B11001100,B00001110,B00110000,B00111000,B00000000,
+  B11100011,B00000011,B10000100,B00001110,B00110000,B00110000,B00000000,
+  B11100011,B00000011,B10000100,B00001110,B00110000,B00110000,B00000000,
+  B11100011,B00000011,B10000100,B00001111,B00110000,B00110000,B00000000,
+  B11100011,B00000011,B10000100,B00001111,B00110000,B00110000,B00000000,
+  B11100011,B00000011,B10000100,B00001111,B00110000,B00110000,B00000000,
+  B11100011,B00000011,B10000100,B00001101,B10110000,B00110000,B00000000,
+  B11100011,B00000011,B10000100,B00001101,B10110000,B00110000,B00000000,
+  B11100110,B00000011,B10000100,B00001101,B10110000,B00110000,B00000000,
+  B11111100,B00000011,B10000100,B00001100,B11110000,B00110000,B00000000,
+  B11100000,B00000011,B10000100,B00001100,B11110000,B00110001,B11000000,
+  B11100000,B00000011,B10000100,B00001100,B11110000,B00110001,B11000000,
+  B11100000,B00000011,B10000100,B00001100,B01110000,B00110000,B11000000,
+  B11100000,B00000011,B10000100,B00001100,B01110000,B00110000,B11000000,
+  B11100000,B00000011,B10000100,B00001100,B01110000,B00110000,B11000000,
+  B11100000,B00000011,B11001100,B00001100,B00110000,B00111001,B11000000,
+  B11100000,B00000001,B11111000,B00001100,B00110000,B00011111,B10000000,
+  B11100000,B00000000,B11110000,B00001100,B00110000,B00001111,B00000000,
+};
 ///////////////////////////////////// SETUP
 void setup() {
 	mp.begin();
-	mp.display.setTextFont(1); //change the font to the large one
+  mp.setResolution(1);
+  mp.display.setTextFont(1); //change the font to the large one
 	randomSeed(micros() * micros()); // can't use analogRad(0) as we have a speaker attached there
 	
 }
-
+bool gameState = 0;
 ///////////////////////////////////// LOOP
-void loop() {
-	if (mp.update()) {
-		if (mp.buttons.pressed(BTN_A))
+void loop()
+{
+  if(!gameState)
+  {
+   
+    bool cursor = 0;
+    bool blinkState = 0;
+    uint32_t blinkMillis = millis();
+    while(!mp.buttons.released(BTN_A))
+    {
+      mp.display.fillScreen(TFT_BLACK);
+      mp.display.drawBitmap(15, 7, title, TFT_WHITE);
+      mp.display.setTextSize(1);
+      mp.display.setTextFont(1);
+      mp.display.setCursor(32, 36);
+      mp.display.setTextColor(TFT_WHITE);
+      mp.display.printCenter("1 PLAYER");
+      mp.display.setCursor(46, 48);
+      mp.display.setTextColor(TFT_DARKGREY);
+      mp.display.printCenter("2 PLAYER");
+      if(!cursor)
+      {
+        mp.display.drawRect(14, 34, 51, 11, blinkState ? TFT_RED : TFT_BLACK);
+      }
+      if(millis()-blinkMillis >= 200)
+      {
+        blinkState = !blinkState;
+        blinkMillis = millis();
+      }
+      if(mp.buttons.released(BTN_B))
+        mp.loader();
+      mp.update();
+    }
+    gameState = 1;
+    mp.display.setTextColor(TFT_WHITE);
+    mp.display.setTextSize(2);
+    player_score = 0;
+    player_x = 0;
+    player_y = (BUFHEIGHT - player_h) / 2;
+    player_vy = 2;
+    //oponent variables
+    oponent_score = 0;
+    oponent_x = BUFWIDTH - oponent_w;
+    oponent_y = (BUFHEIGHT - oponent_h) / 2;
+    oponent_vy = 2;
+    //ball variables
+    ball_x = BUFWIDTH - ball_size - oponent_w - 1;
+    ball_y = (BUFHEIGHT - ball_size) / 2;
+    ball_vx = 3;
+    ball_vy = 3;
+  }
+  if (mp.update()) {
+		if (mp.buttons.released(BTN_B))
 		{
 			mp.display.fillScreen(TFT_BLACK);
-			mp.display.setCursor(16, 35);
-			mp.display.setFreeFont(TT1);
-			mp.display.setTextSize(2);
-			mp.display.print("Paused");
-			while(!mp.update());
-			while (!mp.buttons.pressed(BTN_A)) {
-				while(!mp.update());
-				if (mp.buttons.pressed(BTN_B))
-				{
-					mp.loader();
-				}
-			}
+			mp.display.setCursor(0, mp.display.height()/2 - 12);
+			mp.display.setTextFont(2);
+			mp.display.setTextSize(1);
+			mp.display.printCenter("Paused");
+      mp.display.setCursor(2, 55);
+      mp.display.setFreeFont(TT1);
+      mp.display.print("Press A to resume");
+      mp.display.setCursor(2, 62);
+      mp.display.print("Press B to quit");
+      while(!mp.update());
+			while (!mp.buttons.released(BTN_A)) {
+				if (mp.buttons.released(BTN_B))
+        {
+          gameState = 0;
+          while (!mp.update());
+          break;
+        }
+        while (!mp.update());
+      }
 				
 			mp.display.setTextFont(1);
 			mp.display.setTextSize(2);
 		}
-		if (mp.buttons.pressed(BTN_B))
-		{
-			mp.loader();
-		}
-		mp.display.fillScreen(TFT_BLACK);
+    mp.display.fillScreen(TFT_BLACK);
 		//move the player
 		if (mp.buttons.repeat(JOYSTICK_D, 1)) {
 			player_y = max(0, player_y - player_vy);

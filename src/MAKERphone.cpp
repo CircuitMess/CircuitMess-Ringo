@@ -723,7 +723,15 @@ void MAKERphone::lockScreen() {
 			break;
 	}
 }
-
+void MAKERphone::loader()
+{
+	const esp_partition_t* partition;
+	partition = esp_ota_get_running_partition();
+	const esp_partition_t* partition2;
+	partition2 = esp_ota_get_next_update_partition(partition);
+	esp_ota_set_boot_partition(partition2);
+	ESP.restart();
+}
 // TODO FastLED from now on
 
 void MAKERphone::updateTimeGSM() {
@@ -6989,7 +6997,6 @@ void MAKERphone::loadSettings(bool debug)
 		SD.mkdir("Images");
 	if(!SD.chdir("/Video"))
 		SD.mkdir("Video");
-	listDir("/", 1);
 	SD.chdir("/");
 	const char * path = "/settings.json";
 	Serial.println(""); 
