@@ -1,8 +1,7 @@
 //----------------------------------------------------------------------    
 //                             I N V A D E R S
 //                    coded by Yoda Zhang on Gamebuino
-//                       ported on META by Jicehel
-//					 ported to MAKERphone by CircuitMess
+//                  ported to MAKERphone by CircuitMess
 //                                 V 1.0w
 //----------------------------------------------------------------------    
 
@@ -11,10 +10,10 @@
 //----------------------------------------------------------------------------    
 #include <MAKERphone.h>
 #include "Star.h"
-//#include "portedHighscore.ino"
-//#include "portedImages.ino"
-//#include "portedNonstandard.ino"
-//#include "portedSpecific.ino"
+/*#include "portedHighscore.ino"
+#include "portedImages.ino"
+#include "portedNonstandard.ino"
+#include "portedSpecific.ino"*/
 MAKERphone mp;
 # define Maxwhidth 74
 uint32_t pixelsTimer=0;
@@ -69,14 +68,19 @@ extern const byte bomb[2][6];
 extern const byte saucer[2][10];
 extern const int soundfx[8][8];
 
-/*u
+/*
 //----------------------------------------------------------------------------
 // setup
 //----------------------------------------------------------------------------
 */
+
+
+ 
+
 void setup() {
   Serial.begin(115200);
 	 mp.begin();
+   mp.setResolution(1);
 	 mp.display.fillScreen(TFT_BLACK);
 	 mp.display.setFreeFont(TT1);
 	 //mp.update();
@@ -100,7 +104,7 @@ void loop() {
       mp.update();
       if (mp.buttons.released(BTN_B))
       {
-        gamestatus = "title";
+        gamestatus = "paused";
         while(!mp.update());
       }
 			showscore();
@@ -121,16 +125,8 @@ void loop() {
    
 		if (gamestatus == "title") { 
       showtitle();
-      if (mp.buttons.released(BTN_B))
-      {
-        while (!mp.update());
-        while(1)
-        {
-          mp.loader();
-           //mp.bigIconsMainMenu();
-           //mp.lockScreen();// title
-        }
-      }
+      if (mp.buttons.pressed(BTN_B))
+        mp.loader();
     }
 
 		if (gamestatus == "gameover") { // game over
@@ -158,5 +154,28 @@ void loop() {
 			
 			//saveHighscore(score);
 		}
+	  if(gamestatus == "paused")
+    {
+      mp.display.fillScreen(TFT_BLACK);
+      mp.display.setCursor(0, mp.display.height()/2 - 12);
+      mp.display.setTextFont(2);
+      mp.display.setTextSize(1);
+      mp.display.printCenter("Paused");
+      mp.display.setCursor(2, 55);
+      mp.display.setFreeFont(TT1);
+      mp.display.printCenter("A: resume    B: quit");
+      while(!mp.update());
+      while (!mp.buttons.released(BTN_A)) {
+        if (mp.buttons.released(BTN_B))
+        {
+          gamestatus = "title";
+          while (!mp.update());
+          break;
+        }
+        while (!mp.update());
+        gamestatus = "running";
+      }
+      
+    }
 	} // end of update
 }
