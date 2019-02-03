@@ -5,29 +5,28 @@
 #define max(a,b) ((a)>(b)?(a):(b))
 MAKERphone mp;
 
-boolean paused = false;
+bool gameState = 0;
 //player variables
-int player_score = 0;
-int player_h = 16;
-int player_w = 3;
-int player_x = 0;
-int player_y = (BUFHEIGHT - player_h) / 2;
-int player_vy = 2;
+int playerScore = 0;
+int playerHeight = 16;
+int playerWidth = 3;
+int playerX = 0;
+int playerY = (mp.display.width() - playerHeight) / 2;
+int playerSpeedY = 2;
 //oponent variables
-int oponent_score = 0;
-int oponent_h = 16;
-int oponent_w = 3;
-int oponent_x = BUFWIDTH - oponent_w;
-int oponent_y = (BUFHEIGHT - oponent_h) / 2;
-int oponent_vy = 2;
+int opponentScore = 0;
+int opponentHeight = 16;
+int opponentWidth = 3;
+int opponentX = mp.display.width() - opponentWidth;
+int opponentY = (mp.display.height() - opponentHeight) / 2;
+int opponentSpeedY = 2;
 //ball variables
-int ball_size = 6;
-int ball_x = BUFWIDTH - ball_size - oponent_w - 1;
-int ball_y = (BUFHEIGHT - ball_size) / 2;
-int ball_vx = 3;
-int ball_vy = 3;
+int ballSize = 6;
+int ballX = mp.display.width() - ballSize - opponentWidth - 1;
+int ballY = (mp.display.height() - ballSize) / 2;
+int ballSpeedX = 3;
+int ballSpeedY = 3;
 
-extern const byte font5x7[]; //get the default large font
 const byte title[] PROGMEM = {56,20,
   B11111100,B00000000,B11110000,B00001100,B00110000,B00001111,B10000000,
   B11100110,B00000001,B11111000,B00001100,B00110000,B00011111,B10000000,
@@ -50,21 +49,19 @@ const byte title[] PROGMEM = {56,20,
   B11100000,B00000001,B11111000,B00001100,B00110000,B00011111,B10000000,
   B11100000,B00000000,B11110000,B00001100,B00110000,B00001111,B00000000,
 };
-///////////////////////////////////// SETUP
+
 void setup() {
-	mp.begin();
+	mp.begin(0);
   mp.setResolution(1);
   mp.display.setTextFont(1); //change the font to the large one
 	randomSeed(micros() * micros()); // can't use analogRad(0) as we have a speaker attached there
 	
 }
-bool gameState = 0;
-///////////////////////////////////// LOOP
+
 void loop()
 {
   if(!gameState)
   {
-   
     bool cursor = 0;
     bool blinkState = 0;
     uint32_t blinkMillis = millis();
@@ -93,23 +90,24 @@ void loop()
         mp.loader();
       mp.update();
     }
+		//Starting game - setting all values to defaults
     gameState = 1;
     mp.display.setTextColor(TFT_WHITE);
     mp.display.setTextSize(2);
-    player_score = 0;
-    player_x = 0;
-    player_y = (BUFHEIGHT - player_h) / 2;
-    player_vy = 2;
+    playerScore = 0;
+    playerX = 0;
+		playerY = (mp.display.width() - playerHeight) / 2;
+    playerSpeedY = 2;
     //oponent variables
-    oponent_score = 0;
-    oponent_x = BUFWIDTH - oponent_w;
-    oponent_y = (BUFHEIGHT - oponent_h) / 2;
-    oponent_vy = 2;
+    opponentScore = 0;
+    opponentX = mp.display.width() - opponentWidth;
+    opponentY = (mp.display.height() - opponentHeight) / 2;
+    opponentSpeedY = 2;
     //ball variables
-    ball_x = BUFWIDTH - ball_size - oponent_w - 1;
-    ball_y = (BUFHEIGHT - ball_size) / 2;
-    ball_vx = 3;
-    ball_vy = 3;
+    ballX = mp.display.width() - ballSize - opponentWidth - 1;
+    ballY = (mp.display.height() - ballSize) / 2;
+    ballSpeedX = 3;
+    ballSpeedY = 3;
   }
   if (mp.update()) {
 		if (mp.buttons.released(BTN_B))
@@ -121,9 +119,7 @@ void loop()
 			mp.display.printCenter("Paused");
       mp.display.setCursor(2, 55);
       mp.display.setFreeFont(TT1);
-      mp.display.print("Press A to resume");
-      mp.display.setCursor(2, 62);
-      mp.display.print("Press B to quit");
+      mp.display.printCenter("A: resume      B:quit");
       while(!mp.update());
 			while (!mp.buttons.released(BTN_A)) {
 				if (mp.buttons.released(BTN_B))
@@ -141,90 +137,87 @@ void loop()
     mp.display.fillScreen(TFT_BLACK);
 		//move the player
 		if (mp.buttons.repeat(JOYSTICK_D, 1)) {
-			player_y = max(0, player_y - player_vy);
+			playerY = max(0, playerY - playerSpeedY);
 		}
 		if (mp.buttons.repeat(JOYSTICK_B, 1)) {
-			player_y = min(BUFHEIGHT - player_h, player_y + player_vy);
+			playerY = min(mp.display.height() - playerHeight, playerY + playerSpeedY);
 		}
 
 		//move the ball
-		ball_x = ball_x + ball_vx;
-		ball_y = ball_y + ball_vy;
+		ballX = ballX + ballSpeedX;
+		ballY = ballY + ballSpeedY;
 
 		//check for ball collisions
 		//collision with the top border
-		if (ball_y < 0) {
-			ball_y = 0;
-			ball_vy = -ball_vy;
+		if (ballY < 0) {
+			ballY = 0;
+			ballSpeedY = -ballSpeedY;
 			//mp.sound.playTick();
 		}
 		//collision with the bottom border
-		if ((ball_y + ball_size) > BUFHEIGHT) {
-			ball_y = BUFHEIGHT - ball_size;
-			ball_vy = -ball_vy;
+		if ((ballY + ballSize) > mp.display.height()) {
+			ballY = mp.display.height() - ballSize;
+			ballSpeedY = -ballSpeedY;
 			//mp.sound.playTick();
 		}
 		//collision with the player
-		if (mp.collideRectRect(ball_x, ball_y, ball_size, ball_size, player_x, player_y, player_w, player_h)) {
-			ball_x = player_x + player_w;
-			ball_vx = -ball_vx;
+		if (mp.collideRectRect(ballX, ballY, ballSize, ballSize, playerX, playerY, playerWidth, playerHeight)) {
+			ballX = playerX + playerWidth;
+			ballSpeedX = -ballSpeedX;
 			//mp.sound.playTick();
 		}
 		//collision with the oponent
-		if (mp.collideRectRect(ball_x, ball_y, ball_size, ball_size, oponent_x, oponent_y, oponent_w, oponent_h)) {
-			ball_x = oponent_x - ball_size;
-			ball_vx = -ball_vx;
+		if (mp.collideRectRect(ballX, ballY, ballSize, ballSize, opponentX, opponentY, opponentWidth, opponentHeight)) {
+			ballX = opponentX - ballSize;
+			ballSpeedX = -ballSpeedX;
 			//mp.sound.playTick();
 		}
 		//collision with the left side
-		if (ball_x < 0) {
-			oponent_score = oponent_score + 1;
+		if (ballX < 0) {
+			opponentScore = opponentScore + 1;
 			//mp.sound.playCancel();
-			ball_x = BUFWIDTH - ball_size - oponent_w - 1;
-			ball_vx = -abs(ball_vx);
-			ball_y = random(0, BUFHEIGHT - ball_size);
+			ballX = mp.display.width() - ballSize - opponentWidth - 1;
+			ballSpeedX = -abs(ballSpeedX);
+			ballY = random(0, mp.display.height() - ballSize);
 		}
 		//collision with the right side
-		if ((ball_x + ball_size) > BUFWIDTH) {
-			player_score = player_score + 1;
+		if ((ballX + ballSize) > mp.display.width()) {
+			playerScore = playerScore + 1;
 			//mp.sound.playOK();
-			ball_x = BUFWIDTH - ball_size - oponent_w - 16; //place the ball on the oponent side
-			ball_vx = -abs(ball_vx);
-			ball_y = random(0, BUFHEIGHT - ball_size);
+			ballX = mp.display.width() - ballSize - opponentWidth - 16; //place the ball on the oponent side
+			ballSpeedX = -abs(ballSpeedX);
+			ballY = random(0, mp.display.height() - ballSize);
 
 		}
 		//reset score when 10 is reached
-		if ((player_score == 10) || (oponent_score == 10)) {
-			player_score = 0;
-			oponent_score = 0;
+		if ((playerScore == 10) || (opponentScore == 10)) {
+			playerScore = 0;
+			opponentScore = 0;
 		}
 
 		//move the oponent
-		if ((oponent_y + (oponent_h / 2)) < (ball_y + (ball_size / 2))) { //if the ball is below the oponent
-			oponent_y = oponent_y + oponent_vy; //move down
-			oponent_y = min(BUFHEIGHT - oponent_h, oponent_y); //don't go out of the screen
+		if ((opponentY + (opponentHeight / 2)) < (ballY + (ballSize / 2))) { //if the ball is below the oponent
+			opponentY = opponentY + opponentSpeedY; //move down
+			opponentY = min(BUFHEIGHT - opponentHeight, opponentY); //don't go out of the screen
 		}
 		else {
-			oponent_y = oponent_y - oponent_vy; //move up
-			oponent_y = max(0, oponent_y); //don't go out of the screen
+			opponentY = opponentY - opponentSpeedY; //move up
+			opponentY = max(0, opponentY); //don't go out of the screen
 		}
 
 
 
 		//draw the score
 		mp.display.setTextSize(2);
-		mp.display.cursor_x = 15;
-		mp.display.cursor_y = 16;
-		mp.display.print(player_score);
-
-		mp.display.cursor_x = 57;
-		mp.display.cursor_y = 16;
-		mp.display.print(oponent_score);
+		mp.display.setCursor(15, 16);
+		mp.display.print(playerScore);
+		mp.display.setCursor(57, 16);
+		mp.display.print(opponentScore);
 		//draw the ball
-		mp.display.fillRect(ball_x, ball_y, ball_size, ball_size, TFT_WHITE);
+		mp.display.fillRect(ballX, ballY, ballSize, ballSize, TFT_WHITE);
 		//draw the player
-		mp.display.fillRect(player_x, player_y, player_w, player_h, TFT_RED);
+		mp.display.fillRect(playerX, playerY, playerWidth, playerHeight, TFT_RED);
 		//draw the oponent
-		mp.display.fillRect(oponent_x, oponent_y, oponent_w, oponent_h, TFT_BLUE);
+		mp.display.fillRect(opponentX, opponentY, opponentWidth, opponentHeight, TFT_BLUE);
 	}
 }
