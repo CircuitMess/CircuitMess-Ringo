@@ -2,8 +2,8 @@
 void checkbuttons() {
 	if (shipx < 0) shipx = 0;
 
-	if (mp.buttons.repeat(JOYSTICK_A, 1) && shipx > 0 && deadcounter == -1) { shipx = --shipx; }
-	if (mp.buttons.repeat(JOYSTICK_C, 1) and shipx < Maxwhidth and deadcounter == -1) { shipx = ++shipx; }
+	if (mp.buttons.repeat(BTN_LEFT, 1) && shipx > 0 && deadcounter == -1) { shipx = --shipx; }
+	if (mp.buttons.repeat(BTN_RIGHT, 1) and shipx < Maxwhidth and deadcounter == -1) { shipx = ++shipx; }
 	//if (buttonsPressed(BUTTON_MENU)) {
 	//	 gb.titleScreen(F("    Yoda's"),gamelogo);
 	//	gamestatus = "title";

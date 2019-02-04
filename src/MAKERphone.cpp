@@ -2468,19 +2468,19 @@ void MAKERphone::viewSms(String content, String contact, String date) {
 
 		display.setCursor(1, y);
 		display.print(content);
-		if (buttons.kpd.pin_read(JOYSTICK_B) == 0) { //BUTTON DOWN
+		if (buttons.kpd.pin_read(BTN_DOWN) == 0) { //BUTTON DOWN
 			Serial.println(display.cursor_y);
 			if (display.cursor_y >= 128)
 			{
 				buttonHeld = millis();
 
-				if (buttons.kpd.pin_read(JOYSTICK_B) == 1)
+				if (buttons.kpd.pin_read(BTN_DOWN) == 1)
 				{
 					y -= 4;
 					break;
 				}
 
-				while (buttons.kpd.pin_read(JOYSTICK_B) == 0)
+				while (buttons.kpd.pin_read(BTN_DOWN) == 0)
 				{
 					if (millis() - buttonHeld > 100) {
 						y -= 4;
@@ -2490,18 +2490,18 @@ void MAKERphone::viewSms(String content, String contact, String date) {
 			}
 		}
 
-		if (buttons.kpd.pin_read(JOYSTICK_D) == 0) { //BUTTON UP
+		if (buttons.kpd.pin_read(BTN_UP) == 0) { //BUTTON UP
 			if (y < 14)
 			{
 				buttonHeld = millis();
 
-				if (buttons.kpd.pin_read(JOYSTICK_D) == 1)
+				if (buttons.kpd.pin_read(BTN_UP) == 1)
 				{
 					y += 4;
 					break;
 				}
 
-				while (buttons.kpd.pin_read(JOYSTICK_D) == 0)
+				while (buttons.kpd.pin_read(BTN_UP) == 0)
 				{
 					if (millis() - buttonHeld > 100) {
 						y += 4;
@@ -2711,7 +2711,7 @@ int16_t MAKERphone::smsMenu(const char* title, String* contact, String *date, St
 			break;
 		}
 
-		if (buttons.released(JOYSTICK_D)) {  //BUTTON UP
+		if (buttons.released(BTN_UP)) {  //BUTTON UP
 			if (cursor == 0) {
 				cursor = length - 1;
 				if (length > 2) {
@@ -2726,7 +2726,7 @@ int16_t MAKERphone::smsMenu(const char* title, String* contact, String *date, St
 			}
 		}
 
-		if (buttons.released(JOYSTICK_B)) { //BUTTON DOWN
+		if (buttons.released(BTN_DOWN)) { //BUTTON DOWN
 			cursor++;
 			if (cursor > 0)
 			{
@@ -2938,19 +2938,19 @@ void MAKERphone::composeSMS()
 				display.drawFastHLine(0, 7, LCDWIDTH, TFT_BLACK);
 			}*/
 		}
-		if (buttons.kpd.pin_read(JOYSTICK_D) == 0 && cursor == 1) { //BUTTON UP
+		if (buttons.kpd.pin_read(BTN_UP) == 0 && cursor == 1) { //BUTTON UP
 			/*Serial.println(display.cursor_y);
 			if (display.cursor_y >= 64)
 			{
 				buttonHeld = millis();
 
-				if (buttons.kpd.pin_read(JOYSTICK_D) == 1)
+				if (buttons.kpd.pin_read(BTN_UP) == 1)
 				{
 					y -= 2;
 					break;
 				}
 
-				while (buttons.kpd.pin_read(JOYSTICK_D) == 0)
+				while (buttons.kpd.pin_read(BTN_UP) == 0)
 				{
 					if (millis() - buttonHeld > 100) {
 						y -= 2;
@@ -2961,20 +2961,20 @@ void MAKERphone::composeSMS()
 			cursor = 0;
 		}
 
-		if (buttons.kpd.pin_read(JOYSTICK_B) == 0 && cursor == 0) { //BUTTON DOWN
+		if (buttons.kpd.pin_read(BTN_DOWN) == 0 && cursor == 0) { //BUTTON DOWN
 			/*if (y < 14)
 			{
 
 
 				buttonHeld = millis();
 
-				if (buttons.kpd.pin_read(JOYSTICK_B) == 1)
+				if (buttons.kpd.pin_read(BTN_DOWN) == 1)
 				{
 					y += 2;
 					break;
 				}
 
-				while (buttons.kpd.pin_read(JOYSTICK_B) == 0)
+				while (buttons.kpd.pin_read(BTN_DOWN) == 0)
 				{
 					if (millis() - buttonHeld > 100) {
 						y += 2;
@@ -3216,11 +3216,11 @@ uint8_t MAKERphone::newContact()
 		display.setCursor(31*2, 103);
 		display.printCenter("SAVE");
 
-		if (buttons.kpd.pin_read(JOYSTICK_B) == 0 && cursor == 1) { //BUTTON UP
+		if (buttons.kpd.pin_read(BTN_DOWN) == 0 && cursor == 1) { //BUTTON UP
 		cursor = 0;
 		}
 
-		if (buttons.kpd.pin_read(JOYSTICK_D) == 0 && cursor == 0) { //BUTTON DOWN
+		if (buttons.kpd.pin_read(BTN_UP) == 0 && cursor == 0) { //BUTTON DOWN
 		cursor = 1;
 		}
 
@@ -3441,17 +3441,17 @@ int MAKERphone::contactsMenu(const char* title, String* contact, String *number,
 		while (buttons.kpd.pin_read(BTN_A) == 0);// Exit when pressed
 		break;
 		}
-		if (buttons.kpd.pin_read(JOYSTICK_A) == 0 && cursor != 0) {
-		while (buttons.kpd.pin_read(JOYSTICK_A) == 0); // Delete
+		if (buttons.kpd.pin_read(BTN_LEFT) == 0 && cursor != 0) {
+		while (buttons.kpd.pin_read(BTN_LEFT) == 0); // Delete
 		return -1000 + cursor;
 		}
-		if (buttons.kpd.pin_read(JOYSTICK_C) == 0 && cursor != 0) {
-		while (buttons.kpd.pin_read(JOYSTICK_C) == 0); // Edit contact
+		if (buttons.kpd.pin_read(BTN_RIGHT) == 0 && cursor != 0) {
+		while (buttons.kpd.pin_read(BTN_RIGHT) == 0); // Edit contact
 		return -3000 + cursor;
 		}
 
-		if (buttons.kpd.pin_read(JOYSTICK_D) == 0) {  //BUTTON UP
-		while (buttons.kpd.pin_read(JOYSTICK_D) == 0);
+		if (buttons.kpd.pin_read(BTN_UP) == 0) {  //BUTTON UP
+		while (buttons.kpd.pin_read(BTN_UP) == 0);
 		if (cursor == 0) {
 			cursor = length;
 			if (length > 2) {
@@ -3466,8 +3466,8 @@ int MAKERphone::contactsMenu(const char* title, String* contact, String *number,
 		}
 		}
 
-		if (buttons.kpd.pin_read(JOYSTICK_B) == 0) { //BUTTON DOWN
-		while (buttons.kpd.pin_read(JOYSTICK_B) == 0);
+		if (buttons.kpd.pin_read(BTN_DOWN) == 0) { //BUTTON DOWN
+		while (buttons.kpd.pin_read(BTN_DOWN) == 0);
 
 		cursor++;
 		if ((cursor * (boxHeight+1) + cameraY + offset) > 48) {
@@ -3918,11 +3918,11 @@ uint8_t MAKERphone::newContactSD(String *name, String *number)
 		display.setCursor(31*2, 103);
 		display.printCenter("SAVE");
 
-		if (buttons.kpd.pin_read(JOYSTICK_B) == 0 && cursor == 1) { //BUTTON UP
+		if (buttons.kpd.pin_read(BTN_DOWN) == 0 && cursor == 1) { //BUTTON UP
 		cursor = 0;
 		}
 
-		if (buttons.kpd.pin_read(JOYSTICK_D) == 0 && cursor == 0) { //BUTTON DOWN
+		if (buttons.kpd.pin_read(BTN_UP) == 0 && cursor == 0) { //BUTTON DOWN
 		cursor = 1;
 		}
 
@@ -4007,17 +4007,17 @@ int MAKERphone::contactsMenuSD(JsonArray *contacts){
 		while (buttons.kpd.pin_read(BTN_A) == 0);// Exit when pressed
 		break;
 		}
-		if (buttons.kpd.pin_read(JOYSTICK_A) == 0 && cursor != 0) {
-		while (buttons.kpd.pin_read(JOYSTICK_A) == 0); // Delete
+		if (buttons.kpd.pin_read(BTN_LEFT) == 0 && cursor != 0) {
+		while (buttons.kpd.pin_read(BTN_LEFT) == 0); // Delete
 		return -1000 + cursor;
 		}
-		if (buttons.kpd.pin_read(JOYSTICK_C) == 0 && cursor != 0) {
-		while (buttons.kpd.pin_read(JOYSTICK_C) == 0); // Edit contact
+		if (buttons.kpd.pin_read(BTN_RIGHT) == 0 && cursor != 0) {
+		while (buttons.kpd.pin_read(BTN_RIGHT) == 0); // Edit contact
 		return -3000 + cursor;
 		}
 
-		if (buttons.kpd.pin_read(JOYSTICK_D) == 0) {  //BUTTON UP
-		while (buttons.kpd.pin_read(JOYSTICK_D) == 0);
+		if (buttons.kpd.pin_read(BTN_UP) == 0) {  //BUTTON UP
+		while (buttons.kpd.pin_read(BTN_UP) == 0);
 		if (cursor == 0) {
 			cursor = length;
 			if (length > 2) {
@@ -4032,8 +4032,8 @@ int MAKERphone::contactsMenuSD(JsonArray *contacts){
 		}
 		}
 
-		if (buttons.kpd.pin_read(JOYSTICK_B) == 0) { //BUTTON DOWN
-		while (buttons.kpd.pin_read(JOYSTICK_B) == 0);
+		if (buttons.kpd.pin_read(BTN_DOWN) == 0) { //BUTTON DOWN
+		while (buttons.kpd.pin_read(BTN_DOWN) == 0);
 
 		cursor++;
 		if ((cursor * (boxHeight+1) + cameraY + offset) > 48) {
@@ -4253,7 +4253,7 @@ int16_t MAKERphone::mp3Menu(const char* title, String* items, uint8_t length) {
 			break;
 		}
 
-		if (buttons.released(JOYSTICK_D)) {  //BUTTON UP
+		if (buttons.released(BTN_UP)) {  //BUTTON UP
 
 			while (!update());
 			if (cursor == 0) {
@@ -4270,7 +4270,7 @@ int16_t MAKERphone::mp3Menu(const char* title, String* items, uint8_t length) {
 			}
 		}
 
-		if (buttons.released(JOYSTICK_B)) { //BUTTON DOWN
+		if (buttons.released(BTN_DOWN)) { //BUTTON DOWN
 			while (!update());
 			cursor++;
 			if ((cursor * (boxHeight + 1) + cameraY + offset) > 54*scale) {
@@ -4433,9 +4433,9 @@ void MAKERphone::mp3player(String songName) {
 			playState = !playState;
 		}
 
-		if (buttons.kpd.pin_read(JOYSTICK_D) == 0) //DOWN
+		if (buttons.kpd.pin_read(BTN_UP) == 0) //DOWN
 		{
-			while (buttons.kpd.pin_read(JOYSTICK_D) == 0);
+			while (buttons.kpd.pin_read(BTN_UP) == 0);
 
 			volume--;
 			Serial.print("volume:");
@@ -4443,9 +4443,9 @@ void MAKERphone::mp3player(String songName) {
 			buttons.kpd.writeVolumeRight(volume);
 		}
 
-		if (buttons.kpd.pin_read(JOYSTICK_B) == 0) //UP
+		if (buttons.kpd.pin_read(BTN_DOWN) == 0) //UP
 		{
-			while (buttons.kpd.pin_read(JOYSTICK_B) == 0);
+			while (buttons.kpd.pin_read(BTN_DOWN) == 0);
 
 			volume++;
 			Serial.print("volume:");
@@ -4714,7 +4714,7 @@ int8_t MAKERphone::mediaMenu(String* title, uint8_t length) {
 		}
 		mediaMenuDrawCursor(cursor, cameraY_actual, pressed);
 
-		if (buttons.kpd.pin_read(JOYSTICK_B) == 1 && buttons.kpd.pin_read(JOYSTICK_D) == 1)
+		if (buttons.kpd.pin_read(BTN_DOWN) == 1 && buttons.kpd.pin_read(BTN_UP) == 1)
 			pressed = 0;
 
 		if (buttons.released(BTN_A)) {   //BUTTON CONFIRM
@@ -4723,7 +4723,7 @@ int8_t MAKERphone::mediaMenu(String* title, uint8_t length) {
 			break;
 		}
 
-		if (buttons.released(JOYSTICK_D)) {  //BUTTON UP
+		if (buttons.released(BTN_UP)) {  //BUTTON UP
 			if (cursor == 0) {
 				cursor = length - 1;
 				if (length > 6) {
@@ -4739,7 +4739,7 @@ int8_t MAKERphone::mediaMenu(String* title, uint8_t length) {
 			pressed = 1;
 		}
 
-		if (buttons.released(JOYSTICK_B)) { //BUTTON DOWN
+		if (buttons.released(BTN_DOWN)) { //BUTTON DOWN
 			cursor++;
 			if ((cursor * boxHeight + cameraY + settingsMenuYOffset) > 128) {
 				cameraY -= boxHeight;
@@ -4849,7 +4849,7 @@ int8_t MAKERphone::settingsMenu(String* title, uint8_t length) {
 		}
 		settingsMenuDrawCursor(cursor, cameraY_actual, pressed);
 
-		if (buttons.kpd.pin_read(JOYSTICK_B) == 1 && buttons.kpd.pin_read(JOYSTICK_D) == 1)
+		if (buttons.kpd.pin_read(BTN_DOWN) == 1 && buttons.kpd.pin_read(BTN_UP) == 1)
 			pressed = 0;
 
 		if (buttons.released(BTN_A)) {   //BUTTON CONFIRM
@@ -4858,7 +4858,7 @@ int8_t MAKERphone::settingsMenu(String* title, uint8_t length) {
 			break;
 		}
 
-		if (buttons.released(JOYSTICK_D)) {  //BUTTON UP
+		if (buttons.released(BTN_UP)) {  //BUTTON UP
 			if (cursor == 0) {
 				cursor = length - 1;
 				if (length > 6) {
@@ -4874,7 +4874,7 @@ int8_t MAKERphone::settingsMenu(String* title, uint8_t length) {
 			pressed = 1;
 		}
 
-		if (buttons.released(JOYSTICK_B)) { //BUTTON DOWN
+		if (buttons.released(BTN_DOWN)) { //BUTTON DOWN
 			cursor++;
 			if ((cursor * boxHeight + cameraY + settingsMenuYOffset) > 128) {
 				cameraY -= boxHeight;
@@ -5139,9 +5139,9 @@ void MAKERphone::networkMenu() {
 			{
 				display.drawRect(57*2, 8*2, 20*2, 11*2, TFT_BLACK);
 			}
-			if (buttons.kpd.pin_read(JOYSTICK_A) == 0 && wifi == 0)
+			if (buttons.kpd.pin_read(BTN_LEFT) == 0 && wifi == 0)
 				wifi = !wifi;
-			if (buttons.kpd.pin_read(JOYSTICK_C) == 0 && wifi == 1)
+			if (buttons.kpd.pin_read(BTN_RIGHT) == 0 && wifi == 1)
 				wifi = !wifi;
 		}
 		if (cursor == 1)
@@ -5154,9 +5154,9 @@ void MAKERphone::networkMenu() {
 			{
 				display.drawRect(57*2, 27*2, 20*2, 11*2, TFT_BLACK);
 			}
-			if (buttons.kpd.pin_read(JOYSTICK_A) == 0 && bt == 0)
+			if (buttons.kpd.pin_read(BTN_LEFT) == 0 && bt == 0)
 				bt = !bt;
-			if (buttons.kpd.pin_read(JOYSTICK_C) == 0 && bt == 1)
+			if (buttons.kpd.pin_read(BTN_RIGHT) == 0 && bt == 1)
 				bt = !bt;
 		}
 		if (cursor == 2)
@@ -5169,23 +5169,23 @@ void MAKERphone::networkMenu() {
 			{
 				display.drawRect(57*2, 46*2, 20*2, 11*2, TFT_BLACK);
 			}
-			if (buttons.kpd.pin_read(JOYSTICK_A) == 0 && airplaneMode == 0)
+			if (buttons.kpd.pin_read(BTN_LEFT) == 0 && airplaneMode == 0)
 				airplaneMode = !airplaneMode;
-			if (buttons.kpd.pin_read(JOYSTICK_C) == 0 && airplaneMode == 1)
+			if (buttons.kpd.pin_read(BTN_RIGHT) == 0 && airplaneMode == 1)
 				airplaneMode = !airplaneMode;
 		}
 
-		if (buttons.kpd.pin_read(JOYSTICK_D) == 0) 
+		if (buttons.kpd.pin_read(BTN_UP) == 0) 
 		{
-			while (buttons.kpd.pin_read(JOYSTICK_D) == 0);
+			while (buttons.kpd.pin_read(BTN_UP) == 0);
 			if (cursor == 0)
 				cursor = 2;
 			else
 				cursor--;
 		}
-		if (buttons.kpd.pin_read(JOYSTICK_B) == 0)
+		if (buttons.kpd.pin_read(BTN_DOWN) == 0)
 		{
-			while (buttons.kpd.pin_read(JOYSTICK_B) == 0);
+			while (buttons.kpd.pin_read(BTN_DOWN) == 0);
 			if (cursor == 2)
 				cursor = 0;
 			else
@@ -5263,12 +5263,12 @@ void MAKERphone::displayMenu() {
 				display.drawBitmap(12, 27, noBrightness, 0x8FEA, 2);
 				display.drawBitmap(132, 21, fullBrightness, 0x8FEA, 2);
 			}
-			if (buttons.released(JOYSTICK_A) && brightness != 0)
+			if (buttons.released(BTN_LEFT) && brightness != 0)
 			{
 				brightness--;
 				while(!update());
 			}
-			if (buttons.released(JOYSTICK_C) && brightness != 5)
+			if (buttons.released(BTN_RIGHT) && brightness != 5)
 			{
 				brightness++;
 				while(!update());
@@ -5292,12 +5292,12 @@ void MAKERphone::displayMenu() {
 				display.print("30m");
 				display.setTextColor(TFT_BLACK);
 			}
-			if (buttons.released(JOYSTICK_A) && sleepTimeBuffer!= 0)
+			if (buttons.released(BTN_LEFT) && sleepTimeBuffer!= 0)
 			{
 				sleepTimeBuffer--;
 				while(!update());
 			}
-			if (buttons.released(JOYSTICK_C) && sleepTimeBuffer!= 5)
+			if (buttons.released(BTN_RIGHT) && sleepTimeBuffer!= 5)
 			{
 				sleepTimeBuffer++;
 				while(!update());
@@ -5332,19 +5332,19 @@ void MAKERphone::displayMenu() {
 				display.drawBitmap(11*2, 102, arrowLeft, TFT_BLACK, 2);
 				display.drawBitmap(65*2, 102, arrowRight, TFT_BLACK, 2);
 			}
-			if (buttons.released(JOYSTICK_A) && backgroundIndex != 0)
+			if (buttons.released(BTN_LEFT) && backgroundIndex != 0)
 			{
 				backgroundIndex--;
 				while(!update());
 			}
-			if (buttons.released(JOYSTICK_C) && backgroundIndex != 6)
+			if (buttons.released(BTN_RIGHT) && backgroundIndex != 6)
 			{
 				backgroundIndex++;
 				while(!update());
 			}
 		}
 
-		if (buttons.released(JOYSTICK_D))
+		if (buttons.released(BTN_UP))
 		{
 			while (!update());
   		if (cursor == 0)
@@ -5352,7 +5352,7 @@ void MAKERphone::displayMenu() {
 			else
 				cursor--;
 		}
-		if (buttons.released(JOYSTICK_B))
+		if (buttons.released(BTN_DOWN))
 		{
 			while (!update());
 			if (cursor == 2)
@@ -5450,12 +5450,12 @@ void MAKERphone::soundMenu() {
 				display.drawBitmap(4*2, 10*2, noSound, 0xA7FF, 2);
 				display.drawBitmap(67*2, 10*2, fullSound, 0xA7FF, 2);
 			}
-			if (buttons.released(JOYSTICK_A) && volume != 0)
+			if (buttons.released(BTN_LEFT) && volume != 0)
 			{
 				volume--;
 				while(!update());
 			}
-			if (buttons.released(JOYSTICK_C) && volume != 15)
+			if (buttons.released(BTN_RIGHT) && volume != 15)
 			{
 				volume++;
 				while(!update());
@@ -5507,7 +5507,7 @@ void MAKERphone::soundMenu() {
 			}
 		}
 
-		if (buttons.released(JOYSTICK_D))
+		if (buttons.released(BTN_UP))
 		{
 			if (cursor == 0)
 				cursor = 2;
@@ -5515,7 +5515,7 @@ void MAKERphone::soundMenu() {
 				cursor--;
 			while(!update());
 		}
-		if (buttons.released(JOYSTICK_B))
+		if (buttons.released(BTN_DOWN))
 		{
 			if (cursor == 2)
 				cursor = 0;
@@ -5717,9 +5717,9 @@ void MAKERphone::securityMenu() {
 					display.drawRect(69, 12, 17*2, 11*2, TFT_BLACK);
 				else if (millis() % 500 <= 250 && pinLockBuffer == 0)
 					display.drawRect(113, 12, 38, 11*2, TFT_BLACK);
-				if (buttons.released(JOYSTICK_A) && pinLockBuffer == 0)
+				if (buttons.released(BTN_LEFT) && pinLockBuffer == 0)
 					pinLockBuffer = !pinLockBuffer;
-				if (buttons.released(JOYSTICK_C) && pinLockBuffer == 1)
+				if (buttons.released(BTN_RIGHT) && pinLockBuffer == 1)
 				{
 					pinBuffer = "";
 					pinLockBuffer = !pinLockBuffer;
@@ -6062,7 +6062,7 @@ void MAKERphone::securityMenu() {
 				}
 			}
 
-			if (buttons.released(JOYSTICK_D))
+			if (buttons.released(BTN_UP))
 			{
 				while (!update());
 				if (cursor == 0 && pinLockBuffer == 1)
@@ -6070,7 +6070,7 @@ void MAKERphone::securityMenu() {
 				else if (pinLockBuffer == 1 && cursor == 1)
 					cursor--;
 			}
-			if (buttons.released(JOYSTICK_B))
+			if (buttons.released(BTN_DOWN))
 			{
 				while (!update());
 				if (cursor == 1)
@@ -6373,7 +6373,7 @@ void MAKERphone::timeMenu()
 						blinkState = !blinkState;
 					}
 					update();
-					if(buttons.released(JOYSTICK_C) && editCursor < 5) //RIGHT
+					if(buttons.released(BTN_RIGHT) && editCursor < 5) //RIGHT
 					{
 						blinkState = 1;
 						previousMillis = millis();
@@ -6462,7 +6462,7 @@ void MAKERphone::timeMenu()
 						editCursor++;
 
 					}
-					if(buttons.released(JOYSTICK_A) && editCursor > 0) //LEFT
+					if(buttons.released(BTN_LEFT) && editCursor > 0) //LEFT
 					{
 						while(!update());
 						blinkState = 1;
@@ -6552,7 +6552,7 @@ void MAKERphone::timeMenu()
 
 					}
 
-					if(buttons.released(JOYSTICK_D) && editCursor > 2) //UP
+					if(buttons.released(BTN_UP) && editCursor > 2) //UP
 					{
 						while(!update());
 						blinkState = 1;
@@ -6628,7 +6628,7 @@ void MAKERphone::timeMenu()
 						}
 						editCursor-=3;
 					}
-					if(buttons.released(JOYSTICK_B) && editCursor < 3) //DOWN
+					if(buttons.released(BTN_DOWN) && editCursor < 3) //DOWN
 					{
 						while(!update());
 						blinkState = 1;
@@ -6820,14 +6820,14 @@ void MAKERphone::timeMenu()
 			blinkState = !blinkState;
 			updateTimeRTC();
 		}
-		if (buttons.released(JOYSTICK_D) && cursor > 0)
+		if (buttons.released(BTN_UP) && cursor > 0)
 		{
 			blinkState = 1;
 			previousMillis = millis() + 400;
 			while (!update());
 			cursor--;
 		}
-		if (buttons.released(JOYSTICK_B) && cursor < 1)
+		if (buttons.released(BTN_DOWN) && cursor < 1)
 		{
 			blinkState = 1;
 			previousMillis = millis() + 400;
@@ -6927,14 +6927,14 @@ bool MAKERphone::updateMenu()
 			previousMillis = millis();
 			blinkState = !blinkState;
 		}
-		if (buttons.released(JOYSTICK_D) && cursor > 0)
+		if (buttons.released(BTN_UP) && cursor > 0)
 		{
 			blinkState = 1;
 			previousMillis = millis();
 			while (!update());
 			cursor--;
 		}
-		if (buttons.released(JOYSTICK_B) && cursor < 1)
+		if (buttons.released(BTN_DOWN) && cursor < 1)
 		{
 			blinkState = 1;
 			previousMillis = millis();
@@ -7344,7 +7344,7 @@ int8_t GUI::menu(const char* title, String* items, uint8_t length) {
 			return -1;
 		}
 
-		if (mp.buttons.kpd.pin_read(JOYSTICK_D) == 0) {  //BUTTON DOWN
+		if (mp.buttons.kpd.pin_read(BTN_UP) == 0) {  //BUTTON UP
 			mp.leds[3] = CRGB::Blue;
 			mp.leds[4] = CRGB::Blue;
 			while(!mp.update());
@@ -7352,7 +7352,7 @@ int8_t GUI::menu(const char* title, String* items, uint8_t length) {
 			FastLED.clear();
 			while (!mp.update());
 
-			while (mp.buttons.kpd.pin_read(JOYSTICK_D) == 0);
+			while (mp.buttons.kpd.pin_read(BTN_UP) == 0);
 			if (cursor == 0) {
 				cursor = length - 1;
 				if (length > 6) {
@@ -7367,7 +7367,7 @@ int8_t GUI::menu(const char* title, String* items, uint8_t length) {
 			}
 		}
 
-		if (mp.buttons.kpd.pin_read(JOYSTICK_B) == 0) { //BUTTON UP
+		if (mp.buttons.kpd.pin_read(BTN_DOWN) == 0) { //BUTTON DOWN
 			mp.leds[0] = CRGB::Blue;
 			mp.leds[7] = CRGB::Blue;
 			while (!mp.update());
@@ -7375,7 +7375,7 @@ int8_t GUI::menu(const char* title, String* items, uint8_t length) {
 			FastLED.clear();
 			while (!mp.update());
 
-			while (mp.buttons.kpd.pin_read(JOYSTICK_B) == 0);
+			while (mp.buttons.kpd.pin_read(BTN_DOWN) == 0);
 
 			cursor++;
 			if ((cursor * 8 + cameraY + menuYOffset) > 54) {
@@ -7443,7 +7443,7 @@ uint8_t GUI::drawCursor(uint8_t xoffset, uint8_t yoffset, uint8_t xelements, uin
 			return cursorY * xelements + cursorX;  //returns index of selected icon
 
 		}
-		if (mp.buttons.kpd.pin_read(JOYSTICK_B) == 0) //UP
+		if (mp.buttons.kpd.pin_read(BTN_DOWN) == 0) //UP
 		{
 			mp.leds[0] = CRGB::Black;
 			mp.leds[7] = CRGB::Black;
@@ -7451,7 +7451,7 @@ uint8_t GUI::drawCursor(uint8_t xoffset, uint8_t yoffset, uint8_t xelements, uin
 			mp.vibration(200);
 			FastLED.clear();
 
-			while (mp.buttons.kpd.pin_read(JOYSTICK_B) == 0);
+			while (mp.buttons.kpd.pin_read(BTN_DOWN) == 0);
 			mp.display.drawRect(xstart + cursorX * xoffset, ystart + cursorY * yoffset, width + 2, height + 2, TFT_BLACK);
 			if (cursorY == 0) {
 				cursorY = yelements - 1;
@@ -7461,7 +7461,7 @@ uint8_t GUI::drawCursor(uint8_t xoffset, uint8_t yoffset, uint8_t xelements, uin
 			elapsedMillis = millis();
 			cursorState = 1;
 		}
-		if (mp.buttons.kpd.pin_read(JOYSTICK_D) == 0)//DOWN
+		if (mp.buttons.kpd.pin_read(BTN_UP) == 0)//DOWN
 		{
 
 			mp.leds[3] = CRGB::Blue;
@@ -7470,7 +7470,7 @@ uint8_t GUI::drawCursor(uint8_t xoffset, uint8_t yoffset, uint8_t xelements, uin
 			mp.vibration(200);
 			FastLED.clear();
 
-			while (mp.buttons.kpd.pin_read(JOYSTICK_D) == 0);
+			while (mp.buttons.kpd.pin_read(BTN_UP) == 0);
 			mp.display.drawRect(xstart + cursorX * xoffset, ystart + cursorY * yoffset, width + 2, height + 2, TFT_BLACK);
 			if (cursorY == yelements - 1) {
 				cursorY = 0;
@@ -7480,7 +7480,7 @@ uint8_t GUI::drawCursor(uint8_t xoffset, uint8_t yoffset, uint8_t xelements, uin
 			elapsedMillis = millis();
 			cursorState = 1;
 		}
-		if (mp.buttons.kpd.pin_read(JOYSTICK_A) == 0) //LEFT
+		if (mp.buttons.kpd.pin_read(BTN_LEFT) == 0) //LEFT
 		{
 			mp.leds[6] = CRGB::Blue;
 			mp.leds[5] = CRGB::Blue;
@@ -7488,7 +7488,7 @@ uint8_t GUI::drawCursor(uint8_t xoffset, uint8_t yoffset, uint8_t xelements, uin
 			mp.vibration(200);
 			FastLED.clear();
 
-			while (mp.buttons.kpd.pin_read(JOYSTICK_A) == 0);
+			while (mp.buttons.kpd.pin_read(BTN_LEFT) == 0);
 			mp.display.drawRect(xstart + cursorX * xoffset, ystart + cursorY * yoffset, width + 2, height + 2, TFT_BLACK);
 			if (cursorX == 0) {
 				cursorX = xelements - 1;
@@ -7498,7 +7498,7 @@ uint8_t GUI::drawCursor(uint8_t xoffset, uint8_t yoffset, uint8_t xelements, uin
 			elapsedMillis = millis();
 			cursorState = 1;
 		}
-		if (mp.buttons.kpd.pin_read(JOYSTICK_C) == 0)//RIGHT
+		if (mp.buttons.kpd.pin_read(BTN_RIGHT) == 0)//RIGHT
 		{
 			mp.leds[1] = CRGB::Blue;
 			mp.leds[2] = CRGB::Blue;
@@ -7506,7 +7506,7 @@ uint8_t GUI::drawCursor(uint8_t xoffset, uint8_t yoffset, uint8_t xelements, uin
 			mp.vibration(200);
 			FastLED.clear();
 
-			while (mp.buttons.kpd.pin_read(JOYSTICK_C) == 0);
+			while (mp.buttons.kpd.pin_read(BTN_RIGHT) == 0);
 			mp.display.drawRect(xstart + cursorX * xoffset, ystart + cursorY * yoffset, width + 2, height + 2, TFT_BLACK);
 			if (cursorX == xelements - 1) {
 				cursorX = 0;
@@ -7612,7 +7612,7 @@ int8_t GUI::drawBigIconsCursor(uint8_t xoffset, uint8_t yoffset, uint8_t xelemen
 			return cursorY * xelements + cursorX;  //returns index of selected icon
 
 		}
-		if (mp.buttons.pressed(JOYSTICK_B)) //DOWN
+		if (mp.buttons.pressed(BTN_DOWN)) //DOWN
 		{
 			passcode += "DOWN";
 			passcodeMillis = millis();
@@ -7623,7 +7623,7 @@ int8_t GUI::drawBigIconsCursor(uint8_t xoffset, uint8_t yoffset, uint8_t xelemen
 			FastLED.clear();
 			while (!mp.update());
 
-			while (mp.buttons.kpd.pin_read(JOYSTICK_B) == 0);
+			while (mp.buttons.kpd.pin_read(BTN_DOWN) == 0);
 			mp.display.drawRect((xstart + cursorX * xoffset), (ystart + cursorY * yoffset), (width + 2)*scale, (bigIconHeight + 2)*scale, TFT_BLACK);
 			if (cursorY == 0) {
 				cursorY = yelements - 1;
@@ -7633,7 +7633,7 @@ int8_t GUI::drawBigIconsCursor(uint8_t xoffset, uint8_t yoffset, uint8_t xelemen
 			elapsedMillis = millis();
 			cursorState = 1;
 		}
-		if (mp.buttons.kpd.pin_read(JOYSTICK_D) == 0)//UP
+		if (mp.buttons.kpd.pin_read(BTN_UP) == 0)//UP
 		{
 			passcode += "UP";
 			passcodeMillis = millis();
@@ -7644,7 +7644,7 @@ int8_t GUI::drawBigIconsCursor(uint8_t xoffset, uint8_t yoffset, uint8_t xelemen
 			FastLED.clear();
 			while (!mp.update());
 
-			while (mp.buttons.kpd.pin_read(JOYSTICK_D) == 0);
+			while (mp.buttons.kpd.pin_read(BTN_UP) == 0);
 			mp.display.drawRect((xstart + cursorX * xoffset), (ystart + cursorY * yoffset), (width + 2)*scale, (bigIconHeight + 2)*scale, TFT_BLACK);
 			if (cursorY == yelements - 1) {
 				cursorY = 0;
@@ -7654,7 +7654,7 @@ int8_t GUI::drawBigIconsCursor(uint8_t xoffset, uint8_t yoffset, uint8_t xelemen
 			elapsedMillis = millis();
 			cursorState = 1;
 		}
-		if (mp.buttons.kpd.pin_read(JOYSTICK_A) == 0) //LEFT
+		if (mp.buttons.kpd.pin_read(BTN_LEFT) == 0) //LEFT
 		{
 			passcode += "LEFT";
 			passcodeMillis = millis();
@@ -7665,7 +7665,7 @@ int8_t GUI::drawBigIconsCursor(uint8_t xoffset, uint8_t yoffset, uint8_t xelemen
 			FastLED.clear();
 			while (!mp.update());
 
-			while (mp.buttons.kpd.pin_read(JOYSTICK_A) == 0);
+			while (mp.buttons.kpd.pin_read(BTN_LEFT) == 0);
 			mp.display.drawRect((xstart + cursorX * xoffset), (ystart + cursorY * yoffset), (width + 2)*scale, (bigIconHeight + 2)*scale, TFT_BLACK);
 			if (cursorX == 0) {
 				cursorX = xelements - 1;
@@ -7675,7 +7675,7 @@ int8_t GUI::drawBigIconsCursor(uint8_t xoffset, uint8_t yoffset, uint8_t xelemen
 			elapsedMillis = millis();
 			cursorState = 1;
 		}
-		if (mp.buttons.kpd.pin_read(JOYSTICK_C) == 0)//RIGHT
+		if (mp.buttons.kpd.pin_read(BTN_RIGHT) == 0)//RIGHT
 		{
 			passcode += "RIGHT";
 			passcodeMillis = millis();
@@ -7686,7 +7686,7 @@ int8_t GUI::drawBigIconsCursor(uint8_t xoffset, uint8_t yoffset, uint8_t xelemen
 			FastLED.clear();
 			while (!mp.update());
 
-			while (mp.buttons.kpd.pin_read(JOYSTICK_C) == 0);
+			while (mp.buttons.kpd.pin_read(BTN_RIGHT) == 0);
 			mp.display.drawRect((xstart + cursorX * xoffset), (ystart + cursorY * yoffset), (width + 2)*scale, (bigIconHeight + 2)*scale, TFT_BLACK);
 			if (cursorX == xelements - 1) {
 				cursorX = 0;
@@ -7848,7 +7848,7 @@ int16_t GUI::scrollingMainMenu()
 			while (!mp.update());
 			return cursorY * x_elements + cursorX;  //returns index of selected icon
 		}
-		if (mp.buttons.released(JOYSTICK_D)) //UP
+		if (mp.buttons.released(BTN_UP)) //UP
 		{
 			passcode += "UP";
 			passcodeMillis = millis();
@@ -7883,7 +7883,7 @@ int16_t GUI::scrollingMainMenu()
 			elapsedMillis = millis();
 			cursorState = 1;
 		}
-		if (mp.buttons.released(JOYSTICK_B))//DOWN
+		if (mp.buttons.released(BTN_DOWN))//DOWN
 		{
 			passcode += "DOWN";
 			passcodeMillis = millis();
@@ -7914,7 +7914,7 @@ int16_t GUI::scrollingMainMenu()
 			elapsedMillis = millis();
 			cursorState = 1;
 		}
-		if (mp.buttons.released(JOYSTICK_A)) //LEFT
+		if (mp.buttons.released(BTN_LEFT)) //LEFT
 		{
 			passcode += "LEFT";
 			passcodeMillis = millis();
@@ -7933,7 +7933,7 @@ int16_t GUI::scrollingMainMenu()
 			elapsedMillis = millis();
 			cursorState = 1;
 		}
-		if (mp.buttons.released(JOYSTICK_C))//RIGHT
+		if (mp.buttons.released(BTN_RIGHT))//RIGHT
 		{
 			passcode += "RIGHT";
 			passcodeMillis = millis();

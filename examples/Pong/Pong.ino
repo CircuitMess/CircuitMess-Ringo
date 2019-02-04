@@ -136,10 +136,10 @@ void loop()
 		}
     mp.display.fillScreen(TFT_BLACK);
 		//move the player
-		if (mp.buttons.repeat(JOYSTICK_D, 1)) {
+		if (mp.buttons.repeat(BTN_UP, 1)) {
 			playerY = max(0, playerY - playerSpeedY);
 		}
-		if (mp.buttons.repeat(JOYSTICK_B, 1)) {
+		if (mp.buttons.repeat(BTN_DOWN, 1)) {
 			playerY = min(mp.display.height() - playerHeight, playerY + playerSpeedY);
 		}
 

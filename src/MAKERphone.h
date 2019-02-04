@@ -73,10 +73,10 @@ extern HardwareSerial Serial1;
 //#include "utility/AudioFileSourceBuffer.h"
 
 //PCF8574 0x21 defines (keys)
-#define JOYSTICK_A 0
-#define JOYSTICK_B 1
-#define JOYSTICK_C 2
-#define JOYSTICK_D 3
+#define BTN_LEFT 0
+#define BTN_DOWN 1
+#define BTN_RIGHT 2
+#define BTN_UP 3
 #define JOYSTICK_CENTER 4
 #define BTN_A 5
 #define BTN_B 6
