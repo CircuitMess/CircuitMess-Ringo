@@ -4811,10 +4811,12 @@ void TFT_eSPI::drawBitmap(int16_t x, int16_t y, const byte *bitmap, uint16_t col
 		y++;
 	}
 } */
-void TFT_eSPI::drawIcon(const unsigned short* icon, int16_t x, int16_t y, uint16_t width, uint16_t height, uint8_t scale) {
+void TFT_eSPI::drawIcon(const unsigned short* icon, int16_t x, int16_t y, uint16_t width, uint16_t height, uint8_t scale, int32_t backgroundColor) {
 	for (int i = 0; i < width; i++) {
 		for (int j = 0; j < height; j++) {
-			fillRect(x + i*scale, y + j*scale, scale, scale, pgm_read_word(&icon[j * width + i]));
+      uint32_t color = pgm_read_word(&icon[j * width + i]);
+      if((backgroundColor != -1 && color != backgroundColor) || backgroundColor == -1)
+			  fillRect(x + i*scale, y + j*scale, scale, scale, color); 
 		}
 	}
 }
