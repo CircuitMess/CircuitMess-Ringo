@@ -423,7 +423,7 @@ public:
 	bool collidePointCircle(int16_t pointX, int16_t pointY, int16_t centerX, int16_t centerY, int16_t r);  // Returns TRUE if the point overlaps the circle
 
 private:
-	SdFat SD;
+	SdFat SDFAT;
 	
 	int multi_tap(byte key);
 	bool newMessage = 0;
