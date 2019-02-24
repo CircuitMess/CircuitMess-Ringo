@@ -74,30 +74,21 @@ void MAKERphone::begin(bool splash) {
 	ledcAttachPin(LCD_BL_PIN, LEDC_CHANNEL);
 	ledcAnalogWrite(LEDC_CHANNEL, 255);
 	uint32_t tempMillis = millis();
-	SDinsertedFlag = 1;
-	while (!SD.begin(5, SD_SCK_MHZ(8)))
-	{
-		Serial.println("SD ERROR");
-		if(millis()-tempMillis > 5)
-		{
-			SDinsertedFlag = 0;
-			break;
-		}
-	}
-	if(SDinsertedFlag)
-		loadSettings(1);
-	applySettings();
+	// SDinsertedFlag = 1;
+	// while (!SD.begin(5, SD_SCK_MHZ(8)))
+	// {
+	// 	Serial.println("SD ERROR");
+	// 	if(millis()-tempMillis > 5)
+	// 	{
+	// 		SDinsertedFlag = 0;
+	// 		break;
+	// 	}
+	// }
+	// if(SDinsertedFlag)
+	// 	loadSettings(1);
 
-	//Audio
-	initWavLib();
-	xTaskCreate(
-				Task1code,				/* Task function. */
-				"Task1",				/* name of task. */
-				30000,					/* Stack size of task */
-				NULL,					/* parameter of the task */
-				1,						/* priority of the task */
-				&Task1);				/* Task handle to keep track of created task */
-	addOscillator(gui.osc);
+
+
 	gui.osc->setVolume(150);
 	//display initialization
 	tft.init();
@@ -149,6 +140,19 @@ void MAKERphone::begin(bool splash) {
 	Serial1.println(F("AT+CLCC=1"));
 	Serial1.println(F("AT&W"));
 	Serial.println("Serial1 up and running...");
+
+		//Audio
+	initWavLib();
+	xTaskCreate(
+				Task1code,				/* Task function. */
+				"Task1",				/* name of task. */
+				30000,					/* Stack size of task */
+				NULL,					/* parameter of the task */
+				1,						/* priority of the task */
+				&Task1);				/* Task handle to keep track of created task */
+	addOscillator(gui.osc);
+
+	applySettings();
 }
 
 void MAKERphone::test() {
@@ -881,8 +885,10 @@ void MAKERphone::listBinaries(const char * dirname, uint8_t levels) {
 		  BinaryFiles[counter-1] = file.name();
 		  }
 		  }*/
-		Serial.println(file.name());
-		String Name = String(file.name());
+		char temp[100];
+		file.getName(temp, 100);
+		String Name(temp);
+		Serial.println(Name);
 		if (Name.endsWith(F(".BIN")) || Name.endsWith(F(".bin")))
 		{
 			Serial.print(counter);
@@ -899,7 +905,7 @@ void MAKERphone::listDirectories(const char * dirname) {
 	
 	directoryCount = 0;
 	Serial.printf("Listing directory: %s\n", dirname);
-
+	
 	File root = SD.open(dirname);
 	if (!root) {
 		Serial.println("Failed to open directory");
@@ -916,7 +922,10 @@ void MAKERphone::listDirectories(const char * dirname) {
 	while (file) {
 
 		if (file.isDirectory()) {
-			String Name(file.name());
+			char temp[100];
+		file.getName(temp, 100);
+		String Name(temp);
+		Serial.println(Name);
 			if(Name != "Images" && Name != "Music" && Name != "Video" && Name != "System Volume Information")
 			{
 				
@@ -4394,7 +4403,9 @@ void MAKERphone::listMP3(const char * dirname, uint8_t levels) {
 	uint8_t start = 0;
 	File file = root.openNextFile();
 	while (file) {
-		String Name(file.name());
+		char temp[100];
+		file.getName(temp, 100);
+		String Name(temp);
 		Serial.println(Name);
 		if (Name.endsWith(F(".MP3")) || Name.endsWith(F(".mp3")))
 		{
@@ -4426,7 +4437,9 @@ void MAKERphone::listPhotos(const char * dirname, uint8_t levels) {
 	uint8_t start = 0;
 	File file = root.openNextFile();
 	while (file) {
-		String Name(file.name());
+		char temp[100];
+		file.getName(temp, 100);
+		String Name(temp);
 		Serial.println(Name);
 		if (Name.endsWith(F(".jpeg")) || Name.endsWith(F(".JPEG")) || Name.endsWith(F(".jpg")) || Name.endsWith(F(".JPG")))
 		{
@@ -5695,7 +5708,10 @@ void MAKERphone::listRingtones(const char * dirname, uint8_t levels) {
 	int counter = 1;
 	File file = root.openNextFile();
 	while (file) {
-		String Name = file.name();
+		char temp[100];
+		file.getName(temp, 100);
+		String Name(temp);
+		Serial.println(Name);
 		if (Name.endsWith(F(".MP3")) || Name.endsWith(F(".mp3")))
 		{
 			Serial.print(counter);
@@ -5727,7 +5743,10 @@ void MAKERphone::listNotifications(const char * dirname, uint8_t levels) {
 	int counter = 1;
 	File file = root.openNextFile();
 	while (file) {
-		String Name = file.name();
+		char temp[100];
+		file.getName(temp, 100);
+		String Name(temp);
+		Serial.println(Name);
 		if (Name.endsWith(F(".MP3")) || Name.endsWith(F(".mp3")))
 		{
 			Serial.print(counter);
