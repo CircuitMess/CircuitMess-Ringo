@@ -920,10 +920,12 @@ void MAKERphone::listDirectories(const char * dirname) {
 
 		if (file.isDirectory()) {
 			char temp[100];
-		// file.getName(temp, 100);
-		String Name(file.name());
-		Serial.println(Name);
-			if(Name != "/Images\0" && Name != "/Music\0" && Name != "/Video\0" && Name != "/System Volume Information\0")
+			// file.getName(temp, 100);
+			String Name(file.name());
+			Serial.println(Name);
+			Serial.println(String(Name + Name + ".BIN"));
+			if(Name != "/Images\0" && Name != "/Music\0" && Name != "/Video\0" && 
+			Name != "/System Volume Information\0" && SD.exists(String(Name + Name + ".BIN")))
 			{
 				
 				Serial.println(Name);
@@ -7989,10 +7991,16 @@ int16_t GUI::scrollingMainMenu()
 				default: 
 					if(pageIndex * 3 + i < elements)
 					{
+
+						if(SD.exists(String("/" + mp.directories[pageIndex * 3 + i - 10] + "/icon.bmp")))
+							mp.display.drawBmp(String("/" + mp.directories[pageIndex * 3 + i - 10] + "/icon.bmp"), 4 + tempX * 52, 18 + tempY * 56, 2);
+						else
+							mp.display.drawIcon(defaultIcon, 4 + tempX * 52, 18 + tempY * 56, 24, 26, 2);
 						// Serial.println(mp.directories[pageIndex * 3 + i - 10]);
 						// delay(5);
-						mp.display.drawBmp(String("/" + mp.directories[pageIndex * 3 + i - 10] + "/icon.bmp"), 4 + tempX * 52, 18 + tempY * 56, 2);
+						
 					}
+					
 					break;
 			}
 		}
