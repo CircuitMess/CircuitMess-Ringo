@@ -2,6 +2,9 @@
 #include <MAKERphone.h>
 #include "Sprites.h"
 MAKERphone mp;
+MPTrack *shoot;
+MPTrack *collide;
+MPTrack *hit;
 /*
     Space Rocks
     Copyright (C) 2019 CircuitMess
@@ -87,6 +90,8 @@ static const int8_t shipTbl[6][24] PROGMEM = {
 #define ADC_VOLTAGE (_BV(REFS0) | _BV(MUX4) | _BV(MUX3) | _BV(MUX2) | _BV(MUX1))
 ProgState simState = ProgState::Main;
 void collision() {
+  collide->rewind();
+  collide->play();
 	//   sound.tone(150, 50);
 	life = life - 1;
 	shipX = mp.display.width()/2;
@@ -115,14 +120,15 @@ void guidance() {
   if (velocityX < -2)velocityX = -2;
 }
 void ship() {
+  
   // if (abs(velocityX) > 0.02)
     shipX = shipX + velocityX;
   // if (abs(velocityY) > 0.02)
     shipY = shipY + velocityY;
-  if (shipX < 0) shipX = shipX + mp.display.width()+10;
-  if (shipX > mp.display.width()) shipX = shipX - mp.display.width()-10;
-  if (shipY < 0) shipY = shipY +  mp.display.height()+10;
-  if (shipY > mp.display.height()) shipY = shipY - mp.display.height()-10;
+  if (shipX < 5) shipX = mp.display.width() - 5;
+  if (shipX > mp.display.width() - 5) shipX = 5;
+  if (shipY < 4) shipY = mp.display.height() - 4;
+  if (shipY > mp.display.height() - 4) shipY = 4;
   mp.display.fillTriangle(shipX0*2, shipY0*2, shipX1*2, shipY1*2, shipX2*2, shipY2*2, TFT_LIGHTGREY);
   mp.display.drawTriangle(shipX0*2, shipY0*2, shipX1*2, shipY1*2, shipX2*2, shipY2*2, TFT_LIGHTGREY);
   // mp.display.drawTriangle(shipX0*2, shipY0*2, shipX1*2, shipY1*2, shipX2*2, shipY2*2, TFT_DARKGREY);
@@ -174,21 +180,30 @@ void firing() {
   bullet[bulletCount][2] = shipY1;
   bullet[bulletCount][4] = 120;
   bulletCount = bulletCount + 1;
-//   sound.tone(1100, 4);
-//   delay(4);
-//   sound.tone(1000, 4);
-//   delay(4);
-//   sound.tone(900, 4);
-//   delay(4);
-//   sound.tone(800, 4);
-//   delay(4);
-//   sound.tone(700, 4);
-//   delay(4);
-//   sound.tone(600, 4);
-//   delay(4);
-//   sound.tone(500, 4);
-//   delay(4);
-//   sound.tone(400, 4);
+  // shoot->beep(1200, 0.05);
+  shoot->rewind();
+  shoot->play();
+  
+  // shoot->setADSR(0.5,0.5,0.5,20);
+  // shoot->setVolume(180);
+  // shoot->setWaveform(SINE);
+
+  // shoot->note(F7, 0.250);  
+  //   sound.tone(1100, 4);
+  //   delay(4);
+  //   sound.tone(1000, 4);
+  //   delay(4);
+  //   sound.tone(900, 4);
+  //   delay(4);
+  //   sound.tone(800, 4);
+  //   delay(4);
+  //   sound.tone(700, 4);
+  //   delay(4);
+  //   sound.tone(600, 4);
+  //   delay(4);
+  //   sound.tone(500, 4);
+  //   delay(4);
+  //   sound.tone(400, 4);
 }
 void trajectory() {
   for (uint8_t t = 0; t < bulletCount; t++) {
@@ -218,10 +233,10 @@ void asteroid() {
   for (uint8_t t = 0; t < asteroidCount; t++) {
     asteroids[t][0] = asteroids[t][0] + asteroids[t][1];
     asteroids[t][2] = asteroids[t][2] + asteroids[t][3];
-    if (asteroids[t][0] < -5) asteroids[t][0] = asteroids[t][0] + mp.display.width() + 10;
-    if (asteroids[t][0] > mp.display.width() + 5) asteroids[t][0] = asteroids[t][0] - mp.display.width() - 10;
-    if (asteroids[t][2] < -5) asteroids[t][2] = asteroids[t][2] + mp.display.height() + 10;
-    if (asteroids[t][2] > mp.display.height() + 5) asteroids[t][2] = asteroids[t][2] - mp.display.height() - 10;
+    if (asteroids[t][0] < 5) asteroids[t][0] = mp.display.width() - 5;
+    if (asteroids[t][0] > mp.display.width() - 5) asteroids[t][0] = 5;
+    if (asteroids[t][2] < 5) asteroids[t][2] = mp.display.height() - 5;
+    if (asteroids[t][2] > mp.display.height() - 5) asteroids[t][2] = 5;
     for (uint8_t b = 0; b < bulletCount; b++) {
       if ((abs(bullet[b][0] - asteroids[t][0]) <= 9 && abs(bullet[b][2] - asteroids[t][2]) <= 9) || (abs(bullet[b][0] - asteroids[t][0]) + abs(bullet[b][2] - asteroids[t][2]) < 13))
       {
@@ -238,7 +253,8 @@ void asteroid() {
         bullet[bulletCount][3] = 0;
         bullet[bulletCount][4] = 0;
         bulletCount = bulletCount - 1;
-
+        hit->rewind();
+        hit->play();
         // sound.tone(150, 75);
         score = score + 2;
 
@@ -275,10 +291,10 @@ void rock() {
   for (uint8_t r = 0; r < rockCount; r++) {
     rocks[r][0] = rocks[r][0] + rocks[r][1];
     rocks[r][2] = rocks[r][2] + rocks[r][3];
-    if (rocks[r][0] < -5) rocks[r][0] = rocks[r][0] + mp.display.width()+10;
-    if (rocks[r][0] > mp.display.width()+5) rocks[r][0] = rocks[r][0] - mp.display.width()-10;
-    if (rocks[r][2] < -5) rocks[r][2] = rocks[r][2] + mp.display.height()+10;
-    if (rocks[r][2] > mp.display.height()+5) rocks[r][2] = rocks[r][2] - mp.display.height()-10;
+    if (rocks[r][0] < 4) rocks[r][0] = mp.display.width() - 4;
+    if (rocks[r][0] > mp.display.width() - 4) rocks[r][0] = 4;
+    if (rocks[r][2] < 4) rocks[r][2] = mp.display.height() - 4;
+    if (rocks[r][2] > mp.display.height() - 4) rocks[r][2] = 4;
     for (uint8_t b = 0; b < bulletCount; b++) {
       if ((abs(bullet[b][0] - rocks[r][0]) <= 7 && abs(bullet[b][2] - rocks[r][2]) <= 7) ||
           (abs(bullet[b][0] - rocks[r][0]) + abs(bullet[b][2] - rocks[r][2]) < 11)) {
@@ -297,6 +313,8 @@ void rock() {
         bulletCount = bulletCount - 1;
 
         // sound.tone(150, 75);
+        hit->rewind();
+        hit->play();
         score = score + 4;
 
         pebbles[pebbleCount][0] = rocks[r][0];
@@ -332,10 +350,10 @@ void pebble() {
   for (uint8_t p = 0; p < pebbleCount; p++) {
     pebbles[p][0] = pebbles[p][0] + pebbles[p][1];
     pebbles[p][2] = pebbles[p][2] + pebbles[p][3];
-    if (pebbles[p][0] < -5) pebbles[p][0] = pebbles[p][0] + mp.display.width()+10;
-    if (pebbles[p][0] > mp.display.width()+5) pebbles[p][0] = pebbles[p][0] - mp.display.width()-10;
-    if (pebbles[p][2] < -5) pebbles[p][2] = pebbles[p][2] + mp.display.height()+10;
-    if (pebbles[p][2] > mp.display.height()+5) pebbles[p][2] = pebbles[p][2] - mp.display.height()-10;
+    if (pebbles[p][0] < 3) pebbles[p][0] = mp.display.width() - 3;
+    if (pebbles[p][0] > mp.display.width() - 3) pebbles[p][0] = 3;
+    if (pebbles[p][2] < 3) pebbles[p][2] = mp.display.height() - 3;
+    if (pebbles[p][2] > mp.display.height() - 3) pebbles[p][2] = 3;
     for (uint8_t b = 0; b < bulletCount; b++) {
       if (abs(bullet[b][0] - pebbles[p][0]) <= 3 && abs(bullet[b][2] - pebbles[p][2]) <= 3) {
         for (uint8_t a = b; a < bulletCount - 1; a++) {
@@ -346,7 +364,8 @@ void pebble() {
           bullet[a][4] = bullet[a + 1][4];
         }
         bulletCount = bulletCount - 1;
-
+        hit->rewind();
+        hit->play();
         // sound.tone(150, 75);
         score = score + 8;
 
@@ -412,12 +431,24 @@ void radar() {
   if (asteroidCount == 0 && rockCount == 0 && pebbleCount == 0) {
     tick = tick - 1;
     if (tick <= 0) {
-      tick = 80;
+      tick = 20;
       if (level < 8) level = level + 1;
 
       for (int8_t s = 0; s < level; s++) {
-        asteroids[asteroidCount][0] = 112 + random(0, 106);
-        asteroids[asteroidCount][2] = 80 + random(0, 96);
+        uint8_t tempX = 112 + random(0, 106);
+        uint8_t tempY = 80 + random(0, 96);
+        while(abs(tempX - shipX) < 40 && abs(tempY-shipY) < 40)
+        {
+          tempX = random(10, 150);
+          tempY = random(10, 118);
+        }
+        asteroids[asteroidCount][0] = tempX;
+        asteroids[asteroidCount][2] = tempY;
+        if (asteroids[asteroidCount][0] < 5) asteroids[asteroidCount][0] = mp.display.width() - 5;
+        if (asteroids[asteroidCount][0] > mp.display.width() - 5) asteroids[asteroidCount][0] = 5;
+        if (asteroids[asteroidCount][2] < 5) asteroids[asteroidCount][2] = mp.display.height() - 5;
+        if (asteroids[asteroidCount][2] > mp.display.height() - 5) asteroids[asteroidCount][2] = 5;
+
         asteroids[asteroidCount][1] = random(-10, 10) * 0.05;
         asteroids[asteroidCount][3] = random(-10, 10) * 0.05;
         asteroidDraw[asteroidCount] = random(0, 3);
@@ -518,9 +549,19 @@ uint16_t rawADC(uint8_t adc_bits) {
 //   power_adc_disable();
 }
 void setup() {
+  Serial.begin(115200);
+  shoot = new MPTrack("/SpaceRocks/shoot.wav");
+  collide = new MPTrack("/SpaceRocks/collide.wav");
+  hit = new MPTrack("/SpaceRocks/hit.wav");
   // put your setup code here, to run once:
   mp.begin(0);
-  Serial.begin(115200);
+  addTrack(shoot);
+  addTrack(collide);
+  addTrack(hit);
+  Serial.println(mp.volume);
+  shoot->setVolume(256*mp.volume/14);
+  collide->setVolume(256*mp.volume/14);
+  hit->setVolume(256*mp.volume/14);
   randomSeed(millis() * millis());
   resetSim();
 }
@@ -532,9 +573,12 @@ long unsigned int startMillis;
 
 void loop() 
 {
+  // if(!shoot->isPlaying())
+  //   shoot->stop();
   if(mp.update())
 	{
-		// put your main code here, to run repeatedly:
+    Serial.println(shipY);
+    // put your main code here, to run repeatedly:
 		mp.display.fillScreen(TFT_BLACK);
 		switch (simState)
 		{
@@ -634,10 +678,13 @@ void loop()
           while(!mp.buttons.released(BTN_A) && !mp.buttons.released(BTN_B))
             mp.update();
           while(!mp.update());
-          simState = ProgState::DataEntry;
+          Serial.println("HERE");
+          delay(5);
+          simState = ProgState::Main;
 				}
 			}
 			break;
+
 			case ProgState::DataEntry: {
 				char tmpInitials[3];
 				unsigned short tmpScore;
@@ -680,6 +727,7 @@ void loop()
 			}
 			resetSim();
 			break;
+
 			case ProgState::DataDisplay:
 			// Each block of EEPROM has 7 high scores, and each high score entry
 			// is 5 int8_ts long:  3 int8_ts for initials and one int16_t for score
@@ -712,9 +760,10 @@ void loop()
 			if (mp.buttons.released(BTN_LEFT)) ProgState::DataErasure;
 			break;
 			case ProgState::Pause:
-			mp.display.setCursor(32, 30);
+			mp.display.setCursor(32, mp.display.height()/2 - 12);
 			mp.display.setTextSize(2);
-			mp.display.printCenter(F("PAUSE"));
+      mp.display.setTextFont(2);
+      mp.display.printCenter(F("PAUSE"));
 			if (mp.buttons.released(BTN_A)) simState = ProgState::Simulation;
 			if (mp.buttons.released(BTN_B)) resetSim();
 			if (mp.buttons.released(BTN_UP) || mp.buttons.released(BTN_DOWN)) {
