@@ -54,23 +54,14 @@ extern HardwareSerial Serial1;
 //Fonts and sprites to use
 #include "utility/Free_Fonts.h"
 #include "utility/sprites.c"
+
+
 #include "utility/JPEGDecoder.h"
-
-//Setup for MP3 playback
-
-//#include <AudioFileSource.h>
-//#include <AudioFileSourceID3.h>
-//#include <AudioGeneratorMP3.h>
-//#include <AudioOutputI2S.h>
-//#include <AudioFileSourceSD.h>
-//#include <AudioFileSourceBuffer.h>
-//#include "src/ESP8266Audio.h"
-//#include "utility/AudioFileSource.h"
-//#include "utility/AudioFileSourceID3.h"
-//#include "utility/AudioGeneratorMP3.h"
-//#include "utility/AudioOutputI2S.h"
-//#include "utility/AudioFileSourceSD.h"
-//#include "utility/AudioFileSourceBuffer.h"
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
+#include "esp_system.h"
+#include "utility/soundLib/MPAudioDriver.h" 
+#include "utility/soundLib/MPWavLib.h" 
 
 //PCF8574 0x21 defines (keys)
 #define BTN_LEFT 0
@@ -125,11 +116,11 @@ extern HardwareSerial Serial1;
 #define smsNumber 22
 class Buttons
 {
-public:
-	///////////////////
-	//Keypad variables
-	//////////////////
-
+private:
+	byte rowPins[ROWS] = { 0, 1, 2, 3 }; //connect to the row pinouts of the keypad
+	byte colPins[COLS] = { 4, 5, 6, 7 }; //connect to the column pinouts of the keypad
+	int i2caddress = 0x21;
+	int i2caddressNum = 0x20;
 	char keys[4][3] = {
 	{ '1','2','3' },
 	{ '4','5','6' },
@@ -142,10 +133,13 @@ public:
 	{ '7', '8', '9', 'C' },
 	{ '*', '0', '#', 'D' }
 	};
-	byte rowPins[ROWS] = { 0, 1, 2, 3 }; //connect to the row pinouts of the keypad
-	byte colPins[COLS] = { 4, 5, 6, 7 }; //connect to the column pinouts of the keypad
-	int i2caddress = 0x21;
-	int i2caddressNum = 0x20;
+
+public:
+	///////////////////
+	//Keypad variables
+	//////////////////
+
+
 	Keypad_I2C kpd = Keypad_I2C(makeKeymap(keys), rowPins, colPins, ROWS, COLS, i2caddress);
 	Keypad_I2C kpdNum = Keypad_I2C(makeKeymap(keysNum), rowPins, colPins, ROWS, COLS, i2caddressNum);
 	bool pressed(uint8_t button);
@@ -156,6 +150,7 @@ public:
 	uint16_t timeHeld(uint8_t button);
 	uint16_t states[NUM_BTN];
 	void begin();
+
 
 };
 class GUI {
@@ -178,19 +173,21 @@ public:
   uint8_t popupTotalTime;
 
 private:
-  
+  friend class MAKERphone;
   bool cursorState = 1;
-  
+  Oscillator* osc = new Oscillator();
   bool previousButtonState = 0;
   uint8_t cursor = 0;
   int32_t cameraY = 0;
   int32_t cameraY_actual = 0;
 };
 
+
+
 class MAKERphone:public Buttons, public GUI
 {
 public:
-	SdFat SD;
+	
 	TFT_eSPI tft = TFT_eSPI();  // Invoke library, pins defined in User_Setup.h
 	TFT_eSprite display = TFT_eSprite(&tft);
 	TFT_eSprite buf = TFT_eSprite(&tft);
@@ -426,6 +423,8 @@ public:
 	bool collidePointCircle(int16_t pointX, int16_t pointY, int16_t centerX, int16_t centerY, int16_t r);  // Returns TRUE if the point overlaps the circle
 
 private:
+	SdFat SDFAT;
+	
 	int multi_tap(byte key);
 	bool newMessage = 0;
 	uint8_t currentMessageNumber;
@@ -451,25 +450,25 @@ private:
 	void updateTimeRTC();
 
 	int colorArray[19] = {
-	TFT_BLACK,
-	TFT_NAVY,
-	TFT_DARKGREEN,
-	TFT_DARKCYAN,
-	TFT_MAROON,
-	TFT_PURPLE,
-	TFT_OLIVE,
-	TFT_LIGHTGREY,
-	TFT_DARKGREY,
-	TFT_BLUE,
-	TFT_GREEN,
-	TFT_CYAN,
-	TFT_RED,
-	TFT_MAGENTA,
-	TFT_YELLOW,
-	TFT_WHITE,
-	TFT_ORANGE,
-	TFT_GREENYELLOW,
-	TFT_PINK
+		TFT_BLACK,
+		TFT_NAVY,
+		TFT_DARKGREEN,
+		TFT_DARKCYAN,
+		TFT_MAROON,
+		TFT_PURPLE,
+		TFT_OLIVE,
+		TFT_LIGHTGREY,
+		TFT_DARKGREY,
+		TFT_BLUE,
+		TFT_GREEN,
+		TFT_CYAN,
+		TFT_RED,
+		TFT_MAGENTA,
+		TFT_YELLOW,
+		TFT_WHITE,
+		TFT_ORANGE,
+		TFT_GREENYELLOW,
+		TFT_PINK
 	};
 
 	//SIM800 setup

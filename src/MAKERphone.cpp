@@ -19,10 +19,16 @@ Authors:
 
 #include "MAKERphone.h"
 extern MAKERphone mp;
+TaskHandle_t Task1;
+void Task1code( void * pvParameters ){
+	while (true){
+		updateWav();
+		// Serial.println("TEST");
+		// delay(5);
+	};
+}
 void MAKERphone::begin(bool splash) {
-	
 	String input="";
-	dataRefreshFlag = 0;
 	pinMode(SIM800_DTR, OUTPUT);
 	digitalWrite(SIM800_DTR, 0);
 	pinMode(INTERRUPT_PIN, INPUT_PULLUP);
@@ -30,6 +36,8 @@ void MAKERphone::begin(bool splash) {
 	//Initialize and start with the NeoPixels
 	FastLED.addLeds<NEOPIXEL, 33>(leds, 8);
 	Serial1.begin(9600, SERIAL_8N1, 17, 16);
+	
+
 	//Serial1.println(F("AT+CFUN=1,1"));
 	//Serial1.println("AT+CMEE=2");
 	//Serial1.println(F("AT+CPIN?"));
@@ -67,8 +75,9 @@ void MAKERphone::begin(bool splash) {
 	ledcAnalogWrite(LEDC_CHANNEL, 255);
 	uint32_t tempMillis = millis();
 	SDinsertedFlag = 1;
-	while (!SD.begin(5, SD_SCK_MHZ(8)))
+	while (!SD.begin(5, SPI, 8000000))
 	{
+		Serial.println("SD ERROR");
 		if(millis()-tempMillis > 5)
 		{
 			SDinsertedFlag = 0;
@@ -77,11 +86,10 @@ void MAKERphone::begin(bool splash) {
 	}
 	if(SDinsertedFlag)
 		loadSettings(1);
-	applySettings();
 
+	gui.osc->setVolume(150);
 	//display initialization
 	tft.init();
-
 	tft.invertDisplay(0);
 	tft.setRotation(1);
 	display.setColorDepth(8); // Set colour depth of Sprite to 8 (or 16) bits
@@ -117,7 +125,7 @@ void MAKERphone::begin(bool splash) {
 		checkSim();
 	}
 
-	// updateTimeGSM();
+	updateTimeGSM();
 	Serial1.println(F("AT+CMEE=2"));
 	Serial1.println(F("AT+CLVL=100"));
 	Serial1.println(F("AT+CRSL=100"));
@@ -128,12 +136,21 @@ void MAKERphone::begin(bool splash) {
 	Serial1.println(F("AT+CPMS=\"SM\",\"SM\",\"SM\""));
 	Serial1.println(F("AT+CLCC=1"));
 	Serial1.println(F("AT&W"));
-	//  while(1){
-	//    if(Serial1.available())
-	//      Serial.println(Serial1.read());
-	//  }
-	//Serial1.println(F("AT&W")); //Save  all settings in SIM's non-volatile memory
 	Serial.println("Serial1 up and running...");
+
+		//Audio
+	initWavLib();
+	xTaskCreatePinnedToCore(
+				Task1code,				/* Task function. */
+				"Task1",				/* name of task. */
+				30000,					/* Stack size of task */
+				NULL,					/* parameter of the task */
+				1,						/* priority of the task */
+				&Task1,
+				0);				/* Task handle to keep track of created task */
+	addOscillator(gui.osc);
+
+	applySettings();
 }
 
 void MAKERphone::test() {
@@ -151,11 +168,11 @@ void MAKERphone::test() {
 	// SD.remove(contacts_path);
 	// SD.remove(settings_path);
 
-	// File contacts_file = SD.open(contacts_path, FILE_REWRITE);
+	// SDAudioFile contacts_file = SD.open(contacts_path, FILE_REWRITE);
 	// contacts.prettyPrintTo(contacts_file);
 	// contacts_file.close();
 
-	// File settings_file = SD.open(settings_path, FILE_REWRITE);
+	// SDAudioFile settings_file = SD.open(settings_path, FILE_REWRITE);
 	// settings.prettyPrintTo(settings_file);
 	// settings_file.close();
 }
@@ -205,16 +222,18 @@ bool MAKERphone::update() {
 		}
 	}
 	//buf2.invertDisplay(1);
+	
 	if (digitalRead(35) && sleepTime)
-	{
-		if (millis() - sleepTimer >= sleepTimeActual * 1000)
 		{
-			sleep();
-			sleepTimer = millis();
+			if (millis() - sleepTimer >= sleepTimeActual * 1000)
+			{
+				sleep();
+				sleepTimer = millis();
+			}
 		}
-	}
-	else if(!digitalRead(35) && sleepTime)
-		sleepTimer = millis();
+		else if(!digitalRead(35) && sleepTime)
+			sleepTimer = millis();
+
 	if (millis() > 7000)
 		simReady = 1;
 	else
@@ -317,6 +336,7 @@ bool MAKERphone::update() {
 	}
 	///////////////////////////////////////////////
 	if (millis() - lastFrameCount2 >= frameSpeed) {
+		
 		lastFrameCount2 = millis();
 		if(resolutionMode == 0) //native res mode
 			display.pushSprite(0, 0);
@@ -328,8 +348,8 @@ bool MAKERphone::update() {
 		gui.updatePopup();
 		FastLED.show();
 		delay(1);
-
 		FastLED.clear();
+		
 		return true;
 	}
 	else
@@ -833,7 +853,7 @@ void MAKERphone::listBinaries(const char * dirname, uint8_t levels) {
 	binaryCount = 0;
 	Serial.printf("Listing directory: %s\n", dirname);
 
-	File root = SD.open(dirname);
+	SDAudioFile root = SD.open(dirname);
 	if (!root) {
 		Serial.println("Failed to open directory");
 		return;
@@ -845,7 +865,7 @@ void MAKERphone::listBinaries(const char * dirname, uint8_t levels) {
 	}
 	int counter = 1;
 
-	File file = root.openNextFile();
+	SDAudioFile file = root.openNextFile();
 	while (file) {
 
 		/*if (file.isDirectory()) {
@@ -863,9 +883,9 @@ void MAKERphone::listBinaries(const char * dirname, uint8_t levels) {
 		  BinaryFiles[counter-1] = file.name();
 		  }
 		  }*/
-		char temp[50];
-		file.getName(temp,  50);
-		String Name(temp);
+		char temp[100];
+		// file.getName(temp, 100);
+		String Name(file.name());
 		Serial.println(Name);
 		if (Name.endsWith(F(".BIN")) || Name.endsWith(F(".bin")))
 		{
@@ -883,8 +903,8 @@ void MAKERphone::listDirectories(const char * dirname) {
 	
 	directoryCount = 0;
 	Serial.printf("Listing directory: %s\n", dirname);
-
-	File root = SD.open(dirname);
+	
+	SDAudioFile root = SD.open(dirname);
 	if (!root) {
 		Serial.println("Failed to open directory");
 		return;
@@ -896,18 +916,20 @@ void MAKERphone::listDirectories(const char * dirname) {
 	}
 	int counter = 0;
 
-	File file = root.openNextFile();
+	SDAudioFile file = root.openNextFile();
 	while (file) {
 
 		if (file.isDirectory()) {
-		  	char temp[100];
-			file.getName(temp,  100);
-			String Name(temp);
-			if(Name != "Images" && Name != "Music" && Name != "Video" && Name != "System Volume Information")
+			char temp[100];
+			// file.getName(temp, 100);
+			String Name(file.name());
+			Serial.println(Name);
+			if(Name != "/Images\0" && Name != "/Music\0" && Name != "/Video\0"
+			 && Name != "/System Volume Information\0" && SD.exists(String(Name + "/" + Name + ".BIN")))
 			{
 				
 				Serial.println(Name);
-				directories[directoryCount] = Name;
+				directories[directoryCount] = Name.substring(1);
 				counter++;
 				directoryCount++;
 			}
@@ -938,7 +960,6 @@ void MAKERphone::performUpdate(Stream &updateSource, size_t updateSize) {
 		else {
 			Serial.println("Error Occurred. Error #: " + String(Update.getError()));
 		}
-
 	}
 	else
 	{
@@ -947,7 +968,9 @@ void MAKERphone::performUpdate(Stream &updateSource, size_t updateSize) {
 }
 void MAKERphone::updateFromFS(String FilePath) {
 	Serial.println(FilePath);
-	File updateBin = SD.open(FilePath);
+	while(!SDFAT.begin(5, SD_SCK_MHZ(8)))
+		Serial.println("SdFat error");
+	File updateBin = SDFAT.open(FilePath);
 	if (updateBin) {
 		if (updateBin.isDirectory()) {
 			Serial.println("Error, update.bin is not a file");
@@ -977,8 +1000,6 @@ void MAKERphone::mainMenu()
 	Serial.println("entered main menu");
 	while (1)
 	{
-
-		
 		int8_t index = gui.scrollingMainMenu();
 		Serial.println(index);
 		delay(5);
@@ -990,7 +1011,7 @@ void MAKERphone::mainMenu()
 				update();
 				if(SDinsertedFlag)
 				{
-					while(!SD.begin(5, SD_SCK_MHZ(8)));
+					while(!SD.begin(5, SPI, 8000000));
 					listBinaries("/", 0);
 					int8_t index = gui.menu("Load from SD", BinaryFiles, binaryCount);
 
@@ -1184,6 +1205,7 @@ void MAKERphone::mainMenu()
 			while(!update());
 
 			String foo = directories[index - 10];
+			initWavLib();
 			updateFromFS(String("/" + foo + "/" + foo + ".bin"));
 		}
 		update();
@@ -1205,7 +1227,7 @@ void MAKERphone::bigIconsMainMenu() {
 			update();
 			if(SDinsertedFlag)
 			{
-				while(!SD.begin(5, SD_SCK_MHZ(8)));
+				while(!SD.begin(5, SPI, 8000000));
 				listBinaries("/", 0);
 				if(binaryCount > 0)
 				{
@@ -2706,12 +2728,16 @@ int16_t MAKERphone::smsMenu(const char* title, String* contact, String *date, St
 		display.print(title);
 
 		if (buttons.released(BTN_A)) {   //BUTTON CONFIRM
-
+			gui.osc->note(75, 0.05);
+			gui.osc->play();
 			while (!update());// Exit when pressed
 			break;
 		}
 
 		if (buttons.released(BTN_UP)) {  //BUTTON UP
+			gui.osc->note(75, 0.05);
+			gui.osc->play();
+
 			if (cursor == 0) {
 				cursor = length - 1;
 				if (length > 2) {
@@ -2727,6 +2753,9 @@ int16_t MAKERphone::smsMenu(const char* title, String* contact, String *date, St
 		}
 
 		if (buttons.released(BTN_DOWN)) { //BUTTON DOWN
+			gui.osc->note(75, 0.05);
+			gui.osc->play();
+
 			cursor++;
 			if (cursor > 0)
 			{
@@ -3737,14 +3766,14 @@ uint8_t MAKERphone::deleteContactSD(String name, String number)
 void MAKERphone::contactsAppSD(){
 	Serial.println("");
 	Serial.println("Begin contacts");
-	File file = SD.open("/contacts.json");
+	SDAudioFile file = SD.open("/contacts.json");
 
 	if(file.size() < 2){ // empty -> FILL
 		Serial.println("Override");
 		file.close();
 		JsonArray& jarr = mp.jb.parseArray("[{\"name\":\"foo\", \"number\":\"099\"}]");
 		delay(10);
-		File file1 = SD.open("/contacts.json", FILE_REWRITE);
+		SDAudioFile file1 = SD.open("/contacts.json");
 		jarr.prettyPrintTo(file1);
 		file1.close();
 		file = SD.open("/contacts.json");
@@ -3798,7 +3827,7 @@ void MAKERphone::contactsAppSD(){
 						newContact["name"] = name;
 						newContact["number"] = number;
 						jarr.add(newContact);
-						File file = SD.open("/contacts.json", FILE_REWRITE);
+						SDAudioFile file = SD.open("/contacts.json");
 						jarr.prettyPrintTo(file);
 						file.close();
 					}
@@ -3806,7 +3835,7 @@ void MAKERphone::contactsAppSD(){
 					int id = menuChoice + 1000 - 1;
 					if(deleteContactSD(jarr[id]["name"], jarr[id]["number"])){
 						jarr.remove(id);
-						File file = SD.open("/contacts.json", FILE_REWRITE);
+						SDAudioFile file = SD.open("/contacts.json");
 						jarr.prettyPrintTo(file);
 						file.close();
 					}
@@ -4114,6 +4143,15 @@ void MAKERphone::phoneApp() {
 	update();
 }
 void MAKERphone::dialer() {
+	// gui.osc->stop();
+	// Oscillator *osc2 = new Oscillator();
+	// addOscillator(osc2);
+	// osc2->setVolume(255*volume/14);
+
+	// Oscillator *osc3 = new Oscillator();
+	// addOscillator(osc3);
+	// osc3->setVolume(255*volume/14);
+
 	String callBuffer = "";
 	char key = NO_KEY;
 	display.setTextWrap(0);
@@ -4121,9 +4159,9 @@ void MAKERphone::dialer() {
 		display.setFreeFont(TT1);
 	else
 		display.setTextFont(2);
+
 	while (1)
 	{
-		Serial.println(display.cursor_x);
 		display.fillScreen(TFT_BLACK);
 		display.setTextSize(1);
 		if(resolutionMode)
@@ -4152,8 +4190,64 @@ void MAKERphone::dialer() {
 			callBuffer = "";
 		else if (key == 'C')
 			callBuffer.remove(callBuffer.length()-1);
-		if (key != NO_KEY && key!= 'A' && key != 'C')
+		else if (key != NO_KEY && key!= 'A' && key != 'C' && key != 'B' && key != 'D')
+		{
+			switch (key)
+			{
+				case '1':
+					gui.osc->note(C5,0.05);
+					gui.osc->play();
+					break;
+				case '2':
+					gui.osc->note(D5,0.05);
+					gui.osc->play();
+					break;
+				case '3':
+					gui.osc->note(E5,0.05);
+					gui.osc->play();
+					break;
+				case '4':
+					gui.osc->note(F5,0.05);
+					gui.osc->play();
+					break;
+				case '5':
+					gui.osc->note(G5,0.05);
+					gui.osc->play();
+					break;
+				case '6':
+					gui.osc->note(A5,0.05);
+					gui.osc->play();
+					break;
+				case '7':
+					gui.osc->note(B5,0.05);
+					gui.osc->play();
+					break;
+				case '8':
+					gui.osc->note(C6,0.05);
+					gui.osc->play();
+					break;
+				case '9':
+					gui.osc->note(D6,0.05);
+					gui.osc->play();
+					break;
+				case '*':
+					gui.osc->note(E6,0.05);
+					gui.osc->play();
+					break;
+				case '0':
+					gui.osc->note(F6,0.05);
+					gui.osc->play();
+					break;
+				case '#':
+					gui.osc->note(G6,0.05);
+					gui.osc->play();
+					break;
+			
+				default:
+					break;
+			}
 			callBuffer += key;
+		}
 		if(resolutionMode)
 			display.setCursor(1, 53);
 		else
@@ -4297,7 +4391,7 @@ void MAKERphone::listMP3(const char * dirname, uint8_t levels) {
 	mp3Count = 0;
 	
 	Serial.printf("Listing directory: %s\n", dirname);
-	File root = SD.open(dirname);
+	SDAudioFile root = SD.open(dirname);
 	if (!root) {
 		Serial.println("Failed to open directory");
 		return;
@@ -4308,11 +4402,11 @@ void MAKERphone::listMP3(const char * dirname, uint8_t levels) {
 	}
 	int counter = 1;
 	uint8_t start = 0;
-	File file = root.openNextFile();
+	SDAudioFile file = root.openNextFile();
 	while (file) {
-		char temp[50];
-		file.getName(temp,  50);
-		String Name(temp);
+		char temp[100];
+		// file.getName(temp, 100);
+		String Name(file.name());
 		Serial.println(Name);
 		if (Name.endsWith(F(".MP3")) || Name.endsWith(F(".mp3")))
 		{
@@ -4331,7 +4425,7 @@ void MAKERphone::listPhotos(const char * dirname, uint8_t levels) {
 	photoCount = 0;
 	
 	Serial.printf("Listing directory: %s\n", dirname);
-	File root = SD.open(dirname);
+	SDAudioFile root = SD.open(dirname);
 	if (!root) {
 		Serial.println("Failed to open directory");
 		return;
@@ -4342,11 +4436,11 @@ void MAKERphone::listPhotos(const char * dirname, uint8_t levels) {
 	}
 	int counter = 1;
 	uint8_t start = 0;
-	File file = root.openNextFile();
+	SDAudioFile file = root.openNextFile();
 	while (file) {
-		char temp[50];
-		file.getName(temp,  50);
-		String Name(temp);
+		char temp[100];
+		// file.getName(temp, 100);
+		String Name(file.name());
 		Serial.println(Name);
 		if (Name.endsWith(F(".jpeg")) || Name.endsWith(F(".JPEG")) || Name.endsWith(F(".jpg")) || Name.endsWith(F(".JPG")))
 		{
@@ -4476,7 +4570,7 @@ void MAKERphone::mediaApp() {
 
 		if(input == 0) //music
 		{
-			if (!SD.begin(5, SD_SCK_MHZ(8)))
+			if (!SD.begin(5, SPI, 8000000))
 				Serial.println("SD card error");
 			listMP3("/", 1);
 			if(mp3Count > 0)
@@ -4512,7 +4606,7 @@ void MAKERphone::mediaApp() {
 		}
 		else if(input == 1) //photos
 		{
-			while (!SD.begin(5, SD_SCK_MHZ(8)))
+			while (!SD.begin(5, SPI, 8000000))
 				Serial.println("SD card error");
 			listPhotos("/Images/", 0);
 			if(photoCount > 0)
@@ -4559,11 +4653,11 @@ void MAKERphone::drawJpeg(String filename, int xpos, int ypos) {
   Serial.println("===========================");
 
   // Open the named file (the Jpeg decoder library will close it after rendering image)
-  File jpegFile = SD.open( filename, FILE_READ);    // File handle reference for SPIFFS
-  //  File jpegFile = SD.open( filename, FILE_READ);  // or, file handle reference for SD library
+  SDAudioFile jpegFile = SD.open( filename);    // SDAudioFile handle reference for SPIFFS
+  //  SDAudioFile jpegSDAudioFile = SD.open( filename, FILE_READ);  // or, file handle reference for SD library
 
   if ( !jpegFile ) {
-    Serial.print("ERROR: File \""); Serial.print(filename); Serial.println ("\" not found!");
+    Serial.print("ERROR: SDAudioFile \""); Serial.print(filename); Serial.println ("\" not found!");
     return;
   }
 
@@ -4718,12 +4812,15 @@ int8_t MAKERphone::mediaMenu(String* title, uint8_t length) {
 			pressed = 0;
 
 		if (buttons.released(BTN_A)) {   //BUTTON CONFIRM
-
+			gui.osc->note(75, 0.05);
+			gui.osc->play();
 			while (!update());// Exit when pressed
 			break;
 		}
 
 		if (buttons.released(BTN_UP)) {  //BUTTON UP
+			gui.osc->note(75, 0.05);
+			gui.osc->play();
 			if (cursor == 0) {
 				cursor = length - 1;
 				if (length > 6) {
@@ -4740,6 +4837,8 @@ int8_t MAKERphone::mediaMenu(String* title, uint8_t length) {
 		}
 
 		if (buttons.released(BTN_DOWN)) { //BUTTON DOWN
+			gui.osc->note(75, 0.05);
+			gui.osc->play();
 			cursor++;
 			if ((cursor * boxHeight + cameraY + settingsMenuYOffset) > 128) {
 				cameraY -= boxHeight;
@@ -4853,12 +4952,16 @@ int8_t MAKERphone::settingsMenu(String* title, uint8_t length) {
 			pressed = 0;
 
 		if (buttons.released(BTN_A)) {   //BUTTON CONFIRM
+			gui.osc->note(75, 0.05);
+			gui.osc->play();
 
 			while (!update());// Exit when pressed
 			break;
 		}
 
 		if (buttons.released(BTN_UP)) {  //BUTTON UP
+			gui.osc->note(75, 0.05);
+			gui.osc->play();
 			if (cursor == 0) {
 				cursor = length - 1;
 				if (length > 6) {
@@ -4875,6 +4978,8 @@ int8_t MAKERphone::settingsMenu(String* title, uint8_t length) {
 		}
 
 		if (buttons.released(BTN_DOWN)) { //BUTTON DOWN
+			gui.osc->note(75, 0.05);
+			gui.osc->play();
 			cursor++;
 			if ((cursor * boxHeight + cameraY + settingsMenuYOffset) > 128) {
 				cameraY -= boxHeight;
@@ -5140,9 +5245,17 @@ void MAKERphone::networkMenu() {
 				display.drawRect(57*2, 8*2, 20*2, 11*2, TFT_BLACK);
 			}
 			if (buttons.kpd.pin_read(BTN_LEFT) == 0 && wifi == 0)
+			{
+				gui.osc->note(75, 0.05);
+				gui.osc->play();
 				wifi = !wifi;
+			}
 			if (buttons.kpd.pin_read(BTN_RIGHT) == 0 && wifi == 1)
+			{
+				gui.osc->note(75, 0.05);            
+				gui.osc->play();
 				wifi = !wifi;
+			}
 		}
 		if (cursor == 1)
 		{
@@ -5155,9 +5268,17 @@ void MAKERphone::networkMenu() {
 				display.drawRect(57*2, 27*2, 20*2, 11*2, TFT_BLACK);
 			}
 			if (buttons.kpd.pin_read(BTN_LEFT) == 0 && bt == 0)
+			{
+				gui.osc->note(75, 0.05);
+				gui.osc->play();
 				bt = !bt;
+			}
 			if (buttons.kpd.pin_read(BTN_RIGHT) == 0 && bt == 1)
+			{
+				gui.osc->note(75, 0.05);
+				gui.osc->play();
 				bt = !bt;
+			}
 		}
 		if (cursor == 2)
 		{
@@ -5170,13 +5291,23 @@ void MAKERphone::networkMenu() {
 				display.drawRect(57*2, 46*2, 20*2, 11*2, TFT_BLACK);
 			}
 			if (buttons.kpd.pin_read(BTN_LEFT) == 0 && airplaneMode == 0)
+			{
+				gui.osc->note(75, 0.05);
+				gui.osc->play();
 				airplaneMode = !airplaneMode;
+			}
 			if (buttons.kpd.pin_read(BTN_RIGHT) == 0 && airplaneMode == 1)
+			{
+				gui.osc->note(75, 0.05);
+				gui.osc->play();
 				airplaneMode = !airplaneMode;
+			}
 		}
 
 		if (buttons.kpd.pin_read(BTN_UP) == 0) 
 		{
+			gui.osc->note(75, 0.05);
+			gui.osc->play();
 			while (buttons.kpd.pin_read(BTN_UP) == 0);
 			if (cursor == 0)
 				cursor = 2;
@@ -5185,6 +5316,8 @@ void MAKERphone::networkMenu() {
 		}
 		if (buttons.kpd.pin_read(BTN_DOWN) == 0)
 		{
+			gui.osc->note(75, 0.05);
+			gui.osc->play();
 			while (buttons.kpd.pin_read(BTN_DOWN) == 0);
 			if (cursor == 2)
 				cursor = 0;
@@ -5265,11 +5398,15 @@ void MAKERphone::displayMenu() {
 			}
 			if (buttons.released(BTN_LEFT) && brightness != 0)
 			{
+				gui.osc->note(75, 0.05);
+				gui.osc->play();
 				brightness--;
 				while(!update());
 			}
 			if (buttons.released(BTN_RIGHT) && brightness != 5)
 			{
+				gui.osc->note(75, 0.05);
+				gui.osc->play();
 				brightness++;
 				while(!update());
 			}
@@ -5294,11 +5431,15 @@ void MAKERphone::displayMenu() {
 			}
 			if (buttons.released(BTN_LEFT) && sleepTimeBuffer!= 0)
 			{
+				gui.osc->note(75, 0.05);
+				gui.osc->play();
 				sleepTimeBuffer--;
 				while(!update());
 			}
 			if (buttons.released(BTN_RIGHT) && sleepTimeBuffer!= 5)
 			{
+				gui.osc->note(75, 0.05);
+				gui.osc->play();
 				sleepTimeBuffer++;
 				while(!update());
 			}
@@ -5334,11 +5475,15 @@ void MAKERphone::displayMenu() {
 			}
 			if (buttons.released(BTN_LEFT) && backgroundIndex != 0)
 			{
+				gui.osc->note(75, 0.05);
+				gui.osc->play();
 				backgroundIndex--;
 				while(!update());
 			}
 			if (buttons.released(BTN_RIGHT) && backgroundIndex != 6)
 			{
+				gui.osc->note(75, 0.05);
+				gui.osc->play();
 				backgroundIndex++;
 				while(!update());
 			}
@@ -5346,14 +5491,18 @@ void MAKERphone::displayMenu() {
 
 		if (buttons.released(BTN_UP))
 		{
+			gui.osc->note(75, 0.05);
+			gui.osc->play();
 			while (!update());
-  		if (cursor == 0)
+  			if (cursor == 0)
 				cursor = 2;
 			else
 				cursor--;
 		}
 		if (buttons.released(BTN_DOWN))
 		{
+			gui.osc->note(75, 0.05);
+			gui.osc->play();
 			while (!update());
 			if (cursor == 2)
 				cursor = 0;
@@ -5396,7 +5545,7 @@ void MAKERphone::displayMenu() {
 	sleepTimeActual = sleepTimeActualBuffer;
 }
 void MAKERphone::soundMenu() {
-	SD.begin(5, SD_SCK_MHZ(8));
+	SD.begin(5, SPI, 8000000);
 	listRingtones("/ringtones", 0);
 	listNotifications("/notifications", 0);
 	
@@ -5453,11 +5602,17 @@ void MAKERphone::soundMenu() {
 			if (buttons.released(BTN_LEFT) && volume != 0)
 			{
 				volume--;
+				gui.osc->setVolume(256 * volume / 14);
+				gui.osc->note(75, 0.05);
+				gui.osc->play();
 				while(!update());
 			}
 			if (buttons.released(BTN_RIGHT) && volume != 15)
 			{
 				volume++;
+				gui.osc->setVolume(256 * volume / 14);
+				gui.osc->note(75, 0.05);
+				gui.osc->play();
 				while(!update());
 			}
 		}
@@ -5470,6 +5625,8 @@ void MAKERphone::soundMenu() {
 
 			if (buttons.released(BTN_A))
 			{
+				gui.osc->note(75, 0.05);
+				gui.osc->play();
 				while(!update());
 				display.setFreeFont(TT1);
 				Serial.println(ringtoneCount);
@@ -5487,6 +5644,8 @@ void MAKERphone::soundMenu() {
 		}
 		if (cursor == 2)
 		{
+			gui.osc->note(75, 0.05);
+			gui.osc->play();
 			if (millis() % 1000 <= 500)
 				display.drawRect(3*2, 100, 74*2, 11*2, TFT_BLACK);
 			else
@@ -5509,6 +5668,8 @@ void MAKERphone::soundMenu() {
 
 		if (buttons.released(BTN_UP))
 		{
+			gui.osc->note(75, 0.05);
+			gui.osc->play();
 			if (cursor == 0)
 				cursor = 2;
 			else
@@ -5517,6 +5678,8 @@ void MAKERphone::soundMenu() {
 		}
 		if (buttons.released(BTN_DOWN))
 		{
+			gui.osc->note(75, 0.05);
+			gui.osc->play();
 			if (cursor == 2)
 				cursor = 0;
 			else
@@ -5533,7 +5696,7 @@ void MAKERphone::listRingtones(const char * dirname, uint8_t levels) {
 	
 	Serial.printf("Listing directory: %s\n", dirname);
 
-	File root = SD.open(dirname);
+	SDAudioFile root = SD.open(dirname);
 	if (!root) {
 		Serial.println("Failed to open directory");
 		return;
@@ -5544,9 +5707,12 @@ void MAKERphone::listRingtones(const char * dirname, uint8_t levels) {
 
 	}
 	int counter = 1;
-	File file = root.openNextFile();
+	SDAudioFile file = root.openNextFile();
 	while (file) {
-		String Name = file.name();
+		char temp[100];
+		// file.getName(temp, 100);
+		String Name(file.name());
+		Serial.println(Name);
 		if (Name.endsWith(F(".MP3")) || Name.endsWith(F(".mp3")))
 		{
 			Serial.print(counter);
@@ -5565,7 +5731,7 @@ void MAKERphone::listNotifications(const char * dirname, uint8_t levels) {
 	
 	Serial.printf("Listing directory: %s\n", dirname);
 
-	File root = SD.open(dirname);
+	SDAudioFile root = SD.open(dirname);
 	if (!root) {
 		Serial.println("Failed to open directory");
 		return;
@@ -5576,9 +5742,12 @@ void MAKERphone::listNotifications(const char * dirname, uint8_t levels) {
 
 	}
 	int counter = 1;
-	File file = root.openNextFile();
+	SDAudioFile file = root.openNextFile();
 	while (file) {
-		String Name = file.name();
+		char temp[100];
+		// file.getName(temp, 100);
+		String Name(file.name());
+		Serial.println(Name);
 		if (Name.endsWith(F(".MP3")) || Name.endsWith(F(".mp3")))
 		{
 			Serial.print(counter);
@@ -5718,9 +5887,15 @@ void MAKERphone::securityMenu() {
 				else if (millis() % 500 <= 250 && pinLockBuffer == 0)
 					display.drawRect(113, 12, 38, 11*2, TFT_BLACK);
 				if (buttons.released(BTN_LEFT) && pinLockBuffer == 0)
+				{
+					gui.osc->note(75, 0.05);
+					gui.osc->play();
 					pinLockBuffer = !pinLockBuffer;
+				}
 				if (buttons.released(BTN_RIGHT) && pinLockBuffer == 1)
 				{
+					gui.osc->note(75, 0.05);
+					gui.osc->play();
 					pinBuffer = "";
 					pinLockBuffer = !pinLockBuffer;
 					if (pinLock)
@@ -5835,6 +6010,8 @@ void MAKERphone::securityMenu() {
 					display.drawFastVLine(display.getCursorX()+1, display.getCursorY()+2, 12, TFT_BLACK);
 				if (buttons.released(BTN_A) && pinBuffer.length() == 4 && confirmMessage == 0)
 				{
+					gui.osc->note(75, 0.05);
+					gui.osc->play();
 
 					while (!update());
 					pinNumber = pinBuffer.toInt();
@@ -6031,6 +6208,8 @@ void MAKERphone::securityMenu() {
 
 				if (buttons.released(BTN_A) && pinBuffer.length() < 4 && errorMessage == 0)
 				{
+					gui.osc->note(75, 0.05);
+					gui.osc->play();
 					while (!update());
 					display.setCursor(2, 111);
 					display.print("Pin must have 4+ digits");
@@ -6064,6 +6243,8 @@ void MAKERphone::securityMenu() {
 
 			if (buttons.released(BTN_UP))
 			{
+				gui.osc->note(75, 0.05);
+				gui.osc->play();
 				while (!update());
 				if (cursor == 0 && pinLockBuffer == 1)
 					cursor = 1;
@@ -6072,6 +6253,8 @@ void MAKERphone::securityMenu() {
 			}
 			if (buttons.released(BTN_DOWN))
 			{
+				gui.osc->note(75, 0.05);
+				gui.osc->play();
 				while (!update());
 				if (cursor == 1)
 					cursor = 0;
@@ -6144,6 +6327,8 @@ void MAKERphone::timeMenu()
 				display.drawRect(46,63, 68, 20, 0xFFED);
 			if(buttons.released(BTN_A))
 			{
+				gui.osc->note(75, 0.05);
+				gui.osc->play();
 				while(!update());
 				String inputBuffer;
 				if(clockHour == 0)
@@ -6778,6 +6963,8 @@ void MAKERphone::timeMenu()
 				display.drawRect(23, 93, 110, 20, 0xFFED);
 			if(buttons.released(BTN_A))
 			{
+				gui.osc->note(75, 0.05);
+				gui.osc->play();
 				clockYear = 0;
 				previousMillis = millis();
 				while(1)
@@ -6822,6 +7009,8 @@ void MAKERphone::timeMenu()
 		}
 		if (buttons.released(BTN_UP) && cursor > 0)
 		{
+			gui.osc->note(75, 0.05);
+			gui.osc->play();
 			blinkState = 1;
 			previousMillis = millis() + 400;
 			while (!update());
@@ -6829,6 +7018,8 @@ void MAKERphone::timeMenu()
 		}
 		if (buttons.released(BTN_DOWN) && cursor < 1)
 		{
+			gui.osc->note(75, 0.05);
+			gui.osc->play();
 			blinkState = 1;
 			previousMillis = millis() + 400;
 			while (!update());
@@ -6901,11 +7092,11 @@ bool MAKERphone::updateMenu()
 					SD.remove(contacts_path);
 					SD.remove(settings_path);
 
-					File contacts_file = SD.open(contacts_path, FILE_REWRITE);
+					SDAudioFile contacts_file = SD.open(contacts_path);
 					contacts.prettyPrintTo(contacts_file);
 					contacts_file.close();
 
-					File settings_file = SD.open(settings_path, FILE_REWRITE);
+					SDAudioFile settings_file = SD.open(settings_path);
 					settings.prettyPrintTo(settings_file);
 					settings_file.close();
 
@@ -6929,6 +7120,8 @@ bool MAKERphone::updateMenu()
 		}
 		if (buttons.released(BTN_UP) && cursor > 0)
 		{
+			gui.osc->note(75, 0.05);
+			gui.osc->play();
 			blinkState = 1;
 			previousMillis = millis();
 			while (!update());
@@ -6936,6 +7129,8 @@ bool MAKERphone::updateMenu()
 		}
 		if (buttons.released(BTN_DOWN) && cursor < 1)
 		{
+			gui.osc->note(75, 0.05);
+			gui.osc->play();
 			blinkState = 1;
 			previousMillis = millis();
 			while (!update());
@@ -6953,7 +7148,7 @@ void MAKERphone::saveSettings(bool debug)
 {
 	const char * path = "/settings.json";
 	Serial.println("");
-	File file = SD.open(path);
+	SDAudioFile file = SD.open(path);
 	JsonObject& settings = mp.jb.parseObject(file);
 	file.close();
 
@@ -6980,7 +7175,7 @@ void MAKERphone::saveSettings(bool debug)
 		settings["sleep_time"] = sleepTime;
 		settings["background_color"] = backgroundIndex;
 
-		File file1 = SD.open(path, FILE_REWRITE);
+		SDAudioFile file1 = SD.open(path);
 		settings.prettyPrintTo(file1);
 		file1.close();
 	} else {
@@ -6991,19 +7186,19 @@ void MAKERphone::saveSettings(bool debug)
 void MAKERphone::loadSettings(bool debug)
 {
 	//create default folders if not present
-	if(!SD.chdir("/Music"))
+	if(!SD.exists("/Music"))
 		SD.mkdir("Music");
-	if(!SD.chdir("/Images"))
+	if(!SD.exists("/Images"))
 		SD.mkdir("Images");
-	if(!SD.chdir("/Video"))
+	if(!SD.exists("/Video"))
 		SD.mkdir("Video");
-	SD.chdir("/");
+	SD.exists("/");
 	const char * path = "/settings.json";
 	Serial.println(""); 
-	File file = SD.open(path);
+	SDAudioFile file = SD.open(path);
 	JsonObject& settings = mp.jb.parseObject(file);
 	file.close();
-
+	
 	if (settings.success()) {
 		if(debug){
 			Serial.print("wifi: ");
@@ -7080,7 +7275,81 @@ void MAKERphone::applySettings()
 		sleepTimeActual = 1800;
 		break;
 	}
+	gui.osc->setVolume(256 * volume / 14);
 
+}
+
+//Collision
+bool MAKERphone::collideRectRect(int16_t x1, int16_t y1, int16_t w1, int16_t h1, int16_t x2, int16_t y2, int16_t w2, int16_t h2) {
+	return (x2 < x1 + w1 && x2 + w2 > x1 && y2 < y1 + h1 && y2 + h2 > y1);
+}
+bool MAKERphone::collidePointRect(int16_t pointX, int16_t pointY, uint16_t rectX, uint16_t rectY, uint16_t rectW, uint16_t rectH) {
+	return (pointX >= rectX && pointX < rectX + rectW && pointY >= rectY && pointY < rectY + rectH);
+}
+bool MAKERphone::collideCircleCircle(int16_t centerX1, int16_t centerY1, int16_t r1, int16_t centerX2, int16_t centerY2, int16_t r2) {
+	r1 = abs(r1);
+	r2 = abs(r2);
+	return (((centerX1 - centerX2) * (centerX1 - centerX2) + (centerY1 - centerY2) * (centerY1 - centerY2)) < (r1 + r2) * (r1 + r2));
+}
+bool MAKERphone::collidePointCircle(int16_t pointX, int16_t pointY, int16_t centerX, int16_t centerY, int16_t r) {
+	return (((pointX - centerX) * (pointX - centerX) + (pointY - centerY) * (pointY - centerY)) < abs(r) ^ 2);
+}
+
+//SD operations
+void MAKERphone::writeFile(const char * path, const char * message)
+{
+	while (!SD.begin(5, SPI, 8000000));
+	Serial.printf("Writing file: %s\n", path);
+
+	SDAudioFile file = SD.open(path);
+	if (!file) {
+		Serial.println("Failed to open file for writing");
+		return;
+	}
+	if (file.print(message)) {
+		Serial.println("SDAudioFile written");
+	}
+	else {
+		Serial.println("Write failed");
+	}
+	file.close();
+}
+void MAKERphone::appendFile(const char * path, const char * message) {
+	Serial.printf("Appending to file: %s\n", path);
+
+	SDAudioFile file = SD.open(path);
+	if (!file) {
+		Serial.println("Failed to open file for appending");
+		return;
+	}
+	if (file.print(message)) {
+		Serial.println("Message appended");
+		delay(5);
+	}
+	else {
+		Serial.println("Append failed");
+		delay(5);
+	}
+	file.close();
+}
+String MAKERphone::readFile(const char * path) {
+	while (!SD.begin(5, SPI, 8000000));
+	Serial.printf("Reading file: %s\n", path);
+	String helper="";
+	SDAudioFile file = SD.open(path);
+	if (!file) {
+		Serial.println("Failed to open file for reading");
+		return "";
+	}
+
+	Serial.print("Read from file: ");
+	while (file.available()) {
+		helper += (char)file.read();
+
+	}
+	file.close();
+
+	return helper;
 }
 
 //Buttons class
@@ -7150,87 +7419,6 @@ uint16_t Buttons::timeHeld(uint8_t button) {
 	}
 }
 
-//Collision
-bool MAKERphone::collideRectRect(int16_t x1, int16_t y1, int16_t w1, int16_t h1, int16_t x2, int16_t y2, int16_t w2, int16_t h2) {
-	return (x2 < x1 + w1 && x2 + w2 > x1
-		&& y2 < y1 + h1 && y2 + h2 > y1);
-}
-bool MAKERphone::collidePointRect(int16_t pointX, int16_t pointY, uint16_t rectX, uint16_t rectY, uint16_t rectW, uint16_t rectH) {
-	return (pointX >= rectX && pointX < rectX + rectW && pointY >= rectY && pointY < rectY + rectH);
-}
-bool MAKERphone::collideCircleCircle(int16_t centerX1, int16_t centerY1, int16_t r1, int16_t centerX2, int16_t centerY2, int16_t r2) {
-	// True if the distance between the centers is smaller than the sum of the radii : dist < r1 + r2
-	// dist = sqrt( (centerX1 - centerX2)^2 + (centerY1 - centerY2)^2 ) but we can't use sqrt (too slow).
-	// however, sqrt(a) < b  <==>  a < b*b  for all natural numbers
-	// in our case, 'a' is by definition a natural numbers
-	// So let's make sure 'b' is a natural numbers
-	r1 = abs(r1);
-	r2 = abs(r2);
-	// Now apply the formula
-	return (((centerX1 - centerX2) * (centerX1 - centerX2) + (centerY1 - centerY2) * (centerY1 - centerY2)) < (r1 + r2) * (r1 + r2));
-}
-bool MAKERphone::collidePointCircle(int16_t pointX, int16_t pointY, int16_t centerX, int16_t centerY, int16_t r) {
-	// Just like circleCircle collision, but r2 = 0
-	r = abs(r);
-	return (((pointX - centerX) * (pointX - centerX) + (pointY - centerY) * (pointY - centerY)) < r * r);
-}
-
-//SD operations
-void MAKERphone::writeFile(const char * path, const char * message)
-{
-	while (!SD.begin(5, SD_SCK_MHZ(8)));
-	Serial.printf("Writing file: %s\n", path);
-
-	File file = SD.open(path, FILE_REWRITE);
-	if (!file) {
-		Serial.println("Failed to open file for writing");
-		return;
-	}
-	if (file.print(message)) {
-		Serial.println("File written");
-	}
-	else {
-		Serial.println("Write failed");
-	}
-	file.close();
-}
-void MAKERphone::appendFile(const char * path, const char * message) {
-	Serial.printf("Appending to file: %s\n", path);
-
-	File file = SD.open(path, FILE_WRITE);
-	if (!file) {
-		Serial.println("Failed to open file for appending");
-		return;
-	}
-	if (file.print(message)) {
-		Serial.println("Message appended");
-		delay(5);
-	}
-	else {
-		Serial.println("Append failed");
-		delay(5);
-	}
-	file.close();
-}
-String MAKERphone::readFile(const char * path) {
-	while (!SD.begin(5, SD_SCK_MHZ(8)));
-	Serial.printf("Reading file: %s\n", path);
-	String helper="";
-	File file = SD.open(path);
-	if (!file) {
-		Serial.println("Failed to open file for reading");
-		return "";
-	}
-
-	Serial.print("Read from file: ");
-	while (file.available()) {
-		helper += (char)file.read();
-
-	}
-	file.close();
-
-	return helper;
-}
 
 //GUI class
 void GUI::drawNotificationWindow(uint8_t x, uint8_t y, uint8_t width, uint8_t height, String text) {
@@ -7334,7 +7522,8 @@ int8_t GUI::menu(const char* title, String* items, uint8_t length) {
 		mp.display.print(title);
 
 		if (mp.buttons.released(BTN_A)) {   //BUTTON CONFIRM
-
+			osc->note(75, 0.05);
+			osc->play();
 			while (!mp.update());// Exit when pressed
 			break;
 		}
@@ -7345,6 +7534,8 @@ int8_t GUI::menu(const char* title, String* items, uint8_t length) {
 		}
 
 		if (mp.buttons.kpd.pin_read(BTN_UP) == 0) {  //BUTTON UP
+			osc->note(75, 0.05);
+			osc->play();
 			mp.leds[3] = CRGB::Blue;
 			mp.leds[4] = CRGB::Blue;
 			while(!mp.update());
@@ -7368,6 +7559,8 @@ int8_t GUI::menu(const char* title, String* items, uint8_t length) {
 		}
 
 		if (mp.buttons.kpd.pin_read(BTN_DOWN) == 0) { //BUTTON DOWN
+			osc->note(75, 0.05);
+			osc->play();
 			mp.leds[0] = CRGB::Blue;
 			mp.leds[7] = CRGB::Blue;
 			while (!mp.update());
@@ -7718,7 +7911,7 @@ int16_t GUI::scrollingMainMenu()
 	uint16_t index = 0;
 	uint8_t cursorX = 0;
 	uint8_t cursorY = 0;
-	uint8_t elements = 10 + mp.directoryCount; //5 default apps
+	uint8_t elements = 10 + mp.directoryCount; //10 default apps
 	Serial.println(elements);
 	delay(5);
 	uint8_t x_elements = 3;
@@ -7739,72 +7932,82 @@ int16_t GUI::scrollingMainMenu()
 	String appNames[] = {"Clock", "Calculator", "Flashlight", "Calendar", "Invaders"};
 	String passcode = "";
 	uint32_t passcodeMillis = millis();
-	long elapsedMillis = millis();
-	long elapsedMillis2 = millis();
+	uint32_t elapsedMillis = millis();
+	uint32_t elapsedMillis2 = millis();
+	bool newScreen = 1;
+	mp.display.fillScreen(TFT_BLACK);
 	while(!mp.update());
 	while (1)
 	{
 		
-		mp.display.fillScreen(TFT_BLACK);
-
+		mp.display.fillRect(0,0,mp.display.width(), 14, TFT_BLACK);
 		mp.display.setTextSize(1);
 		mp.display.setTextColor(TFT_WHITE);
 
 		// Draw the icons
-		for (int i = 0; i < 6;i++)
+		if(newScreen)
 		{
-			uint8_t tempX = i%x_elements;
-			uint8_t tempY = i/x_elements;
-			switch (pageIndex * 3 + i)
+			// mp.display.fillScreen(TFT_BLACK);
+			for (int i = 0; i < 6;i++)
 			{
-				case 0:
-					// Serial.println(index);
-					// Serial.println(i);
-					// Serial.println(tempX);
-					// Serial.println(tempY);
-					// Serial.println("-------------");
-					// delay(5);
-					mp.display.drawIcon(bigMessages, 4 + tempX*52, 18 + tempY*56, width, bigIconHeight, 2);
-					break;
-				case 1:
-					mp.display.drawIcon(bigMedia, 4 + tempX*52, 18 + tempY*56, width, bigIconHeight, 2);
-					break;
-				case 2:
-					mp.display.drawIcon(bigContacts, 4 + tempX*52, 18 + tempY*56, width, bigIconHeight, 2);
-					break;
-				case 3:
-					mp.display.drawIcon(bigSettings, 4 + tempX*52, 18 + tempY*56, width, bigIconHeight, 2);
-					break;
-				case 4:
-					mp.display.drawIcon(bigPhone, 4 + tempX*52, 18 + tempY*56, width, bigIconHeight, 2);
-					break;
-				case 5:
-					mp.display.drawIcon(bigApps, 4 + tempX*52, 18 + tempY*56, width, bigIconHeight, 2);
-					break;
-				case 6:
-					mp.display.drawIcon(clock_icon, 4 + tempX*52, 18 + tempY*56, width, bigIconHeight, 2);
-					break;
-				case 7:
-					mp.display.drawIcon(calculator_icon, 4 + tempX*52, 18 + tempY*56, width, bigIconHeight, 2);
-					break;
-				case 8:
-					mp.display.drawIcon(flash_icon, 4 + tempX*52, 18 + tempY*56, width, bigIconHeight, 2);
-					break;
-				case 9:
-					mp.display.drawIcon(calendar_icon, 4 + tempX*52, 18 + tempY*56, width, bigIconHeight, 2);
-					break;
-				// case 10:
-				// 	mp.display.drawBmp("/Invaders/icon.bmp", 4 + tempX * 52, 18 + tempY * 56, 2);
-				// 	break;
-				default: 
-					if(pageIndex * 3 + i < elements)
-					{
-						Serial.println(mp.directories[pageIndex * 3 + i - 10]);
-						delay(5);
-						mp.display.drawBmp(String("/" + mp.directories[pageIndex * 3 + i - 10] + "/icon.bmp"), 4 + tempX * 52, 18 + tempY * 56, 2);
-					}
-					break;
+				uint8_t tempX = i%x_elements;
+				uint8_t tempY = i/x_elements;
+				switch (pageIndex * 3 + i)
+				{
+					case 0:
+						// Serial.println(index);
+						// Serial.println(i);
+						// Serial.println(tempX);
+						// Serial.println(tempY);
+						// Serial.println("-------------");
+						// delay(5);
+						mp.display.drawIcon(bigMessages, 4 + tempX*52, 18 + tempY*56, width, bigIconHeight, 2);
+						break;
+					case 1:
+						mp.display.drawIcon(bigMedia, 4 + tempX*52, 18 + tempY*56, width, bigIconHeight, 2);
+						break;
+					case 2:
+						mp.display.drawIcon(bigContacts, 4 + tempX*52, 18 + tempY*56, width, bigIconHeight, 2);
+						break;
+					case 3:
+						mp.display.drawIcon(bigSettings, 4 + tempX*52, 18 + tempY*56, width, bigIconHeight, 2);
+						break;
+					case 4:
+						mp.display.drawIcon(bigPhone, 4 + tempX*52, 18 + tempY*56, width, bigIconHeight, 2);
+						break;
+					case 5:
+						mp.display.drawIcon(bigApps, 4 + tempX*52, 18 + tempY*56, width, bigIconHeight, 2);
+						break;
+					case 6:
+						mp.display.drawIcon(clock_icon, 4 + tempX*52, 18 + tempY*56, width, bigIconHeight, 2);
+						break;
+					case 7:
+						mp.display.drawIcon(calculator_icon, 4 + tempX*52, 18 + tempY*56, width, bigIconHeight, 2);
+						break;
+					case 8:
+						mp.display.drawIcon(flash_icon, 4 + tempX*52, 18 + tempY*56, width, bigIconHeight, 2);
+						break;
+					case 9:
+						mp.display.drawIcon(calendar_icon, 4 + tempX*52, 18 + tempY*56, width, bigIconHeight, 2);
+						break;
+					// case 10:
+					// 	mp.display.drawBmp("/Invaders/icon.bmp", 4 + tempX * 52, 18 + tempY * 56, 2);
+					// 	break;
+					default: 
+						if(pageIndex * 3 + i < elements)
+						{
+							// Serial.println(mp.directories[pageIndex * 3 + i - 10]);
+							// delay(5);
+							if(SD.exists(String("/" + mp.directories[pageIndex * 3 + i - 10] + "/icon.bmp")))
+								mp.display.drawBmp(String("/" + mp.directories[pageIndex * 3 + i - 10] + "/icon.bmp"), 4 + tempX * 52, 18 + tempY * 56, 2);
+							else
+								mp.display.drawIcon(defaultIcon, 4 + tempX * 52, 18 + tempY * 56, width, bigIconHeight, 2);
+							
+						}
+						break;
+				}
 			}
+			newScreen = 0;
 		}
 
 		mp.display.fillRect(0, 0, 160, 12, TFT_BLACK);
@@ -7845,11 +8048,17 @@ int16_t GUI::scrollingMainMenu()
 		///////////////////////////////////////
 		if (mp.buttons.released(BTN_A)) //CONFIRM
 		{
+			osc->note(75, 0.05);
+			osc->play();
 			while (!mp.update());
 			return cursorY * x_elements + cursorX;  //returns index of selected icon
 		}
 		if (mp.buttons.released(BTN_UP)) //UP
 		{
+			mp.display.drawRect(3 + cursorX * 52, 17 + (cameraY) * 56, 50, 54, TFT_BLACK);
+			mp.display.drawRect(2 + cursorX * 52, 16 + (cameraY) * 56, 52, 56, TFT_BLACK);
+			osc->note(75, 0.05);
+			osc->play();
 			passcode += "UP";
 			passcodeMillis = millis();
 			mp.leds[0] = CRGB::Blue;
@@ -7861,6 +8070,7 @@ int16_t GUI::scrollingMainMenu()
 
 			if (cursorY == 0) 
 			{
+				newScreen = 1;
 				cursorY = y_elements-1;
 				
 				if(pageNumber > 0)
@@ -7876,6 +8086,7 @@ int16_t GUI::scrollingMainMenu()
 			}
 			else if(cameraY % 2 == 0 && pageIndex > 0)
 			{
+				newScreen = 1;
 				cameraY = 0;
 				cursorY--;
 				pageIndex--;
@@ -7885,6 +8096,10 @@ int16_t GUI::scrollingMainMenu()
 		}
 		if (mp.buttons.released(BTN_DOWN))//DOWN
 		{
+			mp.display.drawRect(3 + cursorX * 52, 17 + (cameraY) * 56, 50, 54, TFT_BLACK);
+			mp.display.drawRect(2 + cursorX * 52, 16 + (cameraY) * 56, 52, 56, TFT_BLACK);
+			osc->note(75, 0.05);
+			osc->play();
 			passcode += "DOWN";
 			passcodeMillis = millis();
 			mp.leds[3] = CRGB::Blue;
@@ -7894,7 +8109,9 @@ int16_t GUI::scrollingMainMenu()
 			FastLED.clear();
 			while (!mp.update());
 
-			if (cursorY == y_elements - 1) {
+			if (cursorY == y_elements - 1) 
+			{
+				newScreen = 1;
 				cursorY = 0;
 				pageIndex = 0;
 				cameraY = 0;
@@ -7906,6 +8123,7 @@ int16_t GUI::scrollingMainMenu()
 			}
 			else if (cameraY % 2 == 1 && pageIndex < pageNumber)
 			{
+				newScreen = 1;
 				cameraY = 1;
 				cursorY++;
 				pageIndex++;
@@ -7916,6 +8134,10 @@ int16_t GUI::scrollingMainMenu()
 		}
 		if (mp.buttons.released(BTN_LEFT)) //LEFT
 		{
+			mp.display.drawRect(3 + cursorX * 52, 17 + (cameraY) * 56, 50, 54, TFT_BLACK);
+			mp.display.drawRect(2 + cursorX * 52, 16 + (cameraY) * 56, 52, 56, TFT_BLACK);
+			osc->note(75, 0.05);
+			osc->play();
 			passcode += "LEFT";
 			passcodeMillis = millis();
 			mp.leds[6] = CRGB::Blue;
@@ -7935,6 +8157,10 @@ int16_t GUI::scrollingMainMenu()
 		}
 		if (mp.buttons.released(BTN_RIGHT))//RIGHT
 		{
+			mp.display.drawRect(3 + cursorX * 52, 17 + (cameraY) * 56, 50, 54, TFT_BLACK);
+			mp.display.drawRect(2 + cursorX * 52, 16 + (cameraY) * 56, 52, 56, TFT_BLACK);
+			osc->note(75, 0.05);
+			osc->play();
 			passcode += "RIGHT";
 			passcodeMillis = millis();
 			mp.leds[1] = CRGB::Blue;
