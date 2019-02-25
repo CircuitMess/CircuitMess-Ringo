@@ -7,8 +7,8 @@
 #include "esp_adc_cal.h"
 
 float masterVolume;
-MPTrack *tracks[MAX_TRACKS];
-Oscillator *oscs[MAX_TRACKS];
+MPTrack *tracks[MAX_TRACKS] = {NULL, NULL, NULL, NULL};
+Oscillator *oscs[MAX_TRACKS] = {NULL, NULL, NULL, NULL};
 unsigned char trackCount;
 char dout[1600];
 short adcbuf[1600]={0};
@@ -64,7 +64,14 @@ void initWavLib()
     masterVolume=64;
     trackCount=0;
     for(unsigned char i=0;i<MAX_TRACKS;i++)
+    {
+        if(tracks[i] != NULL || tracks[i] != nullptr)
+            tracks[i]->~MPTrack();
         tracks[i]=nullptr;
+        if(oscs[i] != NULL || oscs[i] != nullptr)
+            oscs[i]->~Oscillator();
+        oscs[i]=nullptr;
+    }
     pinMode(PIN_I2S_BCLK,OUTPUT);
     pinMode(PIN_I2S_LRC,OUTPUT);
     pinMode(PIN_I2S_DOUT,OUTPUT);

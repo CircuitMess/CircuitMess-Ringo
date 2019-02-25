@@ -140,13 +140,14 @@ void MAKERphone::begin(bool splash) {
 
 		//Audio
 	initWavLib();
-	xTaskCreate(
+	xTaskCreatePinnedToCore(
 				Task1code,				/* Task function. */
 				"Task1",				/* name of task. */
 				30000,					/* Stack size of task */
 				NULL,					/* parameter of the task */
 				1,						/* priority of the task */
-				&Task1);				/* Task handle to keep track of created task */
+				&Task1,
+				0);				/* Task handle to keep track of created task */
 	addOscillator(gui.osc);
 
 	applySettings();
@@ -923,9 +924,8 @@ void MAKERphone::listDirectories(const char * dirname) {
 			// file.getName(temp, 100);
 			String Name(file.name());
 			Serial.println(Name);
-			Serial.println(String(Name + Name + ".BIN"));
-			if(Name != "/Images\0" && Name != "/Music\0" && Name != "/Video\0" && 
-			Name != "/System Volume Information\0" && SD.exists(String(Name + Name + ".BIN")))
+			if(Name != "/Images\0" && Name != "/Music\0" && Name != "/Video\0"
+			 && Name != "/System Volume Information\0" && SD.exists(String(Name + "/" + Name + ".BIN")))
 			{
 				
 				Serial.println(Name);
@@ -1205,6 +1205,7 @@ void MAKERphone::mainMenu()
 			while(!update());
 
 			String foo = directories[index - 10];
+			initWavLib();
 			updateFromFS(String("/" + foo + "/" + foo + ".bin"));
 		}
 		update();
@@ -7931,78 +7932,82 @@ int16_t GUI::scrollingMainMenu()
 	String appNames[] = {"Clock", "Calculator", "Flashlight", "Calendar", "Invaders"};
 	String passcode = "";
 	uint32_t passcodeMillis = millis();
-	long elapsedMillis = millis();
-	long elapsedMillis2 = millis();
+	uint32_t elapsedMillis = millis();
+	uint32_t elapsedMillis2 = millis();
+	bool newScreen = 1;
+	mp.display.fillScreen(TFT_BLACK);
 	while(!mp.update());
 	while (1)
 	{
 		
-		mp.display.fillScreen(TFT_BLACK);
-
+		mp.display.fillRect(0,0,mp.display.width(), 14, TFT_BLACK);
 		mp.display.setTextSize(1);
 		mp.display.setTextColor(TFT_WHITE);
 
 		// Draw the icons
-		for (int i = 0; i < 6;i++)
+		if(newScreen)
 		{
-			uint8_t tempX = i%x_elements;
-			uint8_t tempY = i/x_elements;
-			switch (pageIndex * 3 + i)
+			// mp.display.fillScreen(TFT_BLACK);
+			for (int i = 0; i < 6;i++)
 			{
-				case 0:
-					// Serial.println(index);
-					// Serial.println(i);
-					// Serial.println(tempX);
-					// Serial.println(tempY);
-					// Serial.println("-------------");
-					// delay(5);
-					mp.display.drawIcon(bigMessages, 4 + tempX*52, 18 + tempY*56, width, bigIconHeight, 2);
-					break;
-				case 1:
-					mp.display.drawIcon(bigMedia, 4 + tempX*52, 18 + tempY*56, width, bigIconHeight, 2);
-					break;
-				case 2:
-					mp.display.drawIcon(bigContacts, 4 + tempX*52, 18 + tempY*56, width, bigIconHeight, 2);
-					break;
-				case 3:
-					mp.display.drawIcon(bigSettings, 4 + tempX*52, 18 + tempY*56, width, bigIconHeight, 2);
-					break;
-				case 4:
-					mp.display.drawIcon(bigPhone, 4 + tempX*52, 18 + tempY*56, width, bigIconHeight, 2);
-					break;
-				case 5:
-					mp.display.drawIcon(bigApps, 4 + tempX*52, 18 + tempY*56, width, bigIconHeight, 2);
-					break;
-				case 6:
-					mp.display.drawIcon(clock_icon, 4 + tempX*52, 18 + tempY*56, width, bigIconHeight, 2);
-					break;
-				case 7:
-					mp.display.drawIcon(calculator_icon, 4 + tempX*52, 18 + tempY*56, width, bigIconHeight, 2);
-					break;
-				case 8:
-					mp.display.drawIcon(flash_icon, 4 + tempX*52, 18 + tempY*56, width, bigIconHeight, 2);
-					break;
-				case 9:
-					mp.display.drawIcon(calendar_icon, 4 + tempX*52, 18 + tempY*56, width, bigIconHeight, 2);
-					break;
-				// case 10:
-				// 	mp.display.drawBmp("/Invaders/icon.bmp", 4 + tempX * 52, 18 + tempY * 56, 2);
-				// 	break;
-				default: 
-					if(pageIndex * 3 + i < elements)
-					{
-
-						if(SD.exists(String("/" + mp.directories[pageIndex * 3 + i - 10] + "/icon.bmp")))
-							mp.display.drawBmp(String("/" + mp.directories[pageIndex * 3 + i - 10] + "/icon.bmp"), 4 + tempX * 52, 18 + tempY * 56, 2);
-						else
-							mp.display.drawIcon(defaultIcon, 4 + tempX * 52, 18 + tempY * 56, 24, 26, 2);
-						// Serial.println(mp.directories[pageIndex * 3 + i - 10]);
+				uint8_t tempX = i%x_elements;
+				uint8_t tempY = i/x_elements;
+				switch (pageIndex * 3 + i)
+				{
+					case 0:
+						// Serial.println(index);
+						// Serial.println(i);
+						// Serial.println(tempX);
+						// Serial.println(tempY);
+						// Serial.println("-------------");
 						// delay(5);
-						
-					}
-					
-					break;
+						mp.display.drawIcon(bigMessages, 4 + tempX*52, 18 + tempY*56, width, bigIconHeight, 2);
+						break;
+					case 1:
+						mp.display.drawIcon(bigMedia, 4 + tempX*52, 18 + tempY*56, width, bigIconHeight, 2);
+						break;
+					case 2:
+						mp.display.drawIcon(bigContacts, 4 + tempX*52, 18 + tempY*56, width, bigIconHeight, 2);
+						break;
+					case 3:
+						mp.display.drawIcon(bigSettings, 4 + tempX*52, 18 + tempY*56, width, bigIconHeight, 2);
+						break;
+					case 4:
+						mp.display.drawIcon(bigPhone, 4 + tempX*52, 18 + tempY*56, width, bigIconHeight, 2);
+						break;
+					case 5:
+						mp.display.drawIcon(bigApps, 4 + tempX*52, 18 + tempY*56, width, bigIconHeight, 2);
+						break;
+					case 6:
+						mp.display.drawIcon(clock_icon, 4 + tempX*52, 18 + tempY*56, width, bigIconHeight, 2);
+						break;
+					case 7:
+						mp.display.drawIcon(calculator_icon, 4 + tempX*52, 18 + tempY*56, width, bigIconHeight, 2);
+						break;
+					case 8:
+						mp.display.drawIcon(flash_icon, 4 + tempX*52, 18 + tempY*56, width, bigIconHeight, 2);
+						break;
+					case 9:
+						mp.display.drawIcon(calendar_icon, 4 + tempX*52, 18 + tempY*56, width, bigIconHeight, 2);
+						break;
+					// case 10:
+					// 	mp.display.drawBmp("/Invaders/icon.bmp", 4 + tempX * 52, 18 + tempY * 56, 2);
+					// 	break;
+					default: 
+						if(pageIndex * 3 + i < elements)
+						{
+							// Serial.println(mp.directories[pageIndex * 3 + i - 10]);
+							// delay(5);
+							if(SD.exists(String("/" + mp.directories[pageIndex * 3 + i - 10] + "/icon.bmp")))
+								mp.display.drawBmp(String("/" + mp.directories[pageIndex * 3 + i - 10] + "/icon.bmp"), 4 + tempX * 52, 18 + tempY * 56, 2);
+							else
+								mp.display.drawIcon(defaultIcon, 4 + tempX * 52, 18 + tempY * 56, width, bigIconHeight, 2);
+							
+						}
+						break;
+				}
 			}
+			newScreen = 0;
 		}
 
 		mp.display.fillRect(0, 0, 160, 12, TFT_BLACK);
@@ -8050,6 +8055,8 @@ int16_t GUI::scrollingMainMenu()
 		}
 		if (mp.buttons.released(BTN_UP)) //UP
 		{
+			mp.display.drawRect(3 + cursorX * 52, 17 + (cameraY) * 56, 50, 54, TFT_BLACK);
+			mp.display.drawRect(2 + cursorX * 52, 16 + (cameraY) * 56, 52, 56, TFT_BLACK);
 			osc->note(75, 0.05);
 			osc->play();
 			passcode += "UP";
@@ -8063,6 +8070,7 @@ int16_t GUI::scrollingMainMenu()
 
 			if (cursorY == 0) 
 			{
+				newScreen = 1;
 				cursorY = y_elements-1;
 				
 				if(pageNumber > 0)
@@ -8078,6 +8086,7 @@ int16_t GUI::scrollingMainMenu()
 			}
 			else if(cameraY % 2 == 0 && pageIndex > 0)
 			{
+				newScreen = 1;
 				cameraY = 0;
 				cursorY--;
 				pageIndex--;
@@ -8087,6 +8096,8 @@ int16_t GUI::scrollingMainMenu()
 		}
 		if (mp.buttons.released(BTN_DOWN))//DOWN
 		{
+			mp.display.drawRect(3 + cursorX * 52, 17 + (cameraY) * 56, 50, 54, TFT_BLACK);
+			mp.display.drawRect(2 + cursorX * 52, 16 + (cameraY) * 56, 52, 56, TFT_BLACK);
 			osc->note(75, 0.05);
 			osc->play();
 			passcode += "DOWN";
@@ -8098,7 +8109,9 @@ int16_t GUI::scrollingMainMenu()
 			FastLED.clear();
 			while (!mp.update());
 
-			if (cursorY == y_elements - 1) {
+			if (cursorY == y_elements - 1) 
+			{
+				newScreen = 1;
 				cursorY = 0;
 				pageIndex = 0;
 				cameraY = 0;
@@ -8110,6 +8123,7 @@ int16_t GUI::scrollingMainMenu()
 			}
 			else if (cameraY % 2 == 1 && pageIndex < pageNumber)
 			{
+				newScreen = 1;
 				cameraY = 1;
 				cursorY++;
 				pageIndex++;
@@ -8120,6 +8134,8 @@ int16_t GUI::scrollingMainMenu()
 		}
 		if (mp.buttons.released(BTN_LEFT)) //LEFT
 		{
+			mp.display.drawRect(3 + cursorX * 52, 17 + (cameraY) * 56, 50, 54, TFT_BLACK);
+			mp.display.drawRect(2 + cursorX * 52, 16 + (cameraY) * 56, 52, 56, TFT_BLACK);
 			osc->note(75, 0.05);
 			osc->play();
 			passcode += "LEFT";
@@ -8141,6 +8157,8 @@ int16_t GUI::scrollingMainMenu()
 		}
 		if (mp.buttons.released(BTN_RIGHT))//RIGHT
 		{
+			mp.display.drawRect(3 + cursorX * 52, 17 + (cameraY) * 56, 50, 54, TFT_BLACK);
+			mp.display.drawRect(2 + cursorX * 52, 16 + (cameraY) * 56, 52, 56, TFT_BLACK);
 			osc->note(75, 0.05);
 			osc->play();
 			passcode += "RIGHT";
