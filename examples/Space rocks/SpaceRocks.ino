@@ -5,6 +5,7 @@ MAKERphone mp;
 MPTrack *shoot;
 MPTrack *collide;
 MPTrack *hit;
+MPTrack *bgmusic;
 /*
     Space Rocks
     Copyright (C) 2019 CircuitMess
@@ -553,15 +554,19 @@ void setup() {
   shoot = new MPTrack("/SpaceRocks/shoot.wav");
   collide = new MPTrack("/SpaceRocks/collide.wav");
   hit = new MPTrack("/SpaceRocks/hit.wav");
+  bgmusic = new MPTrack("/SpaceRocks/bgmusic.wav");
   // put your setup code here, to run once:
   mp.begin(0);
   addTrack(shoot);
   addTrack(collide);
   addTrack(hit);
-  Serial.println(mp.volume);
+  addTrack(bgmusic);
+
   shoot->setVolume(256*mp.volume/14);
   collide->setVolume(256*mp.volume/14);
   hit->setVolume(256*mp.volume/14);
+  bgmusic->setVolume(256*mp.volume/14);
+  bgmusic->setRepeat(1);
   randomSeed(millis() * millis());
   resetSim();
 }
@@ -577,12 +582,12 @@ void loop()
   //   shoot->stop();
   if(mp.update())
 	{
-    Serial.println(shipY);
     // put your main code here, to run repeatedly:
 		mp.display.fillScreen(TFT_BLACK);
 		switch (simState)
 		{
 			case ProgState::Main: {
+        bgmusic->stop();
         mp.display.drawIcon(backdrop, 0, 0, 160, 128);
         //begin homescreen
 				mp.display.setCursor(10, 10);
@@ -624,7 +629,8 @@ void loop()
         resetField();
         
 				simState = ProgState::Simulation;
-				}
+        bgmusic->play();
+        }
 				if (mp.buttons.released(BTN_B))
 				{
 					while(!mp.update());
@@ -633,6 +639,7 @@ void loop()
 			}
 			break;
 			case ProgState::Simulation: {
+
         mp.display.drawIcon(backdrop, 0, 0, 160, 128);
 
         if (life > 0) {
