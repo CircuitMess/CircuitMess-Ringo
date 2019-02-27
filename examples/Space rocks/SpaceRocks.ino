@@ -48,7 +48,7 @@ byte bulletCount;
 byte asteroidCount;
 byte rockCount;
 byte pebbleCount;
-int8_t life;
+int8_t life = 3;
 uint8_t level = 0;
 unsigned short score;
 char tick;
@@ -95,8 +95,11 @@ void collision() {
   collide->play();
 	//   sound.tone(150, 50);
 	life = life - 1;
-	shipX = mp.display.width()/2;
-	shipY = mp.display.height()/2;
+  if(life>0)
+  {
+	  shipX = mp.display.width()/2;
+	  shipY = mp.display.height()/2;
+  }
 	velocityX = 0;
 	velocityY = 0;
 }
@@ -146,21 +149,21 @@ void navigation() {
 		velocityY += heading[HDG][1];
 
     }
-    if (mp.buttons.repeat(BTN_DOWN, 1)) {
-		if(velocityX!=0)
-    {
-		  velocityX -= heading[HDG][0];
-      if((heading[HDG][0] > 0 && velocityX < 0) || (heading[HDG][0] < 0 && velocityX > 0))
-        velocityX = 0;
-    }
-    if(velocityY!=0)
-    {
-	  	velocityY -= heading[HDG][1];
-      if((heading[HDG][1] > 0 && velocityY < 0) || (heading[HDG][1] < 0 && velocityY > 0))
-        velocityY = 0;
-    }
+    // if (mp.buttons.repeat(BTN_DOWN, 1)) {
+		// if(velocityX!=0)
+    // {
+		//   velocityX -= heading[HDG][0];
+    //   if((heading[HDG][0] > 0 && velocityX < 0) || (heading[HDG][0] < 0 && velocityX > 0))
+    //     velocityX = 0;
+    // }
+    // if(velocityY!=0)
+    // {
+	  // 	velocityY -= heading[HDG][1];
+    //   if((heading[HDG][1] > 0 && velocityY < 0) || (heading[HDG][1] < 0 && velocityY > 0))
+    //     velocityY = 0;
+    // }
 
-    }
+    // }
   // if (mp.buttons.pressed(BTN_DOWN)) {
   //   delay(300);
   //   if (random(0, 3) == 2) {
@@ -458,7 +461,32 @@ void radar() {
     }
   }
 }
-
+void dyingAnimation()
+{
+  uint32_t elapsedMillis = millis();
+  uint8_t passes = 1;
+  Serial.println(shipX);
+  Serial.println(shipY);
+  while(passes < 7)
+  {
+    
+    if(millis()-elapsedMillis >= 200)
+    {
+      mp.display.drawIcon(backdrop, 0, 0, 160, 128);
+      mp.display.drawLine(shipX, shipY + passes*2, shipX, shipY + passes*2 + 3, TFT_WHITE);
+      mp.display.drawLine(shipX, shipY - passes*2, shipX, shipY - passes*2 - 3, TFT_WHITE);
+      mp.display.drawLine(shipX + passes*2, shipY, shipX + passes*2 + 3, shipY, TFT_WHITE);
+      mp.display.drawLine(shipX - passes*2, shipY, shipX - passes*2 - 3, shipY, TFT_WHITE);
+      mp.display.drawLine(shipX + passes*2, shipY + passes*2, shipX + passes*2 + 2, shipY + passes*2 + 2, TFT_WHITE);
+      mp.display.drawLine(shipX - passes*2, shipY - passes*2, shipX - passes*2 - 2, shipY - passes*2 - 2, TFT_WHITE);
+      mp.display.drawLine(shipX + passes*2, shipY - passes*2, shipX + passes*2 + 2, shipY - passes*2 - 2, TFT_WHITE);
+      mp.display.drawLine(shipX - passes*2, shipY + passes*2, shipX - passes*2 - 2, shipY + passes*2 + 2, TFT_WHITE);
+      passes++;
+      elapsedMillis = millis();
+    }
+    while(!mp.update());
+  }
+}
 void resetField() {
   level = 0;
   velocityX = velocityY = 0;
@@ -471,6 +499,13 @@ void resetSim() {
   shipY = mp.display.height()/2;
   shipX = mp.display.width()/2;
   resetField();
+  bgmusic->stop();
+  removeTrack(bgmusic);
+  bgmusic = new MPTrack("/SpaceRocks/title.wav");
+  addTrack(bgmusic);
+  bgmusic->setVolume(250);
+  bgmusic->setRepeat(1);
+  bgmusic->play();
   simState = ProgState::Main;
   score = 0;
 }
@@ -536,39 +571,28 @@ void enterInitials() {
 	}
   }
 }
-uint16_t rawADC(uint8_t adc_bits) {
-//   power_adc_enable(); // ADC on
-//   ADMUX = adc_bits;
-//   // we also need MUX5 for temperature check
-//   if (adc_bits == ADC_TEMP) {
-//     ADCSRB = _BV(MUX5);
-//   }
-//   delay(2); // Wait for ADMUX setting to settle
-//   ADCSRA |= _BV(ADSC); // Start conversion
-//   while (bit_is_set(ADCSRA, ADSC)); // measuring
-//   return ADC;
-//   power_adc_disable();
-}
 void setup() {
   Serial.begin(115200);
   shoot = new MPTrack("/SpaceRocks/shoot.wav");
   collide = new MPTrack("/SpaceRocks/collide.wav");
   hit = new MPTrack("/SpaceRocks/hit.wav");
-  bgmusic = new MPTrack("/SpaceRocks/bgmusic.wav");
+  bgmusic = new MPTrack("/SpaceRocks/title.wav");
   // put your setup code here, to run once:
   mp.begin(0);
   addTrack(shoot);
   addTrack(collide);
   addTrack(hit);
-  addTrack(bgmusic);
 
-  shoot->setVolume(256*mp.volume/14);
-  collide->setVolume(256*mp.volume/14);
-  hit->setVolume(256*mp.volume/14);
-  bgmusic->setVolume(256*mp.volume/14);
-  bgmusic->setRepeat(1);
-  randomSeed(millis() * millis());
+
+  // shoot->setVolume(256*mp.volume/14);
+  // collide->setVolume(256*mp.volume/14);
+  // hit->setVolume(256*mp.volume/14);
+  shoot->setVolume(200);
+  collide->setVolume(200);
+  hit->setVolume(200);
+  randomSeed(millis());
   resetSim();
+  resetField();
 }
 
 uint32_t randMillis = millis();
@@ -582,12 +606,10 @@ void loop()
   //   shoot->stop();
   if(mp.update())
 	{
-    // put your main code here, to run repeatedly:
 		mp.display.fillScreen(TFT_BLACK);
 		switch (simState)
 		{
 			case ProgState::Main: {
-        bgmusic->stop();
         mp.display.drawIcon(backdrop, 0, 0, 160, 128);
         //begin homescreen
 				mp.display.setCursor(10, 10);
@@ -624,18 +646,25 @@ void loop()
         mp.display.printCenter("A: start     B: highscores");
         if (mp.buttons.released(BTN_A)) {
 					while(!mp.update());
-				life = 3;
-        resetSim();
-        resetField();
-        
-				simState = ProgState::Simulation;
-        bgmusic->play();
+          life = 3;
+          resetSim();
+          resetField();
+          
+          simState = ProgState::Simulation;
+          bgmusic->stop();
+          removeTrack(bgmusic);
+          bgmusic = new MPTrack("/SpaceRocks/bgmusic.wav");
+          addTrack(bgmusic);
+          bgmusic->setVolume(250);
+          bgmusic->setRepeat(1);
+          bgmusic->play();
         }
 				if (mp.buttons.released(BTN_B))
 				{
 					while(!mp.update());
 					simState = ProgState::DataDisplay;
-				}
+
+        }
 			}
 			break;
 			case ProgState::Simulation: {
@@ -661,13 +690,24 @@ void loop()
           mp.display.print(level);
           mp.display.setCursor(120, 10);
           mp.display.print(life);
-          if (life == 0)
-            resetField();
+          // if (life == 0)
+          //   resetField();
           if (mp.buttons.released(BTN_B)) 
+          {
+            bgmusic->pause();
             simState = ProgState::Pause;
+          }
 				}
         else 
         {
+          delay(500);
+          bgmusic->stop();
+          removeTrack(bgmusic);
+          bgmusic = new MPTrack("/SpaceRocks/gameover.wav");
+          addTrack(bgmusic);
+          bgmusic->setVolume(250);
+          bgmusic->play();
+          dyingAnimation();
           mp.display.drawIcon(backdrop, 0, 0, 160, 128);
           while(!mp.update());
           for (int i = 0; i < mp.display.height(); i+=4)
@@ -688,6 +728,13 @@ void loop()
           Serial.println("HERE");
           delay(5);
           simState = ProgState::Main;
+          bgmusic->stop();
+          removeTrack(bgmusic);
+          bgmusic = new MPTrack("/SpaceRocks/title.wav");
+          addTrack(bgmusic);
+          bgmusic->setVolume(250);
+          bgmusic->setRepeat(1);
+          bgmusic->play();
 				}
 			}
 			break;
@@ -771,9 +818,15 @@ void loop()
 			mp.display.setTextSize(2);
       mp.display.setTextFont(2);
       mp.display.printCenter(F("PAUSE"));
-			if (mp.buttons.released(BTN_A)) simState = ProgState::Simulation;
-			if (mp.buttons.released(BTN_B)) resetSim();
-			if (mp.buttons.released(BTN_UP) || mp.buttons.released(BTN_DOWN)) {
+			if (mp.buttons.released(BTN_A))
+      { 
+        simState = ProgState::Simulation;
+        bgmusic->resume();
+      }
+      if (mp.buttons.released(BTN_B))
+        resetSim();
+      if (mp.buttons.released(BTN_UP) || mp.buttons.released(BTN_DOWN))
+      {
 			}
 			break;
 			case ProgState::DataErasure:
