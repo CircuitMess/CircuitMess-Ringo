@@ -136,8 +136,6 @@ bool MPTrack::loadSamples()
 {
     trackFile.readBytes(data, sizeof(data));
     loaded=(trackFile.position()-0x2C)/2;
-    Serial.println(loaded);
-    delay(1);
     return true;
 }
 

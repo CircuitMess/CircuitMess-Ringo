@@ -53,9 +53,11 @@ uint8_t level = 0;
 unsigned short score;
 char tick;
 bool turnC;
+bool invincibility = 0;
+#define INVINCIBILITY_PERIOD 2000
+uint32_t invincMillis = 0;
 enum class ProgState : uint8_t {Main, Simulation,  DataEntry, DataDisplay, Pause, DataErasure};
 char initials[3];
-uint16_t battery;
 static const PROGMEM float heading[24][2] = {
   { +0.00, -0.20}, { +0.05, -0.19},
   { +0.10, -0.17}, { +0.14, -0.14},
@@ -97,7 +99,9 @@ void collision() {
 	life = life - 1;
   if(life>0)
   {
-	  shipX = mp.display.width()/2;
+    invincibility = 1;
+    invincMillis = millis();
+    shipX = mp.display.width()/2;
 	  shipY = mp.display.height()/2;
   }
 	velocityX = 0;
@@ -133,10 +137,13 @@ void ship() {
   if (shipX > mp.display.width() - 5) shipX = 5;
   if (shipY < 4) shipY = mp.display.height() - 4;
   if (shipY > mp.display.height() - 4) shipY = 4;
-  mp.display.fillTriangle(shipX0*2, shipY0*2, shipX1*2, shipY1*2, shipX2*2, shipY2*2, TFT_LIGHTGREY);
-  mp.display.drawTriangle(shipX0*2, shipY0*2, shipX1*2, shipY1*2, shipX2*2, shipY2*2, TFT_LIGHTGREY);
-  // mp.display.drawTriangle(shipX0*2, shipY0*2, shipX1*2, shipY1*2, shipX2*2, shipY2*2, TFT_DARKGREY);
-  mp.display.fillTriangle(shipX0, shipY0, shipX1, shipY1, shipX2, shipY2, TFT_NAVY);
+  if(!invincibility || (invincibility && (millis()-invincMillis)%250 >= 100))
+  {
+    mp.display.fillTriangle(shipX0*2, shipY0*2, shipX1*2, shipY1*2, shipX2*2, shipY2*2, TFT_LIGHTGREY);
+    mp.display.drawTriangle(shipX0*2, shipY0*2, shipX1*2, shipY1*2, shipX2*2, shipY2*2, TFT_LIGHTGREY);
+    // mp.display.drawTriangle(shipX0*2, shipY0*2, shipX1*2, shipY1*2, shipX2*2, shipY2*2, TFT_DARKGREY);
+    mp.display.fillTriangle(shipX0, shipY0, shipX1, shipY1, shipX2, shipY2, TFT_NAVY);
+  }
 }
 void navigation() {
     if (mp.buttons.repeat(BTN_LEFT, 1)) HDG--;
@@ -390,6 +397,14 @@ void pebble() {
   }
 }
 void radar() {
+  if(invincibility)
+    if(millis() - invincMillis >= INVINCIBILITY_PERIOD)
+    {
+      invincibility = 0;
+    }
+    else
+      return;
+
   for (uint8_t a = 0; a < asteroidCount; a ++) {
     if (abs(asteroids[a][0] - shipX) < 17 && abs(asteroids[a][2] - shipY) < 17) {
     //   sound.tone(150, 50);
@@ -682,14 +697,23 @@ void loop()
           rock();
           pebble();
           radar();
-
+          mp.display.setTextFont(2);
           mp.display.setTextSize(1);
-          mp.display.setCursor(2, 10);
-          mp.display.print(score);
-          mp.display.setCursor(32, 10);
-          mp.display.print(level);
-          mp.display.setCursor(120, 10);
-          mp.display.print(life);
+          mp.display.setTextColor(TFT_GREEN);
+          mp.display.setCursor(4, 2);
+          mp.display.printf("LV:%d      %04d       X%d", level, score, life);
+          uint8_t tempHDG = HDG;
+          uint8_t tempX = shipX;
+          uint8_t tempY = shipY;
+          HDG = 0;
+          shipX = 130;
+          shipY = 10;
+          mp.display.fillTriangle(shipX0*2, shipY0*2, shipX1*2, shipY1*2, shipX2*2, shipY2*2, TFT_LIGHTGREY);
+          mp.display.drawTriangle(shipX0*2, shipY0*2, shipX1*2, shipY1*2, shipX2*2, shipY2*2, TFT_LIGHTGREY);
+          mp.display.fillTriangle(shipX0, shipY0, shipX1, shipY1, shipX2, shipY2, TFT_NAVY);
+          HDG = tempHDG;
+          shipX = tempX;
+          shipY = tempY;
           // if (life == 0)
           //   resetField();
           if (mp.buttons.released(BTN_B)) 
@@ -703,7 +727,7 @@ void loop()
           delay(500);
           bgmusic->stop();
           removeTrack(bgmusic);
-          bgmusic = new MPTrack("/SpaceRocks/gameover.wav");
+          bgmusic = new MPTrack("/SpaceRocks/destroyed.wav");
           addTrack(bgmusic);
           bgmusic->setVolume(250);
           bgmusic->play();
@@ -722,6 +746,12 @@ void loop()
           }
           mp.display.drawBitmap(26, 15, gameover, TFT_DARKGREY);
           mp.display.drawBitmap(28, 13, gameover, TFT_BLACK);
+          bgmusic->stop();
+          removeTrack(bgmusic);
+          bgmusic = new MPTrack("/SpaceRocks/gameover.wav");
+          addTrack(bgmusic);
+          bgmusic->setVolume(250);
+          bgmusic->play();
           while(!mp.buttons.released(BTN_A) && !mp.buttons.released(BTN_B))
             mp.update();
           while(!mp.update());
@@ -814,9 +844,10 @@ void loop()
 			if (mp.buttons.released(BTN_LEFT)) ProgState::DataErasure;
 			break;
 			case ProgState::Pause:
-			mp.display.setCursor(32, mp.display.height()/2 - 12);
+			mp.display.setCursor(32, mp.display.height()/2 - 16);
 			mp.display.setTextSize(2);
       mp.display.setTextFont(2);
+      mp.display.setTextColor(TFT_WHITE);
       mp.display.printCenter(F("PAUSE"));
 			if (mp.buttons.released(BTN_A))
       { 
