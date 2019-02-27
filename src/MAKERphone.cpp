@@ -998,12 +998,14 @@ void MAKERphone::mainMenu()
 {
 	while (buttons.kpd.pin_read(BTN_A) == 0);
 	Serial.println("entered main menu");
+	dataRefreshFlag = 0;
+	mp.listDirectories("/");
 	while (1)
 	{
 		int8_t index = gui.scrollingMainMenu();
 		Serial.println(index);
 		delay(5);
-		if(index < 10)
+		if(index < 10) 
 		{
 			if (titles[index] == "Apps")
 			{
@@ -2313,7 +2315,7 @@ void MAKERphone::messagesApp() {
 	{
 		input = readSerial();
 	}
-
+	
 	if (input == "ERROR")
 	{
 		display.fillScreen(TFT_BLACK);
@@ -3766,18 +3768,19 @@ uint8_t MAKERphone::deleteContactSD(String name, String number)
 void MAKERphone::contactsAppSD(){
 	Serial.println("");
 	Serial.println("Begin contacts");
-	SDAudioFile file = SD.open("/contacts.json");
+	SDAudioFile file = SD.open("/contacts.json", "r");
 
 	if(file.size() < 2){ // empty -> FILL
 		Serial.println("Override");
 		file.close();
 		JsonArray& jarr = mp.jb.parseArray("[{\"name\":\"foo\", \"number\":\"099\"}]");
 		delay(10);
-		SDAudioFile file1 = SD.open("/contacts.json");
+		SDAudioFile file1 = SD.open("/contacts.json", "w");
 		jarr.prettyPrintTo(file1);
 		file1.close();
-		file = SD.open("/contacts.json");
-		while(!file) {}
+		file = SD.open("/contacts.json", "r");
+		while(!file)
+			Serial.println("CONTACTS ERROR");
 	}
 
 	JsonArray& jarr = mp.jb.parseArray(file);
@@ -7907,7 +7910,6 @@ int8_t GUI::drawBigIconsCursor(uint8_t xoffset, uint8_t yoffset, uint8_t xelemen
 }
 int16_t GUI::scrollingMainMenu()
 {
-	mp.listDirectories("/");
 	uint16_t index = 0;
 	uint8_t cursorX = 0;
 	uint8_t cursorY = 0;
@@ -7947,7 +7949,7 @@ int16_t GUI::scrollingMainMenu()
 		// Draw the icons
 		if(newScreen)
 		{
-			// mp.display.fillScreen(TFT_BLACK);
+			mp.display.fillScreen(TFT_BLACK);
 			for (int i = 0; i < 6;i++)
 			{
 				uint8_t tempX = i%x_elements;
