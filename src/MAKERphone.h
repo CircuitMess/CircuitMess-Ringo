@@ -414,6 +414,10 @@ public:
 	bool receivedFlag = 0;
 	bool SDinsertedFlag = 0;
 	bool popupMenuFlag = 1;
+
+	//SAVE manipulation
+	JsonArray &getJSONfromSAV(const char *path);
+	void saveJSONtoSAV(const char *path, JsonArray &json);
 	/////////////////////////////////////////
 	///////////////COLLISION//////////////////
 	//////////////////////////////////////////
@@ -428,7 +432,7 @@ private:
 	int multi_tap(byte key);
 	bool newMessage = 0;
 	uint8_t currentMessageNumber;
-  void performUpdate(Stream &updateSource, size_t updateSize);
+  	void performUpdate(Stream &updateSource, size_t updateSize);
 	uint8_t coverWidth = 45;
 	uint8_t coverHeight = 45;
 	bool mute = false;

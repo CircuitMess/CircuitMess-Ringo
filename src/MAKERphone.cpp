@@ -2048,7 +2048,7 @@ String MAKERphone::textInput(String buffer, int16_t length = -1)
 		textPointer = 0;
 	}
 
-	if(length == -1 || length > buffer.length()){
+	if(length == -1 || length >= buffer.length()){
 		if (key == '*') buffer += ' ';
 		if (key != 'B' && key != 'D')
 		{
@@ -2066,6 +2066,11 @@ String MAKERphone::textInput(String buffer, int16_t length = -1)
 					buffer[buffer.length() - 1] = char(lowByte(ret));
 			}
 		}
+	}
+	if(buffer.length() > length)
+	{
+		buffer = buffer.substring(0,length);
+		textPointer--;
 	}
 	return buffer;
 }
@@ -2920,7 +2925,7 @@ void MAKERphone::composeSMS()
 					display.drawFastVLine(display.getCursorX(), display.getCursorY()+3, 10, TFT_WHITE);
 			}
 		}
-		else
+		else //inputting the text content
 		{
 			display.setTextColor(TFT_WHITE);
 			if(resolutionMode)
@@ -7148,9 +7153,8 @@ void MAKERphone::saveSettings(bool debug)
 {
 	const char * path = "/settings.json";
 	Serial.println("");
-	SDAudioFile file = SD.open(path);
-	JsonObject& settings = mp.jb.parseObject(file);
-	file.close();
+	SD.remove(path);
+	JsonObject& settings = mp.jb.createObject();
 
 	if (settings.success()) {
 		if(debug){
@@ -7175,7 +7179,7 @@ void MAKERphone::saveSettings(bool debug)
 		settings["sleep_time"] = sleepTime;
 		settings["background_color"] = backgroundIndex;
 
-		SDAudioFile file1 = SD.open(path);
+		SDAudioFile file1 = SD.open(path, "w");
 		settings.prettyPrintTo(file1);
 		file1.close();
 	} else {
@@ -7192,7 +7196,6 @@ void MAKERphone::loadSettings(bool debug)
 		SD.mkdir("Images");
 	if(!SD.exists("/Video"))
 		SD.mkdir("Video");
-	SD.exists("/");
 	const char * path = "/settings.json";
 	Serial.println(""); 
 	SDAudioFile file = SD.open(path);
@@ -7223,6 +7226,7 @@ void MAKERphone::loadSettings(bool debug)
 		backgroundIndex = settings["background_color"];
 	} else {
 		Serial.println("Error loading new settings");
+		saveSettings();
 	}
 	
 }
@@ -7279,6 +7283,27 @@ void MAKERphone::applySettings()
 
 }
 
+//save manipulation
+JsonArray& MAKERphone::getJSONfromSAV(const char *path)
+{
+	String temp = readFile(path);
+	JsonArray& json = mp.jb.parseArray(temp);
+	return json;
+}
+void MAKERphone::saveJSONtoSAV(const char *path, JsonArray& json)
+{
+	while(!SD.begin(5, SPI, 9000000))
+        Serial.println("SD ERROR");
+	SDAudioFile file = SD.open(path, "w");
+	if(file)
+		json.prettyPrintTo(file);
+	else
+		Serial.println("SD ERROR");
+	
+	file.close();
+}
+
+
 //Collision
 bool MAKERphone::collideRectRect(int16_t x1, int16_t y1, int16_t w1, int16_t h1, int16_t x2, int16_t y2, int16_t w2, int16_t h2) {
 	return (x2 < x1 + w1 && x2 + w2 > x1 && y2 < y1 + h1 && y2 + h2 > y1);
@@ -7333,7 +7358,7 @@ void MAKERphone::appendFile(const char * path, const char * message) {
 	file.close();
 }
 String MAKERphone::readFile(const char * path) {
-	while (!SD.begin(5, SPI, 8000000));
+	while (!SD.begin(5, SPI, 9000000));
 	Serial.printf("Reading file: %s\n", path);
 	String helper="";
 	SDAudioFile file = SD.open(path);

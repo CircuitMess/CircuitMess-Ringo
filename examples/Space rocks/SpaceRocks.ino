@@ -1,4 +1,3 @@
-#include <stdio.h>
 #include <MAKERphone.h>
 #include "Sprites.h"
 MAKERphone mp;
@@ -50,14 +49,15 @@ byte rockCount;
 byte pebbleCount;
 int8_t life = 3;
 uint8_t level = 0;
-unsigned short score;
+uint16_t score;
+uint16_t tempScore = 0;
 char tick;
 bool turnC;
 bool invincibility = 0;
 #define INVINCIBILITY_PERIOD 2000
 uint32_t invincMillis = 0;
 enum class ProgState : uint8_t {Main, Simulation,  DataEntry, DataDisplay, Pause, DataErasure};
-char initials[3];
+String name;
 static const PROGMEM float heading[24][2] = {
   { +0.00, -0.20}, { +0.05, -0.19},
   { +0.10, -0.17}, { +0.14, -0.14},
@@ -83,6 +83,8 @@ static const int8_t shipTbl[6][24] PROGMEM = {
   {  -3, -3, -3, -3, -3, -3, -3, -3, -3, -3, -3, -3, -3, +3, +3, +3, +3, +3, +3, +3, +3, +3, +3, +3,},
   {  +3, +2, +1, -1, -2, -3, -3, +3, +2, +1, -1, -2, -3, -2, -1, +1, +2, +3, -3, -3, -2, -1, +1, +2,},
 };
+const char *highscoresPath = "/SpaceRocks/hiscores.sav";
+bool savePresent = 0;
 #define shipX0  shipX + (int8_t)(pgm_read_byte(&shipTbl[0][HDG]))
 #define shipY0  shipY + (int8_t)(pgm_read_byte(&shipTbl[1][HDG]))
 #define shipX1  shipX + (int8_t)(pgm_read_byte(&shipTbl[2][HDG]))
@@ -480,8 +482,6 @@ void dyingAnimation()
 {
   uint32_t elapsedMillis = millis();
   uint8_t passes = 1;
-  Serial.println(shipX);
-  Serial.println(shipY);
   while(passes < 7)
   {
     
@@ -527,67 +527,62 @@ void resetSim() {
 
 
 void enterInitials() {
-  int8_t index = 0;
-  initials[0] = ' ';
-  initials[1] = ' ';
-  initials[2] = ' ';
-  while (index < 3) {
-	mp.display.fillScreen(TFT_BLACK);
-	mp.display.setCursor(16, 0);
-	mp.display.print(F("HIGH SCORE"));
-	mp.display.setCursor(88, 0);
-	mp.display.print(score);
-
-	mp.display.setCursor(56, 20);
-	mp.display.print(initials[0]);
-	mp.display.setCursor(64, 20);
-	mp.display.print(initials[1]);
-	mp.display.setCursor(72, 20);
-	mp.display.print(initials[2]);
-	mp.display.drawLine(56, 27, 56 + 6, 27, TFT_WHITE);
-	mp.display.drawLine(64, 27, 64 + 6, 27, TFT_WHITE);
-	mp.display.drawLine(72, 27, 72 + 6, 27, TFT_WHITE);
-	mp.display.drawLine(56 + (index * 8), 28, 56 + (index * 8) + 6, 28, TFT_WHITE);
-	// delay(150);
-	if (mp.buttons.pressed(BTN_LEFT)) {
-	// sound.tone(1046, 200);
-	index--;
-	if (index < 0) index = 0;
-	}
-
-	if (mp.buttons.pressed(BTN_RIGHT)) {
-	index++;
-	if (index > 2) index = 2;
-	//sound.tone(1046, 200);
-	}
-
-	if (mp.buttons.pressed(BTN_DOWN)) {
-	initials[index]++;
-	// sound.tone(523, 150);
-	// A-Z 0-9 :-? !-/ ' '
-	if (initials[index] == '0') initials[index] = ' ';
-	if (initials[index] == '!') initials[index] = 'A';
-	if (initials[index] == '[') initials[index] = '0';
-	if (initials[index] == '@') initials[index] = '!';
-	}
-	if (mp.buttons.pressed(BTN_UP)) {
-	initials[index]--;
-	// sound.tone(523, 150);
-	if (initials[index] == ' ') initials[index] = '?';
-	if (initials[index] == '/') initials[index] = 'Z';
-	if (initials[index] == 31)  initials[index] = '/';
-	if (initials[index] == '@') initials[index] = ' ';
-	}
-	if (mp.buttons.released(BTN_A)) {
-	if (index >= 2) {
-		index = index + 1;
-		// sound.tone(1046, 200);
+  name = "";
+  String previous = "";
+  uint32_t elapsedMillis = millis();
+  uint32_t hiscoreMillis = millis();
+  bool blinkState = 1;
+  bool hiscoreBlink = 0;
+  mp.textPointer = 0;
+  while (!mp.buttons.released(BTN_A) || name.length() != 3) {
+    if (millis() - elapsedMillis >= multi_tap_threshold) //cursor blinking routine
+		{
+			elapsedMillis = millis();
+			blinkState = !blinkState;
 		}
-	}
+    if(millis()-hiscoreMillis >= 1000)
+    {
+      hiscoreMillis = millis();
+      hiscoreBlink = !hiscoreBlink;
+    }
+    previous = name;
+   
+    name = mp.textInput(name, 3);
+    if(name.indexOf(' ') != -1)
+      name = name.substring(0, name.length() - 1);
+    if (previous != name)
+    {
+      blinkState = 1;
+      elapsedMillis = millis();
+    }
+    
+    mp.display.drawIcon(backdrop, 0, 0, 160, 128);
+    mp.display.setCursor(16, 8);
+    mp.display.setTextFont(2);
+    mp.display.setTextColor(TFT_WHITE);
+    mp.display.setTextSize(1);
+    mp.display.printCenter("ENTER NAME");
+    mp.display.setCursor(39, 80);
+    
+    if(hiscoreBlink && score > tempScore)
+      mp.display.printCenter("NEW HIGH!");
+    else
+      mp.display.printf("SCORE: %04d", score);
+
+    mp.display.setCursor(50, 40);
+    mp.display.printCenter(name);
+    if(blinkState)
+      mp.display.drawFastVLine(mp.display.getCursorX(), mp.display.getCursorY()+3, 10, TFT_WHITE);
+    mp.display.drawRect(30, 38, 100, 20, TFT_WHITE);
+
+    mp.update();
   }
+  while(!mp.update());
 }
+
 void setup() {
   Serial.begin(115200);
+
   shoot = new MPTrack("/SpaceRocks/shoot.wav");
   collide = new MPTrack("/SpaceRocks/collide.wav");
   hit = new MPTrack("/SpaceRocks/hit.wav");
@@ -597,8 +592,24 @@ void setup() {
   addTrack(shoot);
   addTrack(collide);
   addTrack(hit);
-
-
+  JsonArray &hiscores = mp.getJSONfromSAV(highscoresPath);
+  
+  if(hiscores.success())
+  {
+    savePresent = 1;
+  }
+  else
+  {
+    Serial.println("No save present");
+    JsonObject &test = mp.jb.createObject();
+    test["Name"] = "ABC";
+    test["Score"] = 0;
+    test["Rank"] = 1;
+    hiscores.add(test);
+    hiscores.prettyPrintTo(Serial);
+    mp.saveJSONtoSAV(highscoresPath, hiscores);
+  }
+  hiscores.prettyPrintTo(Serial);
   // shoot->setVolume(256*mp.volume/14);
   // collide->setVolume(256*mp.volume/14);
   // hit->setVolume(256*mp.volume/14);
@@ -617,11 +628,10 @@ long unsigned int startMillis;
 
 void loop() 
 {
-  // if(!shoot->isPlaying())
-  //   shoot->stop();
   if(mp.update())
 	{
-		mp.display.fillScreen(TFT_BLACK);
+    
+    mp.display.fillScreen(TFT_BLACK);
 		switch (simState)
 		{
 			case ProgState::Main: {
@@ -678,7 +688,6 @@ void loop()
 				{
 					while(!mp.update());
 					simState = ProgState::DataDisplay;
-
         }
 			}
 			break;
@@ -752,12 +761,12 @@ void loop()
           addTrack(bgmusic);
           bgmusic->setVolume(250);
           bgmusic->play();
+          bgmusic->setRepeat(1);
           while(!mp.buttons.released(BTN_A) && !mp.buttons.released(BTN_B))
             mp.update();
           while(!mp.update());
-          Serial.println("HERE");
-          delay(5);
-          simState = ProgState::Main;
+          
+          simState = ProgState::DataEntry;
           bgmusic->stop();
           removeTrack(bgmusic);
           bgmusic = new MPTrack("/SpaceRocks/title.wav");
@@ -769,80 +778,128 @@ void loop()
 			}
 			break;
 
-			case ProgState::DataEntry: {
-				char tmpInitials[3];
-				unsigned short tmpScore;
-				// Each block of EEPROM has 7 high scores, and each high score entry
-				// is 5 byte long:  3 char for initials and a short for score.
-				// High score processing
-				for (int8_t i = 0; i < 7; i++) {
-				EEPROM.get(100 + (5 * i), tmpScore);
-				if (tmpScore == 0xFFFF) tmpScore = 0;
-				if (score > tmpScore) {
-					enterInitials();
-					for (byte j = i; j < 7; j++) {
-					EEPROM.get(100 + (5 * j), tmpScore);
-					if (tmpScore == 0xFFFF) tmpScore = 0;
+			case ProgState::DataEntry:
+      {
+        shoot->stop();
+        bgmusic->stop();
+        collide->stop();
+        hit->stop();
+        removeTrack(shoot);
+        removeTrack(bgmusic);
+        removeTrack(collide);
+        removeTrack(hit);
+        JsonArray &hiscores = mp.getJSONfromSAV(highscoresPath);
+        for (JsonObject& element : hiscores)
+        {
+          if(element["Rank"] == 1)
+            tempScore = element["Score"].as<int>();
+        }
+        
+        enterInitials();
+        JsonObject &newHiscore = mp.jb.createObject();
+        newHiscore["Name"] = name;
+        newHiscore["Score"] = score;
+        newHiscore["Rank"] = 1;
 
-					tmpInitials[0] = (char)EEPROM.read(100 + (5 * j) + 2);
-					tmpInitials[1] = (char)EEPROM.read(100 + (5 * j) + 3);
-					tmpInitials[2] = (char)EEPROM.read(100 + (5 * j) + 4);
+        if(savePresent && hiscores.size() > 0)
+        {
+          newHiscore["Rank"] = 999;
+          Serial.println(hiscores.size());
+          uint16_t tempSize = hiscores.size();
+          for (int16_t i = 0; i < tempSize;i++)//searching for a place in the leaderboard for our new score
+          {
+            Serial.printf("i: %d\n", i);
+            Serial.println((uint16_t)(hiscores[i]["Rank"]));
+            Serial.println((uint16_t)(hiscores[i]["Score"]));
+            delay(5);
+            if(score >= (uint16_t)(hiscores[i]["Score"]))
+            {
+              Serial.println("ENTERED");
+              delay(5);
+              if((uint16_t)(newHiscore["Rank"]) >  (uint16_t)(hiscores[i]["Rank"]))
+              {
+                newHiscore["Rank"] = (uint16_t)(hiscores[i]["Rank"]);
+              }
+              JsonObject &tempObject = mp.jb.createObject();
+              tempObject["Name"] = (const char *)(hiscores[i]["Name"]);
+              tempObject["Score"] = (uint16_t)(hiscores[i]["Score"]);
+              tempObject["Rank"] = (uint16_t)(hiscores[i]["Rank"]) + 1;
+              tempObject.prettyPrintTo(Serial);
+              delay(5);
+              hiscores.remove(i);
+              hiscores.add(tempObject);
+              tempSize--;
+              i--;
+            }
+            else
+            {
+              if(newHiscore["Rank"] <= (uint16_t)(hiscores[i]["Rank"]) || newHiscore["Rank"] == 999)
+                newHiscore["Rank"] = (uint16_t)(hiscores[i]["Rank"]) + 1;
+            }
+          }
+        }
 
-					// write score and initials to current slot
-					EEPROM.put(100 + (5 * j), score);
-					EEPROM.write(100 + (5 * j) + 2, initials[0]);
-					EEPROM.write(100 + (5 * j) + 3, initials[1]);
-					EEPROM.write(100 + (5 * j) + 4, initials[2]);
-
-					// tmpScore and tmpInitials now hold what we want to
-					//write in the next slot.
-					score = tmpScore;
-					initials[0] = tmpInitials[0];
-					initials[1] = tmpInitials[1];
-					initials[2] = tmpInitials[2];
-					}
-					//reset the initials
-					initials[0] = ' ';
-					initials[1] = ' ';
-					initials[2] = ' ';
-					break;
-				}
-				}
-			}
-			resetSim();
+        hiscores.add(newHiscore);
+        mp.saveJSONtoSAV(highscoresPath, hiscores);
+        simState = ProgState::DataDisplay;
+      }
 			break;
 
 			case ProgState::DataDisplay:
-			// Each block of EEPROM has 7 high scores, and each high score entry
-			// is 5 int8_ts long:  3 int8_ts for initials and one int16_t for score
-			mp.display.setCursor(32, 0);
-			mp.display.setTextSize(1);
-			mp.display.print("HIGH SCORES");
-
-			for (int i = 0; i < 7; i++) {
-				EEPROM.get(100 + (5 * i), score);
-				if (score == 0xFFFF) score = 0;
-				initials[0] = (char)EEPROM.read(100 + (5 * i) + 2);
-				initials[1] = (char)EEPROM.read(100 + (5 * i) + 3);
-				initials[2] = (char)EEPROM.read(100 + (5 * i) + 4);
-
-				mp.display.setCursor(30, 9 + (i * 8));
-				mp.display.print(i + 1);
-				mp.display.print(F(" "));
-				mp.display.print(initials[0]);
-				mp.display.print(initials[1]);
-				mp.display.print(initials[2]);
-				mp.display.print(F(" "));
-				mp.display.print(score);
-				score = 0;
-			}
-			if (mp.buttons.released(BTN_B))
-			{
-				simState = ProgState::Main;
-				while(!mp.update());
-			}
-			if (mp.buttons.released(BTN_LEFT)) ProgState::DataErasure;
+      {
+        shoot->stop();
+        bgmusic->stop();
+        collide->stop();
+        hit->stop();
+        removeTrack(shoot);
+        removeTrack(bgmusic);
+        removeTrack(collide);
+        removeTrack(hit);
+        mp.display.drawIcon(backdrop, 0, 0, 160, 128);
+        mp.display.setCursor(32, 0);
+        mp.display.setTextSize(1);
+        mp.display.setTextFont(2);
+        mp.display.setTextColor(TFT_WHITE);
+        mp.display.printCenter("HIGHSCORES");
+        mp.display.setCursor(3, 110);
+        // mp.display.print("LEFT: delete data");
+        JsonArray &hiscores = mp.getJSONfromSAV(highscoresPath);
+        for (int i = 1; i < 6;i++)
+        {
+          mp.display.setCursor(27, i * 20);
+          if(i <= hiscores.size())
+          {
+            for(JsonObject& element:hiscores)
+            {
+              if(element["Rank"] == i)
+                mp.display.printf("%d.   %.3s    %04d", i, element["Name"].as<char*>(), element["Score"].as<uint16_t>());
+            }
+          }
+          else
+            mp.display.printf("%d.    ---   ----", i);
+          
+        }
+        while(1)
+        {
+          if (mp.buttons.released(BTN_B) || mp.buttons.released(BTN_A))
+          {
+            while (!mp.update());          
+            resetSim();
+            break;
+          }
+          if (mp.buttons.released(BTN_LEFT))
+          {
+            simState = ProgState::DataErasure;
+            break;
+          }
+          mp.update();
+        }
+        addTrack(shoot);
+        addTrack(collide);
+        addTrack(hit);
+      }
 			break;
+
 			case ProgState::Pause:
 			mp.display.setCursor(32, mp.display.height()/2 - 16);
 			mp.display.setTextSize(2);
@@ -860,29 +917,56 @@ void loop()
       {
 			}
 			break;
+
 			case ProgState::DataErasure:
-			mp.display.setCursor(14, 32);
-			mp.display.setTextSize(1);
-			mp.display.print(F("EREASE HIGHSCORE?"));
-			mp.display.setCursor(14, 40);
-			mp.display.print(F("START = RIGHT + B"));
-			if (mp.buttons.pressed(BTN_RIGHT) || mp.buttons.pressed(BTN_B)) {
-				for (int i = 0; i < 35; i ++) {
-				mp.display.fillScreen(TFT_BLACK);
-				mp.display.setCursor(36, mp.display.height() / 2);
-				mp.display.print(F("WORKING..."));
-				while(!mp.update());
-				}
-				delay(500);
-				mp.display.setCursor(32, mp.display.height() / 2);
-				mp.display.fillScreen(TFT_BLACK);
-				mp.display.print(F("EREASE DONE"));
-				while(!mp.update());
-				
-				delay(1000);
-				simState = ProgState::Main;
-			}
-			if (mp.buttons.released(BTN_A)) simState = ProgState::Main;
+			unsigned long elapsedMillis = millis();
+      bool blinkState = 1;
+      while(1)
+      {
+        mp.display.drawIcon(backdrop, 0, 0, 160, 128);
+        mp.display.setTextFont(2);
+
+        if (millis() - elapsedMillis >= multi_tap_threshold) {
+          elapsedMillis = millis();
+          blinkState = !blinkState;
+        }
+
+        mp.display.setTextColor(TFT_WHITE);
+        mp.display.setCursor(4, 5);
+        mp.display.printCenter("ARE YOU SURE?");
+        mp.display.setCursor(4, 25);
+        mp.display.printCenter("This cannot be reverted");
+
+        if (blinkState){
+          mp.display.drawRect((mp.display.width() - 60)/2, 102, 30*2, 9*2, TFT_RED);
+          mp.display.setTextColor(TFT_RED);
+          mp.display.setCursor(28*2, 103);
+          mp.display.printCenter("DELETE");
+        }
+        else {
+          mp.display.fillRect((mp.display.width() - 60)/2, 102, 30*2, 9*2, TFT_RED);
+          mp.display.setTextColor(TFT_WHITE);
+          mp.display.setCursor(28*2, 103);
+          mp.display.printCenter("DELETE");
+        }
+        if (mp.buttons.released(BTN_B)) //BUTTON BACK
+        {
+          Serial.println("Go back");
+          while (!mp.update());
+          simState = ProgState::DataDisplay;
+          break;
+        }
+        if (mp.buttons.released(BTN_A)) // DELETE
+        {
+          while(!mp.update());
+          JsonArray &empty = mp.jb.createArray();
+          mp.saveJSONtoSAV(highscoresPath, empty);
+          simState = ProgState::Main;
+          break;
+        }
+        mp.update();
+      }
+      
 			break;
 		}
 	}
