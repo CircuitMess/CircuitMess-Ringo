@@ -653,7 +653,7 @@ class TFT_eSPI : public Print {
   /////////////////////
   void drawBitmap(int16_t x, int16_t y, const byte *bitmap, uint16_t color = TFT_BLACK, uint8_t scale = 1);
   //void drawBitmap(int8_t x, int8_t y, const byte *bitmap);
-  void drawIcon(const unsigned short* icon, int16_t x, int16_t y, uint16_t width, uint16_t height, uint8_t scale = 1);
+  void drawIcon(const unsigned short* icon, int16_t x, int16_t y, uint16_t width, uint16_t height, uint8_t scale = 1, int32_t backgroundColor = -1);
   void printCenter(const char* text);
   void printCenter(String text);
   void printCenter(int text);
