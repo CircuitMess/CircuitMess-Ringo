@@ -39,11 +39,12 @@ public:
     void setSpeed(float s);
     float getSpeed();
     void setRepeat(bool r);
+    bool openFile();
+    void closeFile();
 
 private:
-    
     SDAudioFile trackFile;
-    // File trackFile;
+    char trackPath[32];
     float volume=2;
     bool playing=false;
     bool finished=false;
@@ -60,6 +61,7 @@ class Oscillator
 public:
     Oscillator();
     Oscillator(byte wave);
+    ~Oscillator(){}
     void setWaveform(byte wave);
     void setFrequency(double freq);
     void setVolume(float vol);

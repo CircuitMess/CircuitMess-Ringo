@@ -3,15 +3,31 @@
 
 MPTrack::MPTrack(char path[])
 {
-    while(!SD.begin(5, SPI, 9000000))
-        Serial.println("SD ERROR");
-    trackFile=SD.open(path);
-    size=trackFile.size();
-    trackFile.seek(0x2C);
-    pos=0;
+    strcpy(trackPath,path);
 }
 
 MPTrack::~MPTrack()
+{
+    
+}
+
+bool MPTrack::openFile()
+{
+    while(!SD.begin(5, SPI, 9000000))
+        Serial.println("SD ERROR");
+    trackFile=SD.open(trackPath);
+    if(trackFile)
+    {
+        size=trackFile.size();
+        trackFile.seek(0x2C);
+        pos=0;
+        return true;
+    }
+    else
+        return false;
+}
+
+void MPTrack::closeFile()
 {
     trackFile.close();
 }
