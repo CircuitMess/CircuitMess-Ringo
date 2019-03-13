@@ -358,6 +358,7 @@ bool MAKERphone::update() {
 			inHomePopup = 0;
 		}
 		gui.updatePopup();
+		
 		FastLED.show();
 		delay(1);
 		FastLED.clear();
@@ -8416,7 +8417,7 @@ void GUI::updatePopup() {
 }
 void GUI::homePopup()
 {
-	mp.dataRefreshFlag = 0;
+	mp.dataRefreshFlag = 1;
 	for (int i = 0; i < mp.display.height(); i+=1)
 	{
 		// for (int x = 0; x < mp.display.width(); x++)
@@ -8675,6 +8676,7 @@ void GUI::homePopup()
 							mp.ledcAnalogWrite(LEDC_CHANNEL, 230);
 						else
 							mp.ledcAnalogWrite(LEDC_CHANNEL, (5 - mp.brightness) * 51);
+						
 						mp.update();
 					}
 				break;
@@ -8682,7 +8684,69 @@ void GUI::homePopup()
 				case 3:
 					mp.screenshotFlag = 1;
 					return;
-					break;
+				break;
+
+				case 4:
+					uint32_t timer = millis();
+					bool blinkState = 0;
+					String temp = "";
+					String monthsList[] = {"January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"};
+
+					while(!mp.buttons.released(BTN_B) && !mp.buttons.released(BTN_A))
+					{
+						mp.display.fillScreen(0x963F);
+						// date and time
+						mp.updateTimeRTC();
+						mp.display.setTextFont(2);
+						mp.display.setTextSize(2);
+						mp.display.setCursor(15, 25);
+						temp = "";
+						if (mp.clockHour < 10)
+							temp.concat("0");
+						temp.concat(mp.clockHour);
+						temp.concat(":");
+						if (mp.clockMinute < 10)
+							temp.concat("0");
+						temp.concat(mp.clockMinute);
+						temp.concat(":");
+						if (mp.clockSecond < 10)
+							temp.concat("0");
+						temp.concat(mp.clockSecond);
+						
+						mp.display.printCenter(temp);
+						mp.display.setTextSize(1);
+						mp.display.setCursor(63, 85);
+						temp = "";
+						if (mp.clockDay < 10)
+							temp.concat("0");
+						temp.concat(mp.clockDay);
+						if(mp.clockDay < 20 && mp.clockDay > 10)
+							temp.concat("th");
+						else if(mp.clockDay%10 == 1)
+							temp.concat("st");
+						else if(mp.clockDay%10 == 2)
+							temp.concat("nd");
+						else if(mp.clockDay%10 == 3)
+							temp.concat("rd");
+						else
+							temp.concat("th");
+						temp.concat(" of ");
+						temp.concat(monthsList[mp.clockMonth - 1]);
+
+						mp.display.printCenter(temp);
+						mp.display.setCursor(0,100);
+						mp.display.printCenter(2000 + mp.clockYear);
+
+
+						if(millis()-timer >= 1000)
+						{
+							blinkState = !blinkState;
+							timer = millis();
+						}
+						mp.update();
+						
+					}
+				break;
 			}
 			while(!mp.update());
 			mp.display.fillScreen(TFT_WHITE);
