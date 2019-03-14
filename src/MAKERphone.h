@@ -315,7 +315,7 @@ class MAKERphone:public Buttons, public GUI
 	uint16_t sleepTimeActual = 0; //in seconds
 	uint8_t backgroundIndex = 0;
 	uint8_t volume = 10; //volume 0-14
-
+	uint8_t pixelsBrightness = 5; //0-5
 	bool pinLock;
 	uint16_t pinNumber = 1234;
 	bool simInserted = 0;

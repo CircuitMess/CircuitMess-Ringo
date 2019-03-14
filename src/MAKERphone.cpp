@@ -358,7 +358,7 @@ bool MAKERphone::update() {
 			inHomePopup = 0;
 		}
 		gui.updatePopup();
-		
+		FastLED.setBrightness((float)(255/5*pixelsBrightness));
 		FastLED.show();
 		delay(1);
 		FastLED.clear();
@@ -8687,6 +8687,7 @@ void GUI::homePopup()
 				break;
 
 				case 4:
+				{
 					uint32_t timer = millis();
 					bool blinkState = 0;
 					String temp = "";
@@ -8746,6 +8747,40 @@ void GUI::homePopup()
 						mp.update();
 						
 					}
+				}
+				break;
+
+				case 5:
+				{
+					while(!mp.buttons.released(BTN_B) && !mp.buttons.released(BTN_A))
+					{
+						for (int i = 0; i < 8; i++)
+							mp.leds[i] = CRGB::Red;
+						mp.display.drawRect(13, 49, 136, 30, TFT_BLACK);
+						mp.display.drawRect(14, 50, 134, 28, TFT_BLACK);
+						mp.display.fillRect(15, 51, 132, 26, 0xA794);
+						mp.display.drawRect(33, 58, 89, 12, TFT_BLACK);
+						mp.display.drawRect(34, 59, 87, 10, TFT_BLACK);
+						mp.display.fillRect(35, 60, mp.pixelsBrightness * 17, 8, TFT_BLACK);
+						mp.display.drawBitmap(18, 59, noBrightness, TFT_BLACK, 2);
+						mp.display.drawBitmap(125, 53, fullBrightness, TFT_BLACK, 2);
+						if(mp.buttons.released(BTN_LEFT) && mp.pixelsBrightness > 0)
+						{
+							mp.pixelsBrightness--;
+							mp.gui.osc->note(75, 0.05);
+							mp.gui.osc->play();
+							while(!mp.update());
+						}
+						if(mp.buttons.released(BTN_RIGHT) && mp.pixelsBrightness < 5)
+						{
+							mp.pixelsBrightness++;
+							mp.gui.osc->note(75, 0.05);
+							mp.gui.osc->play();
+							while(!mp.update());
+						}
+						mp.update();
+					}
+				}
 				break;
 			}
 			while(!mp.update());
