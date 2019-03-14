@@ -168,6 +168,7 @@ public:
   //popup GUI
   void popup(String text, uint8_t duration);
   void updatePopup();
+  void homePopup(bool animation = 1);
   String popupText;
   uint8_t popupTimeLeft;
   uint8_t popupTotalTime;
@@ -176,6 +177,14 @@ private:
   friend class MAKERphone;
   bool cursorState = 1;
   Oscillator* osc = new Oscillator();
+  const char *popupHomeItems[6] = {
+	"Volume",
+	"Home",
+	"Screen brightness",
+	"Screenshot",
+	"Date & time",
+	"LED brightness"
+	};
   bool previousButtonState = 0;
   uint8_t cursor = 0;
   int32_t cameraY = 0;
@@ -186,8 +195,9 @@ private:
 
 class MAKERphone:public Buttons, public GUI
 {
-public:
-	
+	friend class GUI;
+
+  public:
 	TFT_eSPI tft = TFT_eSPI();  // Invoke library, pins defined in User_Setup.h
 	TFT_eSprite display = TFT_eSprite(&tft);
 	TFT_eSprite buf = TFT_eSprite(&tft);
@@ -238,21 +248,7 @@ public:
 	void updateFromFS(String FilePath);
 
 
-	//variables used for parsing SMS
-	int16_t y;
-	String smsContent[smsNumber];
-	String phoneNumber[smsNumber];
-	String tempDate[smsNumber];
-	uint16_t smsYear[smsNumber];
-	uint8_t smsDay[smsNumber];
-	uint8_t smsMonth[smsNumber];
-	uint8_t smsMinute[smsNumber];
-	uint8_t smsSecond[smsNumber];
-	uint8_t smsHour[smsNumber];
-	uint32_t start = 0;
-	uint32_t end = 0;
-	String input;
-	String buffer;
+	
 
 	//NeoPixels...
 	int numberOfColors = 19;
@@ -319,7 +315,7 @@ public:
 	uint16_t sleepTimeActual = 0; //in seconds
 	uint8_t backgroundIndex = 0;
 	uint8_t volume = 10; //volume 0-14
-
+	uint8_t pixelsBrightness = 5; //0-5
 	bool pinLock;
 	uint16_t pinNumber = 1234;
 	bool simInserted = 0;
@@ -438,6 +434,22 @@ private:
 	bool mute = false;
 	uint8_t timesRemaining;
 
+	//variables used for parsing SMS
+	int16_t y;
+	String smsContent[smsNumber];
+	String phoneNumber[smsNumber];
+	String tempDate[smsNumber];
+	uint16_t smsYear[smsNumber];
+	uint8_t smsDay[smsNumber];
+	uint8_t smsMonth[smsNumber];
+	uint8_t smsMinute[smsNumber];
+	uint8_t smsSecond[smsNumber];
+	uint8_t smsHour[smsNumber];
+	uint32_t start = 0;
+	uint32_t end = 0;
+	String input;
+	String buffer;
+	
 	//SD functions
 	String readFile(const char * path);
 	void writeFile(const char * path, const char * message);
@@ -452,7 +464,9 @@ private:
 	bool clockDy, clock12h, clockpm;
 	void updateTimeGSM();
 	void updateTimeRTC();
-
+	bool inHomePopup = 0;
+	void takeScreenshot();
+	bool screenshotFlag = 0;
 	int colorArray[19] = {
 		TFT_BLACK,
 		TFT_NAVY,
@@ -474,16 +488,6 @@ private:
 		TFT_GREENYELLOW,
 		TFT_PINK
 	};
-
-	//SIM800 setup
-//	HardwareSerial sim800 = HardwareSerial(1);
-
-	//Audio objects
-	/*AudioGeneratorMP3 *mp3;
-	AudioFileSourceSD *file;
-	AudioOutputI2S *out;
-	AudioFileSourceID3 *id3;
-	AudioFileSourceBuffer *buff;*/
 };
 
 #endif

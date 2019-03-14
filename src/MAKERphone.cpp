@@ -202,6 +202,12 @@ bool MAKERphone::update() {
 	//}
 	char c;
 	uint16_t refreshInterval = 3000;
+	if(screenshotFlag)
+	{
+		screenshotFlag = 0;
+		takeScreenshot();
+		gui.homePopup(0);
+	}
 	if(!spriteCreated)
 	{
 		display.deleteSprite();
@@ -335,6 +341,7 @@ bool MAKERphone::update() {
 		}
 	}
 	///////////////////////////////////////////////
+	
 	if (millis() - lastFrameCount2 >= frameSpeed) {
 		
 		lastFrameCount2 = millis();
@@ -345,7 +352,14 @@ bool MAKERphone::update() {
 			buf.pushSprite(0,0);
 
 		buttons.update();
+		if(buttons.kpdNum.getKey() == 'B' && !inHomePopup)
+		{
+			inHomePopup = 1;
+			gui.homePopup();
+			inHomePopup = 0;
+		}
 		gui.updatePopup();
+		FastLED.setBrightness((float)(255/5*pixelsBrightness));
 		FastLED.show();
 		delay(1);
 		FastLED.clear();
@@ -745,6 +759,13 @@ void MAKERphone::lockScreen() {
 }
 void MAKERphone::loader()
 {
+	display.fillScreen(TFT_BLACK);
+	display.setCursor(0, display.height() / 2 - 12);
+	display.setTextColor(TFT_WHITE);
+	display.setTextFont(2);
+	display.setTextSize(1);
+	display.printCenter("LOADING...");
+	while(!mp.update());
 	const esp_partition_t* partition;
 	partition = esp_ota_get_running_partition();
 	const esp_partition_t* partition2;
@@ -4151,15 +4172,6 @@ void MAKERphone::phoneApp() {
 	update();
 }
 void MAKERphone::dialer() {
-	// gui.osc->stop();
-	// Oscillator *osc2 = new Oscillator();
-	// addOscillator(osc2);
-	// osc2->setVolume(255*volume/14);
-
-	// Oscillator *osc3 = new Oscillator();
-	// addOscillator(osc3);
-	// osc3->setVolume(255*volume/14);
-
 	String callBuffer = "";
 	char key = NO_KEY;
 	display.setTextWrap(0);
@@ -7379,6 +7391,205 @@ String MAKERphone::readFile(const char * path) {
 
 	return helper;
 }
+void MAKERphone::takeScreenshot()
+{
+	display.setTextColor(TFT_BLACK);
+	display.setTextSize(1);
+	display.setTextFont(2);
+	display.drawRect(14, 45, 134, 38, TFT_BLACK);
+	display.drawRect(13, 44, 136, 40, TFT_BLACK);
+	display.fillRect(15, 46, 132, 36, 0xC59F);
+	display.setCursor(47, 55);
+	display.printCenter("Taking screenshot");
+	while(!update());
+
+	char name[] = "/Images/screenshot_00.bmp";
+	while (!SD.begin(5, SPI, 9000000))
+		Serial.println("SD ERROR");
+	for (int i = 0; i < 100;i++)
+	{
+		name[20] = i % 10 + '0';
+		name[19] = i / 10 + '0';
+		if(!SD.exists(name))
+			break;
+	}
+	Serial.println(name);
+	delay(5);
+	SDAudioFile file = SD.open(name, "w");
+	if(!file)
+	{
+		Serial.println("SD file error!");
+		return;
+	}
+	
+	uint8_t w = 160;
+	uint8_t h = 128;
+	int px[] = {255, 0, 255, 0, 255, 0
+	 };
+	bool debugPrint = 1;
+	unsigned char *img = NULL;          // image data
+	//  int filesize = 54 + 3 * w * h;      //  w is image width, h is image height
+	int filesize = 54 + 4 * w * h;      //  w is image width, h is image height  
+	if (img) {
+		free(img);
+	}
+	img = (unsigned char *)malloc(3*w);
+	Serial.println(ESP.getFreeHeap());
+	delay(5);
+	memset(img,0,sizeof(img));        // not sure if I really need this; runs fine without...
+	Serial.println(ESP.getFreeHeap());
+	delay(5);
+	// for (int y=0; y<h; y++) {
+	// 	for (int x=0; x<w; x++) {
+	// 		byte red, green, blue;
+	// 		unsigned long rgb = display.readPixel(x, y);
+	// 		red = rgb >> 16;
+	// 		green = (rgb & 0x00ff00) >> 8;
+	// 		blue = (rgb & 0x0000ff);
+	// 		rgb = 0;
+	// 		rgb |= red <<16;
+	// 		rgb |= blue <<8;
+	// 		rgb |=green;
+	// 		img[(y*w + x)*3+2] = red;
+	// 		img[(y*w + x)*3+1] = green;
+	// 		img[(y*w + x)*3+0] = blue;
+	// 		// Serial.printf("x: %d   y: %d\n", x, y);
+	// 		// delay(5);
+	// 		// int colorVal = px[y*w + x];
+	// 		img[(y*w + x)*3+2] = (unsigned char)(red);
+	// 		img[(y*w + x)*3+1] = (unsigned char)(green);
+	// 		img[(y*w + x)*3+0] = (unsigned char)(blue);
+	// 	}
+	// }
+	Serial.println("HERE");
+	delay(5);
+	// print px and img data for debugging
+	// if (debugPrint) {
+	// Serial.print("Writing \"");
+	// Serial.print(name);
+	// Serial.print("\" to file...\n");
+	// for (int i=0; i<w*h; i++) {
+	// 	Serial.print(px[i]);
+	// 	Serial.print("  ");
+	// }
+	// }
+
+	// create file headers (also taken from above example)
+	unsigned char bmpFileHeader[14] = {
+	'B','M', 0,0,0,0, 0,0, 0,0, 54,0,0,0             };
+	unsigned char bmpInfoHeader[40] = {
+	40,0,0,0, 0,0,0,0, 0,0,0,0, 1,0, 24,0             };
+	unsigned char bmpPad[3] = {
+	0,0,0             };
+
+	bmpFileHeader[ 2] = (unsigned char)(filesize    );
+	bmpFileHeader[ 3] = (unsigned char)(filesize>> 8);
+	bmpFileHeader[ 4] = (unsigned char)(filesize>>16);
+	bmpFileHeader[ 5] = (unsigned char)(filesize>>24);
+
+	bmpInfoHeader[ 4] = (unsigned char)(       w    );
+	bmpInfoHeader[ 5] = (unsigned char)(       w>> 8);
+	bmpInfoHeader[ 6] = (unsigned char)(       w>>16);
+	bmpInfoHeader[ 7] = (unsigned char)(       w>>24);
+	bmpInfoHeader[ 8] = (unsigned char)(       h    );
+	bmpInfoHeader[ 9] = (unsigned char)(       h>> 8);
+	bmpInfoHeader[10] = (unsigned char)(       h>>16);
+	bmpInfoHeader[11] = (unsigned char)(       h>>24);
+
+	// write the file (thanks forum!)
+	file.write(bmpFileHeader, sizeof(bmpFileHeader));    // write file header
+	file.write(bmpInfoHeader, sizeof(bmpInfoHeader));    // " info header
+
+	for (int i=h; i>=0; i--) 			  // iterate image array
+	{
+		// memset(img,0,sizeof(img));        // not sure if I really need this; runs fine without...
+		for (int x=0; x<w; x++)
+		{
+			// uint8_t rgb[3];
+			uint16_t rgb = display.readPixelRGB(x, i);
+			// Serial.println(rgb);
+			// Serial.println(display.readPixelRGB(x, i)*257);
+			// delay(5);
+			// byte red, green, blue;
+			// display.readPixelRGB(x, i, &rgb[0]);
+			// display.readRectRGB(x, i, 1, 1, rgb);
+			// uint8_t r = ((rgb >> 11) & 0x1F);
+			// uint8_t g = ((rgb >> 5) & 0x3F);
+			// uint8_t b = (rgb & 0x1F);
+			
+			uint8_t r = (rgb & 0xF800) >> 8;
+			uint8_t g = (rgb & 0x07E0) >> 3;
+			uint8_t b = (rgb & 0x1F) << 3;
+
+			// r = (r * 255) / 31;
+			// g = (g * 255) / 63;
+			// b = (b * 255) / 31;
+			
+
+
+			//  r = rgb >> 16;
+			//  g = (rgb & 0x00ff00) >> 8;
+			//  b = (rgb & 0x0000ff);
+
+			// Serial.println(r);
+			// Serial.println(g);
+			// Serial.println(b);
+
+			// delay(1000);
+
+			// rgb = 0;
+			// rgb |= red <<16;
+			// rgb |= blue <<8;
+			// rgb |= green;
+			// Serial.printf("x: %d   y: %d\n", x, y);
+			// delay(5);
+			// int colorVal = px[y*w + x];
+			// img[x*3+2] = (unsigned char)(r);
+			// img[x*3+1] = (unsigned char)(g);
+			// img[x*3+0] = (unsigned char)(b);
+			file.write(b);
+			file.write(g);
+			file.write(r);
+			// file.write(rgb[0]);
+			// Serial.println(rgb[0]);
+			// file.write(rgb[1]);
+			// Serial.println(rgb[1]);
+			// file.write(rgb[2]);                // write px data
+			// Serial.println(rgb[2]);
+			// delay(5);
+		}
+		// file.write(img + (w * (h - i - 1) * 3), 3 * w);	// write px data
+		// file.write(bmpPad, (4-(w*3)%4)%4);                 // and padding as needed
+	}
+	file.close();
+	free(img);
+	if (debugPrint) {
+	Serial.println("\n---");
+	}
+	display.setTextColor(TFT_BLACK);
+	display.setTextSize(1);
+	display.setTextFont(2);
+	display.drawRect(14, 45, 134, 38, TFT_BLACK);
+	display.drawRect(13, 44, 136, 40, TFT_BLACK);
+	display.fillRect(15, 46, 132, 36, 0xC59F);
+	display.setCursor(47, 48);
+	display.printCenter(&name[8]);
+	display.setCursor(47, 61);
+	display.printCenter("saved to SD!");
+	uint32_t tempMillis = millis();
+	while(millis() < tempMillis + 3000)
+	{
+		update();
+		if(buttons.pressed(BTN_A) || buttons.pressed(BTN_B))
+		{
+			while(!buttons.released(BTN_A) && !buttons.released(BTN_B))
+				update();
+			break;
+		}
+	}
+	while(!update());
+	
+}
 
 //Buttons class
 bool Buttons::pressed(uint8_t button) {
@@ -8244,4 +8455,397 @@ void GUI::updatePopup() {
 	mp.display.setCursor(1, BUFHEIGHT - (6 * scale) + yOffset, TFT_WHITE);
 	mp.display.print(popupText);
 	popupTimeLeft--;
+}
+void GUI::homePopup(bool animation)
+{
+	mp.dataRefreshFlag = 1;
+	if(animation)
+	{
+		for (int i = 0; i < mp.display.height(); i+=1)
+		{
+			// for (int x = 0; x < mp.display.width(); x++)
+			// {
+				
+			// 	mp.display.drawPixel(x, i, TFT_WHITE);
+				
+
+			// 	// mp.display.drawPixel(x, i+1, TFT_WHITE);
+				
+			//
+			mp.display.drawFastHLine(0, i, mp.display.width(), TFT_WHITE);
+			mp.update();
+
+			delayMicroseconds(750);
+		}
+	}
+	else
+		mp.display.fillScreen(TFT_WHITE);
+	// for (int i = 1; i < mp.display.height(); i+=2)
+	// {
+	// 	for (int x = 0; x < mp.display.width(); x++)
+	// 	{
+	// 		mp.display.drawPixel(x, i, TFT_WHITE);
+	// 		mp.update();
+	// 	}
+	// 	delayMicroseconds(20);
+	// }
+	// mp.display.fillRect(0,0, 160,20, TFT_WHITE);
+	// mp.display.fillRect(0,114, 160,20, TFT_WHITE);
+	mp.display.drawIcon(popupVolume,12,25,20,20,2);
+	mp.display.drawIcon(popupExit,60,25,20,20,2);
+	mp.display.drawIcon(popupScreenBrightness,108,25,20,20,2);
+	mp.display.drawIcon(popupScreenshot,12,70,20,20,2);
+	mp.display.drawIcon(popupPixelBrightness,108,70,20,20,2);
+	uint8_t cursor = 1;
+	uint8_t scale = 2;
+	uint32_t blinkMillis = millis();
+	uint8_t cursorState = 0;
+	mp.dataRefreshFlag = 1;
+	String temp;
+	while(!mp.buttons.released(BTN_B))
+	{
+		mp.display.fillRect(0,0, 160,18, TFT_WHITE);
+		mp.display.fillRect(0,114, 160,20, TFT_WHITE);
+		
+
+		//drawing the top icons
+
+		uint8_t helper = 11;
+		if (mp.simInserted && !mp.airplaneMode)
+		{
+			if (mp.signalStrength <= 3)
+				mp.display.drawBitmap(1*scale, 1*scale, noSignalIcon, TFT_BLACK, scale);
+			else if (mp.signalStrength > 3 && mp.signalStrength <= 10)
+				mp.display.drawBitmap(1*scale, 1*scale, signalLowIcon, TFT_BLACK, scale);
+			else if (mp.signalStrength > 10 && mp.signalStrength <= 20)
+				mp.display.drawBitmap(1*scale, 1*scale, signalHighIcon, TFT_BLACK, scale);
+			else if (mp.signalStrength > 20 && mp.signalStrength <= 31)
+				mp.display.drawBitmap(1*scale, 1*scale, signalFullIcon, TFT_BLACK, scale);
+			else if (mp.signalStrength == 99)
+				mp.display.drawBitmap(1*scale, 1*scale, signalErrorIcon, TFT_BLACK, scale);
+		}
+		else if(!mp.simInserted && !mp.airplaneMode)
+			mp.display.drawBitmap(1*scale, 1*scale, signalErrorIcon, TFT_BLACK, scale);
+		if (mp.volume == 0)
+		{
+			mp.display.drawBitmap(helper*scale, 1*scale, silentmode, TFT_BLACK, scale);
+			helper += 10;
+		}
+		if (!mp.airplaneMode)
+		{
+			if (mp.wifi == 1)
+				mp.display.drawBitmap(helper*scale, 1*scale, wifion, TFT_BLACK, scale);
+			else
+				mp.display.drawBitmap(helper*scale, 1*scale, wifioff, TFT_BLACK, scale);
+			helper += 10;
+			if (mp.bt)
+				mp.display.drawBitmap(helper*scale, 1*scale, BTon, TFT_BLACK, scale);
+			else
+				mp.display.drawBitmap(helper*scale, 1*scale, BToff, TFT_BLACK, scale);
+			helper += 10;
+		}
+		else
+		{
+			mp.display.drawBitmap(scale, scale, airplaneModeIcon, TFT_BLACK, scale);
+			helper += 10;
+		}
+		if(!mp.SDinsertedFlag)
+			mp.display.drawBitmap(helper*scale, 1*scale, noSDIcon, TFT_BLACK, scale);
+		if (mp.batteryVoltage > 4000)
+			mp.display.drawBitmap(74*scale, 1*scale, batteryCharging, TFT_BLACK, scale);
+		else if (mp.batteryVoltage <= 4000 && mp.batteryVoltage >= 3800)
+			mp.display.drawBitmap(74*scale, 1*scale, batteryFull, TFT_BLACK, scale);
+		else if (mp.batteryVoltage < 3800 && mp.batteryVoltage >= 3700)
+			mp.display.drawBitmap(74*scale, 1*scale, batteryMid, TFT_BLACK, scale);
+		else if (mp.batteryVoltage < 3700 && mp.batteryVoltage >= 3600)
+			mp.display.drawBitmap(74*scale, 1*scale, batteryMidLow, TFT_BLACK, scale);
+		else if (mp.batteryVoltage < 3600 && mp.batteryVoltage >= 3500)
+			mp.display.drawBitmap(74*scale, 1*scale, batteryLow, TFT_BLACK, scale);
+		else if (mp.batteryVoltage < 3500)
+			mp.display.drawBitmap(74*scale, 1*scale, batteryEmpty, TFT_BLACK, scale);
+
+
+		if (millis() - blinkMillis >= 250) {
+			blinkMillis = millis();
+			cursorState = !cursorState;
+		}
+		mp.display.setTextFont(2);
+		mp.display.setTextSize(1);
+		mp.display.setCursor(0,112);
+		mp.display.setTextColor(TFT_BLACK);
+		mp.display.printCenter(popupHomeItems[cursor]);
+		mp.display.drawRect(12 + cursor % 3 * 48 - 1, 25 + 45 * (int)(cursor / 3) - 1, 42, 42, cursorState ? TFT_RED : TFT_WHITE);
+		mp.display.drawRect(12 + cursor % 3 * 48 - 2, 25 + 45 * (int)(cursor / 3) - 2, 44, 44, cursorState ? TFT_RED : TFT_WHITE);
+		
+		// date and time
+		mp.updateTimeRTC();
+		mp.display.fillRect(60,70,40,40,0x963F); 
+		mp.display.setFreeFont(TT1);
+		mp.display.setTextSize(2);
+		mp.display.setCursor(63, 85);
+		temp = "";
+		if (mp.clockHour < 10)
+			temp.concat("0");
+		temp.concat(mp.clockHour);
+		temp.concat(":");
+		if (mp.clockMinute < 10)
+			temp.concat("0");
+		temp.concat(mp.clockMinute);
+		mp.display.printCenter(temp);
+		mp.display.setCursor(63, 105);
+		temp = "";
+		if (mp.clockDay < 10)
+			temp.concat("0");
+		temp.concat(mp.clockDay);
+		temp.concat("/");
+		if (mp.clockMonth < 10)
+			temp.concat("0");
+		temp.concat(mp.clockMonth);
+		mp.display.printCenter(temp);
+
+
+		
+		if(mp.buttons.released(BTN_UP))
+		{
+			mp.gui.osc->note(75, 0.05);
+			mp.gui.osc->play();
+			mp.display.drawRect(12 + cursor % 3 * 48 - 2, 25 + 45 * (int)(cursor / 3) - 2, 44, 44,TFT_WHITE);
+			mp.display.drawRect(12 + cursor % 3 * 48 - 1, 25 + 45 * (int)(cursor / 3) - 1, 42, 42,TFT_WHITE);
+			cursorState = 1;
+			blinkMillis = millis();
+			if(cursor < 3)
+				cursor += 3;
+			else
+				cursor -= 3;
+			while(!mp.update());
+		}
+		if(mp.buttons.released(BTN_DOWN))
+		{
+			mp.gui.osc->note(75, 0.05);
+			mp.gui.osc->play();
+			mp.display.drawRect(12 + cursor % 3 * 48 - 2, 25 + 45 * (int)(cursor / 3) - 2, 44, 44,TFT_WHITE);
+			mp.display.drawRect(12 + cursor % 3 * 48 - 1, 25 + 45 * (int)(cursor / 3) - 1, 42, 42,TFT_WHITE);
+			cursorState = 1;
+			blinkMillis = millis();
+			if(cursor > 2)
+				cursor -= 3;
+			else
+				cursor += 3;			
+			while(!mp.update());
+		}
+		if(mp.buttons.released(BTN_LEFT))
+		{
+			mp.gui.osc->note(75, 0.05);
+			mp.gui.osc->play();
+			mp.display.drawRect(12 + cursor % 3 * 48 - 2, 25 + 45 * (int)(cursor / 3) - 2, 44, 44,TFT_WHITE);
+			mp.display.drawRect(12 + cursor % 3 * 48 - 1, 25 + 45 * (int)(cursor / 3) - 1, 42, 42,TFT_WHITE);
+			cursorState = 1;
+			blinkMillis = millis();
+			if(cursor % 3 == 0)
+				cursor += 2;
+			else
+				cursor -= 1;			
+			while(!mp.update());
+		}
+		if(mp.buttons.released(BTN_RIGHT))
+		{
+			mp.gui.osc->note(75, 0.05);
+			mp.gui.osc->play();
+			mp.display.drawRect(12 + cursor % 3 * 48 - 2, 25 + 45 * (int)(cursor / 3) - 2, 44, 44,TFT_WHITE);
+			mp.display.drawRect(12 + cursor % 3 * 48 - 1, 25 + 45 * (int)(cursor / 3) - 1, 42, 42,TFT_WHITE);
+			cursorState = 1;
+			blinkMillis = millis();
+			if(cursor % 3 == 2)
+				cursor -= 2;
+			else
+				cursor += 1;			
+			while(!mp.update());
+		}
+		if(mp.buttons.released(BTN_A))
+		{
+			while(!mp.update());
+			switch (cursor)
+			{
+				case 0: //volume
+					while(!mp.buttons.released(BTN_B) && !mp.buttons.released(BTN_A))
+					{
+						mp.display.drawRect(14, 50, 134, 28, TFT_BLACK);
+						mp.display.drawRect(13, 49, 136, 30, TFT_BLACK);
+						mp.display.fillRect(15, 51, 132, 26, 0x9FFE);
+						mp.display.drawRect(37, 59, 86, 10, TFT_BLACK);
+						mp.display.drawRect(36, 58, 88, 12, TFT_BLACK);
+						mp.display.fillRect(38, 60, mp.volume * 6, 8, TFT_BLACK);
+						mp.display.drawBitmap(18, 56, noSound, TFT_BLACK, 2);
+						mp.display.drawBitmap(126, 56, fullSound, TFT_BLACK, 2);
+						if(mp.buttons.released(BTN_LEFT) && mp.volume > 0)
+						{
+							mp.volume--;
+							mp.gui.osc->setVolume(256 * mp.volume / 14);
+							mp.gui.osc->note(75, 0.05);
+							mp.gui.osc->play();
+							while(!mp.update());
+						}
+						if(mp.buttons.released(BTN_RIGHT) && mp.volume < 14)
+						{
+							mp.volume++;
+							mp.gui.osc->setVolume(256 * mp.volume / 14);
+							mp.gui.osc->note(75, 0.05);
+							mp.gui.osc->play();
+							while(!mp.update());
+						}
+						mp.update();
+					}
+				break;
+
+				case 1: //exit
+					mp.loader();
+				break;
+				
+				case 2: //screen brightness
+					while(!mp.buttons.released(BTN_B) && !mp.buttons.released(BTN_A))
+					{
+						mp.display.drawRect(13, 49, 136, 30, TFT_BLACK);
+						mp.display.drawRect(14, 50, 134, 28, TFT_BLACK);
+						mp.display.fillRect(15, 51, 132, 26, 0xFF92);
+						mp.display.drawRect(33, 58, 89, 12, TFT_BLACK);
+						mp.display.drawRect(34, 59, 87, 10, TFT_BLACK);
+						mp.display.fillRect(35, 60, mp.brightness * 17, 8, TFT_BLACK);
+						mp.display.drawBitmap(18, 59, noBrightness, TFT_BLACK, 2);
+						mp.display.drawBitmap(125, 53, fullBrightness, TFT_BLACK, 2);
+						if(mp.buttons.released(BTN_LEFT) && mp.brightness > 0)
+						{
+							mp.brightness--;
+							mp.gui.osc->note(75, 0.05);
+							mp.gui.osc->play();
+							while(!mp.update());
+						}
+						if(mp.buttons.released(BTN_RIGHT) && mp.brightness < 5)
+						{
+							mp.brightness++;
+							mp.gui.osc->note(75, 0.05);
+							mp.gui.osc->play();
+							while(!mp.update());
+						}
+						if (mp.brightness == 0)
+							mp.ledcAnalogWrite(LEDC_CHANNEL, 230);
+						else
+							mp.ledcAnalogWrite(LEDC_CHANNEL, (5 - mp.brightness) * 51);
+						
+						mp.update();
+					}
+				break;
+
+				case 3:
+					mp.screenshotFlag = 1;
+					return;
+				break;
+
+				case 4:
+				{
+					uint32_t timer = millis();
+					bool blinkState = 0;
+					String temp = "";
+					String monthsList[] = {"January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"};
+
+					while(!mp.buttons.released(BTN_B) && !mp.buttons.released(BTN_A))
+					{
+						mp.display.fillScreen(0x963F);
+						// date and time
+						mp.updateTimeRTC();
+						mp.display.setTextFont(2);
+						mp.display.setTextSize(2);
+						mp.display.setCursor(15, 25);
+						temp = "";
+						if (mp.clockHour < 10)
+							temp.concat("0");
+						temp.concat(mp.clockHour);
+						temp.concat(":");
+						if (mp.clockMinute < 10)
+							temp.concat("0");
+						temp.concat(mp.clockMinute);
+						temp.concat(":");
+						if (mp.clockSecond < 10)
+							temp.concat("0");
+						temp.concat(mp.clockSecond);
+						
+						mp.display.printCenter(temp);
+						mp.display.setTextSize(1);
+						mp.display.setCursor(63, 85);
+						temp = "";
+						if (mp.clockDay < 10)
+							temp.concat("0");
+						temp.concat(mp.clockDay);
+						if(mp.clockDay < 20 && mp.clockDay > 10)
+							temp.concat("th");
+						else if(mp.clockDay%10 == 1)
+							temp.concat("st");
+						else if(mp.clockDay%10 == 2)
+							temp.concat("nd");
+						else if(mp.clockDay%10 == 3)
+							temp.concat("rd");
+						else
+							temp.concat("th");
+						temp.concat(" of ");
+						temp.concat(monthsList[mp.clockMonth - 1]);
+
+						mp.display.printCenter(temp);
+						mp.display.setCursor(0,100);
+						mp.display.printCenter(2000 + mp.clockYear);
+
+
+						if(millis()-timer >= 1000)
+						{
+							blinkState = !blinkState;
+							timer = millis();
+						}
+						mp.update();
+						
+					}
+				}
+				break;
+
+				case 5:
+				{
+					while(!mp.buttons.released(BTN_B) && !mp.buttons.released(BTN_A))
+					{
+						for (int i = 0; i < 8; i++)
+							mp.leds[i] = CRGB::Red;
+						mp.display.drawRect(13, 49, 136, 30, TFT_BLACK);
+						mp.display.drawRect(14, 50, 134, 28, TFT_BLACK);
+						mp.display.fillRect(15, 51, 132, 26, 0xA794);
+						mp.display.drawRect(33, 58, 89, 12, TFT_BLACK);
+						mp.display.drawRect(34, 59, 87, 10, TFT_BLACK);
+						mp.display.fillRect(35, 60, mp.pixelsBrightness * 17, 8, TFT_BLACK);
+						mp.display.drawBitmap(18, 59, noBrightness, TFT_BLACK, 2);
+						mp.display.drawBitmap(125, 53, fullBrightness, TFT_BLACK, 2);
+						if(mp.buttons.released(BTN_LEFT) && mp.pixelsBrightness > 0)
+						{
+							mp.pixelsBrightness--;
+							mp.gui.osc->note(75, 0.05);
+							mp.gui.osc->play();
+							while(!mp.update());
+						}
+						if(mp.buttons.released(BTN_RIGHT) && mp.pixelsBrightness < 5)
+						{
+							mp.pixelsBrightness++;
+							mp.gui.osc->note(75, 0.05);
+							mp.gui.osc->play();
+							while(!mp.update());
+						}
+						mp.update();
+					}
+				}
+				break;
+			}
+			while(!mp.update());
+			mp.display.fillScreen(TFT_WHITE);
+			mp.display.drawIcon(popupVolume,12,25,20,20,2);
+			mp.display.drawIcon(popupExit,60,25,20,20,2);
+			mp.display.drawIcon(popupScreenBrightness,108,25,20,20,2);
+			mp.display.drawIcon(popupScreenshot,12,70,20,20,2);
+			mp.display.drawIcon(popupPixelBrightness,108,70,20,20,2);
+		}
+		mp.update();		
+	}
+	// while(!mp.update());
 }

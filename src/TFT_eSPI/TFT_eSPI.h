@@ -568,6 +568,7 @@ class TFT_eSPI : public Print {
            // Read the colour of a pixel at x,y and return value in 565 format
   uint16_t readPixel(int32_t x0, int32_t y0);
 
+
            // The next functions can be used as a pair to copy screen blocks (or horizontal/vertical lines) to another location
            // Read a block of pixels to a data buffer, buffer is 16 bit and the array size must be at least w * h
   void     readRect(uint32_t x0, uint32_t y0, uint32_t w, uint32_t h, uint16_t *data);
@@ -784,6 +785,8 @@ public:
 
 	// Read the colour of a pixel at x,y and return value in 565 format
 	uint16_t readPixel(int32_t x0, int32_t y0);
+	uint16_t readPixelRGB(int32_t x0, int32_t y0);
+
 
 	// Write an image (colour bitmap) to the sprite
 	void     pushImage(int32_t x0, int32_t y0, uint32_t w, uint32_t h, uint16_t *data);
