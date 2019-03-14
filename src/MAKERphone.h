@@ -168,7 +168,7 @@ public:
   //popup GUI
   void popup(String text, uint8_t duration);
   void updatePopup();
-  void homePopup();
+  void homePopup(bool animation = 1);
   String popupText;
   uint8_t popupTimeLeft;
   uint8_t popupTotalTime;

@@ -204,8 +204,9 @@ bool MAKERphone::update() {
 	uint16_t refreshInterval = 3000;
 	if(screenshotFlag)
 	{
-		takeScreenshot();
 		screenshotFlag = 0;
+		takeScreenshot();
+		gui.homePopup(0);
 	}
 	if(!spriteCreated)
 	{
@@ -758,6 +759,13 @@ void MAKERphone::lockScreen() {
 }
 void MAKERphone::loader()
 {
+	display.fillScreen(TFT_BLACK);
+	display.setCursor(0, display.height() / 2 - 12);
+	display.setTextColor(TFT_WHITE);
+	display.setTextFont(2);
+	display.setTextSize(1);
+	display.printCenter("LOADING...");
+	while(!mp.update());
 	const esp_partition_t* partition;
 	partition = esp_ota_get_running_partition();
 	const esp_partition_t* partition2;
@@ -7385,6 +7393,16 @@ String MAKERphone::readFile(const char * path) {
 }
 void MAKERphone::takeScreenshot()
 {
+	display.setTextColor(TFT_BLACK);
+	display.setTextSize(1);
+	display.setTextFont(2);
+	display.drawRect(14, 45, 134, 38, TFT_BLACK);
+	display.drawRect(13, 44, 136, 40, TFT_BLACK);
+	display.fillRect(15, 46, 132, 36, 0xC59F);
+	display.setCursor(47, 55);
+	display.printCenter("Taking screenshot");
+	while(!update());
+
 	char name[] = "/Images/screenshot_00.bmp";
 	while (!SD.begin(5, SPI, 9000000))
 		Serial.println("SD ERROR");
@@ -7403,6 +7421,7 @@ void MAKERphone::takeScreenshot()
 		Serial.println("SD file error!");
 		return;
 	}
+	
 	uint8_t w = 160;
 	uint8_t h = 128;
 	int px[] = {255, 0, 255, 0, 255, 0
@@ -7547,6 +7566,28 @@ void MAKERphone::takeScreenshot()
 	if (debugPrint) {
 	Serial.println("\n---");
 	}
+	display.setTextColor(TFT_BLACK);
+	display.setTextSize(1);
+	display.setTextFont(2);
+	display.drawRect(14, 45, 134, 38, TFT_BLACK);
+	display.drawRect(13, 44, 136, 40, TFT_BLACK);
+	display.fillRect(15, 46, 132, 36, 0xC59F);
+	display.setCursor(47, 48);
+	display.printCenter(&name[8]);
+	display.setCursor(47, 61);
+	display.printCenter("saved to SD!");
+	uint32_t tempMillis = millis();
+	while(millis() < tempMillis + 3000)
+	{
+		update();
+		if(buttons.pressed(BTN_A) || buttons.pressed(BTN_B))
+		{
+			while(!buttons.released(BTN_A) && !buttons.released(BTN_B))
+				update();
+			break;
+		}
+	}
+	while(!update());
 	
 }
 
@@ -8415,25 +8456,30 @@ void GUI::updatePopup() {
 	mp.display.print(popupText);
 	popupTimeLeft--;
 }
-void GUI::homePopup()
+void GUI::homePopup(bool animation)
 {
 	mp.dataRefreshFlag = 1;
-	for (int i = 0; i < mp.display.height(); i+=1)
+	if(animation)
 	{
-		// for (int x = 0; x < mp.display.width(); x++)
-		// {
-			
-		// 	mp.display.drawPixel(x, i, TFT_WHITE);
-			
+		for (int i = 0; i < mp.display.height(); i+=1)
+		{
+			// for (int x = 0; x < mp.display.width(); x++)
+			// {
+				
+			// 	mp.display.drawPixel(x, i, TFT_WHITE);
+				
 
-		// 	// mp.display.drawPixel(x, i+1, TFT_WHITE);
-			
-		//
-		mp.display.drawFastHLine(0, i, mp.display.width(), TFT_WHITE);
-		mp.update();
+			// 	// mp.display.drawPixel(x, i+1, TFT_WHITE);
+				
+			//
+			mp.display.drawFastHLine(0, i, mp.display.width(), TFT_WHITE);
+			mp.update();
 
-		delayMicroseconds(750);
+			delayMicroseconds(750);
+		}
 	}
+	else
+		mp.display.fillScreen(TFT_WHITE);
 	// for (int i = 1; i < mp.display.height(); i+=2)
 	// {
 	// 	for (int x = 0; x < mp.display.width(); x++)
@@ -8561,6 +8607,8 @@ void GUI::homePopup()
 		
 		if(mp.buttons.released(BTN_UP))
 		{
+			mp.gui.osc->note(75, 0.05);
+			mp.gui.osc->play();
 			mp.display.drawRect(12 + cursor % 3 * 48 - 2, 25 + 45 * (int)(cursor / 3) - 2, 44, 44,TFT_WHITE);
 			mp.display.drawRect(12 + cursor % 3 * 48 - 1, 25 + 45 * (int)(cursor / 3) - 1, 42, 42,TFT_WHITE);
 			cursorState = 1;
@@ -8573,6 +8621,8 @@ void GUI::homePopup()
 		}
 		if(mp.buttons.released(BTN_DOWN))
 		{
+			mp.gui.osc->note(75, 0.05);
+			mp.gui.osc->play();
 			mp.display.drawRect(12 + cursor % 3 * 48 - 2, 25 + 45 * (int)(cursor / 3) - 2, 44, 44,TFT_WHITE);
 			mp.display.drawRect(12 + cursor % 3 * 48 - 1, 25 + 45 * (int)(cursor / 3) - 1, 42, 42,TFT_WHITE);
 			cursorState = 1;
@@ -8585,6 +8635,8 @@ void GUI::homePopup()
 		}
 		if(mp.buttons.released(BTN_LEFT))
 		{
+			mp.gui.osc->note(75, 0.05);
+			mp.gui.osc->play();
 			mp.display.drawRect(12 + cursor % 3 * 48 - 2, 25 + 45 * (int)(cursor / 3) - 2, 44, 44,TFT_WHITE);
 			mp.display.drawRect(12 + cursor % 3 * 48 - 1, 25 + 45 * (int)(cursor / 3) - 1, 42, 42,TFT_WHITE);
 			cursorState = 1;
@@ -8597,6 +8649,8 @@ void GUI::homePopup()
 		}
 		if(mp.buttons.released(BTN_RIGHT))
 		{
+			mp.gui.osc->note(75, 0.05);
+			mp.gui.osc->play();
 			mp.display.drawRect(12 + cursor % 3 * 48 - 2, 25 + 45 * (int)(cursor / 3) - 2, 44, 44,TFT_WHITE);
 			mp.display.drawRect(12 + cursor % 3 * 48 - 1, 25 + 45 * (int)(cursor / 3) - 1, 42, 42,TFT_WHITE);
 			cursorState = 1;
