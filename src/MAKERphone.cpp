@@ -7407,10 +7407,273 @@ void MAKERphone::clockStopwatch()
 		display.printCenter(temp);
 		update();
 	}
+	while(!update());
 }
 void MAKERphone::clockApp()
 {
-	
+	String clockItems[4] = {
+		"Alarm",
+		"Clock",
+		"Stopwatch",
+		"Timer"
+	};
+	while(1)
+	{
+		int8_t index = clockMenu(clockItems, 4);
+		if(index == -1)
+			break;
+		switch(index)
+		{
+			case 0:
+				clockAlarm();
+			break;
+
+			case 1:
+			{
+				uint32_t timer = millis();
+				bool blinkState = 0;
+				String temp = "";
+				String monthsList[] = {"January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"};
+				while(!buttons.released(BTN_B) && !buttons.released(BTN_A))
+				{
+					display.fillScreen(0x963F);
+					// date and time
+					updateTimeRTC();
+					display.setTextFont(2);
+					display.setTextSize(2);
+					display.setTextColor(TFT_BLACK);
+					display.setCursor(15, 25);
+					temp = "";
+					if (clockHour < 10)
+						temp.concat("0");
+					temp.concat(clockHour);
+					temp.concat(":");
+					if (clockMinute < 10)
+						temp.concat("0");
+					temp.concat(clockMinute);
+					temp.concat(":");
+					if (clockSecond < 10)
+						temp.concat("0");
+					temp.concat(clockSecond);
+					
+					display.printCenter(temp);
+					display.setTextSize(1);
+					display.setCursor(63, 85);
+					temp = "";
+					if (clockDay < 10)
+						temp.concat("0");
+					temp.concat(clockDay);
+					if(clockDay < 20 && clockDay > 10)
+						temp.concat("th");
+					else if(clockDay%10 == 1)
+						temp.concat("st");
+					else if(clockDay%10 == 2)
+						temp.concat("nd");
+					else if(clockDay%10 == 3)
+						temp.concat("rd");
+					else
+						temp.concat("th");
+					temp.concat(" of ");
+					temp.concat(monthsList[clockMonth - 1]);
+
+					display.printCenter(temp);
+					display.setCursor(0,100);
+					display.printCenter(2000 + clockYear);
+
+
+					if(millis()-timer >= 1000)
+					{
+						blinkState = !blinkState;
+						timer = millis();
+					}
+					update();
+					
+				}
+				while(!update());
+			}
+			break;
+
+			case 2:
+				clockStopwatch();
+			break;
+
+			case 3:
+			break;
+
+		}
+	}
+}
+int8_t MAKERphone::clockMenu(String* title, uint8_t length) {
+	uint8_t offset = 4;
+	bool pressed = 0;
+	uint8_t cursor = 0;
+	int32_t cameraY = 0;
+	int32_t cameraY_actual = 0;
+	dataRefreshFlag = 0;
+
+	uint8_t boxHeight;
+	boxHeight = 30; //actually 2 less than that
+	while (1) {
+		while (!update());
+		display.fillScreen(TFT_BLACK);
+		display.setCursor(0, 0);
+		cameraY_actual = (cameraY_actual + cameraY) / 2;
+		if (cameraY_actual - cameraY == 1) {
+			cameraY_actual = cameraY;
+		}
+
+		for (uint8_t i = 0; i < length; i++) {
+			clockMenuDrawBox(title[i], i, cameraY_actual);
+		}
+		uint8_t y = cameraY_actual;
+		uint8_t i = cursor;
+		if (millis() % 500 <= 250 && pressed == 0);
+		else
+		{
+			y += i * boxHeight + offset;
+			display.drawRect(0, y-1, display.width()-1, boxHeight+2, TFT_RED);
+			display.drawRect(1, y, display.width()-3, boxHeight, TFT_RED);
+		}
+		
+		
+
+		if (buttons.kpd.pin_read(BTN_DOWN) == 1 && buttons.kpd.pin_read(BTN_UP) == 1)
+			pressed = 0;
+
+		if (buttons.released(BTN_A)) {   //BUTTON CONFIRM
+			gui.osc->note(75, 0.05);
+			gui.osc->play();
+			while (!update());// Exit when pressed
+			break;
+		}
+
+		if (buttons.released(BTN_UP)) {  //BUTTON UP
+			gui.osc->note(75, 0.05);
+			gui.osc->play();
+			if (cursor == 0) {
+				cursor = length - 1;
+				if (length > 6) {
+					cameraY = -(cursor - 2) * boxHeight;
+				}
+			}
+			else {
+				cursor--;
+				if (cursor > 0 && (cursor * boxHeight + cameraY + offset) < boxHeight) {
+					cameraY += 15;
+				}
+			}
+			pressed = 1;
+		}
+
+		if (buttons.released(BTN_DOWN)) { //BUTTON DOWN
+			gui.osc->note(75, 0.05);
+			gui.osc->play();
+			cursor++;
+			if ((cursor * boxHeight + cameraY + offset) > 128) {
+				cameraY -= boxHeight;
+			}
+			if (cursor >= length) {
+				cursor = 0;
+				cameraY = 0;
+
+			}
+			pressed = 1;
+		}
+
+
+		if (buttons.released(BTN_B) == 1) //BUTTON BACK
+		{
+			return -1;
+		}
+	}
+
+	return cursor;
+
+}
+void MAKERphone::clockMenuDrawBox(String title, uint8_t i, int32_t y) {
+	uint8_t offset = 4;
+	uint8_t boxHeight;
+	boxHeight = 30;
+	y += i * boxHeight + offset;
+	if (y < 0 || y > display.width()) {
+		return;
+	}
+	display.fillRect(2, y + 1, display.width() - 4, boxHeight-2,TFT_DARKGREY);
+	if (title == "Alarm")
+	{
+		display.drawBitmap(5, y + 2, alarmIcon, 0xFC92, 2);
+		display.setTextColor(0xFC92);
+		// display.fillRect(2, y + 1, display.width() - 4, boxHeight-2, 0xFC92);
+
+	}
+	else if (title == "Clock") 
+	{
+		display.drawBitmap(5, y + 2, clockIcon, 0x963F, 2);
+		display.setTextColor(0x963F);
+		// display.fillRect(2, y + 1, display.width() - 4, boxHeight-2, 0x963F);
+	}
+	else if (title == "Stopwatch")
+	{
+		display.drawBitmap(5, y + 2, stopwatchIcon, 0xFF92, 2);
+		display.setTextColor(0xFF92);
+		// display.fillRect(2, y + 1, display.width() - 4, boxHeight-2, 0xFF92);
+
+	}
+	else if (title == "Timer")
+	{
+		display.drawBitmap(5, y + 2, timerIcon, 0x97F6, 2);
+		display.setTextColor(0x97F6);
+		// display.fillRect(2, y + 1, display.width() - 4, boxHeight-2, 0x97F6);
+
+	}
+	// display.setTextColor(TFT_BLACK);
+	display.setTextSize(2);
+	display.setTextFont(1);
+	display.drawString(title, 40, y +  8);
+	display.setTextColor(TFT_WHITE);
+	display.setTextSize(1);
+}
+void MAKERphone::clockAlarm()
+{
+	bool enabled = 0;
+	uint8_t hour = 12;
+	uint8_t minute = 0;
+	uint8_t scale = 2;
+	String temp;
+	bool days[7] = {0, 0, 0, 0, 1, 1, 0};
+	while(!buttons.released(BTN_B))
+	{
+		display.fillScreen(0xFC92);
+		//Hour black
+		display.setTextColor(TFT_BLACK);
+		display.setCursor(15, 8);
+		display.setTextFont(2);
+		display.setTextSize(2);
+		temp = "";
+		if (hour < 10)
+			temp.concat("0");
+		temp.concat(hour);
+		temp.concat(":");
+		if (minute < 10)
+			temp.concat("0");
+		temp.concat(minute);
+		display.print(temp);
+		display.drawRect(115, 15, 20, 20, TFT_BLACK);
+		display.drawRect(116, 16, 18, 18, TFT_BLACK);
+
+		display.setCursor(10,50);
+		display.setTextSize(1);
+		display.printCenter("once/repeat");
+		display.setCursor(85,69);
+		display.printCenter("M T W T F S S");
+
+		display.drawRect(20, 96, 120, 20, TFT_BLACK);
+		display.drawRect(19, 95, 122, 22, TFT_BLACK);
+		display.setCursor(0,98);
+		display.printCenter("alarm.wav");
+
+		update();
+	}
 }
 //save manipulation
 JsonArray& MAKERphone::getJSONfromSAV(const char *path)
