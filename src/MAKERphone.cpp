@@ -352,12 +352,12 @@ bool MAKERphone::update() {
 			buf.pushSprite(0,0);
 
 		buttons.update();
-		if(buttons.kpdNum.getKey() == 'B' && !inHomePopup)
-		{
-			inHomePopup = 1;
-			gui.homePopup();
-			inHomePopup = 0;
-		}
+		// if(buttons.kpdNum.getKey() == 'B' && !inHomePopup)
+		// {
+		// 	inHomePopup = 1;
+		// 	gui.homePopup();
+		// 	inHomePopup = 0;
+		// }
 		gui.updatePopup();
 		FastLED.setBrightness((float)(255/5*pixelsBrightness));
 		FastLED.show();
@@ -1212,6 +1212,8 @@ void MAKERphone::mainMenu()
 				if(settingsApp())
 					return;
 			}
+			if(titles[index] == "Clock")
+				clockApp();
 			if (index == -2)
 			{
 				Serial.println("pressed");
@@ -7298,6 +7300,118 @@ void MAKERphone::applySettings()
 
 }
 
+//Clock app
+void MAKERphone::clockStopwatch()
+{
+	bool running = 0;
+	String temp;
+	uint32_t timeMillis = 0;
+	uint32_t timeActual = 0;
+	char key;
+	uint32_t blinkMills = millis();
+	bool blinkState = 1;
+	while(!buttons.released(BTN_B))
+	{
+		key = buttons.kpdNum.getKey();
+		if(key != NO_KEY)
+		{
+			Serial.println(key);
+			delay(5);
+		}
+		display.setTextColor(TFT_BLACK);
+		display.fillScreen(0xFF92);
+		display.setTextFont(2);
+		display.setTextSize(1);
+		display.setCursor(123,110);
+		display.print("Reset");
+		display.setTextFont(2);
+		display.setTextSize(2);
+		display.setCursor(15, 25);
+		int seconds = timeActual / 1000;
+		int centiseconds = timeActual % 1000 / 10;
+		temp = "";
+		if(seconds > 59)
+		{
+			int mins = seconds / 60;
+			if (mins < 10)
+				temp.concat("0");
+			temp.concat(mins);
+			temp.concat(":");
+		}
+		if (seconds % 60 < 10)
+			temp.concat("0");
+		temp.concat(seconds % 60);
+		temp.concat(":");
+		if (centiseconds < 10)
+			temp.concat("0");
+		temp.concat(centiseconds);
+		display.printCenter(temp);
+
+		if(!blinkState)
+		{
+			if(seconds > 59)
+			{
+				display.fillRect(0, 0, 56, 60, 0xFF92);
+				display.fillRect(64, 0, 33, 60, 0xFF92);
+				display.fillRect(102, 0, 50, 60, 0xFF92);
+			}
+			else
+			{
+				display.fillRect(0, 0, 75, 60, 0xFF92);
+				display.fillRect(82, 0, 70, 60, 0xFF92);
+			}
+		}
+		// if(blinkState)
+		// else
+		// 	display.printCenter(":");
+		if(!running)
+		{
+			display.drawBitmap(72, 90, pause2, TFT_BLACK, 2);
+			if(buttons.released(BTN_A))
+			{
+				blinkState = 1;
+				blinkMills = millis();
+				running = 1;
+				timeMillis = millis() - timeActual;
+			}
+			if(key == 'A')
+			{
+				timeMillis = 0;
+				timeActual = 0;
+			}
+			while (!update());
+			if (millis() - blinkMills >= 350)
+			{
+				blinkMills = millis();
+				blinkState = !blinkState;
+			}
+		}
+		if(running)
+		{
+			display.drawBitmap(72, 88, play, TFT_BLACK, 2);
+
+			timeActual = millis() - timeMillis;
+			if(buttons.released(BTN_A))
+			{
+				running = 0;
+				timeMillis = millis();
+			}
+			if(key == 'A')
+			{
+				running = 0;
+				timeMillis = 0;
+				timeActual = 0;
+			}
+			while (!update());
+		}
+		display.printCenter(temp);
+		update();
+	}
+}
+void MAKERphone::clockApp()
+{
+	
+}
 //save manipulation
 JsonArray& MAKERphone::getJSONfromSAV(const char *path)
 {
@@ -8735,12 +8849,12 @@ void GUI::homePopup(bool animation)
 					}
 				break;
 
-				case 3:
+				case 3: //screenshot
 					mp.screenshotFlag = 1;
 					return;
 				break;
 
-				case 4:
+				case 4: //clock
 				{
 					uint32_t timer = millis();
 					bool blinkState = 0;
@@ -8804,7 +8918,7 @@ void GUI::homePopup(bool animation)
 				}
 				break;
 
-				case 5:
+				case 5: //LED brightness
 				{
 					while(!mp.buttons.released(BTN_B) && !mp.buttons.released(BTN_A))
 					{

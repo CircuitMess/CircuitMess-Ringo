@@ -378,6 +378,8 @@ class MAKERphone:public Buttons, public GUI
 	void listRingtones(const char * dirname, uint8_t levels);
 	void listNotifications(const char * dirname, uint8_t levels);
 
+	void clockApp();
+	void clockStopwatch();
 	GUI gui;
 	Buttons buttons;
 	//Display display;
@@ -390,7 +392,10 @@ class MAKERphone:public Buttons, public GUI
 	"Settings",
 	"Phone",
 	"Apps",
-	"Clock", "Calculator", "Flashlight", "Calendar"
+	"Clock",
+	"Calculator",
+	"Flashlight",
+	"Calendar"
 	};
 	String BinaryFiles[255];
 	uint8_t binaryCount = 0;//Number of binary files available for loading
