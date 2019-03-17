@@ -383,6 +383,7 @@ class MAKERphone:public Buttons, public GUI
 	int8_t clockMenu(String* title, uint8_t length);
 	void clockMenuDrawBox(String title, uint8_t i, int32_t y);
 	void clockAlarm();
+	void clockTimer();
 	GUI gui;
 	Buttons buttons;
 	//Display display;
