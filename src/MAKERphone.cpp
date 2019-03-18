@@ -4409,9 +4409,10 @@ int16_t MAKERphone::mp3Menu(const char* title, String* items, uint8_t length) {
 	return cursor;
 
 }
-void MAKERphone::listMP3(const char * dirname, uint8_t levels) {
-	mp3Count = 0;
-	
+void MAKERphone::listAudio(const char * dirname, uint8_t levels) {
+	audioCount = 0;
+	while(!SD.begin(5, SPI, 9000000))
+        Serial.println("SD ERROR");
 	Serial.printf("Listing directory: %s\n", dirname);
 	SDAudioFile root = SD.open(dirname);
 	if (!root) {
@@ -4430,14 +4431,15 @@ void MAKERphone::listMP3(const char * dirname, uint8_t levels) {
 		// file.getName(temp, 100);
 		String Name(file.name());
 		Serial.println(Name);
-		if (Name.endsWith(F(".MP3")) || Name.endsWith(F(".mp3")))
+		if (Name.endsWith(F(".MP3")) || Name.endsWith(F(".mp3")) 
+		 || Name.endsWith(F(".wav")) || Name.endsWith(F(".WAV")))
 		{
 			Serial.print(counter);
 			Serial.print(".   ");
 			Serial.println(Name);
-			mp3Files[counter - 1] = Name;
+			audioFiles[counter - 1] = Name;
 			Serial.println(Name);
-			mp3Count++;
+			audioCount++;
 			counter++;
 		}
 		file = root.openNextFile();
@@ -4594,16 +4596,16 @@ void MAKERphone::mediaApp() {
 		{
 			if (!SD.begin(5, SPI, 8000000))
 				Serial.println("SD card error");
-			listMP3("/", 1);
-			if(mp3Count > 0)
+			listAudio("/", 1);
+			if(audioCount > 0)
 			{
 				while (1)
 				{
-					int16_t index = mp3Menu("Select file to play:", mp3Files, mp3Count);
+					int16_t index = mp3Menu("Select file to play:", audioFiles, audioCount);
 					if (index == -1)
 						break;
 					display.fillScreen(TFT_LIGHTGREY);
-					mp3player(mp3Files[index]);
+					mp3player(audioFiles[index]);
 				} 
 			}
 			else
@@ -7634,7 +7636,222 @@ void MAKERphone::clockStopwatch()
 	}
 	while(!update());
 }
+
 void MAKERphone::clockAlarm()
+{
+	uint16_t alarmCount = 0;
+	for (int i = 0; i < 5;i++)
+	{
+		if(alarmEnabled[i] != 2)
+			alarmCount++;
+	}
+	uint8_t alarmsArray[alarmCount];
+	uint8_t temp = 0;
+	for (int i = 0; i < 5;i++)
+	{
+		if(alarmEnabled[i] != 2)
+		{
+			alarmsArray[temp] = i;
+			temp++;
+		}
+	}
+	while(1)
+	{
+		int8_t index = clockAlarmMenu(alarmsArray, alarmCount + 1) - 1;
+		if(index == -1)
+		{
+			int8_t newAlarm = -1;
+			for(int i = 0;i<5;i++)
+			{
+				if(alarmEnabled[i] == 2)
+				{
+					newAlarm = i;
+					break;
+				}
+			}
+			if(newAlarm == -1)
+			{
+				display.setTextColor(TFT_BLACK);
+				display.setTextSize(1);
+				display.setTextFont(2);
+				display.drawRect(14, 45, 134, 38, TFT_BLACK);
+				display.drawRect(13, 44, 136, 40, TFT_BLACK);
+				display.fillRect(15, 46, 132, 36, 0xFC92);
+				display.setCursor(47, 55);
+				display.printCenter("Limit reached!");
+				uint32_t tempMillis = millis();
+				while(millis() < tempMillis + 3000)
+				{
+					update();
+					if(buttons.pressed(BTN_A) || buttons.pressed(BTN_B))
+					{
+						while(!buttons.released(BTN_A) && !buttons.released(BTN_B))
+							update();
+						break;
+					}
+				}
+			}
+			else
+			{
+				clockAlarmEdit(newAlarm);
+				alarmCount = 0;
+				for (int i = 0; i < 5;i++)
+				{
+					if(alarmEnabled[i] != 2)
+						alarmCount++;
+				}
+				alarmsArray[alarmCount];
+				temp = 0;
+				for (int i = 0; i < 5;i++)
+				{
+					if(alarmEnabled[i] != 2)
+					{
+						alarmsArray[temp] = i;
+						temp++;
+					}
+				}
+			}
+			
+		}
+		else if(index == -2)
+			break;
+		else
+		{
+			clockAlarmEdit(index);
+			alarmCount = 0;
+			for (int i = 0; i < 5;i++)
+			{
+				if(alarmEnabled[i] != 2)
+					alarmCount++;
+			}
+			alarmsArray[alarmCount];
+			temp = 0;
+			for (int i = 0; i < 5;i++)
+			{
+				if(alarmEnabled[i] != 2)
+				{
+					alarmsArray[temp] = i;
+					temp++;
+				}
+			}
+		}
+	}
+}
+int8_t MAKERphone::clockAlarmMenu(uint8_t* alarmsArray, uint8_t length) {
+	uint8_t offset = 4;
+	uint8_t cursor = 0;
+	int32_t cameraY = 0;
+	int32_t cameraY_actual = 0;
+	dataRefreshFlag = 0;
+
+	uint8_t boxHeight;
+	boxHeight = 30; //actually 2 less than that
+	while (1) {
+		while (!update());
+		display.fillScreen(0xFC92);
+		display.setCursor(0, 0);
+		cameraY_actual = (cameraY_actual + cameraY) / 2;
+		if (cameraY_actual - cameraY == 1) {
+			cameraY_actual = cameraY;
+		}
+
+		for (uint8_t i = 0; i < length; i++) {
+			if(i > 0)
+				clockAlarmMenuDrawBox(alarmsArray[i-1], i, cameraY_actual);
+			else
+			{
+				uint8_t temp = y;
+				temp += i * boxHeight + offset;
+				display.fillRect(2, temp + 1, display.width() - 4, boxHeight-2,TFT_DARKGREY);
+				display.setTextColor(TFT_WHITE);
+				display.setTextFont(2);
+				display.setTextSize(3);
+				display.setCursor(0, temp-11);
+				display.printCenter("+");
+			}
+		}
+		uint8_t y = cameraY_actual;
+		uint8_t i = cursor;
+		if (millis() % 500 <= 250);
+		else
+		{
+			y += i * boxHeight + offset;
+			display.drawRect(0, y-1, display.width()-1, boxHeight+2, TFT_RED);
+			display.drawRect(1, y, display.width()-3, boxHeight, TFT_RED);
+		}
+		if (buttons.released(BTN_A)) {   //BUTTON CONFIRM
+			gui.osc->note(75, 0.05);
+			gui.osc->play();
+			while (!update());// Exit when pressed
+			break;
+		}
+
+		if (buttons.released(BTN_UP)) {  //BUTTON UP
+			gui.osc->note(75, 0.05);
+			gui.osc->play();
+			if (cursor == 0) {
+				cursor = length - 1;
+				if (length > 6) {
+					cameraY = -(cursor - 2) * boxHeight;
+				}
+			}
+			else {
+				cursor--;
+				if (cursor > 0 && (cursor * boxHeight + cameraY + offset) < boxHeight) {
+					cameraY += 15;
+				}
+			}
+		}
+
+		if (buttons.released(BTN_DOWN)) { //BUTTON DOWN
+			gui.osc->note(75, 0.05);
+			gui.osc->play();
+			cursor++;
+			if ((cursor * boxHeight + cameraY + offset) > 128) {
+				cameraY -= boxHeight;
+			}
+			if (cursor >= length) {
+				cursor = 0;
+				cameraY = 0;
+
+			}
+		}
+
+
+		if (buttons.released(BTN_B) == 1) //BUTTON BACK
+		{
+			return -1;
+		}
+	}
+	return cursor;
+}
+void MAKERphone::clockAlarmMenuDrawBox(uint8_t alarmIndex, uint8_t i, int32_t y) {
+	uint8_t offset = 4;
+	uint8_t boxHeight;
+	boxHeight = 30;
+	y += i * boxHeight + offset;
+	if (y < 0 || y > display.width()) {
+		return;
+	}
+	display.fillRect(2, y + 1, display.width() - 4, boxHeight-2,TFT_DARKGREY);
+	display.setTextFont(2);
+	display.setTextSize(2);
+	display.setCursor(5, y-1);
+	if (alarmHours[alarmIndex] < 10)
+		display.print("0");
+	display.print(alarmHours[alarmIndex]);
+	display.print(":");
+	if (alarmMins[alarmIndex] < 10)
+		display.print("0");
+	display.print(alarmMins[alarmIndex]);
+	display.setTextSize(1);
+	display.setCursor(130, y + 8);
+	display.print(alarmEnabled[alarmIndex] ? "ON" : "OFF");
+
+	display.setCursor(80, y + 12);
+	display.print(alarmRepeat[alarmIndex] ? "repeat" : "once");
+}
+void MAKERphone::clockAlarmEdit(uint8_t index)
 {
 	bool enabled = 0;
 	bool repeat = 0;
@@ -7648,7 +7865,22 @@ void MAKERphone::clockAlarm()
 	uint32_t blinkMillis = millis();
 	uint32_t color = TFT_BLACK;
 	bool blinkState = 1;
-	while(!buttons.released(BTN_B))
+	String parsedAlarmTrack = "alarm.wav";
+	String localAlarmTrack = "/Music/alarm.wav";
+
+	if(alarmEnabled[index] != 2)
+	{
+		hours = alarmHours[index];
+		mins = alarmMins[index];
+		enabled = alarmEnabled[index];
+		localAlarmTrack = alarmTrack[index];
+		for(int i = 0; i < 7; i++)
+		{
+			days[i] = alarmRepeatDays[index][i];
+		}
+		repeat = alarmRepeat[index];
+	}
+	while(1)
 	{
 		color = TFT_BLACK;
 		key = buttons.kpdNum.getKey();
@@ -7707,9 +7939,9 @@ void MAKERphone::clockAlarm()
 			{
 				display.setCursor(42, 45);
 				display.setTextColor(TFT_DARKGREY);
-				display.print("once/");
+				display.print("once");
 				display.setTextColor(TFT_BLACK);
-				display.print("repeat");
+				display.print("/repeat");
 				display.setCursor(85,63);
 				display.printCenter("M T W T F S S");
 				temp = "";
@@ -7742,7 +7974,7 @@ void MAKERphone::clockAlarm()
 		display.drawRect(20, 98, 120, 20, color);
 		display.drawRect(19, 97, 122, 22, color);
 		display.setCursor(0,100);
-		display.printCenter("alarm.wav");
+		display.printCenter(parsedAlarmTrack);
 		if(millis()-blinkMillis >= 350)
 		{
 			blinkState = !blinkState;
@@ -7836,19 +8068,84 @@ void MAKERphone::clockAlarm()
 			break;
 
 			case 2:
+				if(!blinkState)
+					display.fillRect(29 + 14*cursorX, 64, 15, 15, 0xFC92);
+				if(buttons.released(BTN_RIGHT) && cursorX < 6)
+				{
+					cursorX++;
+					blinkState = 0;
+					blinkMillis = millis();
+					while(!update());
+				}
+				if(buttons.released(BTN_LEFT) && cursorX > 0)
+				{
+					cursorX--;
+					blinkState = 0;
+					blinkMillis = millis();
+					while(!update());
+				}
+				if(buttons.released(BTN_A))
+				{
+					days[cursorX] = !days[cursorX];
+					blinkState = 1;
+					blinkMillis = millis();
+					while(!update());
+				}
 			break;
 
 			case 3:
-			break;
+				if(!blinkState)
+				{
+					display.drawRect(20, 98, 120, 20, 0xFC92);
+					display.drawRect(19, 97, 122, 22, 0xFC92);
+				}
+				if(buttons.released(BTN_A))
+				{
+					while(!update());
+					display.setFreeFont(TT1);
+					listAudio("/Music", 1);
+					int16_t i = 0;
+					if(audioCount == 0)
+					{
+						display.fillScreen(0xFC92);
+						display.setCursor(0, display.height()/2 - 16);
+						display.setTextFont(2);
+						display.printCenter("No audio tracks found!");
+						uint32_t tempMillis = millis();
+						while(millis() < tempMillis + 2000)
+						{
+							update();
+							if(buttons.pressed(BTN_A) || buttons.pressed(BTN_B))
+							{
+								while(!buttons.released(BTN_A) && !buttons.released(BTN_B))
+									update();
+								break;
+							}
+						}
+					}
+					else
+					{
+						i = mp3Menu("Select alarm:", audioFiles, audioCount);
+						display.setTextColor(TFT_BLACK);
+						if (i >= 0)
+							localAlarmTrack = audioFiles[i];
+						uint16_t start = 0;
+						while (localAlarmTrack.indexOf("/", start) != -1)
+							start = localAlarmTrack.indexOf("/", start) + 1;
+						parsedAlarmTrack = localAlarmTrack.substring(start);
+					}
 
-			case 4:
+				}
+
 			break;
 		}
 		if(buttons.released(BTN_UP) && cursorY>0)
 		{
+			if (cursorY == 3 && !repeat)
+				cursorY--;
 			cursorY--;
 			cursorX = 0;
-			blinkState = 1;
+			blinkState = 0;
 			blinkMillis = millis();
 			while(!update());
 		}
@@ -7858,7 +8155,7 @@ void MAKERphone::clockAlarm()
 				cursorY++;
 			cursorY++;
 			cursorX = 0;
-			blinkState = 1;
+			blinkState = 0;
 			blinkMillis = millis();
 			while(!update());
 
@@ -7873,16 +8170,28 @@ void MAKERphone::clockAlarm()
 			display.drawRect(13, 44, 136, 40, TFT_BLACK);
 			display.fillRect(15, 46, 132, 36, 0xFC92);
 			display.setCursor(47, 48);
-			display.printCenter("Save changes and exit?");
+			display.printCenter("Save and exit?");
 			display.setCursor(47, 61);
-			display.printCenter("A: yes			B:cancel");
+			display.printCenter("A: yes    B:cancel");
 			while(1)
 			{
 				if(buttons.released(BTN_B))
+				{
+					while(!update());
 					break;
+				}
 				if(buttons.released(BTN_A))
 				{
 					while(!update());
+					alarmHours[index] = hours;
+					alarmMins[index] = mins;
+					alarmEnabled[index] = enabled;
+					alarmTrack[index] = localAlarmTrack;
+					for(int i = 0; i < 7; i++)
+					{
+						alarmRepeatDays[index][i] = days[i];
+					}
+					alarmRepeat[index] = repeat;
 					//save RTC and exit
 					return;
 				}
@@ -7891,6 +8200,7 @@ void MAKERphone::clockAlarm()
 		}
 		update();
 	}
+	
 }
 void MAKERphone::clockTimer()
 {

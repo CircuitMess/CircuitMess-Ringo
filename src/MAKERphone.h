@@ -259,10 +259,10 @@ class MAKERphone:public Buttons, public GUI
 	uint8_t cursor = 0;
 	int32_t cameraY = 0;
 	int32_t cameraY_actual = 0;
-	String mp3Files[255];
-	uint8_t mp3Count = 0;
+	String audioFiles[255];
+	uint8_t audioCount = 0;
 	int16_t mp3Menu(const char* title, String* items, uint8_t length);
-	void listMP3(const char * dirname, uint8_t levels);
+	void listAudio(const char * dirname, uint8_t levels);
 	void mp3player(String songName);
 	void mediaApp();
 	int8_t mediaMenu(String* title, uint8_t length);
@@ -378,12 +378,18 @@ class MAKERphone:public Buttons, public GUI
 	void listRingtones(const char * dirname, uint8_t levels);
 	void listNotifications(const char * dirname, uint8_t levels);
 
+	//Clock app
 	void clockApp();
 	void clockStopwatch();
 	int8_t clockMenu(String* title, uint8_t length);
 	void clockMenuDrawBox(String title, uint8_t i, int32_t y);
 	void clockAlarm();
+	int8_t clockAlarmMenu(uint8_t* alarmsArray, uint8_t length);
+	void clockAlarmMenuDrawBox(uint8_t alarmIndex, uint8_t i, int32_t y);
+	void clockAlarmEdit(uint8_t index);
+	String alarmTrack[5] = {"alarm.wav", "alarm.wav", "alarm.wav", "alarm.wav", "alarm.wav"};
 	void clockTimer();
+	
 	GUI gui;
 	Buttons buttons;
 	//Display display;
@@ -497,6 +503,19 @@ private:
 		TFT_GREENYELLOW,
 		TFT_PINK
 	};
+	uint8_t alarmHours[5];
+	uint8_t alarmMins[5];
+	uint8_t alarmEnabled[5] = {2, 2, 2, 2, 2};
+	bool alarmRepeat[5] = {0,0,0,0,0};
+	bool alarmRepeatDays[5][7] = {
+		{0, 0, 0, 0, 0},
+		{0, 0, 0, 0, 0},
+		{0, 0, 0, 0, 0},
+		{0, 0, 0, 0, 0},
+		{0, 0, 0, 0, 0}
+	};
+	
+
 };
 
 #endif
