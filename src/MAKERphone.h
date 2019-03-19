@@ -388,6 +388,8 @@ class MAKERphone:public Buttons, public GUI
 	void clockAlarmMenuDrawBox(uint8_t alarmIndex, uint8_t i, int32_t y);
 	void clockAlarmEdit(uint8_t index);
 	String alarmTrack[5] = {"alarm.wav", "alarm.wav", "alarm.wav", "alarm.wav", "alarm.wav"};
+	void saveAlarms();
+	void loadAlarms();
 	void clockTimer();
 	
 	GUI gui;
