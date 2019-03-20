@@ -2,8 +2,8 @@
 void checkbuttons() {
 	if (shipx < 0) shipx = 0;
 
-	if (mp.buttons.repeat(JOYSTICK_A, 1) && shipx > 0 && deadcounter == -1) { shipx = --shipx; }
-	if (mp.buttons.repeat(JOYSTICK_C, 1) and shipx < Maxwhidth and deadcounter == -1) { shipx = ++shipx; }
+	if (mp.buttons.repeat(BTN_LEFT, 1) && shipx > 0 && deadcounter == -1) { shipx = --shipx; }
+	if (mp.buttons.repeat(BTN_RIGHT, 1) and shipx < Maxwhidth and deadcounter == -1) { shipx = ++shipx; }
 	//if (buttonsPressed(BUTTON_MENU)) {
 	//	 gb.titleScreen(F("    Yoda's"),gamelogo);
 	//	gamestatus = "title";
@@ -12,18 +12,15 @@ void checkbuttons() {
 		shotx = shipx + 3;
 		shoty = 43;
 		for (uint8_t i = 0; i < 8; i++){
-      mp.pixels.setPixelColor(i, mp.hslRed);
+      mp.leds[i] = CRGB(255,0,0);
     //mp.pixels.show();
     pixelsTimer=millis();
     pixelsState=1;  
 	  }
 	}
   if(millis()-pixelsTimer >= 50 && pixelsState==1){
-    for (uint8_t i = 0; i < 8; i++)
-      mp.pixels.setPixelColor(i, mp.hslBlack);
-    //mp.pixels.show();
-    pixelsState=0;
-	}
+    FastLED.clear();
+  }
 }
 //----------------------------------------------------------------------------
 void drawplayership() {
@@ -321,7 +318,7 @@ void starsSetup()
         // Randomize its position and speed.
         stars[i].randomize(0, 80, 0, 64, STAR_SPEED_MIN, STAR_SPEED_MAX);
     }
-}  
+} 
 //----------------------------------------------------------------------------
 void showtitle() {
   mp.display.fillScreen(TFT_BLACK);
@@ -360,7 +357,7 @@ void showtitle() {
 	mp.display.cursor_x = 9;
 	mp.display.cursor_y = 56;
 	mp.display.setTextColor(TFT_RED);
-	mp.display.print(" A:PLAY   MENU:QUIT");
+	mp.display.print(" A:PLAY      B:QUIT");
 	if (mp.buttons.released(BTN_A)) {
     Serial.println("NEW GAME");
 		gamestatus = "newgame";

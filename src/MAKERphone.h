@@ -55,25 +55,20 @@ extern HardwareSerial Serial1;
 //Fonts and sprites to use
 #include "utility/Free_Fonts.h"
 #include "utility/sprites.c"
+
+
 #include "utility/JPEGDecoder.h"
-
-//Setup for MP3 playback
-
-//#include <AudioFileSource.h>
-//#include <AudioFileSourceID3.h>
-// #include <AudioGeneratorMP3.h>
-//#include <AudioOutputI2S.h>
-//#include <AudioFileSourceSD.h>
-//#include <AudioFileSourceBuffer.h>
-// #include <AudioGeneratorWAV.h>
-//#include "src/ESP8266Audio.h"
-
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
+#include "esp_system.h"
+#include "utility/soundLib/MPAudioDriver.h" 
+#include "utility/soundLib/MPWavLib.h" 
 
 //PCF8574 0x21 defines (keys)
-#define JOYSTICK_A 0
-#define JOYSTICK_B 1
-#define JOYSTICK_C 2
-#define JOYSTICK_D 3
+#define BTN_LEFT 0
+#define BTN_DOWN 1
+#define BTN_RIGHT 2
+#define BTN_UP 3
 #define JOYSTICK_CENTER 4
 #define BTN_A 5
 #define BTN_B 6
@@ -122,11 +117,11 @@ extern HardwareSerial Serial1;
 #define smsNumber 22
 class Buttons
 {
-public:
-	///////////////////
-	//Keypad variables
-	//////////////////
-
+private:
+	byte rowPins[ROWS] = { 0, 1, 2, 3 }; //connect to the row pinouts of the keypad
+	byte colPins[COLS] = { 4, 5, 6, 7 }; //connect to the column pinouts of the keypad
+	int i2caddress = 0x21;
+	int i2caddressNum = 0x20;
 	char keys[4][3] = {
 	{ '1','2','3' },
 	{ '4','5','6' },
@@ -139,10 +134,13 @@ public:
 	{ '7', '8', '9', 'C' },
 	{ '*', '0', '#', 'D' }
 	};
-	byte rowPins[ROWS] = { 0, 1, 2, 3 }; //connect to the row pinouts of the keypad
-	byte colPins[COLS] = { 4, 5, 6, 7 }; //connect to the column pinouts of the keypad
-	int i2caddress = 0x21;
-	int i2caddressNum = 0x20;
+
+public:
+	///////////////////
+	//Keypad variables
+	//////////////////
+
+
 	Keypad_I2C kpd = Keypad_I2C(makeKeymap(keys), rowPins, colPins, ROWS, COLS, i2caddress);
 	Keypad_I2C kpdNum = Keypad_I2C(makeKeymap(keysNum), rowPins, colPins, ROWS, COLS, i2caddressNum);
 	bool pressed(uint8_t button);
@@ -154,45 +152,53 @@ public:
 	uint16_t states[NUM_BTN];
 	void begin();
 
+
 };
 class GUI {
-	public:
-		//main menu GUI
-	uint8_t drawCursor(uint8_t xoffset, uint8_t yoffset, uint8_t xelements, uint8_t yelements, uint8_t xstart, uint8_t ystart);
-	int8_t drawBigIconsCursor(uint8_t xoffset, uint8_t yoffset, uint8_t xelements, uint8_t yelements, uint8_t xstart, uint8_t ystart);
-	//generic menu GUI
-	void menuDrawBox(String text, uint8_t i, int32_t y);
-	void menuDrawCursor(uint8_t i, int32_t y);
-	int8_t menu(const char* title, String* items, uint8_t length);
-	//lock screen notifications
-	void drawNotificationWindow(uint8_t x, uint8_t y, uint8_t width, uint8_t height, String text); 
-	//popup GUI
-	void popup(String text, uint8_t duration);
-	void updatePopup();
-	String popupText;
-	uint8_t popupTimeLeft;
-	uint8_t popupTotalTime;
+public:
+	//main menu GUI
+  int16_t scrollingMainMenu();
+  uint8_t drawCursor(uint8_t xoffset, uint8_t yoffset, uint8_t xelements, uint8_t yelements, uint8_t xstart, uint8_t ystart);
+  int8_t drawBigIconsCursor(uint8_t xoffset, uint8_t yoffset, uint8_t xelements, uint8_t yelements, uint8_t xstart, uint8_t ystart);
+  //generic menu GUI
+  void menuDrawBox(String text, uint8_t i, int32_t y);
+  void menuDrawCursor(uint8_t i, int32_t y);
+  int8_t menu(const char* title, String* items, uint8_t length);
+  //lock screen notifications
+  void drawNotificationWindow(uint8_t x, uint8_t y, uint8_t width, uint8_t height, String text);
+  //popup GUI
+  void popup(String text, uint8_t duration);
+  void updatePopup();
+  void homePopup(bool animation = 1);
+  String popupText;
+  uint8_t popupTimeLeft;
+  uint8_t popupTotalTime;
 
-	private:
-	uint8_t cursorX = 0;
-	uint8_t cursorY = 0;
-	bool cursorState = 1;
-	uint8_t index;
-	bool previousButtonState = 0;
-	uint8_t cursor = 0;
-	int32_t cameraY = 0;
-	int32_t cameraY_actual = 0;
+private:
+  friend class MAKERphone;
+  bool cursorState = 1;
+  Oscillator* osc = new Oscillator();
+  const char *popupHomeItems[6] = {
+	"Volume",
+	"Home",
+	"Screen brightness",
+	"Screenshot",
+	"Date & time",
+	"LED brightness"
+	};
+  bool previousButtonState = 0;
+  uint8_t cursor = 0;
+  int32_t cameraY = 0;
+  int32_t cameraY_actual = 0;
 };
 
-class MAKERphone:public Buttons, public GUI, private Audio
+
+
+class MAKERphone:public Buttons, public GUI
 {
-public:
-	// XT_DAC_Audio_Class DacAudio = XT_DAC_Audio_Class(25,0);    // Create the main player class object. 
-    //                                   // Use GPIO 25, one of the 2 DAC pins and timer 0
-                                      
-	// XT_Wav_Class StarWars = XT_Wav_Class(StarWarsWav);   // create an object of type XT_Wav_Class that is used by 
-                                      // the dac audio class (above), passing wav data as parameter.
-	SdFat SD;
+	friend class GUI;
+
+  public:
 	TFT_eSPI tft = TFT_eSPI();  // Invoke library, pins defined in User_Setup.h
 	TFT_eSprite display = TFT_eSprite(&tft);
 	TFT_eSprite buf = TFT_eSprite(&tft);
@@ -214,7 +220,8 @@ public:
 	void lockScreen();
 	void mainMenu();
 	void bigIconsMainMenu();
-	void listDir(const char * dirname, uint8_t levels);
+	void listDirectories(const char *dirname);
+	void listBinaries(const char * dirname, uint8_t levels);
 	void sleep();
 	void checkSMS();
 	void incomingCall();
@@ -244,21 +251,7 @@ public:
 	void updateFromFS(String FilePath);
 
 
-	//variables used for parsing SMS
-	int16_t y;
-	String smsContent[smsNumber];
-	String phoneNumber[smsNumber];
-	String tempDate[smsNumber];
-	uint16_t smsYear[smsNumber];
-	uint8_t smsDay[smsNumber];
-	uint8_t smsMonth[smsNumber];
-	uint8_t smsMinute[smsNumber];
-	uint8_t smsSecond[smsNumber];
-	uint8_t smsHour[smsNumber];
-	uint32_t start = 0;
-	uint32_t end = 0;
-	String input;
-	String buffer;
+	
 
 	//NeoPixels...
 	int numberOfColors = 19;
@@ -269,11 +262,11 @@ public:
 	uint8_t cursor = 0;
 	int32_t cameraY = 0;
 	int32_t cameraY_actual = 0;
-	String mp3Files[255];
-	uint8_t mp3Count = 0;
+	String audioFiles[255];
+	uint8_t audioCount = 0;
 	int16_t mp3Menu(const char* title, String* items, uint8_t length);
-	void listMP3(const char * dirname, uint8_t levels);
-	void mp3player(uint16_t index);
+	void listAudio(const char * dirname, uint8_t levels);
+	void mp3player(String songName);
 	void mediaApp();
 	int8_t mediaMenu(String* title, uint8_t length);
 	void mediaMenuDrawBox(String title, uint8_t i, int32_t y);
@@ -325,7 +318,7 @@ public:
 	uint16_t sleepTimeActual = 0; //in seconds
 	uint8_t backgroundIndex = 0;
 	uint8_t volume = 10; //volume 0-14
-
+	uint8_t pixelsBrightness = 5; //0-5
 	bool pinLock;
 	uint16_t pinNumber = 1234;
 	bool simInserted = 0;
@@ -388,21 +381,41 @@ public:
 	void listRingtones(const char * dirname, uint8_t levels);
 	void listNotifications(const char * dirname, uint8_t levels);
 
+	//Clock app
+	void clockApp();
+	void clockStopwatch();
+	int8_t clockMenu(String* title, uint8_t length);
+	void clockMenuDrawBox(String title, uint8_t i, int32_t y);
+	void clockAlarm();
+	int8_t clockAlarmMenu(uint8_t* alarmsArray, uint8_t length);
+	void clockAlarmMenuDrawBox(uint8_t alarmIndex, uint8_t i, int32_t y);
+	void clockAlarmEdit(uint8_t index);
+	String alarmTrack[5] = {"alarm.wav", "alarm.wav", "alarm.wav", "alarm.wav", "alarm.wav"};
+	void saveAlarms();
+	void loadAlarms();
+	void clockTimer();
+	
 	GUI gui;
 	Buttons buttons;
 	//Display display;
 
 	////////////////////////////////Main_menu.ino variables
-	String titles[6] = {
+	String titles[10] = {
 	"Messages",
 	"Media",
 	"Contacts",
 	"Settings",
 	"Phone",
 	"Apps",
+	"Clock",
+	"Calculator",
+	"Flashlight",
+	"Calendar"
 	};
 	String BinaryFiles[255];
 	uint8_t binaryCount = 0;//Number of binary files available for loading
+	String directories[255];
+	uint8_t directoryCount = 0;//Number of binary files available for loading
 
 	//update() variables
 
@@ -418,6 +431,10 @@ public:
 	bool SDinsertedFlag = 0;
 	bool popupMenuFlag = 1;
 	uint32_t audioMillis = millis();
+
+	//SAVE manipulation
+	JsonArray &getJSONfromSAV(const char *path);
+	void saveJSONtoSAV(const char *path, JsonArray &json);
 	/////////////////////////////////////////
 	///////////////COLLISION//////////////////
 	//////////////////////////////////////////
@@ -427,15 +444,33 @@ public:
 	bool collidePointCircle(int16_t pointX, int16_t pointY, int16_t centerX, int16_t centerY, int16_t r);  // Returns TRUE if the point overlaps the circle
 
 private:
+	SdFat SDFAT;
+	
 	int multi_tap(byte key);
 	bool newMessage = 0;
 	uint8_t currentMessageNumber;
-  void performUpdate(Stream &updateSource, size_t updateSize);
+  	void performUpdate(Stream &updateSource, size_t updateSize);
 	uint8_t coverWidth = 45;
 	uint8_t coverHeight = 45;
 	bool mute = false;
 	uint8_t timesRemaining;
 
+	//variables used for parsing SMS
+	int16_t y;
+	String smsContent[smsNumber];
+	String phoneNumber[smsNumber];
+	String tempDate[smsNumber];
+	uint16_t smsYear[smsNumber];
+	uint8_t smsDay[smsNumber];
+	uint8_t smsMonth[smsNumber];
+	uint8_t smsMinute[smsNumber];
+	uint8_t smsSecond[smsNumber];
+	uint8_t smsHour[smsNumber];
+	uint32_t start = 0;
+	uint32_t end = 0;
+	String input;
+	String buffer;
+	
 	//SD functions
 	String readFile(const char * path);
 	void writeFile(const char * path, const char * message);
@@ -450,31 +485,43 @@ private:
 	bool clockDy, clock12h, clockpm;
 	void updateTimeGSM();
 	void updateTimeRTC();
-
+	bool inHomePopup = 0;
+	void takeScreenshot();
+	bool screenshotFlag = 0;
 	int colorArray[19] = {
-	TFT_BLACK,
-	TFT_NAVY,
-	TFT_DARKGREEN,
-	TFT_DARKCYAN,
-	TFT_MAROON,
-	TFT_PURPLE,
-	TFT_OLIVE,
-	TFT_LIGHTGREY,
-	TFT_DARKGREY,
-	TFT_BLUE,
-	TFT_GREEN,
-	TFT_CYAN,
-	TFT_RED,
-	TFT_MAGENTA,
-	TFT_YELLOW,
-	TFT_WHITE,
-	TFT_ORANGE,
-	TFT_GREENYELLOW,
-	TFT_PINK
+		TFT_BLACK,
+		TFT_NAVY,
+		TFT_DARKGREEN,
+		TFT_DARKCYAN,
+		TFT_MAROON,
+		TFT_PURPLE,
+		TFT_OLIVE,
+		TFT_LIGHTGREY,
+		TFT_DARKGREY,
+		TFT_BLUE,
+		TFT_GREEN,
+		TFT_CYAN,
+		TFT_RED,
+		TFT_MAGENTA,
+		TFT_YELLOW,
+		TFT_WHITE,
+		TFT_ORANGE,
+		TFT_GREENYELLOW,
+		TFT_PINK
 	};
+	uint8_t alarmHours[5];
+	uint8_t alarmMins[5];
+	uint8_t alarmEnabled[5] = {2, 2, 2, 2, 2};
+	bool alarmRepeat[5] = {0,0,0,0,0};
+	bool alarmRepeatDays[5][7] = {
+		{0, 0, 0, 0, 0},
+		{0, 0, 0, 0, 0},
+		{0, 0, 0, 0, 0},
+		{0, 0, 0, 0, 0},
+		{0, 0, 0, 0, 0}
+	};
+	
 
-	//SIM800 setup
-//	HardwareSerial sim800 = HardwareSerial(1);
 };
 
 #endif

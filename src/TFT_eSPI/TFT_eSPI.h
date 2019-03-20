@@ -373,7 +373,7 @@ swap_coord(T& a, T& b) { T t = a; a = b; b = t; }
 #ifndef min
   #define min(a,b) (((a) < (b)) ? (a) : (b))
 #endif
-
+#include "../utility/SD/SD/src/SD.h"
 // This structure allows sketches to retrieve the user setup parameters at runtime
 // by calling getSetup(), zero impact on code size unless used, mainly for diagnostics
 typedef struct
@@ -568,6 +568,7 @@ class TFT_eSPI : public Print {
            // Read the colour of a pixel at x,y and return value in 565 format
   uint16_t readPixel(int32_t x0, int32_t y0);
 
+
            // The next functions can be used as a pair to copy screen blocks (or horizontal/vertical lines) to another location
            // Read a block of pixels to a data buffer, buffer is 16 bit and the array size must be at least w * h
   void     readRect(uint32_t x0, uint32_t y0, uint32_t w, uint32_t h, uint16_t *data);
@@ -646,19 +647,24 @@ class TFT_eSPI : public Print {
            textsize,  // Current font size multiplier
            textdatum, // Text reference datum
            rotation;  // Display rotation (0-3)
+
+
 	//////////////////////
   //added functions:
   /////////////////////
   void drawBitmap(int16_t x, int16_t y, const byte *bitmap, uint16_t color = TFT_BLACK, uint8_t scale = 1);
   //void drawBitmap(int8_t x, int8_t y, const byte *bitmap);
-  void drawIcon(const unsigned short* icon, int16_t x, int16_t y, uint16_t width, uint16_t height, uint8_t scale = 1);
+  void drawIcon(const unsigned short* icon, int16_t x, int16_t y, uint16_t width, uint16_t height, uint8_t scale = 1, int32_t backgroundColor = -1);
   void printCenter(const char* text);
   void printCenter(String text);
+  void printCenter(uint32_t text);
   void printCenter(int text);
   void printCenter(float text);
   void printCenter(char text);
- private:
 
+
+private:
+  
   inline void spi_begin() __attribute__((always_inline));
   inline void spi_end()   __attribute__((always_inline));
 
@@ -780,6 +786,8 @@ public:
 
 	// Read the colour of a pixel at x,y and return value in 565 format
 	uint16_t readPixel(int32_t x0, int32_t y0);
+	uint16_t readPixelRGB(int32_t x0, int32_t y0);
+
 
 	// Write an image (colour bitmap) to the sprite
 	void     pushImage(int32_t x0, int32_t y0, uint32_t w, uint32_t h, uint16_t *data);
@@ -810,8 +818,26 @@ public:
 	void     printToSprite(char *cbuffer, int len);
 	int16_t  printToSprite(int16_t x, int16_t y, uint16_t index);
 
-private:
 
+    void drawBmp(SDAudioFile bmpFS, int16_t x, int16_t y, uint8_t scale = 1);
+    void drawBmp(const char * path, int16_t x, int16_t y, uint8_t scale = 1);
+    void drawBmp(String path, int16_t x, int16_t y, uint8_t scale = 1);
+    
+private:
+  uint16_t read16(SDAudioFile &f) {
+    uint16_t result;
+    ((uint8_t *)&result)[0] = f.read(); // LSB
+    ((uint8_t *)&result)[1] = f.read(); // MSB
+    return result;
+  }
+  uint32_t read32(SDAudioFile &f) {
+    uint32_t result;
+    ((uint8_t *)&result)[0] = f.read(); // LSB
+    ((uint8_t *)&result)[1] = f.read();
+    ((uint8_t *)&result)[2] = f.read();
+    ((uint8_t *)&result)[3] = f.read(); // MSB
+    return result;
+  }
 	TFT_eSPI *_tft;
 
 protected:
