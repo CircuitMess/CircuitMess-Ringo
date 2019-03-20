@@ -30,19 +30,8 @@ Authors:
 extern HardwareSerial Serial1;
 #include "TFT_eSPI/TFT_eSPI.h" // Graphics and font library for ST7735 driver chip
 #include <SPI.h>
-// #include "utility/XT_DAC_Audio.h"
-#include "utility/Audio/Audio.h"
 #include "utility/ArduinoJson.h"
 
-//Includes for SD firmware update
-//#include <SysCall.h>
-//#include <sdios.h>
-//#include <SdFatConfig.h>
-//#include <SdFat.h>
-//#include <MinimumSerial.h>
-//#include <FreeStack.h>
-//#include <BlockDriver.h>
-//SdFatSdio SD;
 //File file;
 #include "utility/SdFat.h"
 #include <Update.h>
@@ -208,8 +197,6 @@ class MAKERphone:public Buttons, public GUI
 	void setResolution(bool res);
 	bool spriteCreated = 0;
 
-	Audio audio;
-
 	void begin(bool splash = 1);
 	void test();
 	void tone2(int pin, int freq, int duration);
@@ -264,9 +251,9 @@ class MAKERphone:public Buttons, public GUI
 	int32_t cameraY_actual = 0;
 	String audioFiles[255];
 	uint8_t audioCount = 0;
-	int16_t mp3Menu(const char* title, String* items, uint8_t length);
+	int16_t audioPlayerMenu(const char* title, String* items, uint8_t length);
 	void listAudio(const char * dirname, uint8_t levels);
-	void mp3player(String songName);
+	void audioPlayer(uint16_t index);
 	void mediaApp();
 	int8_t mediaMenu(String* title, uint8_t length);
 	void mediaMenuDrawBox(String title, uint8_t i, int32_t y);
