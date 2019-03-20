@@ -657,6 +657,7 @@ class TFT_eSPI : public Print {
   void drawIcon(const unsigned short* icon, int16_t x, int16_t y, uint16_t width, uint16_t height, uint8_t scale = 1, int32_t backgroundColor = -1);
   void printCenter(const char* text);
   void printCenter(String text);
+  void printCenter(uint32_t text);
   void printCenter(int text);
   void printCenter(float text);
   void printCenter(char text);

@@ -4839,6 +4839,16 @@ void TFT_eSPI::printCenter(String text)
 	setCursor(int((width() - textLength) / 2), cursorBuffer); //TO-DO: change this to the sprite width value
 	print(text);
 }
+void TFT_eSPI::printCenter(uint32_t text)
+{
+	int8_t cursorBuffer = cursor_y;
+	setCursor(-50, -50);
+	uint16_t textLength = cursor_x;
+	print(text);
+	textLength = cursor_x - textLength;
+	setCursor(int((width() - textLength) / 2), cursorBuffer); //TO-DO: change this to the sprite width value
+	print(text);
+}
 void TFT_eSPI::printCenter(int text)
 {
 	int8_t cursorBuffer = cursor_y;
