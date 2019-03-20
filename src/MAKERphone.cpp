@@ -7716,6 +7716,34 @@ void MAKERphone::clockAlarm()
 		}
 		else if(index == -2)
 			break;
+		else if(index < -2)
+		{
+			index = alarmsArray[-(index + 4)];
+			Serial.printf("Deleting alarm on index %d\n", index);
+			alarmEnabled[index] = 2;
+			alarmHours[index] = 12;
+			alarmMins[index] = 0;
+			alarmRepeat[index] = 0;
+			for (int i = 0;i<7;i++)
+				alarmRepeatDays[index][i] = 0;
+			alarmTrack[index] = "/alarm.wav";
+			alarmCount = 0;
+			for (int i = 0; i < 5;i++)
+			{
+				if(alarmEnabled[i] != 2)
+					alarmCount++;
+			}
+			temp = 0;
+			for (int i = 0; i < 5;i++)
+			{
+				if(alarmEnabled[i] != 2)
+				{
+					alarmsArray[temp] = i;
+					temp++;
+				}
+			}
+			saveAlarms();
+		}
 		else
 		{
 			clockAlarmEdit(index);
@@ -7725,7 +7753,6 @@ void MAKERphone::clockAlarm()
 				if(alarmEnabled[i] != 2)
 					alarmCount++;
 			}
-			alarmsArray[alarmCount];
 			temp = 0;
 			for (int i = 0; i < 5;i++)
 			{
@@ -7745,11 +7772,12 @@ int8_t MAKERphone::clockAlarmMenu(uint8_t* alarmsArray, uint8_t length) {
 	int32_t cameraY_actual = 0;
 	uint8_t bottomBezel = 30;
 	dataRefreshFlag = 0;
-
+	char key;
 	uint8_t boxHeight;
-	boxHeight = 26; //actually 2 less than that
+	boxHeight = 28; //actually 2 less than that
 	while (1) {
 		while (!update());
+		key = buttons.kpdNum.getKey();
 		display.fillScreen(0xFC92);
 		display.setCursor(0, 0);
 		cameraY_actual = (cameraY_actual + cameraY) / 2;
@@ -7758,21 +7786,22 @@ int8_t MAKERphone::clockAlarmMenu(uint8_t* alarmsArray, uint8_t length) {
 		}
 
 		for (uint8_t i = 0; i < length; i++) {
-			if(i > 0)
+			if(i < 1)
 			{
-				if(cameraY_actual < 128-bottomBezel)
-					clockAlarmMenuDrawBox(alarmsArray[i-1], i, cameraY_actual);
-			}
-			else
-			{
-				uint8_t temp = y;
+				uint8_t temp = cameraY_actual;
 				temp += i * boxHeight + offset;
 				display.fillRect(2, temp + 1, display.width() - 4, boxHeight-2,TFT_DARKGREY);
 				display.setTextColor(TFT_WHITE);
 				display.setTextFont(2);
 				display.setTextSize(3);
-				display.setCursor(0, temp-13);
+				display.setCursor(0, temp-12);
 				display.printCenter("+");
+				
+			}
+			else
+			{
+				if(cameraY_actual < 128-bottomBezel)
+					clockAlarmMenuDrawBox(alarmsArray[i-1], i, cameraY_actual);
 			}
 		}
 		uint8_t y = cameraY_actual;
@@ -7784,8 +7813,8 @@ int8_t MAKERphone::clockAlarmMenu(uint8_t* alarmsArray, uint8_t length) {
 			display.drawRect(0, y-1, display.width()-1, boxHeight+2, TFT_RED);
 			display.drawRect(1, y, display.width()-3, boxHeight, TFT_RED);
 		}
-		display.fillRect(0,106, 160, 22, 0xFC92);
-		display.setCursor(2, 110);
+		display.fillRect(0,114, 160, 22, 0xFC92);
+		display.setCursor(2, 113);
 		display.setTextFont(2);
 		display.setTextSize(1);
 		display.setTextColor(TFT_BLACK);
@@ -7827,11 +7856,12 @@ int8_t MAKERphone::clockAlarmMenu(uint8_t* alarmsArray, uint8_t length) {
 
 			}
 		}
-		if(buttons.released(BTN_LEFT))
-
-		if (buttons.released(BTN_B) == 1) //BUTTON BACK
-		{
+		
+		if (buttons.released(BTN_B)) //BUTTON BACK
 			return -1;
+		if(key == 'C' && cursor > 0)
+		{
+			return -(cursor + 2);
 		}
 	}
 	return cursor;
@@ -7839,7 +7869,7 @@ int8_t MAKERphone::clockAlarmMenu(uint8_t* alarmsArray, uint8_t length) {
 void MAKERphone::clockAlarmMenuDrawBox(uint8_t alarmIndex, uint8_t i, int32_t y) {
 	uint8_t offset = 1;
 	uint8_t boxHeight;
-	boxHeight = 26;
+	boxHeight = 28;
 	y += i * boxHeight + offset;
 	if (y < 0 || y > display.width()) {
 		return;
@@ -7847,7 +7877,7 @@ void MAKERphone::clockAlarmMenuDrawBox(uint8_t alarmIndex, uint8_t i, int32_t y)
 	display.fillRect(2, y + 1, display.width() - 4, boxHeight-2,TFT_DARKGREY);
 	display.setTextFont(2);
 	display.setTextSize(2);
-	display.setCursor(5, y-3);
+	display.setCursor(5, y-2);
 	if (alarmHours[alarmIndex] < 10)
 		display.print("0");
 	display.print(alarmHours[alarmIndex]);
@@ -7856,10 +7886,10 @@ void MAKERphone::clockAlarmMenuDrawBox(uint8_t alarmIndex, uint8_t i, int32_t y)
 		display.print("0");
 	display.print(alarmMins[alarmIndex]);
 	display.setTextSize(1);
-	display.setCursor(130, y + 6);
+	display.setCursor(130, y + 7);
 	display.print(alarmEnabled[alarmIndex] ? "ON" : "OFF");
 
-	display.setCursor(80, y + 10);
+	display.setCursor(80, y + 11);
 	display.print(alarmRepeat[alarmIndex] ? "repeat" : "once");
 }
 void MAKERphone::clockAlarmEdit(uint8_t index)
