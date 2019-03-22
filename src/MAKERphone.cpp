@@ -4492,15 +4492,19 @@ void MAKERphone::audioPlayer(uint16_t index) {
 	bool shuffle = 0;
 	bool shuffleList[audioCount];
 	uint32_t buttonsRefreshMillis = millis();
+	MPTrack* trackArray[audioCount];
 	MPTrack* mp3;
-	
-	while(1)
+	for(int i = 0; i < audioCount;i++)
 	{
-		String songName = audioFiles[index];
-		Serial.println(index);
-		delay(5);
+		String songName = audioFiles[i];
 		char test[songName.length() + 1];
 		songName.toCharArray(test, songName.length() + 1);
+
+		trackArray[i] = new MPTrack(test);
+	}
+	while(1)
+	{
+		
 
 
 		uint8_t x = 1;
@@ -4530,29 +4534,22 @@ void MAKERphone::audioPlayer(uint16_t index) {
 		display.setCursor(4, 2);
 		display.print(volume);
 		display.setCursor(1, 111);
-		if(songName.length() > 20)
-			display.print(songName);
+		if(audioFiles[index].length() > 20)
+			display.print(audioFiles[index]);
 		else
-			display.printCenter(songName);
+			display.printCenter(audioFiles[index]);
 		display.fillRect(141,74, 4,4, shuffle ? TFT_BLACK : backgroundColors[backgroundIndex]);
 		display.fillRect(14,73, 4,4, loop ? TFT_BLACK : backgroundColors[backgroundIndex]);
 
 		while(!update());
-		char foo[100];
-		sprintf(foo, "%s", test);
-		Serial.println(foo);
-		mp3 = new MPTrack(foo);
+		mp3 = trackArray[index];
 		addTrack(mp3);
 		if(playState)
 			mp3->play();
 		mp3->setVolume(256*14/volume);
 		while (1) 
 		{
-			if(millis()-buttonsRefreshMillis >= 5)
-			{
-				c = buttons.kpdNum.getKey();
-				buttonsRefreshMillis = millis();
-			}
+			c = buttons.kpdNum.getKey();
 			if (buttons.released(BTN_B))
 			{
 
@@ -4589,10 +4586,10 @@ void MAKERphone::audioPlayer(uint16_t index) {
 
 					//drawtext
 					display.setCursor(1, 111);
-					if(songName.length() > 20)
-						display.print(songName);
+					if(audioFiles[index].length() > 20)
+						display.print(audioFiles[index]);
 					else
-						display.printCenter(songName);
+						display.printCenter(audioFiles[index]);
 					display.setCursor(4, 2);
 					display.print(volume);
 					display.fillRect(141,74, 4,4, shuffle ? TFT_BLACK : backgroundColors[backgroundIndex]);
@@ -4621,10 +4618,10 @@ void MAKERphone::audioPlayer(uint16_t index) {
 
 					//drawtext
 					display.setCursor(1, 111);
-					if(songName.length() > 20)
-						display.print(songName);
+					if(audioFiles[index].length() > 20)
+						display.print(audioFiles[index]);
 					else
-						display.printCenter(songName);
+						display.printCenter(audioFiles[index]);
 					display.setCursor(4, 2);
 					display.print(volume);
 					display.fillRect(141,74, 4,4, shuffle ? TFT_BLACK : backgroundColors[backgroundIndex]);
@@ -4726,6 +4723,8 @@ void MAKERphone::audioPlayer(uint16_t index) {
 						}
 					}
 				}
+				if(shuffleReset)
+					playState = 0;
 				mp3->stop();
 				removeTrack(mp3);
 				while(!update());
@@ -4771,6 +4770,8 @@ void MAKERphone::audioPlayer(uint16_t index) {
 					}
 					// index = (index < audioCount - 1) ? index++ : 0;
 				}
+				if(shuffleReset)
+					playState = 0;
 				mp3->stop();
 				removeTrack(mp3);
 				while(!update());
@@ -4792,10 +4793,6 @@ void MAKERphone::audioPlayer(uint16_t index) {
 				tft.fillRect(14,73, 4,4, loop ? TFT_BLACK : backgroundColors[backgroundIndex]);
 				display.fillRect(14,73, 4,4, loop ? TFT_BLACK : backgroundColors[backgroundIndex]);
 			}
-			// if(playState)
-			// 	audio.playMP3();
-			// else
-			// 	audio.pauseMP3();
 			update();
 			if(mp3->isPlaying() < 1 && playState) //if the current song is finished, play the next one
 			{
@@ -4839,6 +4836,12 @@ void MAKERphone::audioPlayer(uint16_t index) {
 		}
 		if(out)
 			break;
+	}
+	for(int i = 0; i < audioCount;i++)
+	{
+		removeTrack(trackArray[i]);
+		trackArray[i]->~MPTrack();
+
 	}
 }
 
@@ -5088,7 +5091,7 @@ int8_t MAKERphone::mediaMenu(String* title, uint8_t length) {
 		}
 		mediaMenuDrawCursor(cursor, cameraY_actual, pressed);
 
-		if (buttons.kpd.pin_read(BTN_DOWN) == 1 && buttons.kpd.pin_read(BTN_UP) == 1)
+		if (!buttons.pressed(BTN_DOWN) && !buttons.pressed(BTN_UP))
 			pressed = 0;
 
 		if (buttons.released(BTN_A)) {   //BUTTON CONFIRM
