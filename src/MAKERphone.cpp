@@ -33,6 +33,7 @@ void MAKERphone::begin(bool splash) {
 	digitalWrite(SIM800_DTR, 0);
 	pinMode(INTERRUPT_PIN, INPUT_PULLUP);
 	esp_sleep_enable_ext0_wakeup(GPIO_NUM_35, 0); //1 = High, 0 = Low
+	
 	//Initialize and start with the NeoPixels
 	FastLED.addLeds<NEOPIXEL, 33>(leds, 8);
 	Serial1.begin(9600, SERIAL_8N1, 17, 16);
@@ -84,6 +85,7 @@ void MAKERphone::begin(bool splash) {
 			break;
 		}
 	}
+	
 	if(SDinsertedFlag)
 		loadSettings(1);
 
@@ -99,7 +101,6 @@ void MAKERphone::begin(bool splash) {
 
 	buf.createSprite(BUF2WIDTH, BUF2HEIGHT); // Create the sprite and clear background to black
 	buf.setTextSize(1);
-
 	if (splash == 1)
 	{
 		display.fillScreen(TFT_RED);
@@ -109,7 +110,7 @@ void MAKERphone::begin(bool splash) {
 		display.fillScreen(TFT_BLACK);
 		while (!update());
 	}
-
+	
 	ledcAnalogWrite(LEDC_CHANNEL, 255);
 	for (uint8_t i = 255; i > actualBrightness; i--) {
 		ledcAnalogWrite(LEDC_CHANNEL, i);
@@ -138,7 +139,7 @@ void MAKERphone::begin(bool splash) {
 	Serial1.println(F("AT&W"));
 	Serial.println("Serial1 up and running...");
 
-		//Audio
+	//Audio
 	initWavLib();
 	xTaskCreatePinnedToCore(
 				Task1code,				/* Task function. */
@@ -200,6 +201,7 @@ bool MAKERphone::update() {
 	//		//handleCall();
 	//	}
 	//}
+	 //DacAudio.FillBuffer(); // Fill the sound buffer with data
 	char c;
 	uint16_t refreshInterval = 3000;
 	if(screenshotFlag)
@@ -226,6 +228,7 @@ bool MAKERphone::update() {
 				buf.fillRect(x * 2, y * 2, 2, 2, display.readPixel(x, y));
 			}
 		}
+		audioMillis-=5;
 	}
 	//buf2.invertDisplay(1);
 	
@@ -341,7 +344,6 @@ bool MAKERphone::update() {
 		}
 	}
 	///////////////////////////////////////////////
-	
 	if (millis() - lastFrameCount2 >= frameSpeed) {
 		
 		lastFrameCount2 = millis();
@@ -4308,7 +4310,7 @@ void MAKERphone::dialer() {
 }
 
 //Media app
-int16_t MAKERphone::mp3Menu(const char* title, String* items, uint8_t length) {
+int16_t MAKERphone::audioPlayerMenu(const char* title, String* items, uint8_t length) {
 	cursor = 0;
 	cameraY = 0;
 	cameraY_actual = 0;
@@ -4479,115 +4481,372 @@ void MAKERphone::listPhotos(const char * dirname, uint8_t levels) {
 		file = root.openNextFile();
 	}
 }
-void MAKERphone::mp3player(String songName) {
-	/* 
-	char test[songName.length() + 1];
-	songName.toCharArray(test, songName.length() + 1);
-
-	Serial.println(test);
-
-	uint8_t x = 1;
-	uint8_t y = 53;
-	int8_t i = 0;
-
+void MAKERphone::audioPlayer(uint16_t index) {
+	uint8_t scale= 2;
+	bool out = 0;
+	char c = NO_KEY;
 	bool playState = 1;
-	long elapsedMillis = millis();
+	bool loop = 0;
+	bool shuffleReset = 0;
+	bool allTrue = 0;
+	bool shuffle = 0;
+	bool shuffleList[audioCount];
+	uint32_t buttonsRefreshMillis = millis();
+	MPTrack* trackArray[audioCount];
+	MPTrack* mp3;
+	for(int i = 0; i < audioCount;i++)
+	{
+		String songName = audioFiles[i];
+		char test[songName.length() + 1];
+		songName.toCharArray(test, songName.length() + 1);
 
-	file = new AudioFileSourceSD(test);
-	//buff = new AudioFileSourceBuffer(file, 4056);
-	id3 = new AudioFileSourceID3(file);
-	//id3->RegisterMetadataCB(MDCallback, (void*)"ID3TAG");
-	out = new AudioOutputI2S();
-	mp3 = new AudioGeneratorMP3();
-	mp3->begin(id3, out);
-	Serial.println("Audio files setup complete");
-	//out->SetRate(44100);
+		trackArray[i] = new MPTrack(test);
+	}
+	while(1)
+	{
+		
 
-	while (1) {
-		display.fillScreen(TFT_LIGHTGREY);
 
+		uint8_t x = 1;
+		uint8_t y = 53;
+		int8_t i = 0;
+
+		
+		long elapsedMillis = millis();
+		display.fillScreen(backgroundColors[backgroundIndex]);
 		//draw bitmaps
-		display.drawBitmap(2, 20, previous);
-		display.drawBitmap(65, 20, next);
-		display.drawBitmap(2, 37, repeatSprite);
-		display.drawBitmap(66, 37, shuffle);
-		display.drawBitmap(37, 19, play);
-		display.drawBitmap(17, 2, cover2);
-
-
-
+		display.drawBitmap(2*scale, 20*scale, previous, TFT_BLACK, scale);
+		display.drawBitmap(65*scale, 20*scale, next, TFT_BLACK, scale);
+		display.drawBitmap(2*scale, 75, repeatSprite, TFT_BLACK, scale);
+		display.drawBitmap(66*scale, 37*scale, shuffleIcon, TFT_BLACK, scale);
+		if(playState)
+			display.drawBitmap(37*scale, 19*scale, play, TFT_BLACK, scale);
+		else
+			display.drawBitmap(72, 40, pause2, TFT_BLACK, scale);
+		display.drawBitmap(17*scale, 2*scale, cover2, TFT_BLACK, scale);
 		//prepare for text printing
 		display.setTextColor(TFT_BLACK);
+
+
 		display.setTextSize(1);
 		display.setTextWrap(0);
-
 		//drawtext
-		display.setCursor(x - i, y + 5);
-		display.print(songName);
-		display.fillRect(0, y, x - 1, 5, TFT_LIGHTGREY);
-		display.fillRect(BUFWIDTH, y, BUFWIDTH - x - width, 5, TFT_LIGHTGREY);
-		if (millis() - elapsedMillis > 200) {
-			i += 3;
-			elapsedMillis = millis();
-			update();
-
-		}
-		if (i >= display.textWidth(songName) + 3) {
-			i = -80;
-		}
-
-
-		if (buttons.kpd.pin_read(BTN_B) == 0)
-		{
-
-			mp3->stop();
-			while (buttons.kpd.pin_read(BTN_B) == 0);
-			break;
-		}
-
-		if (buttons.kpd.pin_read(BTN_A) == 0) //PLAY/PAUSE BUTTON
-		{
-			while (buttons.kpd.pin_read(BTN_A) == 0);
-			playState = !playState;
-		}
-
-		if (buttons.kpd.pin_read(BTN_UP) == 0) //DOWN
-		{
-			while (buttons.kpd.pin_read(BTN_UP) == 0);
-
-			volume--;
-			Serial.print("volume:");
-			Serial.print(volume);
-			buttons.kpd.writeVolumeRight(volume);
-		}
-
-		if (buttons.kpd.pin_read(BTN_DOWN) == 0) //UP
-		{
-			while (buttons.kpd.pin_read(BTN_DOWN) == 0);
-
-			volume++;
-			Serial.print("volume:");
-			Serial.print(volume);
-			buttons.kpd.writeVolumeRight(volume);
-		}
-
-		if (playState == 1)
-		{
-			if (mp3->isRunning()) {
-				if (!mp3->loop())
-					mp3->stop();
-			}
-			else {
-				display.fillScreen(TFT_BLACK);
-				display.setCursor(0, 5);
-				display.printf("MP3 done\n");
-			}
-		}
+		display.setCursor(4, 2);
+		display.print(volume);
+		display.setCursor(1, 111);
+		if(audioFiles[index].length() > 20)
+			display.print(audioFiles[index]);
 		else
-			out->stop();
-	} */
+			display.printCenter(audioFiles[index]);
+		display.fillRect(141,74, 4,4, shuffle ? TFT_BLACK : backgroundColors[backgroundIndex]);
+		display.fillRect(14,73, 4,4, loop ? TFT_BLACK : backgroundColors[backgroundIndex]);
+
+		while(!update());
+		mp3 = trackArray[index];
+		addTrack(mp3);
+		if(playState)
+			mp3->play();
+		mp3->setVolume(256*14/volume);
+		while (1) 
+		{
+			c = buttons.kpdNum.getKey();
+			if (buttons.released(BTN_B))
+			{
+
+				mp3->stop();
+				removeTrack(mp3);
+				Serial.println("Stopped");
+				delay(5);
+				while (!update());
+			
+				out = 1;
+				break;
+			}
+
+			if (buttons.released(BTN_A)) //PLAY/PAUSE BUTTON
+			{
+				
+				if(playState)
+				{
+					mp3->pause();
+					display.fillScreen(backgroundColors[backgroundIndex]);
+
+					//draw bitmaps
+					display.drawBitmap(2*scale, 20*scale, previous, TFT_BLACK, scale);
+					display.drawBitmap(65*scale, 20*scale, next, TFT_BLACK, scale);
+					display.drawBitmap(2*scale, 75, repeatSprite, TFT_BLACK, scale);
+					display.drawBitmap(66*scale, 37*scale, shuffleIcon, TFT_BLACK, scale);
+					display.drawBitmap(72, 40, pause2, TFT_BLACK, scale);
+					display.drawBitmap(17*scale, 2*scale, cover2, TFT_BLACK, scale);
+
+					//prepare for text printing
+					display.setTextColor(TFT_BLACK);
+					display.setTextSize(1);
+					display.setTextWrap(0);
+
+					//drawtext
+					display.setCursor(1, 111);
+					if(audioFiles[index].length() > 20)
+						display.print(audioFiles[index]);
+					else
+						display.printCenter(audioFiles[index]);
+					display.setCursor(4, 2);
+					display.print(volume);
+					display.fillRect(141,74, 4,4, shuffle ? TFT_BLACK : backgroundColors[backgroundIndex]);
+					display.fillRect(14,73, 4,4, loop ? TFT_BLACK : backgroundColors[backgroundIndex]);
+				
+				}
+				else
+				{
+					shuffleReset = 0;
+					display.fillScreen(backgroundColors[backgroundIndex]);
+
+					//draw bitmaps
+					display.drawBitmap(2*scale, 20*scale, previous, TFT_BLACK, scale);
+					display.drawBitmap(65*scale, 20*scale, next, TFT_BLACK, scale);
+					display.drawBitmap(2*scale, 75, repeatSprite, TFT_BLACK, scale);
+					display.drawBitmap(66*scale, 37*scale, shuffleIcon, TFT_BLACK, scale);
+					display.drawBitmap(37*scale, 19*scale, play, TFT_BLACK, scale);
+					display.drawBitmap(17*scale, 2*scale, cover2, TFT_BLACK, scale);
+
+
+
+					//prepare for text printing
+					display.setTextColor(TFT_BLACK);
+					display.setTextSize(1);
+					display.setTextWrap(0);
+
+					//drawtext
+					display.setCursor(1, 111);
+					if(audioFiles[index].length() > 20)
+						display.print(audioFiles[index]);
+					else
+						display.printCenter(audioFiles[index]);
+					display.setCursor(4, 2);
+					display.print(volume);
+					display.fillRect(141,74, 4,4, shuffle ? TFT_BLACK : backgroundColors[backgroundIndex]);
+					display.fillRect(14,73, 4,4, loop ? TFT_BLACK : backgroundColors[backgroundIndex]);
+					while(!update());
+					mp3->resume();
+				}
+				playState = !playState;
+				while (!update());
+			}
+
+			if (buttons.released(BTN_DOWN) && volume > 0) //DOWN
+			{
+				
+				volume--;
+				mp3->setVolume(256*14/volume);
+				//prepare for text printing
+				tft.setTextColor(TFT_BLACK);
+				tft.setTextFont(2);
+				tft.setTextSize(1);
+				tft.setTextWrap(0);
+				tft.fillRect(4,2, 15, 15, backgroundColors[backgroundIndex]);
+				//drawtext
+				tft.setCursor(4, 2);
+				tft.print(volume);
+
+				//prepare for text printing
+				display.setTextColor(TFT_BLACK);
+				display.setTextFont(2);
+				display.setTextSize(1);
+				display.setTextWrap(0);
+				display.fillRect(4,2, 15, 15, backgroundColors[backgroundIndex]);
+				//drawtext
+				display.setCursor(4, 2);
+				display.print(volume);
+				while (!update());
+			}
+
+			if (buttons.released(BTN_UP) && volume < 14) //UP
+			{
+				
+				volume++;
+				mp3->setVolume(256*14/volume);
+				//prepare for text printing
+				tft.setTextColor(TFT_BLACK);
+				tft.setTextFont(2);
+				tft.setTextSize(1);
+				tft.setTextWrap(0);
+				tft.fillRect(4,2, 15, 15, backgroundColors[backgroundIndex]);
+				//drawtext
+				tft.setCursor(4, 2);
+				tft.print(volume);
+				//prepare for text printing
+				display.setTextColor(TFT_BLACK);
+				display.setTextFont(2);
+				display.setTextSize(1);
+				display.setTextWrap(0);
+				display.fillRect(4,2, 15, 15, backgroundColors[backgroundIndex]);
+				//drawtext
+				display.setCursor(4, 2);
+				display.print(volume);
+				while (!update());
+			}
+			if(buttons.released(BTN_LEFT)) //previous
+			{
+				playState = 1;
+				if(shuffle && !shuffleReset)
+				{
+					bool allTrue=1;
+					for(int i = 0; i < audioCount;i++)
+						if(!shuffleList[i])
+							allTrue = 0;
+					if(allTrue)
+					{
+						memset(shuffleList, 0, sizeof(shuffleList));
+						if(!loop)
+						{
+							playState = 0;
+							shuffleReset = 1;
+						}
+					}
+					uint16_t randNumber = random(0,audioCount);
+					
+					while(shuffleList[randNumber])
+						randNumber = random(0,audioCount);
+					index = randNumber;
+					shuffleList[randNumber] = 1;
+				}
+				else
+				{
+					if(!loop && !shuffleReset)
+					{
+						if(index > 0)
+							index--;
+						else
+						{
+							playState = 0;
+							index = audioCount-1;
+						}
+					}
+				}
+				if(shuffleReset)
+					playState = 0;
+				mp3->stop();
+				removeTrack(mp3);
+				while(!update());
+				break;
+			}
+			if(buttons.released(BTN_RIGHT)) //next
+			{
+				playState = 1;
+				if(shuffle && !shuffleReset)
+				{
+					bool allTrue=1;
+					for(int i = 0; i < audioCount;i++)
+						if(!shuffleList[i])
+							allTrue = 0;
+					if(allTrue)
+					{
+						memset(shuffleList, 0, sizeof(shuffleList));
+						if(!loop)
+						{
+							playState = 0;
+							shuffleReset = 1;
+						}
+					}
+					uint16_t randNumber = random(0,audioCount);
+					
+					while(shuffleList[randNumber] == 1 || index == randNumber)
+						randNumber = random(0,audioCount);
+					index = randNumber;
+					shuffleList[randNumber] = 1;
+				}
+				else if(!shuffle && !shuffleReset)
+				{
+					if(!loop && !shuffleReset)
+					{
+						if(index < audioCount - 1)
+							index++;
+						else
+						{
+							shuffleReset = 1;
+							index = 0;
+							playState = 0;
+						}
+					}
+					// index = (index < audioCount - 1) ? index++ : 0;
+				}
+				if(shuffleReset)
+					playState = 0;
+				mp3->stop();
+				removeTrack(mp3);
+				while(!update());
+				break;
+			}
+			if(c == 'A') //shuffle button
+			{
+				if(!shuffle)
+					memset(shuffleList, 0, sizeof(shuffleList));
+				shuffle = !shuffle;
+				tft.fillRect(141,74, 4,4, shuffle ? TFT_BLACK : backgroundColors[backgroundIndex]);
+				display.fillRect(141,74, 4,4, shuffle ? TFT_BLACK : backgroundColors[backgroundIndex]);
+				shuffleList[index] = 1;
+
+			}
+			if(c == 'C') //loop button
+			{
+				loop = !loop;
+				tft.fillRect(14,73, 4,4, loop ? TFT_BLACK : backgroundColors[backgroundIndex]);
+				display.fillRect(14,73, 4,4, loop ? TFT_BLACK : backgroundColors[backgroundIndex]);
+			}
+			update();
+			if(mp3->isPlaying() < 1 && playState) //if the current song is finished, play the next one
+			{
+				if(shuffle && !shuffleReset)
+				{
+					allTrue=1;
+					for(int i = 0; i < audioCount;i++)
+						if(!shuffleList[i])
+							allTrue = 0;
+					if(allTrue)
+					{
+						memset(shuffleList, 0, sizeof(shuffleList));
+						if(!loop)
+						{
+							playState = 0;
+							shuffleReset = 1;
+						}
+					}
+					uint16_t randNumber = random(0,audioCount);
+					
+					while(shuffleList[randNumber] || index == randNumber)
+						randNumber = random(0,audioCount);
+					index = randNumber;
+					shuffleList[randNumber] = 1;
+				}
+				else if(!shuffle && !shuffleReset)
+				{
+					if(!loop)
+					{
+						if(index < audioCount - 1)
+							index++;
+						else
+						{
+							index = 0;
+							playState = 0;
+						}
+					}
+				}
+				break;
+			}
+		}
+		if(out)
+			break;
+	}
+	for(int i = 0; i < audioCount;i++)
+	{
+		removeTrack(trackArray[i]);
+		trackArray[i]->~MPTrack();
+
+	}
 }
+
 void MAKERphone::mediaApp() {
+	dataRefreshFlag = 0;
 	while(1)
 	{
 		int8_t input = mediaMenu(mediaItems, 3);
@@ -4596,16 +4855,16 @@ void MAKERphone::mediaApp() {
 		{
 			if (!SD.begin(5, SPI, 8000000))
 				Serial.println("SD card error");
-			listAudio("/", 1);
+			listAudio("/Music", 1);
 			if(audioCount > 0)
 			{
 				while (1)
 				{
-					int16_t index = mp3Menu("Select file to play:", audioFiles, audioCount);
+					int16_t index = audioPlayerMenu("Select file to play:", audioFiles, audioCount);
 					if (index == -1)
 						break;
 					display.fillScreen(TFT_LIGHTGREY);
-					mp3player(audioFiles[index]);
+					audioPlayer(index);
 				} 
 			}
 			else
@@ -4613,7 +4872,7 @@ void MAKERphone::mediaApp() {
 				display.fillScreen(TFT_BLACK);
 				display.setCursor(0, display.height()/2 - 16);
 				display.setTextFont(2);
-				display.printCenter("No MP3 files!");
+				display.printCenter("No audio files!");
 				uint32_t tempMillis = millis();
 				while(millis() < tempMillis + 2000)
 				{
@@ -4832,7 +5091,7 @@ int8_t MAKERphone::mediaMenu(String* title, uint8_t length) {
 		}
 		mediaMenuDrawCursor(cursor, cameraY_actual, pressed);
 
-		if (buttons.kpd.pin_read(BTN_DOWN) == 1 && buttons.kpd.pin_read(BTN_UP) == 1)
+		if (!buttons.pressed(BTN_DOWN) && !buttons.pressed(BTN_UP))
 			pressed = 0;
 
 		if (buttons.released(BTN_A)) {   //BUTTON CONFIRM
@@ -5654,7 +5913,7 @@ void MAKERphone::soundMenu() {
 				while(!update());
 				display.setFreeFont(TT1);
 				Serial.println(ringtoneCount);
-				i = mp3Menu("Select ringtone:", ringtoneFiles, ringtoneCount);
+				i = audioPlayerMenu("Select ringtone:", ringtoneFiles, ringtoneCount);
 				display.setTextColor(TFT_BLACK);
 				if (i >= 0)
 					ringtone = ringtoneFiles[i];
@@ -5679,7 +5938,7 @@ void MAKERphone::soundMenu() {
 			{
 				while(!update());
 				display.setFreeFont(TT1);
-				i = mp3Menu("Select notification:", notificationFiles, notificationCount);
+				i = audioPlayerMenu("Select notification:", notificationFiles, notificationCount);
 				display.setTextColor(TFT_BLACK);
 				if (i >= 0)
 					notification = notificationFiles[i];
@@ -8166,7 +8425,7 @@ void MAKERphone::clockAlarmEdit(uint8_t index)
 					}
 					else
 					{
-						i = mp3Menu("Select alarm:", audioFiles, audioCount);
+						i = audioPlayerMenu("Select alarm:", audioFiles, audioCount);
 						display.setTextColor(TFT_BLACK);
 						if (i >= 0)
 							localAlarmTrack = audioFiles[i];
