@@ -251,7 +251,7 @@ class MAKERphone:public Buttons, public GUI
 	int32_t cameraY_actual = 0;
 	String audioFiles[255];
 	uint8_t audioCount = 0;
-	int16_t audioPlayerMenu(const char* title, String* items, uint8_t length);
+	int16_t audioPlayerMenu(const char* title, String* items, uint16_t length, uint16_t index = 0);
 	void listAudio(const char * dirname, uint8_t levels);
 	void audioPlayer(uint16_t index);
 	void mediaApp();

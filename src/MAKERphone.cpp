@@ -4319,14 +4319,13 @@ void MAKERphone::mediaApp() {
 
 		if(input == 0) //music
 		{
-			if (!SD.begin(5, SPI, 8000000))
-				Serial.println("SD card error");
 			listAudio("/Music", 1);
 			if(audioCount > 0)
 			{
+				int16_t index =0;
 				while (1)
 				{
-					int16_t index = audioPlayerMenu("Select file to play:", audioFiles, audioCount);
+					index = audioPlayerMenu("Select file to play:", audioFiles, audioCount, index);
 					if (index == -1)
 						break;
 					display.fillScreen(TFT_LIGHTGREY);
@@ -4355,24 +4354,28 @@ void MAKERphone::mediaApp() {
 		}
 		else if(input == 1) //photos
 		{
-			while (!SD.begin(5, SPI, 8000000))
-				Serial.println("SD card error");
-			listPhotos("/Images/", 0);
+			listPhotos("/Images", 0);
 			if(photoCount > 0)
 			{
+				int16_t index =0;
 				while (1)
 				{
-					int16_t index = gui.menu("Select photo to open:", photoFiles, photoCount);
+					index = audioPlayerMenu("Select photo to open:", photoFiles, photoCount, index);
 					if (index == -1)
 						break;
 					Serial.println(index);
-					drawJpeg(photoFiles[index], 0, 0);
+					if(photoFiles[index].endsWith(".bmp") || photoFiles[index].endsWith(".BMP"))
+						display.drawBmp(photoFiles[index], 0,0);
+					else
+						drawJpeg(photoFiles[index], 0, 0);
 					while(!buttons.released(BTN_A) && !buttons.released(BTN_B))
 						update();
+					while(!update());
 				} 
 			}
 			else
 			{
+				display.fillScreen(TFT_BLACK);
 				display.setCursor(0, display.height()/2 - 16);
 				display.setTextFont(2);
 				display.printCenter("No JPEG files!");
@@ -4516,8 +4519,8 @@ void MAKERphone::mediaMenuDrawCursor(uint8_t i, int32_t y, bool pressed) {
 	display.drawRect(1, y, display.width()-3, boxHeight, TFT_RED);
 }
 
-int16_t MAKERphone::audioPlayerMenu(const char* title, String* items, uint8_t length) {
-	cursor = 0;
+int16_t MAKERphone::audioPlayerMenu(const char* title, String* items, uint16_t length, uint16_t index) {
+	
 	cameraY = 0;
 	cameraY_actual = 0;
 	String Name;
@@ -4533,8 +4536,12 @@ int16_t MAKERphone::audioPlayerMenu(const char* title, String* items, uint8_t le
 	else
 	{
 		scale = 2;
-		offset = 19;
+		offset = 17;
 		boxHeight = 15;
+	}
+	cursor = index;
+	if (length > 12) {
+		cameraY = -cursor * (boxHeight + 1) - 1;
 	}
 	while (1) {
 		display.fillScreen(TFT_BLACK);
@@ -4583,15 +4590,16 @@ int16_t MAKERphone::audioPlayerMenu(const char* title, String* items, uint8_t le
 			if (cursor == 0) {
 				cursor = length - 1;
 				if (length > 6*scale) {
-					cameraY = -(cursor - 5) * (boxHeight + 1);
+					cameraY = -(cursor - 5) * (boxHeight + 1) - 1;
 				}
 			}
 			else {
-				cursor--;
-				if (cursor > 0 && (cursor * (boxHeight + 1) + cameraY + offset) < boxHeight*2) {
+				if (cursor > 0 && (cursor * (boxHeight + 1) - 1 + cameraY + offset) <= boxHeight) {
 					cameraY += (boxHeight + 1);
 				}
+				cursor--;
 			}
+			
 		}
 
 		if (buttons.released(BTN_DOWN)) { //BUTTON DOWN
@@ -5067,7 +5075,9 @@ void MAKERphone::listPhotos(const char * dirname, uint8_t levels) {
 		// file.getName(temp, 100);
 		String Name(file.name());
 		Serial.println(Name);
-		if (Name.endsWith(F(".jpeg")) || Name.endsWith(F(".JPEG")) || Name.endsWith(F(".jpg")) || Name.endsWith(F(".JPG")))
+		if (Name.endsWith(F(".jpeg")) || Name.endsWith(F(".JPEG"))
+		|| Name.endsWith(F(".jpg")) || Name.endsWith(F(".JPG"))
+		|| Name.endsWith(F(".bmp")) || Name.endsWith(F(".BMP")))
 		{
 			Serial.print(counter);
 			Serial.print(".   ");
@@ -9194,7 +9204,7 @@ void GUI::menuDrawBox(String text, uint8_t i, int32_t y) {
 	else
 	{
 		scale = 2;
-		offset = 19;
+		offset = 17;
 		boxHeight = 15;
 	}
 	y += i * (boxHeight + 1) + offset;
@@ -9219,7 +9229,7 @@ void GUI::menuDrawCursor(uint8_t i, int32_t y) {
 	}
 	else
 	{
-		offset = 19;
+		offset = 17;
 		boxHeight = 15;
 	}
 	if (millis() % 500 <= 250) {
@@ -9229,6 +9239,18 @@ void GUI::menuDrawCursor(uint8_t i, int32_t y) {
 	mp.display.drawRect(0, y, mp.display.width(), boxHeight + 2, TFT_RED);
 }
 int8_t GUI::menu(const char* title, String* items, uint8_t length) {
+	uint8_t offset;
+	uint8_t boxHeight;
+	if(mp.resolutionMode)
+	{
+		offset = menuYOffset;
+		boxHeight = 7;
+	}
+	else
+	{
+		offset = 19;
+		boxHeight = 15;
+	}
 	while (1) {
 		while (!mp.update());
 		mp.display.fillScreen(TFT_BLACK);
@@ -9291,7 +9313,7 @@ int8_t GUI::menu(const char* title, String* items, uint8_t length) {
 			}
 			else {
 				cursor--;
-				if (cursor > 0 && (cursor * 8 + cameraY + menuYOffset) < 14) {
+				if (cursor > 0 && (cursor * 8 + cameraY + offset) < 14) {
 					cameraY += 8;
 				}
 			}
@@ -9310,7 +9332,7 @@ int8_t GUI::menu(const char* title, String* items, uint8_t length) {
 			while (mp.buttons.kpd.pin_read(BTN_DOWN) == 0);
 
 			cursor++;
-			if ((cursor * 8 + cameraY + menuYOffset) > 54) {
+			if ((cursor * 8 + cameraY + offset) > 54) {
 				cameraY -= 8;
 			}
 			if (cursor >= length) {
