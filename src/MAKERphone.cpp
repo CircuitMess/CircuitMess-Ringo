@@ -4354,22 +4354,63 @@ void MAKERphone::mediaApp() {
 		}
 		else if(input == 1) //photos
 		{
+			display.setTextColor(TFT_BLACK);
+			display.setTextSize(1);
+			display.setTextFont(2);
+			display.drawRect(14, 45, 134, 38, TFT_BLACK);
+			display.drawRect(13, 44, 136, 40, TFT_BLACK);
+			display.fillRect(15, 46, 132, 36, TFT_WHITE);
+			display.setCursor(47, 55);
+			display.printCenter("Loading photos");
+			while(!update());
 			listPhotos("/Images", 0);
 			if(photoCount > 0)
 			{
-				int16_t index =0;
+				int16_t index = 0;
 				while (1)
 				{
 					index = audioPlayerMenu("Select photo to open:", photoFiles, photoCount, index);
 					if (index == -1)
 						break;
-					Serial.println(index);
+	
 					if(photoFiles[index].endsWith(".bmp") || photoFiles[index].endsWith(".BMP"))
 						display.drawBmp(photoFiles[index], 0,0);
 					else
 						drawJpeg(photoFiles[index], 0, 0);
-					while(!buttons.released(BTN_A) && !buttons.released(BTN_B))
+					Serial.println(index);
+					while(!update());
+					while(1)
+					{
+						
+						if(buttons.released(BTN_A) || buttons.released(BTN_B))
+							break;
+						if(buttons.released(BTN_LEFT))
+						{
+							if(index > 0)
+								index--;
+							else
+								index = photoCount - 1;
+							if(photoFiles[index].endsWith(".bmp") || photoFiles[index].endsWith(".BMP"))
+								display.drawBmp(photoFiles[index], 0,0);
+							else
+								drawJpeg(photoFiles[index], 0, 0);
+							while(!update());
+						}
+						if(buttons.released(BTN_RIGHT))
+						{
+							if(index < photoCount - 1)
+								index++;
+							else
+								index = 0;
+							if(photoFiles[index].endsWith(".bmp") || photoFiles[index].endsWith(".BMP"))
+								display.drawBmp(photoFiles[index], 0,0);
+							else
+								drawJpeg(photoFiles[index], 0, 0);
+							while(!update());
+						}
 						update();
+					}
+					Serial.println("out");
 					while(!update());
 				} 
 			}
@@ -4378,7 +4419,7 @@ void MAKERphone::mediaApp() {
 				display.fillScreen(TFT_BLACK);
 				display.setCursor(0, display.height()/2 - 16);
 				display.setTextFont(2);
-				display.printCenter("No JPEG files!");
+				display.printCenter("No photos found!");
 				uint32_t tempMillis = millis();
 				while(millis() < tempMillis + 2000)
 				{
