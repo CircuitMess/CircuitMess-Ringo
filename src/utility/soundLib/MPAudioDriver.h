@@ -2,7 +2,7 @@
 #ifndef MPAudio
 #define MPAudio
 
-#define SAMPLE_RATE (32000)  //SAMPLE RATE
+#define SAMPLE_RATE (44100)  //SAMPLE RATE
 
 #define MAX_TRACKS 4
 
