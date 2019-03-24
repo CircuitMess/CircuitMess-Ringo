@@ -382,6 +382,9 @@ class MAKERphone:public Buttons, public GUI
 	void loadAlarms();
 	void clockTimer();
 	
+	//Flashlight app
+	void flashlightApp();
+	
 	GUI gui;
 	Buttons buttons;
 	//Display display;

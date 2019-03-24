@@ -1216,6 +1216,8 @@ void MAKERphone::mainMenu()
 			}
 			if(titles[index] == "Clock")
 				clockApp();
+			if(titles[index] == "Flashlight")
+				flashlightApp();
 			if (index == -2)
 			{
 				Serial.println("pressed");
@@ -8808,6 +8810,123 @@ void MAKERphone::loadAlarms()
 	alarms.prettyPrintTo(Serial);
 }
 
+//flashlight app
+void MAKERphone::flashlightApp()
+{
+	char key = NO_KEY;
+	bool state = 0;
+	uint8_t color = 4;
+	uint8_t localBrightness = 5;
+	while(1)
+	{
+		key = buttons.kpdNum.getKey();
+		for(int i = 0; i < 8; i++)
+		{
+			switch(color)
+			{
+				case 0:
+					leds[i] = CRGB::Cyan;
+					break;
+				case 1:
+					leds[i] = CRGB::Green;
+					break;
+				case 2:
+					leds[i] = CRGB::Red;
+					break;
+				case 3:
+					leds[i] = CRGB::Yellow;
+					break;
+				case 4:
+					leds[i] = CRGB::White;
+					break;
+				case 5:
+					leds[i] = CRGB::Orange;
+					break;
+				case 6:
+					leds[i] = CRGB::Fuchsia;
+					break;
+			}
+		}
+		pixelsBrightness = localBrightness;
+		display.fillScreen(TFT_BLACK);
+		display.setTextColor(TFT_WHITE);
+		display.setTextFont(2);
+		display.setTextSize(1);
+		display.setCursor(2, 110);
+		display.print("Color");
+		// display.setCursor(95, 110);
+		// display.print("Brightness");
+		if(!state)
+		{
+			pixelsBrightness = 0;
+			display.drawIcon(flashlightOff, 46, 10, 34, 50, 2, TFT_GREEN);
+		}
+		else
+			display.drawIcon(flashlightOn, 46, 10, 34, 50, 2, TFT_GREEN);
+
+		if(buttons.released(BTN_A))
+		{
+			state = !state;
+			Serial.println(state);
+			delay(5);
+			while(!update());
+		}
+		if(buttons.released(BTN_B))
+			break;
+		if(key == 'C')
+		{
+			while(!buttons.released(BTN_A) && !buttons.released(BTN_B))
+			{
+				display.fillRect(15, 51, 130, 24, backgroundColors[color]);
+				display.drawRect(14, 50, 132, 26, TFT_BLACK);
+				display.setTextColor(TFT_BLACK);
+				display.setCursor(0, display.height() / 2 - 10);
+				display.printCenter(backgroundColorsNames[color]);
+				display.drawBitmap(22, 57, arrowLeft, TFT_BLACK, 2);
+				display.drawBitmap(130, 57, arrowRight, TFT_BLACK, 2);
+				if (millis() % 1000 <= 500)
+				{
+					if (color == 0)
+					{
+						display.drawBitmap(130, 57, arrowRight, backgroundColors[color], 2);
+						display.drawBitmap(11*2, 57, arrowLeft, TFT_BLACK, 2);
+						display.drawBitmap(66*2, 57, arrowRight, TFT_BLACK, 2);
+					}
+					else if (color == 6)
+					{
+						display.drawBitmap(22, 57, arrowLeft, backgroundColors[color], 2);
+						display.drawBitmap(10*2, 57, arrowLeft, TFT_BLACK, 2);
+						display.drawBitmap(65*2, 57, arrowRight, TFT_BLACK, 2);
+					}
+					else
+					{
+						display.drawBitmap(130, 57, arrowRight, backgroundColors[color], 2);
+						display.drawBitmap(22, 57, arrowLeft, backgroundColors[color], 2);
+						display.drawBitmap(10*2, 57, arrowLeft, TFT_BLACK, 2);
+						display.drawBitmap(66*2, 57, arrowRight, TFT_BLACK, 2);
+					}
+				}
+				if (buttons.released(BTN_LEFT) && color > 0)
+				{
+					gui.osc->note(75, 0.05);
+					gui.osc->play();
+					color--;
+					while(!update());
+				}
+				if (buttons.released(BTN_RIGHT) && color < 6)
+				{
+					gui.osc->note(75, 0.05);
+					gui.osc->play();
+					color++;
+					while(!update());
+				}
+				update();
+			}
+			while(!update());
+		}
+		update();
+	}
+}
 //save manipulation
 JsonArray& MAKERphone::getJSONfromSAV(const char *path)
 {
