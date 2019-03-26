@@ -385,6 +385,9 @@ class MAKERphone:public Buttons, public GUI
 	//Flashlight app
 	void flashlightApp();
 	
+	//Calculator app
+	void calculatorApp();
+	
 	GUI gui;
 	Buttons buttons;
 	//Display display;
