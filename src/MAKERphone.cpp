@@ -8972,7 +8972,8 @@ void MAKERphone::flashlightApp()
 void MAKERphone::calculatorApp()
 {
 	String input = "0";
-	uint32_t result = 0;
+	double result = 0;
+	double helper = 0;
 	char key;
 	uint8_t tempCursor;
 	uint8_t cursor = 0;
@@ -8980,6 +8981,7 @@ void MAKERphone::calculatorApp()
 	int8_t operation = -1;
 	bool blinkState = 0;
 	bool clear = 0;
+	bool set = 0;
 	display.fillScreen(0xA794);
 	display.drawRect(6,5, 149, 40, TFT_BLACK);
 	display.fillRect(7,6,147,38, TFT_LIGHTGREY);
@@ -9028,8 +9030,6 @@ void MAKERphone::calculatorApp()
 	display.print("Erase");
 	while(1)
 	{
-		Serial.printf("Operation: %d\nClear: %d\n---------------\n", operation, clear);
-		delay(5);
 		key = buttons.kpdNum.getKey();
 		if(key != NO_KEY && key > 47 && key < 58 && input.length() < 8)
 		{
@@ -9066,6 +9066,7 @@ void MAKERphone::calculatorApp()
 			operation = -1;
 			input = "0";
 			clear = 0;
+			helper = 0;
 		}
 		if(buttons.released(BTN_LEFT))
 		{
@@ -9117,47 +9118,123 @@ void MAKERphone::calculatorApp()
 		}
 		if(buttons.released(BTN_A))
 		{
-			if(operation == -1)
+			if(cursor == 4)
 			{
-				operation = cursor;
-				clear = 1;
-				result = input.toInt();
+				result = input.toDouble();
+				Serial.println(sqrt((double)(result)));
+				result = sqrt(result);
+				if(result == int(result))
+					input = String((int)(round(result)));
+				else
+					input = String(result);
 			}
-			else
+			else if(cursor == 6)
 			{
-				if(operation == cursor)
+				result = input.toDouble();
+				result = 1/result;
+				if(result == int(result))
+					input = String((int)(round(result)));
+				else
+					input = String(result);
+			}
+			else if(cursor == 7 && input.indexOf('.') == -1 && input.length() < 8)
+			{
+				if(input == "" || clear)
+				{
+					input = "0";
+					clear = 0;
+				}
+				input.concat('.');
+			}
+			else if(operation == -1 && cursor != 4 && cursor != 6)
+			{
+				clear = 1;
+				result = input.toDouble();
+				set = 0;
+				operation = cursor;
+			}
+			else if(operation > -1 && cursor != 4 && cursor != 6)
+			{
+				if(!set)
+				{
+					helper = input.toDouble();
+					set = 1;
+				}
+
+				set = 0;
+				Serial.println(clear);
+				if(operation == cursor && !clear)
 				{
 					switch (operation)
 					{
 						case 0:
-							result += input.toInt();
-							input = String(result);
-							clear = 1;
+							result += helper;
 							break;
-					
-						default:
+						case 1:
+							result -= helper;
+							break;
+						case 2:
+							result *= helper;
+							break;
+						case 3:
+							result /= helper;
+							break;
+						case 5:
+							result = pow(result, helper);
 							break;
 					}
+					if(result == int(result))
+						input = String((int)(round(result)));
+					else
+						input = String(result);
+					set = 1;
+					clear = 1;
 				}
+				else
+					operation = cursor;
+				
 			}
 			while(!update());
 		}
 		if(key == 'A')
 		{
-			if(operation != -1)
+			if(operation != -1 && !clear)
 			{
+				if(!set)
+				{
+					helper = input.toDouble();
+					set = 1;
+				}
+				set = 0;
 				switch (operation)
 				{
 					case 0:
-						result += input.toInt();
-						input = String(result);
+						result += input.toDouble();
 						break;
-				
-					default:
+					case 1:
+						result -= input.toDouble();
+						break;
+					case 2:
+						result *= input.toDouble();
+						break;
+					case 3:
+						result /= input.toDouble();
+						break;
+					case 5:
+						result = pow(result, helper);
 						break;
 				}
+				if(result == int(result))
+					input = String((int)(round(result)));
+				else
+					input = String(result);
 				operation = -1;
 			}
+		}
+		if(input.length() > 8 || input == "inf")
+		{
+			input = "Error";
+			clear = 1;
 		}
 		if(buttons.released(BTN_B))
 			break;
