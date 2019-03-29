@@ -5668,12 +5668,17 @@ void MAKERphone::displayMenu() {
 		display.setTextFont(2);
 		display.setTextSize(1);
 		display.fillScreen(0x8FEA);
-		display.setCursor(9*2, 2*2);
+		display.setCursor(9*2, 2);
 		display.printCenter("Brightness");
-		display.drawRect(33, 28, 47*2, 4*2, TFT_BLACK);
-		display.drawBitmap(12, 27, noBrightness, TFT_BLACK, 2);
-		display.drawBitmap(132, 21, fullBrightness, TFT_BLACK, 2);
-		display.fillRect(35, 30, brightness * 9*2, 2*2, TFT_BLACK);
+		display.drawRect(33, 21, 47*2, 4*2, TFT_BLACK);
+		display.drawBitmap(12, 20, noBrightness, TFT_BLACK, 2);
+		display.drawBitmap(132, 14, fullBrightness, TFT_BLACK, 2);
+		display.fillRect(35, 23, brightness * 9*2, 2*2, TFT_BLACK);
+
+		display.setCursor(9*2, 32);
+		display.printCenter("LED brightness");
+		display.drawRect(33, 50, 47*2, 4*2, TFT_BLACK);
+		display.fillRect(35, 52, pixelsBrightness * 9*2, 2*2, TFT_BLACK);
 
 		String foo = "Sleep: ";
 		if (sleepTimeActualBuffer > 60)
@@ -5686,37 +5691,37 @@ void MAKERphone::displayMenu() {
 			foo += sleepTimeActualBuffer;
 			foo += "s";
 		}
-		display.setCursor(10*2, 44);
+		display.setCursor(10*2, 59);
 		display.printCenter(foo);
 
-		display.drawRect(33, 65, 47*2, 4*2, TFT_BLACK);
-		display.fillRect(35, 67, sleepTimeBuffer * 9*2, 2*2, TFT_BLACK);
+		display.drawRect(33, 77, 47*2, 4*2, TFT_BLACK);
+		display.fillRect(35, 79, sleepTimeBuffer * 9*2, 2*2, TFT_BLACK);
 
-		display.setCursor(12, 60);
+		display.setCursor(12, 72);
 		display.print("0s");
-		display.setCursor(132, 61);
+		display.setCursor(132, 72);
 		display.print("30m");
 
-		display.setCursor(11*2, 80);
+		display.setCursor(11*2, 87);
 		display.printCenter("Background");
-		display.fillRect(16*2, 100, 48*2, 9*2, backgroundColors[backgroundIndex]);
-		display.setCursor(18*2, 102);
+		display.fillRect(16*2, 105, 48*2, 9*2, backgroundColors[backgroundIndex]);
+		display.setCursor(18*2, 105);
 		display.printCenter(backgroundColorsNames[backgroundIndex]);
-		display.drawBitmap(11*2, 102, arrowLeft, TFT_BLACK, 2);
-		display.drawBitmap(65*2, 102, arrowRight, TFT_BLACK, 2);
+		display.drawBitmap(11*2, 107, arrowLeft, TFT_BLACK, 2);
+		display.drawBitmap(65*2, 107, arrowRight, TFT_BLACK, 2);
 
 		if (cursor == 0)
 		{
 			if (millis() % 1000 <= 500)
 			{
-				display.drawBitmap(12, 27, noBrightness, TFT_BLACK, 2);
-				display.drawBitmap(132, 21, fullBrightness, TFT_BLACK, 2);
+				display.drawBitmap(12, 20, noBrightness, TFT_BLACK, 2);
+				display.drawBitmap(132, 14, fullBrightness, TFT_BLACK, 2);
 
 			}
 			else
 			{
-				display.drawBitmap(12, 27, noBrightness, 0x8FEA, 2);
-				display.drawBitmap(132, 21, fullBrightness, 0x8FEA, 2);
+				display.drawBitmap(12, 20, noBrightness, 0x8FEA, 2);
+				display.drawBitmap(132, 14, fullBrightness, 0x8FEA, 2);
 			}
 			if (buttons.released(BTN_LEFT) && brightness != 0)
 			{
@@ -5735,19 +5740,40 @@ void MAKERphone::displayMenu() {
 		}
 		if (cursor == 1)
 		{
+			for(int i = 0;i<8;i++)
+			{
+				leds[i] = CRGB::White;
+			}
+			if (buttons.released(BTN_LEFT) && pixelsBrightness!= 0)
+			{
+				gui.osc->note(75, 0.05);
+				gui.osc->play();
+				pixelsBrightness--;
+				while(!update());
+			}
+			if (buttons.released(BTN_RIGHT) && pixelsBrightness!= 5)
+			{
+				gui.osc->note(75, 0.05);
+				gui.osc->play();
+				pixelsBrightness++;
+				while(!update());
+			}
+		}
+		if (cursor == 2)
+		{
 			if (millis() % 1000 <= 500)
 			{
-				display.setCursor(12, 60);
+				display.setCursor(12, 72);
 				display.print("0s");
-				display.setCursor(132, 61);
+				display.setCursor(132, 72);
 				display.print("30m");
 			}
 			else
 			{
 				display.setTextColor(0x8FEA);
-				display.setCursor(12, 60);
+				display.setCursor(12, 72);
 				display.print("0s");
-				display.setCursor(132, 61);
+				display.setCursor(132, 72);
 				display.print("30m");
 				display.setTextColor(TFT_BLACK);
 			}
@@ -5766,34 +5792,34 @@ void MAKERphone::displayMenu() {
 				while(!update());
 			}
 		}
-		if (cursor == 2)
+		if (cursor == 3)
 		{
 			if (millis() % 1000 <= 500)
 			{
 				if (backgroundIndex == 0)
 				{
-					display.fillRect(65*2 , 100, 20, 20, 0x8FEA);
-					display.drawBitmap(11*2, 102, arrowLeft, TFT_BLACK, 2);
-					display.drawBitmap(66*2, 102, arrowRight, TFT_BLACK, 2);
+					display.fillRect(65*2 , 105, 20, 20, 0x8FEA);
+					display.drawBitmap(11*2, 107, arrowLeft, TFT_BLACK, 2);
+					display.drawBitmap(66*2, 107, arrowRight, TFT_BLACK, 2);
 				}
 				else if (backgroundIndex == 6)
 				{
-					display.fillRect(5*2 , 100, 20, 20, 0x8FEA);
-					display.drawBitmap(10*2, 102, arrowLeft, TFT_BLACK, 2);
-					display.drawBitmap(65*2, 102, arrowRight, TFT_BLACK, 2);
+					display.fillRect(5*2 , 105, 20, 20, 0x8FEA);
+					display.drawBitmap(10*2, 107, arrowLeft, TFT_BLACK, 2);
+					display.drawBitmap(65*2, 107, arrowRight, TFT_BLACK, 2);
 				}
 				else
 				{
-					display.fillRect(65*2 , 100, 20, 20, 0x8FEA);
-					display.fillRect(5*2, 100, 20, 20, 0x8FEA);
-					display.drawBitmap(10*2, 102, arrowLeft, TFT_BLACK, 2);
-					display.drawBitmap(66*2, 102, arrowRight, TFT_BLACK, 2);
+					display.fillRect(65*2 , 105, 20, 20, 0x8FEA);
+					display.fillRect(5*2, 105, 20, 20, 0x8FEA);
+					display.drawBitmap(10*2, 107, arrowLeft, TFT_BLACK, 2);
+					display.drawBitmap(66*2, 107, arrowRight, TFT_BLACK, 2);
 				}
 			}
 			else
 			{
-				display.drawBitmap(11*2, 102, arrowLeft, TFT_BLACK, 2);
-				display.drawBitmap(65*2, 102, arrowRight, TFT_BLACK, 2);
+				display.drawBitmap(11*2, 107, arrowLeft, TFT_BLACK, 2);
+				display.drawBitmap(65*2, 107, arrowRight, TFT_BLACK, 2);
 			}
 			if (buttons.released(BTN_LEFT) && backgroundIndex != 0)
 			{
@@ -5817,7 +5843,7 @@ void MAKERphone::displayMenu() {
 			gui.osc->play();
 			while (!update());
   			if (cursor == 0)
-				cursor = 2;
+				cursor = 3;
 			else
 				cursor--;
 		}
@@ -5826,7 +5852,7 @@ void MAKERphone::displayMenu() {
 			gui.osc->note(75, 0.05);
 			gui.osc->play();
 			while (!update());
-			if (cursor == 2)
+			if (cursor == 3)
 				cursor = 0;
 			else
 				cursor++;
