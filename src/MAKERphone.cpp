@@ -1398,7 +1398,6 @@ void MAKERphone::bigIconsMainMenu() {
 				}while(!update());
 			}
 		}
-
 		if (titles[index] == "Phone")
 		{
 			display.fillScreen(TFT_BLACK);
@@ -8877,7 +8876,7 @@ void MAKERphone::loadAlarms()
 	alarms.prettyPrintTo(Serial);
 }
 
-//flashlight app
+//Flashlight app
 void MAKERphone::flashlightApp()
 {
 	char key = NO_KEY;
@@ -8993,6 +8992,281 @@ void MAKERphone::flashlightApp()
 		}
 		update();
 	}
+}
+
+//Calculator app
+void MAKERphone::calculatorApp()
+{
+	String input = "0";
+	double result = 0;
+	double helper = 0;
+	char key;
+	uint8_t tempCursor;
+	uint8_t cursor = 0;
+	uint32_t blinkMillis = millis();
+	int8_t operation = -1;
+	bool blinkState = 0;
+	bool clear = 0;
+	bool set = 0;
+	display.fillScreen(0xA794);
+	display.drawRect(6,5, 149, 40, TFT_BLACK);
+	display.fillRect(7,6,147,38, TFT_LIGHTGREY);
+	for (int y = 0; y < 2; y++)
+	{
+		for (int x = 0; x < 4; x++)
+		{
+			display.drawRect(8 + 37 * x, 49 + 27 * y, 33, 23, TFT_BLACK);
+			display.fillRect(9 + 37 * x, 50 + 27 * y, 31, 21, TFT_LIGHTGREY);
+			switch (y*4 + x)
+			{
+				case 0:
+					display.drawBitmap(18, 54, calculatorPlus);
+					break;
+				case 1:
+					display.drawBitmap(55, 59, calculatorMinus);
+					break;
+				case 2:
+					display.drawBitmap(92, 54, calculatorMultiply);
+					break;
+				case 3:
+					display.drawBitmap(128, 54, calculatorDivide);
+					break;
+				case 4:
+					display.drawBitmap(15, 79, calculatorRoot);
+					break;
+				case 5:
+					display.drawBitmap(55, 80, calculatorPotency);
+					break;
+				case 6:
+					display.drawBitmap(87, 79, calculatorReciprocal);
+					break;
+				case 7:
+					display.drawBitmap(133, 91, calculatorDecimalPoint);
+					break;
+			}
+		}
+	}
+	display.drawRect(119, 103, 33, 23, TFT_BLACK);
+	display.fillRect(120, 104, 31, 21, 0x4D42);
+	display.drawBitmap(128, 110, calculatorEquals);
+	display.setCursor(5, 113);
+	display.setTextFont(2);
+	display.setTextSize(1);
+	display.setTextColor(TFT_BLACK);
+	display.print("Erase");
+	while(1)
+	{
+		key = buttons.kpdNum.getKey();
+		if(key != NO_KEY && key > 47 && key < 58 && input.length() < 8)
+		{
+			if(clear)
+			{
+				input = "0";
+				clear = 0;
+			}
+			if(input == "0")
+				input = "";
+			input.concat(key);
+		}
+		if(millis() - blinkMillis > 250)
+		{
+			blinkState = !blinkState;
+			blinkMillis = millis();
+		}
+		display.fillRect(7,6,147,38, TFT_LIGHTGREY);
+		display.setTextSize(2);
+		display.setTextFont(2);
+		display.setCursor(200, 200);
+		tempCursor = display.cursor_x;
+		display.print(input);
+		tempCursor = display.cursor_x - tempCursor;
+		display.setCursor(145-tempCursor, 7);
+		display.print(input);
+
+		display.drawRect(7 + 37 * (cursor % 4), 48 + 27 * (int)(cursor / 4), 35, 25, blinkState ? TFT_RED : 0xA794);
+		display.drawRect(6 + 37 * (cursor % 4), 47 + 27 * (int)(cursor / 4), 37, 27, blinkState ? TFT_RED : 0xA794);
+
+		if(key == 'C')
+		{
+			result = 0;
+			operation = -1;
+			input = "0";
+			clear = 0;
+			helper = 0;
+		}
+		if(buttons.released(BTN_LEFT))
+		{
+			display.drawRect(7 + 37 * (cursor % 4), 48 + 27 * (int)(cursor / 4), 35, 25, 0xA794);
+			display.drawRect(6 + 37 * (cursor % 4), 47 + 27 * (int)(cursor / 4), 37, 27, 0xA794);
+			if(cursor%4 > 0)
+				cursor--;
+			else
+				cursor += 3;
+			blinkState = 1;
+			blinkMillis = millis();
+			while(!update());
+		}
+		if(buttons.released(BTN_RIGHT))
+		{
+			display.drawRect(7 + 37 * (cursor % 4), 48 + 27 * (int)(cursor / 4), 35, 25, 0xA794);
+			display.drawRect(6 + 37 * (cursor % 4), 47 + 27 * (int)(cursor / 4), 37, 27, 0xA794);
+			if(cursor%4 < 3)
+				cursor++;
+			else
+				cursor -= 3;
+			blinkState = 1;
+			blinkMillis = millis();
+			while(!update());
+		}
+		if(buttons.released(BTN_DOWN))
+		{
+			display.drawRect(7 + 37 * (cursor % 4), 48 + 27 * (int)(cursor / 4), 35, 25, 0xA794);
+			display.drawRect(6 + 37 * (cursor % 4), 47 + 27 * (int)(cursor / 4), 37, 27, 0xA794);
+			if((int)(cursor/4) < 1)
+				cursor += 4;
+			else
+				cursor -= 4;
+			blinkState = 1;
+			blinkMillis = millis();
+			while(!update());
+		}
+		if(buttons.released(BTN_UP))
+		{
+			display.drawRect(7 + 37 * (cursor % 4), 48 + 27 * (int)(cursor / 4), 35, 25, 0xA794);
+			display.drawRect(6 + 37 * (cursor % 4), 47 + 27 * (int)(cursor / 4), 37, 27, 0xA794);
+			if((int)(cursor/4) > 0)
+				cursor -= 4;
+			else
+				cursor += 4;
+			blinkState = 1;
+			blinkMillis = millis();
+			while(!update());
+		}
+		if(buttons.released(BTN_A))
+		{
+			if(cursor == 4)
+			{
+				result = input.toDouble();
+				Serial.println(sqrt((double)(result)));
+				result = sqrt(result);
+				if(result == int(result))
+					input = String((int)(round(result)));
+				else
+					input = String(result);
+			}
+			else if(cursor == 6)
+			{
+				result = input.toDouble();
+				result = 1/result;
+				if(result == int(result))
+					input = String((int)(round(result)));
+				else
+					input = String(result);
+			}
+			else if(cursor == 7 && input.indexOf('.') == -1 && input.length() < 8)
+			{
+				if(input == "" || clear)
+				{
+					input = "0";
+					clear = 0;
+				}
+				input.concat('.');
+			}
+			else if(operation == -1 && cursor != 4 && cursor != 6)
+			{
+				clear = 1;
+				result = input.toDouble();
+				set = 0;
+				operation = cursor;
+			}
+			else if(operation > -1 && cursor != 4 && cursor != 6)
+			{
+				if(!set)
+				{
+					helper = input.toDouble();
+					set = 1;
+				}
+
+				set = 0;
+				Serial.println(clear);
+				if(operation == cursor && !clear)
+				{
+					switch (operation)
+					{
+						case 0:
+							result += helper;
+							break;
+						case 1:
+							result -= helper;
+							break;
+						case 2:
+							result *= helper;
+							break;
+						case 3:
+							result /= helper;
+							break;
+						case 5:
+							result = pow(result, helper);
+							break;
+					}
+					if(result == int(result))
+						input = String((int)(round(result)));
+					else
+						input = String(result);
+					set = 1;
+					clear = 1;
+				}
+				else
+					operation = cursor;
+				
+			}
+			while(!update());
+		}
+		if(key == 'A')
+		{
+			if(operation != -1 && !clear)
+			{
+				if(!set)
+				{
+					helper = input.toDouble();
+					set = 1;
+				}
+				set = 0;
+				switch (operation)
+				{
+					case 0:
+						result += input.toDouble();
+						break;
+					case 1:
+						result -= input.toDouble();
+						break;
+					case 2:
+						result *= input.toDouble();
+						break;
+					case 3:
+						result /= input.toDouble();
+						break;
+					case 5:
+						result = pow(result, helper);
+						break;
+				}
+				if(result == int(result))
+					input = String((int)(round(result)));
+				else
+					input = String(result);
+				operation = -1;
+			}
+		}
+		if(input.length() > 8 || input == "inf")
+		{
+			input = "Error";
+			clear = 1;
+		}
+		if(buttons.released(BTN_B))
+			break;
+		update();
+	}
+	while(!update());
 }
 //save manipulation
 JsonArray& MAKERphone::getJSONfromSAV(const char *path)
