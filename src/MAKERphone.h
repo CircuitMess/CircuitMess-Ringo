@@ -388,6 +388,9 @@ class MAKERphone:public Buttons, public GUI
 	//Calculator app
 	void calculatorApp();
 	
+	//Calendar app
+	void calendarApp();
+	
 	GUI gui;
 	Buttons buttons;
 	//Display display;
@@ -436,6 +439,15 @@ class MAKERphone:public Buttons, public GUI
 	bool collideCircleCircle(int16_t centerX1, int16_t centerY1, int16_t r1, int16_t centerX2, int16_t centerY2, int16_t r2);  // Returns TRUE if the 2 circles overlap
 	bool collidePointCircle(int16_t pointX, int16_t pointY, int16_t centerX, int16_t centerY, int16_t r);  // Returns TRUE if the point overlaps the circle
 
+	//Clock functions and variables
+	bool Century = false;
+	bool h12;
+	bool PM;
+	uint8_t clockMonth, clockDay, clockHour, clockMinute, clockSecond;
+	uint16_t clockYear;
+	bool clockDy, clock12h, clockpm;
+	void updateTimeGSM();
+	void updateTimeRTC();
 private:
 	SdFat SDFAT;
 	
@@ -469,15 +481,7 @@ private:
 	void writeFile(const char * path, const char * message);
 	void appendFile(const char * path, const char * message);
 
-	//Clock functions and variables
-	bool Century = false;
-	bool h12;
-	bool PM;
-	uint8_t clockMonth, clockDay, clockHour, clockMinute, clockSecond;
-	uint16_t clockYear;
-	bool clockDy, clock12h, clockpm;
-	void updateTimeGSM();
-	void updateTimeRTC();
+	
 	bool inHomePopup = 0;
 	void takeScreenshot();
 	bool screenshotFlag = 0;

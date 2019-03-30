@@ -1218,6 +1218,10 @@ void MAKERphone::mainMenu()
 				clockApp();
 			if(titles[index] == "Flashlight")
 				flashlightApp();
+			if(titles[index] == "Calculator")
+				calculatorApp();
+			if(titles[index] == "Calendar")
+				calendarApp();
 			if (index == -2)
 			{
 				Serial.println("pressed");
@@ -9264,6 +9268,192 @@ void MAKERphone::calculatorApp()
 		}
 		if(buttons.released(BTN_B))
 			break;
+		update();
+	}
+	while(!update());
+}
+
+//Calendar app
+void MAKERphone::calendarApp()
+{
+	int startDay = 0; // Sunday's value is 0, Saturday is 6
+	String week1 ="";
+	String week2 ="";
+	String week3 ="";
+	String week4 ="";
+	String week5 ="";
+	String week6 = "";
+	int newWeekStart = 0; // used to show start of next week of the month
+	String monthNames= "JanFebMarAprMayJunJulAugSepOctNovDec";
+	int  monthIndex2[122] ={0,3,6,9,12,15,18,21,24,27,30,33};
+	static int t[] = {0, 3, 2, 5, 0, 3, 5, 1, 4, 6, 2, 4};
+	char monthName2[3]="";
+	int monthLength = 0;
+	uint8_t offset = 7;
+	updateTimeRTC();
+	uint8_t month = clockMonth;
+	uint16_t year = clockYear + 2000;
+
+	while(!buttons.released(BTN_B))
+	{	
+		//printing the month
+		{
+			display.setTextFont(2);
+			display.fillScreen(TFT_WHITE);
+			display.setTextColor(TFT_BLACK);
+			display.drawString("Mo Tu We Th Fr Sa Su", 5,9 - offset); 
+			if (month == 1 || month == 3 || month == 5 || month == 7 || month == 8 || month == 10 || month == 12){
+				monthLength = 31;
+			}
+			else {monthLength = 30;}
+			if(month == 2){monthLength = 28;}
+
+			int y = year -  (month < 3);
+			startDay = (y +y/4 -y/100 + y/400 + t[month-1] + 1)% 7; // Sunday's value is 0
+			// now build first week string
+			switch (startDay){
+				case 1:
+				// Monday
+				week1 = " 1  2  3  4  5  6  7";
+				break;
+				case 2:
+				// Tuesday
+				week1 = "    1  2  3  4  5  6";
+				break;      
+				case 3:
+				// Wednesday
+				week1 = "       1  2  3  4  5";
+				break;           
+				case 4:
+				// Thursday
+				week1 = "          1  2  3  4";
+				break;  
+				case 5:
+				// Friday
+				week1 = "             1  2  3";
+				break; 
+				case 6:
+				// Saturday
+				if(monthLength == 31)
+					week6 = "31";
+				week1 = "                1  2";
+				break; 
+				case 0:
+				// Sunday
+				week1 = "                   1";
+				if(monthLength == 30){week6 = "30";}      
+				else if(monthLength == 31){week6 = "30 31";}     
+
+				break;           
+			} // end first week
+			startDay += 6;
+			if(startDay > 6)
+				startDay %= 7;
+			newWeekStart = (7-startDay) + 1;
+			const char* newWeek1 = (const char*) week1.c_str();  
+			display.drawString(newWeek1, 5,25 - offset); 
+			// display week 2
+			week2 ="";
+			for (int f = newWeekStart; f < newWeekStart + 7; f++){
+				Serial.println(week2);
+				delay(5);
+				if(f<10){
+				week2 = week2 +  " " + String(f) + " ";
+				}  
+				else{week2 = week2 + String(f) + " ";}    
+			}
+			const char* newWeek2 = (const char*) week2.c_str();  
+			display.drawString(newWeek2, 5,40 - offset); 
+			// display week 3
+			newWeekStart = (14-startDay)+1; 
+			week3 ="";
+			for (int f = newWeekStart; f < newWeekStart + 7; f++){
+				if(f<10){
+				week3 = week3 +  " " + String(f) + " ";
+				}  
+				else{week3 = week3 + String(f) + " ";}    
+			}
+			const char* newWeek3 = (const char*) week3.c_str();  
+			display.drawString(newWeek3, 5,55 - offset);     
+			// display week 4
+			newWeekStart = (21-startDay)+1; 
+			week4 ="";
+			for (int f = newWeekStart; f < newWeekStart + 7; f++){
+				if(f<10){
+				week4 = week4 +  " " + String(f) + " ";
+				}  
+				else{week4 = week4 + String(f) + " ";}    
+				}
+			const char* newWeek4 = (const char*) week4.c_str();  
+			display.drawString(newWeek4, 5,70 - offset); 
+			// do we need a fifth week
+			week5="";
+			newWeekStart = (28-startDay)+1;   
+			// is is February?
+			if(newWeekStart > 28 && month == 2){
+			// do nothing unless its a leap year
+				if (year==(year/4)*4){ // its a leap year
+				week5 = "29";
+				}       
+			}
+			else{ // print up to 30 anyway
+				if(month == 2){  // its February
+				for (int f = newWeekStart; f < 29; f++){
+					week5 = week5 + String(f) + " ";  
+				}  
+				// is it a leap year
+				if (year==(year/4)*4){ // its a leap year
+					week5 = week5 + "29";
+				}        
+				}
+				else{
+				for (int f = newWeekStart; f < 31; f++){
+					week5 = week5 + String(f) + " ";
+				}
+				// are there 31 days
+				if (monthLength == 31 && week5.length() <18){
+					week5 = week5 + "31"; 
+				} 
+				} 
+			}
+			const char* newWeek5 = (const char*) week5.c_str();  
+			display.drawString(newWeek5, 5,85 - offset);
+			display.setCursor(5, 100 - offset);
+			if(week6 != "")
+			{
+				display.print(week6.c_str());
+				week6 = "";
+			}
+			display.setCursor(0, 112);
+			display.printCenter(String(monthNames.substring((month - 1) * 3, month * 3)) + " " + year);
+
+			//  Serial.println("Su Mo Tu We Th Fr Sa");
+			//  Serial.println(week1);  
+			//  Serial.println(week2);  
+			//  Serial.println(week3); 
+			//  Serial.println(week4);    
+			//  Serial.println(week5); 
+		} 
+		 if(buttons.released(BTN_LEFT))
+		{
+			if(month > 1)
+				month--;
+			else
+			{
+				month = 12;
+				year--;
+			}
+		}
+		if(buttons.released(BTN_RIGHT))
+		{
+			if(month < 12)
+				month++;
+			else
+			{
+				month = 1;
+				year++;
+			}
+		}
 		update();
 	}
 	while(!update());
