@@ -10268,8 +10268,8 @@ int16_t GUI::scrollingMainMenu()
 		///////////////////////////////////////
 		if (mp.buttons.released(BTN_A)) //CONFIRM
 		{
-			osc->note(75, 0.05);
-			osc->play();
+			// osc->note(75, 0.05);
+			// osc->play();
 			while (!mp.update());
 			return cursorY * x_elements + cursorX;  //returns index of selected icon
 		}
