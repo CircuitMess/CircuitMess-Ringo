@@ -9277,17 +9277,17 @@ void MAKERphone::calculatorApp()
 void MAKERphone::calendarApp()
 {
 	int startDay = 0; // Sunday's value is 0, Saturday is 6
-	String week1 ="";
-	String week2 ="";
-	String week3 ="";
-	String week4 ="";
-	String week5 ="";
+	int8_t days[5][7] = {
+		{-1, -1, -1, -1, -1, -1, -1},
+		{-1, -1, -1, -1, -1, -1, -1},
+		{-1, -1, -1, -1, -1, -1, -1},
+		{-1, -1, -1, -1, -1, -1, -1},
+		{-1, -1, -1, -1, -1, -1, -1}
+		};
 	String week6 = "";
 	int newWeekStart = 0; // used to show start of next week of the month
 	String monthNames= "JanFebMarAprMayJunJulAugSepOctNovDec";
-	int  monthIndex2[122] ={0,3,6,9,12,15,18,21,24,27,30,33};
 	static int t[] = {0, 3, 2, 5, 0, 3, 5, 1, 4, 6, 2, 4};
-	char monthName2[3]="";
 	int monthLength = 0;
 	uint8_t offset = 7;
 	updateTimeRTC();
@@ -9314,33 +9314,47 @@ void MAKERphone::calendarApp()
 			switch (startDay){
 				case 1:
 				// Monday
-				week1 = " 1  2  3  4  5  6  7";
+				for (int i = 1; i < 8; i++)
+					days[0][i-1] = i;
 				break;
+
 				case 2:
 				// Tuesday
-				week1 = "    1  2  3  4  5  6";
-				break;      
+				for (int i = 1; i < 7; i++)
+					days[0][i] = i;
+
+				break;   
+
 				case 3:
 				// Wednesday
-				week1 = "       1  2  3  4  5";
-				break;           
+				for (int i = 1; i < 6; i++)
+					days[0][i+1] = i;
+
+				break;  
+
 				case 4:
 				// Thursday
-				week1 = "          1  2  3  4";
-				break;  
+				for (int i = 1; i < 5; i++)
+					days[0][i+2] = i;
+				break; 
+
 				case 5:
 				// Friday
-				week1 = "             1  2  3";
-				break; 
+				for (int i = 1; i < 4; i++)
+					days[0][i+3] = i;
+				break;
+
 				case 6:
 				// Saturday
+				for (int i = 1; i < 3; i++)
+					days[0][i+4] = i;
 				if(monthLength == 31)
 					week6 = "31";
-				week1 = "                1  2";
 				break; 
+
 				case 0:
 				// Sunday
-				week1 = "                   1";
+				days[0][6] = 1;
 				if(monthLength == 30){week6 = "30";}      
 				else if(monthLength == 31){week6 = "30 31";}     
 
@@ -9349,76 +9363,43 @@ void MAKERphone::calendarApp()
 			startDay += 6;
 			if(startDay > 6)
 				startDay %= 7;
+		
 			newWeekStart = (7-startDay) + 1;
-			const char* newWeek1 = (const char*) week1.c_str();  
-			display.drawString(newWeek1, 5,25 - offset); 
-			// display week 2
-			week2 ="";
-			for (int f = newWeekStart; f < newWeekStart + 7; f++){
-				Serial.println(week2);
-				delay(5);
-				if(f<10){
-				week2 = week2 +  " " + String(f) + " ";
-				}  
-				else{week2 = week2 + String(f) + " ";}    
-			}
-			const char* newWeek2 = (const char*) week2.c_str();  
-			display.drawString(newWeek2, 5,40 - offset); 
-			// display week 3
+			for (int f = newWeekStart; f < newWeekStart + 7; f++)
+				days[1][f - newWeekStart] = f;  
+
 			newWeekStart = (14-startDay)+1; 
-			week3 ="";
-			for (int f = newWeekStart; f < newWeekStart + 7; f++){
-				if(f<10){
-				week3 = week3 +  " " + String(f) + " ";
-				}  
-				else{week3 = week3 + String(f) + " ";}    
-			}
-			const char* newWeek3 = (const char*) week3.c_str();  
-			display.drawString(newWeek3, 5,55 - offset);     
-			// display week 4
+			for (int f = newWeekStart; f < newWeekStart + 7; f++)
+				days[2][f - newWeekStart] = f;
+
 			newWeekStart = (21-startDay)+1; 
-			week4 ="";
-			for (int f = newWeekStart; f < newWeekStart + 7; f++){
-				if(f<10){
-				week4 = week4 +  " " + String(f) + " ";
-				}  
-				else{week4 = week4 + String(f) + " ";}    
-				}
-			const char* newWeek4 = (const char*) week4.c_str();  
-			display.drawString(newWeek4, 5,70 - offset); 
-			// do we need a fifth week
-			week5="";
+			for (int f = newWeekStart; f < newWeekStart + 7; f++)
+				days[3][f - newWeekStart] = f;
+
 			newWeekStart = (28-startDay)+1;   
 			// is is February?
 			if(newWeekStart > 28 && month == 2){
 			// do nothing unless its a leap year
-				if (year==(year/4)*4){ // its a leap year
-				week5 = "29";
-				}       
+				if (year==(year/4)*4) // its a leap year
+					days[4][0] = 29;
 			}
 			else{ // print up to 30 anyway
 				if(month == 2){  // its February
-				for (int f = newWeekStart; f < 29; f++){
-					week5 = week5 + String(f) + " ";  
-				}  
-				// is it a leap year
-				if (year==(year/4)*4){ // its a leap year
-					week5 = week5 + "29";
-				}        
+					for (int f = newWeekStart; f < 29; f++)
+						days[4][f - newWeekStart] = f;
+					// is it a leap year
+					if (year==(year/4)*4) // its a leap year
+						days[4][29 - newWeekStart] = 29;
 				}
 				else{
-				for (int f = newWeekStart; f < 31; f++){
-					week5 = week5 + String(f) + " ";
-				}
-				// are there 31 days
-				if (monthLength == 31 && week5.length() <18){
-					week5 = week5 + "31"; 
-				} 
+					for (int f = newWeekStart; f < 31; f++)
+						days[4][f - newWeekStart] = f;
+					// are there 31 days
+					if (monthLength == 31 && days[4][6] == -1)
+						days[4][31 - newWeekStart] = 31;
 				} 
 			}
-			const char* newWeek5 = (const char*) week5.c_str();  
-			display.drawString(newWeek5, 5,85 - offset);
-			display.setCursor(5, 100 - offset);
+			display.setCursor(6, 100 - offset);
 			if(week6 != "")
 			{
 				display.print(week6.c_str());
@@ -9426,16 +9407,35 @@ void MAKERphone::calendarApp()
 			}
 			display.setCursor(0, 112);
 			display.printCenter(String(monthNames.substring((month - 1) * 3, month * 3)) + " " + year);
+			display.fillRect(2 + 111, 18, 44, 90, TFT_LIGHTGREY);
+			for (int y = 0; y < 5;y++)
+			{
+				display.drawFastHLine(2, 18 + 15 * y, 155, TFT_BLACK);
+				for(int x = 0; x<7;x++)
+				{
+					display.drawFastVLine(2 + 22 * x, 18, 90, TFT_BLACK);
+					if(month == clockMonth && days[y][x] == clockDay && year == clockYear + 2000 && millis()%500 >= 250)
+						display.fillRect(3 + 22 * x, 19 + 15 * y, 21, 14, TFT_RED);
+					display.setCursor(6 + 22 * x, 18 + 15 * y);
+					if(days[y][x] < 10)
+						display.setCursor(6 + 4 + 22 * x, 18 + 15 * y);
+					if(days[y][x] > 0)
+						display.print(days[y][x]);
+					// Serial.print(days[y][x]);
+					// Serial.print("|");
+					days[y][x] = -1;
+				}
+				// Serial.print("\n-----------\n");
+				// delay(5);
+			}
+			display.drawFastVLine(2 + 154, 18, 90, TFT_BLACK);
+			display.drawFastHLine(2, 18 + 75, 155, TFT_BLACK);
+			display.drawFastHLine(2, 18 + 90, 155, TFT_BLACK);
 
-			//  Serial.println("Su Mo Tu We Th Fr Sa");
-			//  Serial.println(week1);  
-			//  Serial.println(week2);  
-			//  Serial.println(week3); 
-			//  Serial.println(week4);    
-			//  Serial.println(week5); 
 		} 
 		 if(buttons.released(BTN_LEFT))
 		{
+			while(!update());
 			if(month > 1)
 				month--;
 			else
@@ -9446,6 +9446,7 @@ void MAKERphone::calendarApp()
 		}
 		if(buttons.released(BTN_RIGHT))
 		{
+			while(!update());
 			if(month < 12)
 				month++;
 			else
