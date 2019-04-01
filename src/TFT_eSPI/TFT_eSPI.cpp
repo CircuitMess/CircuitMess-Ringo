@@ -5316,8 +5316,6 @@ uint16_t TFT_eSprite::readPixel(int32_t x, int32_t y)
 	if (_bpp == 8)
 	{
     uint16_t color = _img8[x + y * _iwidth];
-    Serial.println(color);
-    delay(5);
 		if (color != 0)
 		{
 			uint8_t  blue[] = { 0, 11, 21, 31 };

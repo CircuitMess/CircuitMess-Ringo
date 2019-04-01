@@ -423,7 +423,6 @@ class MAKERphone:public Buttons, public GUI
 	bool receivedFlag = 0;
 	bool SDinsertedFlag = 0;
 	bool popupMenuFlag = 1;
-	uint32_t audioMillis = millis();
 
 	//SAVE manipulation
 	JsonArray &getJSONfromSAV(const char *path);

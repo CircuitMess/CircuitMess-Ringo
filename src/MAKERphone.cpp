@@ -52,7 +52,6 @@ void MAKERphone::begin(bool splash) {
 		}
 		for (uint8_t i = 0; i < NUMPIXELS; i++) {
 			for (int16_t x = 128; x >= 0; x -= 2) {
-				Serial.println(x);
 				leds[i] = CRGB(x, 0, 0);
 				delay(1);
 				FastLED.show();
@@ -60,12 +59,12 @@ void MAKERphone::begin(bool splash) {
 		}
 	}
 	FastLED.clear();
+	buttons.begin();
 
 	//Startup sounds
-	tone2(soundPin, 2000, 10);
-	buttons.begin();
-	buttons.kpd.writeMute(0);
-	buttons.kpd.writeVolume(0);
+	// tone2(soundPin, 2000, 10);
+	// buttons.kpd.writeMute(0);
+	// buttons.kpd.writeVolume(0);
 	//kpd.writeVolumeRight(78);
 
 	//PWM SETUP FOR ESP32
@@ -228,7 +227,6 @@ bool MAKERphone::update() {
 				buf.fillRect(x * 2, y * 2, 2, 2, display.readPixel(x, y));
 			}
 		}
-		audioMillis-=5;
 	}
 	//buf2.invertDisplay(1);
 	
