@@ -21,13 +21,13 @@
 namespace fs
 {
 
-    class SDFS : public FS
+    class _SDFS : public _FS
     {
     protected:
         uint8_t _pdrv;
 
     public:
-        SDFS(FSImplPtr impl);
+        _SDFS(FSImplPtr impl);
         bool begin(uint8_t ssPin=SS, SPIClass &spi=SPI, uint32_t frequency=4000000, const char * mountpoint="/sd");
         void end();
         sdcard_type_t cardType();
@@ -37,10 +37,10 @@ namespace fs
     };
 
 }
-extern fs::SDFS SD;
+extern fs::_SDFS _SD;
 using namespace fs;
 // typedef fs::SDAudioFile SDFile;
-typedef fs::SDFS SDFileSystemClass;
-#define SDFileSystem    SD
+typedef fs::_SDFS SDFileSystemClass;
+#define SDFileSystem    _SD
 
 #endif /* _SD_H_ */

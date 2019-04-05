@@ -177,12 +177,12 @@ void SDAudioFile::rewindDirectory(void)
     _p->rewindDirectory();
 }
 
-SDAudioFile FS::open(const String& path, const char* mode)
+SDAudioFile _FS::open(const String& path, const char* mode)
 {
     return open(path.c_str(), mode);
 }
 
-SDAudioFile FS::open(const char* path, const char* mode)
+SDAudioFile _FS::open(const char* path, const char* mode)
 {
     if (!_impl) {
         return SDAudioFile();
@@ -191,7 +191,7 @@ SDAudioFile FS::open(const char* path, const char* mode)
     return SDAudioFile(_impl->open(path, mode));
 }
 
-bool FS::exists(const char* path)
+bool _FS::exists(const char* path)
 {
     if (!_impl) {
         return false;
@@ -199,12 +199,12 @@ bool FS::exists(const char* path)
     return _impl->exists(path);
 }
 
-bool FS::exists(const String& path)
+bool _FS::exists(const String& path)
 {
     return exists(path.c_str());
 }
 
-bool FS::remove(const char* path)
+bool _FS::remove(const char* path)
 {
     if (!_impl) {
         return false;
@@ -212,12 +212,12 @@ bool FS::remove(const char* path)
     return _impl->remove(path);
 }
 
-bool FS::remove(const String& path)
+bool _FS::remove(const String& path)
 {
     return remove(path.c_str());
 }
 
-bool FS::rename(const char* pathFrom, const char* pathTo)
+bool _FS::rename(const char* pathFrom, const char* pathTo)
 {
     if (!_impl) {
         return false;
@@ -225,13 +225,13 @@ bool FS::rename(const char* pathFrom, const char* pathTo)
     return _impl->rename(pathFrom, pathTo);
 }
 
-bool FS::rename(const String& pathFrom, const String& pathTo)
+bool _FS::rename(const String& pathFrom, const String& pathTo)
 {
     return rename(pathFrom.c_str(), pathTo.c_str());
 }
 
 
-bool FS::mkdir(const char *path)
+bool _FS::mkdir(const char *path)
 {
     if (!_impl) {
         return false;
@@ -239,12 +239,12 @@ bool FS::mkdir(const char *path)
     return _impl->mkdir(path);
 }
 
-bool FS::mkdir(const String &path)
+bool _FS::mkdir(const String &path)
 {
     return mkdir(path.c_str());
 }
 
-bool FS::rmdir(const char *path)
+bool _FS::rmdir(const char *path)
 {
     if (!_impl) {
         return false;
@@ -252,7 +252,7 @@ bool FS::rmdir(const char *path)
     return _impl->rmdir(path);
 }
 
-bool FS::rmdir(const String &path)
+bool _FS::rmdir(const String &path)
 {
     return rmdir(path.c_str());
 }

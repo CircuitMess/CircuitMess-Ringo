@@ -81,7 +81,7 @@
   #endif
 #endif
 
-#include <Arduino.h>
+// #include <Arduino.h>
 #include <Print.h>
 
 #include <pgmspace.h>
@@ -373,6 +373,7 @@ swap_coord(T& a, T& b) { T t = a; a = b; b = t; }
 #ifndef min
   #define min(a,b) (((a) < (b)) ? (a) : (b))
 #endif
+#include "../utility/SD/FS/src/FS.h"
 #include "../utility/SD/SD/src/SD.h"
 // This structure allows sketches to retrieve the user setup parameters at runtime
 // by calling getSetup(), zero impact on code size unless used, mainly for diagnostics
@@ -730,7 +731,7 @@ private:
 class TFT_eSprite : public TFT_eSPI {
 
 public:
-
+  
 	TFT_eSprite(TFT_eSPI *tft);
 
 	// Create a sprite of width x height pixels, return a pointer to the RAM area

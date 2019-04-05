@@ -20,7 +20,6 @@
 
 #ifndef FS_H
 #define FS_H
-
 #include <memory>
 #include <Arduino.h>
 
@@ -83,10 +82,10 @@ protected:
     FileImplPtr _p;
 };
 
-class FS
+class _FS
 {
 public:
-    FS(FSImplPtr impl) : _impl(impl) { }
+    _FS(FSImplPtr impl) : _impl(impl) { }
 
     SDAudioFile open(const char* path, const char* mode = "r");
     SDAudioFile open(const String& path, const char* mode = "r");
@@ -113,7 +112,7 @@ protected:
 
 } // namespace fs
 #ifndef FS_NO_GLOBALS
-using fs::FS;
+using fs::_FS;
 using fs::SDAudioFile;
 using fs::SeekMode;
 using fs::SeekSet;

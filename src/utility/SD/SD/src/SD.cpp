@@ -20,9 +20,9 @@
 
 using namespace fs;
 
-SDFS::SDFS(FSImplPtr impl): FS(impl), _pdrv(0xFF) {}
+_SDFS::_SDFS(FSImplPtr impl): _FS(impl), _pdrv(0xFF) {}
 
-bool SDFS::begin(uint8_t ssPin, SPIClass &spi, uint32_t frequency, const char * mountpoint)
+bool _SDFS::begin(uint8_t ssPin, SPIClass &spi, uint32_t frequency, const char * mountpoint)
 {
     if(_pdrv != 0xFF) {
         return true;
@@ -46,7 +46,7 @@ bool SDFS::begin(uint8_t ssPin, SPIClass &spi, uint32_t frequency, const char * 
     return true;
 }
 
-void SDFS::end()
+void _SDFS::end()
 {
     if(_pdrv != 0xFF) {
         _impl->mountpoint(NULL);
@@ -57,7 +57,7 @@ void SDFS::end()
     }
 }
 
-sdcard_type_t SDFS::cardType()
+sdcard_type_t _SDFS::cardType()
 {
     if(_pdrv == 0xFF) {
         return CARD_NONE;
@@ -65,7 +65,7 @@ sdcard_type_t SDFS::cardType()
     return sdcard_type(_pdrv);
 }
 
-uint64_t SDFS::cardSize()
+uint64_t _SDFS::cardSize()
 {
     if(_pdrv == 0xFF) {
         return 0;
@@ -75,7 +75,7 @@ uint64_t SDFS::cardSize()
     return (uint64_t)sectors * sectorSize;
 }
 
-uint64_t SDFS::totalBytes()
+uint64_t _SDFS::totalBytes()
 {
 	FATFS* fsinfo;
 	DWORD fre_clust;
@@ -89,7 +89,7 @@ uint64_t SDFS::totalBytes()
 	return size;
 }
 
-uint64_t SDFS::usedBytes()
+uint64_t _SDFS::usedBytes()
 {
 	FATFS* fsinfo;
 	DWORD fre_clust;
@@ -103,4 +103,4 @@ uint64_t SDFS::usedBytes()
 	return size;
 }
 
-SDFS SD = SDFS(FSImplPtr(new VFSImpl()));
+_SDFS _SD = _SDFS(FSImplPtr(new VFSImpl()));

@@ -28,6 +28,9 @@ void Task1code( void * pvParameters ){
 	};
 }
 void MAKERphone::begin(bool splash) {
+	SDFileSystemClass SD = _SD;
+
+
 	String input="";
 	pinMode(SIM800_DTR, OUTPUT);
 	digitalWrite(SIM800_DTR, 0);
@@ -75,7 +78,7 @@ void MAKERphone::begin(bool splash) {
 	ledcAnalogWrite(LEDC_CHANNEL, 255);
 	uint32_t tempMillis = millis();
 	SDinsertedFlag = 1;
-	while (!SD.begin(5, SPI, 8000000))
+	while (!_SD.begin(5, SPI, 8000000))
 	{
 		Serial.println("SD ERROR");
 		if(millis()-tempMillis > 5)
@@ -165,14 +168,14 @@ void MAKERphone::test() {
 	// JsonArray& contacts = mp.jb.parseArray(contacts_default);
 	// JsonObject& settings = mp.jb.parseObject(settings_default);
 
-	// SD.remove(contacts_path);
-	// SD.remove(settings_path);
+	// _SD.remove(contacts_path);
+	// _SD.remove(settings_path);
 
-	// SDAudioFile contacts_file = SD.open(contacts_path, FILE_REWRITE);
+	// SDAudioFile contacts_file = _SD.open(contacts_path, FILE_REWRITE);
 	// contacts.prettyPrintTo(contacts_file);
 	// contacts_file.close();
 
-	// SDAudioFile settings_file = SD.open(settings_path, FILE_REWRITE);
+	// SDAudioFile settings_file = _SD.open(settings_path, FILE_REWRITE);
 	// settings.prettyPrintTo(settings_file);
 	// settings_file.close();
 }
@@ -874,7 +877,7 @@ void MAKERphone::listBinaries(const char * dirname, uint8_t levels) {
 	binaryCount = 0;
 	Serial.printf("Listing directory: %s\n", dirname);
 
-	SDAudioFile root = SD.open(dirname);
+	SDAudioFile root = _SD.open(dirname);
 	if (!root) {
 		Serial.println("Failed to open directory");
 		return;
@@ -925,7 +928,7 @@ void MAKERphone::listDirectories(const char * dirname) {
 	directoryCount = 0;
 	Serial.printf("Listing directory: %s\n", dirname);
 	
-	SDAudioFile root = SD.open(dirname);
+	SDAudioFile root = _SD.open(dirname);
 	if (!root) {
 		Serial.println("Failed to open directory");
 		return;
@@ -946,7 +949,7 @@ void MAKERphone::listDirectories(const char * dirname) {
 			String Name(file.name());
 			Serial.println(Name);
 			if(Name != "/Images\0" && Name != "/Music\0" && Name != "/Video\0"
-			 && Name != "/System Volume Information\0" && SD.exists(String(Name + "/" + Name + ".BIN")))
+			 && Name != "/System Volume Information\0" && _SD.exists(String(Name + "/" + Name + ".BIN")))
 			{
 				
 				Serial.println(Name);
@@ -1034,7 +1037,7 @@ void MAKERphone::mainMenu()
 				update();
 				if(SDinsertedFlag)
 				{
-					while(!SD.begin(5, SPI, 8000000));
+					while(!_SD.begin(5, SPI, 8000000));
 					listBinaries("/", 0);
 					int8_t index = gui.menu("Load from SD", BinaryFiles, binaryCount);
 
@@ -1254,7 +1257,7 @@ void MAKERphone::bigIconsMainMenu() {
 			update();
 			if(SDinsertedFlag)
 			{
-				while(!SD.begin(5, SPI, 8000000));
+				while(!_SD.begin(5, SPI, 8000000));
 				listBinaries("/", 0);
 				if(binaryCount > 0)
 				{
@@ -3797,17 +3800,17 @@ uint8_t MAKERphone::deleteContactSD(String name, String number)
 void MAKERphone::contactsAppSD(){
 	Serial.println("");
 	Serial.println("Begin contacts");
-	SDAudioFile file = SD.open("/contacts.json", "r");
+	SDAudioFile file = _SD.open("/contacts.json", "r");
 
 	if(file.size() < 2){ // empty -> FILL
 		Serial.println("Override");
 		file.close();
 		JsonArray& jarr = mp.jb.parseArray("[{\"name\":\"foo\", \"number\":\"099\"}]");
 		delay(10);
-		SDAudioFile file1 = SD.open("/contacts.json", "w");
+		SDAudioFile file1 = _SD.open("/contacts.json", "w");
 		jarr.prettyPrintTo(file1);
 		file1.close();
-		file = SD.open("/contacts.json", "r");
+		file = _SD.open("/contacts.json", "r");
 		while(!file)
 			Serial.println("CONTACTS ERROR");
 	}
@@ -3859,7 +3862,7 @@ void MAKERphone::contactsAppSD(){
 						newContact["name"] = name;
 						newContact["number"] = number;
 						jarr.add(newContact);
-						SDAudioFile file = SD.open("/contacts.json");
+						SDAudioFile file = _SD.open("/contacts.json");
 						jarr.prettyPrintTo(file);
 						file.close();
 					}
@@ -3867,7 +3870,7 @@ void MAKERphone::contactsAppSD(){
 					int id = menuChoice + 1000 - 1;
 					if(deleteContactSD(jarr[id]["name"], jarr[id]["number"])){
 						jarr.remove(id);
-						SDAudioFile file = SD.open("/contacts.json");
+						SDAudioFile file = _SD.open("/contacts.json");
 						jarr.prettyPrintTo(file);
 						file.close();
 					}
@@ -4667,10 +4670,10 @@ int16_t MAKERphone::audioPlayerMenu(const char* title, String* items, uint16_t l
 }
 void MAKERphone::listAudio(const char * dirname, uint8_t levels) {
 	audioCount = 0;
-	while(!SD.begin(5, SPI, 9000000))
+	while(!_SD.begin(5, SPI, 9000000))
         Serial.println("SD ERROR");
 	Serial.printf("Listing directory: %s\n", dirname);
-	SDAudioFile root = SD.open(dirname);
+	SDAudioFile root = _SD.open(dirname);
 	if (!root) {
 		Serial.println("Failed to open directory");
 		return;
@@ -5070,8 +5073,8 @@ void MAKERphone::drawJpeg(String filename, int xpos, int ypos) {
   Serial.println("===========================");
 
   // Open the named file (the Jpeg decoder library will close it after rendering image)
-  SDAudioFile jpegFile = SD.open( filename);    // SDAudioFile handle reference for SPIFFS
-  //  SDAudioFile jpegSDAudioFile = SD.open( filename, FILE_READ);  // or, file handle reference for SD library
+  SDAudioFile jpegFile = _SD.open( filename);    // SDAudioFile handle reference for SPIFFS
+  //  SDAudioFile jpegSDAudioFile = _SD.open( filename, FILE_READ);  // or, file handle reference for SD library
 
   if ( !jpegFile ) {
     Serial.print("ERROR: SDAudioFile \""); Serial.print(filename); Serial.println ("\" not found!");
@@ -5098,7 +5101,7 @@ void MAKERphone::listPhotos(const char * dirname, uint8_t levels) {
 	photoCount = 0;
 	
 	Serial.printf("Listing directory: %s\n", dirname);
-	SDAudioFile root = SD.open(dirname);
+	SDAudioFile root = _SD.open(dirname);
 	if (!root) {
 		Serial.println("Failed to open directory");
 		return;
@@ -5890,7 +5893,7 @@ void MAKERphone::displayMenu() {
 	sleepTimeActual = sleepTimeActualBuffer;
 }
 void MAKERphone::soundMenu() {
-	SD.begin(5, SPI, 8000000);
+	_SD.begin(5, SPI, 8000000);
 	listRingtones("/ringtones", 0);
 	listNotifications("/notifications", 0);
 	
@@ -6041,7 +6044,7 @@ void MAKERphone::listRingtones(const char * dirname, uint8_t levels) {
 	
 	Serial.printf("Listing directory: %s\n", dirname);
 
-	SDAudioFile root = SD.open(dirname);
+	SDAudioFile root = _SD.open(dirname);
 	if (!root) {
 		Serial.println("Failed to open directory");
 		return;
@@ -6076,7 +6079,7 @@ void MAKERphone::listNotifications(const char * dirname, uint8_t levels) {
 	
 	Serial.printf("Listing directory: %s\n", dirname);
 
-	SDAudioFile root = SD.open(dirname);
+	SDAudioFile root = _SD.open(dirname);
 	if (!root) {
 		Serial.println("Failed to open directory");
 		return;
@@ -7434,14 +7437,14 @@ bool MAKERphone::updateMenu()
 					JsonArray& contacts = mp.jb.parseArray(contacts_default);
 					JsonObject& settings = mp.jb.parseObject(settings_default);
 
-					SD.remove(contacts_path);
-					SD.remove(settings_path);
+					_SD.remove(contacts_path);
+					_SD.remove(settings_path);
 
-					SDAudioFile contacts_file = SD.open(contacts_path);
+					SDAudioFile contacts_file = _SD.open(contacts_path);
 					contacts.prettyPrintTo(contacts_file);
 					contacts_file.close();
 
-					SDAudioFile settings_file = SD.open(settings_path);
+					SDAudioFile settings_file = _SD.open(settings_path);
 					settings.prettyPrintTo(settings_file);
 					settings_file.close();
 
@@ -7493,7 +7496,7 @@ void MAKERphone::saveSettings(bool debug)
 {
 	const char * path = "/settings.json";
 	Serial.println("");
-	SD.remove(path);
+	_SD.remove(path);
 	JsonObject& settings = mp.jb.createObject();
 
 	if (settings.success()) {
@@ -7519,7 +7522,7 @@ void MAKERphone::saveSettings(bool debug)
 		settings["sleep_time"] = sleepTime;
 		settings["background_color"] = backgroundIndex;
 
-		SDAudioFile file1 = SD.open(path, "w");
+		SDAudioFile file1 = _SD.open(path, "w");
 		settings.prettyPrintTo(file1);
 		file1.close();
 	} else {
@@ -7530,15 +7533,15 @@ void MAKERphone::saveSettings(bool debug)
 void MAKERphone::loadSettings(bool debug)
 {
 	//create default folders if not present
-	if(!SD.exists("/Music"))
-		SD.mkdir("Music");
-	if(!SD.exists("/Images"))
-		SD.mkdir("Images");
-	if(!SD.exists("/Video"))
-		SD.mkdir("Video");
+	if(!_SD.exists("/Music"))
+		_SD.mkdir("Music");
+	if(!_SD.exists("/Images"))
+		_SD.mkdir("Images");
+	if(!_SD.exists("/Video"))
+		_SD.mkdir("Video");
 	const char * path = "/settings.json";
 	Serial.println(""); 
-	SDAudioFile file = SD.open(path);
+	SDAudioFile file = _SD.open(path);
 	JsonObject& settings = mp.jb.parseObject(file);
 	file.close();
 	
@@ -8814,7 +8817,7 @@ void MAKERphone::saveAlarms()
 {
 	const char * path = "/alarms.json";
 	Serial.println("");
-	SD.remove(path);
+	_SD.remove(path);
 	JsonArray& alarms = mp.jb.createArray();
 
 	if (alarms.success()) {
@@ -8835,7 +8838,7 @@ void MAKERphone::saveAlarms()
 			alarms.add(tempAlarm);	
 		}
 
-		SDAudioFile file1 = SD.open(path, "w");
+		SDAudioFile file1 = _SD.open(path, "w");
 		alarms.prettyPrintTo(file1);
 		alarms.prettyPrintTo(Serial);
 		file1.close();
@@ -8847,7 +8850,7 @@ void MAKERphone::loadAlarms()
 {
 	const char * path = "/alarms.json";
 	Serial.println(""); 
-	SDAudioFile file = SD.open(path);
+	SDAudioFile file = _SD.open(path);
 	JsonArray& alarms = mp.jb.parseArray(file);
 	file.close();
 	
@@ -9275,9 +9278,9 @@ JsonArray& MAKERphone::getJSONfromSAV(const char *path)
 }
 void MAKERphone::saveJSONtoSAV(const char *path, JsonArray& json)
 {
-	while(!SD.begin(5, SPI, 9000000))
+	while(!_SD.begin(5, SPI, 9000000))
         Serial.println("SD ERROR");
-	SDAudioFile file = SD.open(path, "w");
+	SDAudioFile file = _SD.open(path, "w");
 	if(file)
 		json.prettyPrintTo(file);
 	else
@@ -9306,10 +9309,10 @@ bool MAKERphone::collidePointCircle(int16_t pointX, int16_t pointY, int16_t cent
 //SD operations
 void MAKERphone::writeFile(const char * path, const char * message)
 {
-	while (!SD.begin(5, SPI, 8000000));
+	while (!_SD.begin(5, SPI, 8000000));
 	Serial.printf("Writing file: %s\n", path);
 
-	SDAudioFile file = SD.open(path);
+	SDAudioFile file = _SD.open(path);
 	if (!file) {
 		Serial.println("Failed to open file for writing");
 		return;
@@ -9325,7 +9328,7 @@ void MAKERphone::writeFile(const char * path, const char * message)
 void MAKERphone::appendFile(const char * path, const char * message) {
 	Serial.printf("Appending to file: %s\n", path);
 
-	SDAudioFile file = SD.open(path);
+	SDAudioFile file = _SD.open(path);
 	if (!file) {
 		Serial.println("Failed to open file for appending");
 		return;
@@ -9341,10 +9344,10 @@ void MAKERphone::appendFile(const char * path, const char * message) {
 	file.close();
 }
 String MAKERphone::readFile(const char * path) {
-	while (!SD.begin(5, SPI, 9000000));
+	while (!_SD.begin(5, SPI, 9000000));
 	Serial.printf("Reading file: %s\n", path);
 	String helper="";
-	SDAudioFile file = SD.open(path);
+	SDAudioFile file = _SD.open(path);
 	if (!file) {
 		Serial.println("Failed to open file for reading");
 		return "";
@@ -9372,18 +9375,18 @@ void MAKERphone::takeScreenshot()
 	while(!update());
 
 	char name[] = "/Images/screenshot_00.bmp";
-	while (!SD.begin(5, SPI, 9000000))
+	while (!_SD.begin(5, SPI, 9000000))
 		Serial.println("SD ERROR");
 	for (int i = 0; i < 100;i++)
 	{
 		name[20] = i % 10 + '0';
 		name[19] = i / 10 + '0';
-		if(!SD.exists(name))
+		if(!_SD.exists(name))
 			break;
 	}
 	Serial.println(name);
 	delay(5);
-	SDAudioFile file = SD.open(name, "w");
+	SDAudioFile file = _SD.open(name, "w");
 	if(!file)
 	{
 		Serial.println("SD file error!");
@@ -10216,7 +10219,7 @@ int16_t GUI::scrollingMainMenu()
 						{
 							// Serial.println(mp.directories[pageIndex * 3 + i - 10]);
 							// delay(5);
-							if(SD.exists(String("/" + mp.directories[pageIndex * 3 + i - 10] + "/icon.bmp")))
+							if(_SD.exists(String("/" + mp.directories[pageIndex * 3 + i - 10] + "/icon.bmp")))
 								mp.display.drawBmp(String("/" + mp.directories[pageIndex * 3 + i - 10] + "/icon.bmp"), 4 + tempX * 52, 18 + tempY * 56, 2);
 							else
 								mp.display.drawIcon(defaultIcon, 4 + tempX * 52, 18 + tempY * 56, width, bigIconHeight, 2);

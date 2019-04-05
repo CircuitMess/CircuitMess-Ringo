@@ -4,6 +4,8 @@
 // Dimensions    : 36x30 pixels
 // Size          : 2,160 Bytes
 // We need this header file to use FLASH as storage with PROGMEM directive:
+#ifndef sprites_c
+#define sprites_c
 #include <pgmspace.h>
 #include <Arduino.h>
 #include <stdint.h>
@@ -1749,7 +1751,7 @@ const byte calculatorEquals[] PROGMEM = {
 	B11111111,B11111110,
 	B11111111,B11111110,
 };
-
+#endif
 
 
 

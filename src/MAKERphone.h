@@ -163,7 +163,7 @@ public:
   uint8_t popupTimeLeft;
   uint8_t popupTotalTime;
 
-private:
+// private:
   friend class MAKERphone;
   bool cursorState = 1;
   Oscillator* osc = new Oscillator();
@@ -188,6 +188,7 @@ class MAKERphone:public Buttons, public GUI
 	friend class GUI;
 
   public:
+  	SDFileSystemClass SD = _SD;
 	TFT_eSPI tft = TFT_eSPI();  // Invoke library, pins defined in User_Setup.h
 	TFT_eSprite display = TFT_eSprite(&tft);
 	TFT_eSprite buf = TFT_eSprite(&tft);
@@ -324,13 +325,13 @@ class MAKERphone:public Buttons, public GUI
 	String ringtoneFiles[255];
 	String notificationFiles[255];
 	int backgroundColors[7] = {
-	TFT_CYAN,
-	TFT_GREEN,
-	TFT_RED,
-	TFT_YELLOW,
-	TFT_WHITE,
-	TFT_ORANGE,
-	TFT_PINK
+		TFT_CYAN,
+		TFT_GREEN,
+		TFT_RED,
+		TFT_YELLOW,
+		TFT_WHITE,
+		TFT_ORANGE,
+		TFT_PINK
 	};
 	String backgroundColorsNames[7] = {
 	"Cyan",
@@ -435,7 +436,7 @@ class MAKERphone:public Buttons, public GUI
 	bool collideCircleCircle(int16_t centerX1, int16_t centerY1, int16_t r1, int16_t centerX2, int16_t centerY2, int16_t r2);  // Returns TRUE if the 2 circles overlap
 	bool collidePointCircle(int16_t pointX, int16_t pointY, int16_t centerX, int16_t centerY, int16_t r);  // Returns TRUE if the point overlaps the circle
 
-private:
+// private:
 	SdFat SDFAT;
 	
 	int multi_tap(byte key);
@@ -515,5 +516,4 @@ private:
 	
 
 };
-
 #endif
