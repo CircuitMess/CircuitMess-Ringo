@@ -250,8 +250,8 @@ class MAKERphone:public Buttons, public GUI
 	uint8_t cursor = 0;
 	int32_t cameraY = 0;
 	int32_t cameraY_actual = 0;
-	String audioFiles[255];
-	uint8_t audioCount = 0;
+	// String audioFiles[255];
+	// uint8_t audioCount = 0;
 	int16_t audioPlayerMenu(const char* title, String* items, uint16_t length, uint16_t index = 0);
 	void listAudio(const char * dirname, uint8_t levels);
 	void audioPlayer(uint16_t index);
@@ -265,29 +265,29 @@ class MAKERphone:public Buttons, public GUI
 		"Photo",
 		"Video",
 	};
-	String photoFiles[255];
+	// String photoFiles[255];
 	void listPhotos(const char *dirname, uint8_t levels);
 	void drawJpeg(String filename, int xpos, int ypos);
 	void jpegRender(int xpos, int ypos);
 	void jpegInfo();
-	uint8_t photoCount = 0;
+	// uint8_t photoCount = 0;
 
 	//Contacts app
-	void contactsMenuDrawBox(String contact, String number, uint8_t i, int32_t y);
-	void contactsMenuDrawBoxSD(String name, String number, uint8_t i, int32_t y);
-	uint8_t deleteContact(String contact, String number, String id);
-	uint8_t deleteContactSD(String name, String number);
-	uint8_t newContact();
-	uint8_t newContactSD(String *name, String *number);
-	void parse_contacts();
-	void contactsMenuNewBox(uint8_t i, int32_t y);
-	void contactsMenuDrawCursor(uint8_t i, int32_t y);
-	void contactsMenuNewBoxCursor(uint8_t i, int32_t y);
-	int contactsMenu(const char* title, String* contact, String *number, uint8_t length);
-	int contactsMenuSD(JsonArray *contacts);
-	void contactsApp();
-	void contactsAppSD();
-	String readAllContacts();
+	// void contactsMenuDrawBox(String contact, String number, uint8_t i, int32_t y);
+	// void contactsMenuDrawBoxSD(String name, String number, uint8_t i, int32_t y);
+	// uint8_t deleteContact(String contact, String number, String id);
+	// uint8_t deleteContactSD(String name, String number);
+	// uint8_t newContact();
+	// uint8_t newContactSD(String *name, String *number);
+	// void parse_contacts();
+	// void contactsMenuNewBox(uint8_t i, int32_t y);
+	// void contactsMenuDrawCursor(uint8_t i, int32_t y);
+	// void contactsMenuNewBoxCursor(uint8_t i, int32_t y);
+	// int contactsMenu(const char* title, String* contact, String *number, uint8_t length);
+	// int contactsMenuSD(JsonArray *contacts);
+	// void contactsApp();
+	// void contactsAppSD();
+	// String readAllContacts();
 	void callNumber(String number);
 
 	StaticJsonBuffer<capacity> jb;
@@ -322,8 +322,8 @@ class MAKERphone:public Buttons, public GUI
 	String notification = "/notifications/to-the-point.mp3";
 	uint8_t ringtoneCount=0;
 	uint8_t notificationCount=0;
-	String ringtoneFiles[255];
-	String notificationFiles[255];
+	// String ringtoneFiles[255];
+	// String notificationFiles[255];
 	int backgroundColors[7] = {
 		TFT_CYAN,
 		TFT_GREEN,
@@ -406,10 +406,10 @@ class MAKERphone:public Buttons, public GUI
 	"Flashlight",
 	"Calendar"
 	};
-	String BinaryFiles[255];
-	uint8_t binaryCount = 0;//Number of binary files available for loading
-	String directories[255];
-	uint8_t directoryCount = 0;//Number of binary files available for loading
+	// String BinaryFiles[255];
+	// uint8_t binaryCount = 0;//Number of binary files available for loading
+	// String directories[255];
+	// uint8_t directoryCount = 0;
 
 	//update() variables
 
@@ -449,20 +449,20 @@ class MAKERphone:public Buttons, public GUI
 	uint8_t timesRemaining;
 
 	//variables used for parsing SMS
-	int16_t y;
-	String smsContent[smsNumber];
-	String phoneNumber[smsNumber];
-	String tempDate[smsNumber];
-	uint16_t smsYear[smsNumber];
-	uint8_t smsDay[smsNumber];
-	uint8_t smsMonth[smsNumber];
-	uint8_t smsMinute[smsNumber];
-	uint8_t smsSecond[smsNumber];
-	uint8_t smsHour[smsNumber];
-	uint32_t start = 0;
-	uint32_t end = 0;
-	String input;
-	String buffer;
+	// int16_t y;
+	// String smsContent[smsNumber];
+	// String phoneNumber[smsNumber];
+	// String tempDate[smsNumber];
+	// uint16_t smsYear[smsNumber];
+	// uint8_t smsDay[smsNumber];
+	// uint8_t smsMonth[smsNumber];
+	// uint8_t smsMinute[smsNumber];
+	// uint8_t smsSecond[smsNumber];
+	// uint8_t smsHour[smsNumber];
+	// uint32_t start = 0;
+	// uint32_t end = 0;
+	// String input;
+	// String buffer;
 	
 	//SD functions
 	String readFile(const char * path);

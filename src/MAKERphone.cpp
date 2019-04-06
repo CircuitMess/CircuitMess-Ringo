@@ -21,15 +21,11 @@ Authors:
 extern MAKERphone mp;
 TaskHandle_t Task1;
 void Task1code( void * pvParameters ){
-	while (true){
+	while (true)
 		updateWav();
-		// Serial.println("TEST");
-		// delay(5);
-	};
 }
 void MAKERphone::begin(bool splash) {
 	SDFileSystemClass SD = _SD;
-
 
 	String input="";
 	pinMode(SIM800_DTR, OUTPUT);
@@ -91,7 +87,7 @@ void MAKERphone::begin(bool splash) {
 	if(SDinsertedFlag)
 		loadSettings(1);
 
-	gui.osc->setVolume(150);
+	// gui.osc->setVolume(150);
 	//display initialization
 	tft.init();
 	tft.invertDisplay(0);
@@ -151,7 +147,7 @@ void MAKERphone::begin(bool splash) {
 				1,						/* priority of the task */
 				&Task1,
 				0);				/* Task handle to keep track of created task */
-	addOscillator(gui.osc);
+	// addOscillator(gui.osc);
 
 	applySettings();
 }
@@ -475,290 +471,290 @@ void MAKERphone::sleep() {
 	while (!update());
 }
 void MAKERphone::lockScreen() {
-	dataRefreshFlag = 1;
+	// dataRefreshFlag = 1;
 	
-	bool goOut = 0;
-	uint32_t elapsedMillis = millis();
-	uint8_t scale;
-	if(resolutionMode)
-		scale = 1;
-	else
-		scale = 2;
+	// bool goOut = 0;
+	// uint32_t elapsedMillis = millis();
+	// uint8_t scale;
+	// if(resolutionMode)
+	// 	scale = 1;
+	// else
+	// 	scale = 2;
 
-	FastLED.clear();
+	// FastLED.clear();
 
-	while (1)
-	{
-		display.fillScreen(backgroundColors[backgroundIndex]);
+	// while (1)
+	// {
+	// 	display.fillScreen(backgroundColors[backgroundIndex]);
 
-		display.setFreeFont(TT1);
-		display.setTextSize(3*scale);//
-		//Hour shadow
-		display.setTextColor(TFT_DARKGREY);
-		if (clockHour == 11)
-			display.setCursor(10*scale, 28*scale);
-		else if (clockHour % 10 == 1 || (int)clockHour / 10 == 1)
-			display.setCursor(7*scale, 28*scale);
-		else
-			display.setCursor(4*scale, 28*scale);
-		if (clockHour < 10)
-			display.print("0");
-		display.print(clockHour);
+	// 	display.setFreeFont(TT1);
+	// 	display.setTextSize(3*scale);//
+	// 	//Hour shadow
+	// 	display.setTextColor(TFT_DARKGREY);
+	// 	if (clockHour == 11)
+	// 		display.setCursor(10*scale, 28*scale);
+	// 	else if (clockHour % 10 == 1 || (int)clockHour / 10 == 1)
+	// 		display.setCursor(7*scale, 28*scale);
+	// 	else
+	// 		display.setCursor(4*scale, 28*scale);
+	// 	if (clockHour < 10)
+	// 		display.print("0");
+	// 	display.print(clockHour);
 
-		//minute shadow
-		display.setCursor(36*scale, 28*scale);
-		if (clockMinute < 10)
-			display.print("0");
-		display.print(clockMinute);
+	// 	//minute shadow
+	// 	display.setCursor(36*scale, 28*scale);
+	// 	if (clockMinute < 10)
+	// 		display.print("0");
+	// 	display.print(clockMinute);
 
-		//Hour black
-		display.setTextColor(TFT_BLACK);
-		if (clockHour == 11)
-			display.setCursor(9*scale, 27*scale);
-		else if (clockHour % 10 == 1 || (int)clockHour / 10 == 1)
-			display.setCursor(6*scale, 27*scale);
-		else
-			display.setCursor(3*scale, 27*scale);
-		if (clockHour < 10)
-			display.print("0");
-		display.print(clockHour);
+	// 	//Hour black
+	// 	display.setTextColor(TFT_BLACK);
+	// 	if (clockHour == 11)
+	// 		display.setCursor(9*scale, 27*scale);
+	// 	else if (clockHour % 10 == 1 || (int)clockHour / 10 == 1)
+	// 		display.setCursor(6*scale, 27*scale);
+	// 	else
+	// 		display.setCursor(3*scale, 27*scale);
+	// 	if (clockHour < 10)
+	// 		display.print("0");
+	// 	display.print(clockHour);
 
-		//Minute black
-		display.setCursor(35*scale, 27*scale);
-		if (clockMinute < 10)
-			display.print("0");
-		display.print(clockMinute);
+	// 	//Minute black
+	// 	display.setCursor(35*scale, 27*scale);
+	// 	if (clockMinute < 10)
+	// 		display.print("0");
+	// 	display.print(clockMinute);
 
-		display.setTextSize(1*scale);
-		display.setCursor(60*scale, 19*scale);
-		display.setTextWrap(false);
-		if (clockDay < 10)
-			display.print("0");
-		display.print(clockDay);
-		display.print("/");
-		if (clockMonth < 10)
-			display.print("0");
-		display.print(clockMonth);
-		display.setCursor(62*scale, 25*scale);
-		display.print(2000 + clockYear);
-		/*display.setTextSize(2);
-		display.setCursor(10, 50);
-		display.print("12:00");*/
-		uint8_t helper = 11;
-		if (simInserted && !airplaneMode)
-		{
-			if (signalStrength <= 3)
-				display.drawBitmap(1*scale, 1*scale, noSignalIcon, TFT_BLACK, scale);
-			else if (signalStrength > 3 && signalStrength <= 10)
-				display.drawBitmap(1*scale, 1*scale, signalLowIcon, TFT_BLACK, scale);
-			else if (signalStrength > 10 && signalStrength <= 20)
-				display.drawBitmap(1*scale, 1*scale, signalHighIcon, TFT_BLACK, scale);
-			else if (signalStrength > 20 && signalStrength <= 31)
-				display.drawBitmap(1*scale, 1*scale, signalFullIcon, TFT_BLACK, scale);
-			else if (signalStrength == 99)
-				display.drawBitmap(1*scale, 1*scale, signalErrorIcon, TFT_BLACK, scale);
-		}
-		else if(!simInserted && !airplaneMode)
-			display.drawBitmap(1*scale, 1*scale, signalErrorIcon, TFT_BLACK, scale);
-		if (volume == 0)
-		{
-			display.drawBitmap(helper*scale, 1*scale, silentmode, TFT_BLACK, scale);
-			helper += 10;
-		}
-		//display.drawBitmap(31, 1, missedcall);
-		//display.drawBitmap(41, 1, newtext);
-		if (!airplaneMode)
-		{
-			if (wifi == 1)
-				display.drawBitmap(helper*scale, 1*scale, wifion, TFT_BLACK, scale);
-			else
-				display.drawBitmap(helper*scale, 1*scale, wifioff, TFT_BLACK, scale);
-			helper += 10;
-			if (bt)
-				display.drawBitmap(helper*scale, 1*scale, BTon, TFT_BLACK, scale);
-			else
-				display.drawBitmap(helper*scale, 1*scale, BToff, TFT_BLACK, scale);
-			helper += 10;
-		}
-		else
-		{
-			display.drawBitmap(scale, scale, airplaneModeIcon, TFT_BLACK, scale);
-			helper += 10;
-		}
+	// 	display.setTextSize(1*scale);
+	// 	display.setCursor(60*scale, 19*scale);
+	// 	display.setTextWrap(false);
+	// 	if (clockDay < 10)
+	// 		display.print("0");
+	// 	display.print(clockDay);
+	// 	display.print("/");
+	// 	if (clockMonth < 10)
+	// 		display.print("0");
+	// 	display.print(clockMonth);
+	// 	display.setCursor(62*scale, 25*scale);
+	// 	display.print(2000 + clockYear);
+	// 	/*display.setTextSize(2);
+	// 	display.setCursor(10, 50);
+	// 	display.print("12:00");*/
+	// 	uint8_t helper = 11;
+	// 	if (simInserted && !airplaneMode)
+	// 	{
+	// 		if (signalStrength <= 3)
+	// 			display.drawBitmap(1*scale, 1*scale, noSignalIcon, TFT_BLACK, scale);
+	// 		else if (signalStrength > 3 && signalStrength <= 10)
+	// 			display.drawBitmap(1*scale, 1*scale, signalLowIcon, TFT_BLACK, scale);
+	// 		else if (signalStrength > 10 && signalStrength <= 20)
+	// 			display.drawBitmap(1*scale, 1*scale, signalHighIcon, TFT_BLACK, scale);
+	// 		else if (signalStrength > 20 && signalStrength <= 31)
+	// 			display.drawBitmap(1*scale, 1*scale, signalFullIcon, TFT_BLACK, scale);
+	// 		else if (signalStrength == 99)
+	// 			display.drawBitmap(1*scale, 1*scale, signalErrorIcon, TFT_BLACK, scale);
+	// 	}
+	// 	else if(!simInserted && !airplaneMode)
+	// 		display.drawBitmap(1*scale, 1*scale, signalErrorIcon, TFT_BLACK, scale);
+	// 	if (volume == 0)
+	// 	{
+	// 		display.drawBitmap(helper*scale, 1*scale, silentmode, TFT_BLACK, scale);
+	// 		helper += 10;
+	// 	}
+	// 	//display.drawBitmap(31, 1, missedcall);
+	// 	//display.drawBitmap(41, 1, newtext);
+	// 	if (!airplaneMode)
+	// 	{
+	// 		if (wifi == 1)
+	// 			display.drawBitmap(helper*scale, 1*scale, wifion, TFT_BLACK, scale);
+	// 		else
+	// 			display.drawBitmap(helper*scale, 1*scale, wifioff, TFT_BLACK, scale);
+	// 		helper += 10;
+	// 		if (bt)
+	// 			display.drawBitmap(helper*scale, 1*scale, BTon, TFT_BLACK, scale);
+	// 		else
+	// 			display.drawBitmap(helper*scale, 1*scale, BToff, TFT_BLACK, scale);
+	// 		helper += 10;
+	// 	}
+	// 	else
+	// 	{
+	// 		display.drawBitmap(scale, scale, airplaneModeIcon, TFT_BLACK, scale);
+	// 		helper += 10;
+	// 	}
 
-		if(!SDinsertedFlag)
-			display.drawBitmap(helper*scale, 1*scale, noSDIcon, TFT_BLACK, scale);
+	// 	if(!SDinsertedFlag)
+	// 		display.drawBitmap(helper*scale, 1*scale, noSDIcon, TFT_BLACK, scale);
 
-		if (batteryVoltage > 4000)
-			display.drawBitmap(74*scale, 1*scale, batteryCharging, TFT_BLACK, scale);
-		else if (batteryVoltage <= 4000 && batteryVoltage >= 3800)
-			display.drawBitmap(74*scale, 1*scale, batteryFull, TFT_BLACK, scale);
-		else if (batteryVoltage < 3800 && batteryVoltage >= 3700)
-			display.drawBitmap(74*scale, 1*scale, batteryMid, TFT_BLACK, scale);
-		else if (batteryVoltage < 3700 && batteryVoltage >= 3600)
-			display.drawBitmap(74*scale, 1*scale, batteryMidLow, TFT_BLACK, scale);
-		else if (batteryVoltage < 3600 && batteryVoltage >= 3500)
-			display.drawBitmap(74*scale, 1*scale, batteryLow, TFT_BLACK, scale);
-		else if (batteryVoltage < 3500)
-			display.drawBitmap(74*scale, 1*scale, batteryEmpty, TFT_BLACK, scale);
+	// 	if (batteryVoltage > 4000)
+	// 		display.drawBitmap(74*scale, 1*scale, batteryCharging, TFT_BLACK, scale);
+	// 	else if (batteryVoltage <= 4000 && batteryVoltage >= 3800)
+	// 		display.drawBitmap(74*scale, 1*scale, batteryFull, TFT_BLACK, scale);
+	// 	else if (batteryVoltage < 3800 && batteryVoltage >= 3700)
+	// 		display.drawBitmap(74*scale, 1*scale, batteryMid, TFT_BLACK, scale);
+	// 	else if (batteryVoltage < 3700 && batteryVoltage >= 3600)
+	// 		display.drawBitmap(74*scale, 1*scale, batteryMidLow, TFT_BLACK, scale);
+	// 	else if (batteryVoltage < 3600 && batteryVoltage >= 3500)
+	// 		display.drawBitmap(74*scale, 1*scale, batteryLow, TFT_BLACK, scale);
+	// 	else if (batteryVoltage < 3500)
+	// 		display.drawBitmap(74*scale, 1*scale, batteryEmpty, TFT_BLACK, scale);
 
-		gui.drawNotificationWindow(2*scale, 32*scale, 77*scale, 10*scale, "Missed call from Dad");
-		gui.drawNotificationWindow(2*scale, 44*scale, 77*scale, 10*scale, "Text from Jack");
-		display.setFreeFont(TT1);
-		display.setTextSize(2*scale);
-		if (millis() - elapsedMillis >= 500) {
-			elapsedMillis = millis();
-			blinkState = !blinkState;
-			if (clockYear != 4 && clockYear != 80)
-				updateTimeRTC();
-		}
+	// 	gui.drawNotificationWindow(2*scale, 32*scale, 77*scale, 10*scale, "Missed call from Dad");
+	// 	gui.drawNotificationWindow(2*scale, 44*scale, 77*scale, 10*scale, "Text from Jack");
+	// 	display.setFreeFont(TT1);
+	// 	display.setTextSize(2*scale);
+	// 	if (millis() - elapsedMillis >= 500) {
+	// 		elapsedMillis = millis();
+	// 		blinkState = !blinkState;
+	// 		if (clockYear != 4 && clockYear != 80)
+	// 			updateTimeRTC();
+	// 	}
 
 
-		if (blinkState == 1)
-		{
-			display.setTextSize(1);
-			if(scale == 1)
-			{
-				display.setCursor(1, 63);
-				display.setFreeFont(TT1);
-			}
-			else
-			{
-				/* display.setCursor(2, 63*scale);
-				display.setFreeFont(FSS9); */
-				display.setCursor(2, 111);
-				display.setTextFont(2);
-			}
-			display.setTextColor(TFT_BLACK);
-			display.print("Hold \"A\" to unlock");
-			display.setTextSize(3*scale);
-			display.setTextColor(TFT_DARKGREY);
-			display.setFreeFont(TT1);
-			display.setCursor(29*scale, 28*scale);
-			display.print(":");
-			display.setTextColor(TFT_BLACK);
-			display.setCursor(28*scale, 27*scale);
-			display.print(":");
-		}
-		update();
+	// 	if (blinkState == 1)
+	// 	{
+	// 		display.setTextSize(1);
+	// 		if(scale == 1)
+	// 		{
+	// 			display.setCursor(1, 63);
+	// 			display.setFreeFont(TT1);
+	// 		}
+	// 		else
+	// 		{
+	// 			/* display.setCursor(2, 63*scale);
+	// 			display.setFreeFont(FSS9); */
+	// 			display.setCursor(2, 111);
+	// 			display.setTextFont(2);
+	// 		}
+	// 		display.setTextColor(TFT_BLACK);
+	// 		display.print("Hold \"A\" to unlock");
+	// 		display.setTextSize(3*scale);
+	// 		display.setTextColor(TFT_DARKGREY);
+	// 		display.setFreeFont(TT1);
+	// 		display.setCursor(29*scale, 28*scale);
+	// 		display.print(":");
+	// 		display.setTextColor(TFT_BLACK);
+	// 		display.setCursor(28*scale, 27*scale);
+	// 		display.print(":");
+	// 	}
+	// 	update();
 
-		display.setTextSize(1*scale);
+	// 	display.setTextSize(1*scale);
 
-		if (buttons.pressed(BTN_A)) {
-			display.setTextSize(1);
-			vibration(200);
+	// 	if (buttons.pressed(BTN_A)) {
+	// 		display.setTextSize(1);
+	// 		vibration(200);
 
-			display.fillRect(0, 56*scale, display.width(), 7*scale, backgroundColors[backgroundIndex]);
-			if(mp.resolutionMode)
-			{
-				display.setCursor(1, 63);
-				display.setFreeFont(TT1);
-			}
-			else
-			{
-				display.setCursor(2, 111);
-				display.setTextFont(2);
-			}
-			display.print("Unlocking");
-			update();
-			buttonHeld = millis();
-			pixelState = 0;
-			while (buttons.kpd.pin_read(BTN_A) == 0)
-			{
+	// 		display.fillRect(0, 56*scale, display.width(), 7*scale, backgroundColors[backgroundIndex]);
+	// 		if(mp.resolutionMode)
+	// 		{
+	// 			display.setCursor(1, 63);
+	// 			display.setFreeFont(TT1);
+	// 		}
+	// 		else
+	// 		{
+	// 			display.setCursor(2, 111);
+	// 			display.setTextFont(2);
+	// 		}
+	// 		display.print("Unlocking");
+	// 		update();
+	// 		buttonHeld = millis();
+	// 		pixelState = 0;
+	// 		while (buttons.kpd.pin_read(BTN_A) == 0)
+	// 		{
 
-				if (millis() - buttonHeld > 250 && millis() - buttonHeld < 500) {
-					display.fillRect(0, 57*scale, display.width(), 7*scale, backgroundColors[backgroundIndex]);
-					if(mp.resolutionMode)
-					{
-						display.setCursor(1, 63);
-						display.setFreeFont(TT1);
-					}
-					else
-					{
-						display.setCursor(2, 111);
-						display.setTextFont(2);
-					}
-					leds[0] = CRGB::Red;
-					leds[7] = CRGB::Red;
-					display.print("Unlocking *");
-				}
-				else if (millis() - buttonHeld > 500 && millis() - buttonHeld < 750)
-				{
-					display.fillRect(0, 57*scale, display.width(), 7*scale, backgroundColors[backgroundIndex]);
-					if(mp.resolutionMode)
-					{
-						display.setCursor(1, 63);
-						display.setFreeFont(TT1);
-					}
-					else
-					{
-						display.setCursor(2, 111);
-						display.setTextFont(2);
-					}
-					display.print("Unlocking * *");
-					leds[0] = CRGB::Red;
-					leds[7] = CRGB::Red;
-					leds[1] = CRGB::Red;
-					leds[6] = CRGB::Red;
-				}
-				else if (millis() - buttonHeld > 750 && millis() - buttonHeld < 1000)
-				{
-					display.fillRect(0, 57*scale, display.width(), 7*scale, backgroundColors[backgroundIndex]);
-					if(mp.resolutionMode)
-					{
-						display.setCursor(1, 63);
-						display.setFreeFont(TT1);
-					}
-					else
-					{
-						display.setCursor(2, 111);
-						display.setTextFont(2);
-					}
-					display.print("Unlocking * * *");
-					leds[0] = CRGB::Red;
-					leds[7] = CRGB::Red;
-					leds[1] = CRGB::Red;
-					leds[6] = CRGB::Red;
-					leds[2] = CRGB::Red;
-					leds[5] = CRGB::Red;
-				}
-				else if (millis() - buttonHeld > 1000)
-				{
-					leds[0] = CRGB::Red;
-					leds[7] = CRGB::Red;
-					leds[1] = CRGB::Red;
-					leds[6] = CRGB::Red;
-					leds[2] = CRGB::Red;
-					leds[5] = CRGB::Red;
-					leds[3] = CRGB::Red;
-					leds[4] = CRGB::Red;
+	// 			if (millis() - buttonHeld > 250 && millis() - buttonHeld < 500) {
+	// 				display.fillRect(0, 57*scale, display.width(), 7*scale, backgroundColors[backgroundIndex]);
+	// 				if(mp.resolutionMode)
+	// 				{
+	// 					display.setCursor(1, 63);
+	// 					display.setFreeFont(TT1);
+	// 				}
+	// 				else
+	// 				{
+	// 					display.setCursor(2, 111);
+	// 					display.setTextFont(2);
+	// 				}
+	// 				leds[0] = CRGB::Red;
+	// 				leds[7] = CRGB::Red;
+	// 				display.print("Unlocking *");
+	// 			}
+	// 			else if (millis() - buttonHeld > 500 && millis() - buttonHeld < 750)
+	// 			{
+	// 				display.fillRect(0, 57*scale, display.width(), 7*scale, backgroundColors[backgroundIndex]);
+	// 				if(mp.resolutionMode)
+	// 				{
+	// 					display.setCursor(1, 63);
+	// 					display.setFreeFont(TT1);
+	// 				}
+	// 				else
+	// 				{
+	// 					display.setCursor(2, 111);
+	// 					display.setTextFont(2);
+	// 				}
+	// 				display.print("Unlocking * *");
+	// 				leds[0] = CRGB::Red;
+	// 				leds[7] = CRGB::Red;
+	// 				leds[1] = CRGB::Red;
+	// 				leds[6] = CRGB::Red;
+	// 			}
+	// 			else if (millis() - buttonHeld > 750 && millis() - buttonHeld < 1000)
+	// 			{
+	// 				display.fillRect(0, 57*scale, display.width(), 7*scale, backgroundColors[backgroundIndex]);
+	// 				if(mp.resolutionMode)
+	// 				{
+	// 					display.setCursor(1, 63);
+	// 					display.setFreeFont(TT1);
+	// 				}
+	// 				else
+	// 				{
+	// 					display.setCursor(2, 111);
+	// 					display.setTextFont(2);
+	// 				}
+	// 				display.print("Unlocking * * *");
+	// 				leds[0] = CRGB::Red;
+	// 				leds[7] = CRGB::Red;
+	// 				leds[1] = CRGB::Red;
+	// 				leds[6] = CRGB::Red;
+	// 				leds[2] = CRGB::Red;
+	// 				leds[5] = CRGB::Red;
+	// 			}
+	// 			else if (millis() - buttonHeld > 1000)
+	// 			{
+	// 				leds[0] = CRGB::Red;
+	// 				leds[7] = CRGB::Red;
+	// 				leds[1] = CRGB::Red;
+	// 				leds[6] = CRGB::Red;
+	// 				leds[2] = CRGB::Red;
+	// 				leds[5] = CRGB::Red;
+	// 				leds[3] = CRGB::Red;
+	// 				leds[4] = CRGB::Red;
 
-					FastLED.show();
+	// 				FastLED.show();
 
-					while(!update());
-					if(buttons.released(BTN_A))
-					{
-						vibration(200);
-						Serial.println(millis() - buttonHeld);
-						goOut = 1;
-						FastLED.clear();
-						delay(10);
-						break;
-					}
-				}
-				update();
-			}
-		}
-		if (buttons.released(BTN_A))
-			FastLED.clear();
-		if (buttons.pressed(BTN_B)) {
-			while (buttons.kpd.pin_read(BTN_B) == 0);
-			sleep();
-		}
+	// 				while(!update());
+	// 				if(buttons.released(BTN_A))
+	// 				{
+	// 					vibration(200);
+	// 					Serial.println(millis() - buttonHeld);
+	// 					goOut = 1;
+	// 					FastLED.clear();
+	// 					delay(10);
+	// 					break;
+	// 				}
+	// 			}
+	// 			update();
+	// 		}
+	// 	}
+	// 	if (buttons.released(BTN_A))
+	// 		FastLED.clear();
+	// 	if (buttons.pressed(BTN_B)) {
+	// 		while (buttons.kpd.pin_read(BTN_B) == 0);
+	// 		sleep();
+	// 	}
 
-		if (goOut == 1 && buttons.released(BTN_A))
-			break;
-	}
+	// 	if (goOut == 1 && buttons.released(BTN_A))
+	// 		break;
+	// }
 }
 void MAKERphone::loader()
 {
@@ -872,95 +868,95 @@ void MAKERphone::updateTimeRTC() {
 
 	//Serial.println(F("\nGLOBAL TIME UPDATE OVER RTC DONE!"));
 }
-void MAKERphone::listBinaries(const char * dirname, uint8_t levels) {
+// void MAKERphone::listBinaries(const char * dirname, uint8_t levels) {
 	
-	binaryCount = 0;
-	Serial.printf("Listing directory: %s\n", dirname);
+// 	binaryCount = 0;
+// 	Serial.printf("Listing directory: %s\n", dirname);
 
-	SDAudioFile root = _SD.open(dirname);
-	if (!root) {
-		Serial.println("Failed to open directory");
-		return;
-	}
-	if (!root.isDirectory()) {
-		Serial.println("Not a directory");
-		return;
+// 	SDAudioFile root = _SD.open(dirname);
+// 	if (!root) {
+// 		Serial.println("Failed to open directory");
+// 		return;
+// 	}
+// 	if (!root.isDirectory()) {
+// 		Serial.println("Not a directory");
+// 		return;
 
-	}
-	int counter = 1;
+// 	}
+// 	int counter = 1;
 
-	SDAudioFile file = root.openNextFile();
-	while (file) {
+// 	SDAudioFile file = root.openNextFile();
+// 	while (file) {
 
-		/*if (file.isDirectory()) {
-		  Serial.print("  DIR : ");
-		  Serial.println(file.name());
-		  if (levels) {
-		  listBinaries(fs, file.name(), levels - 1);
-		  }
-		  }
-		  else {
-		  String Name = file.name();
-		  if (Name.endsWith(F(".bin")))
-		  {
-		  Serial.print(file.name());
-		  BinaryFiles[counter-1] = file.name();
-		  }
-		  }*/
-		char temp[100];
-		// file.getName(temp, 100);
-		String Name(file.name());
-		Serial.println(Name);
-		if (Name.endsWith(F(".BIN")) || Name.endsWith(F(".bin")))
-		{
-			Serial.print(counter);
-			Serial.print(".   ");
-			Serial.println(Name);
-			BinaryFiles[counter - 1] = Name;
-			counter++;
-			binaryCount++;
-		}
-		file = root.openNextFile();
-	}
-}
-void MAKERphone::listDirectories(const char * dirname) {
+// 		/*if (file.isDirectory()) {
+// 		  Serial.print("  DIR : ");
+// 		  Serial.println(file.name());
+// 		  if (levels) {
+// 		  listBinaries(fs, file.name(), levels - 1);
+// 		  }
+// 		  }
+// 		  else {
+// 		  String Name = file.name();
+// 		  if (Name.endsWith(F(".bin")))
+// 		  {
+// 		  Serial.print(file.name());
+// 		  BinaryFiles[counter-1] = file.name();
+// 		  }
+// 		  }*/
+// 		char temp[100];
+// 		// file.getName(temp, 100);
+// 		String Name(file.name());
+// 		Serial.println(Name);
+// 		if (Name.endsWith(F(".BIN")) || Name.endsWith(F(".bin")))
+// 		{
+// 			Serial.print(counter);
+// 			Serial.print(".   ");
+// 			Serial.println(Name);
+// 			BinaryFiles[counter - 1] = Name;
+// 			counter++;
+// 			binaryCount++;
+// 		}
+// 		file = root.openNextFile();
+// 	}
+// }
+// void MAKERphone::listDirectories(const char * dirname) {
 	
-	directoryCount = 0;
-	Serial.printf("Listing directory: %s\n", dirname);
+// 	directoryCount = 0;
+// 	Serial.printf("Listing directory: %s\n", dirname);
 	
-	SDAudioFile root = _SD.open(dirname);
-	if (!root) {
-		Serial.println("Failed to open directory");
-		return;
-	}
-	if (!root.isDirectory()) {
-		Serial.println("Not a directory");
-		return;
+// 	SDAudioFile root = _SD.open(dirname);
+// 	if (!root) {
+// 		Serial.println("Failed to open directory");
+// 		return;
+// 	}
+// 	if (!root.isDirectory()) {
+// 		Serial.println("Not a directory");
+// 		return;
 
-	}
-	int counter = 0;
+// 	}
+// 	int counter = 0;
 
-	SDAudioFile file = root.openNextFile();
-	while (file) {
+// 	SDAudioFile file = root.openNextFile();
+// 	while (file) {
 
-		if (file.isDirectory()) {
-			char temp[100];
-			// file.getName(temp, 100);
-			String Name(file.name());
-			Serial.println(Name);
-			if(Name != "/Images\0" && Name != "/Music\0" && Name != "/Video\0"
-			 && Name != "/System Volume Information\0" && _SD.exists(String(Name + "/" + Name + ".BIN")))
-			{
+// 		if (file.isDirectory()) {
+// 			char temp[100];
+// 			// file.getName(temp, 100);
+// 			String Name(file.name());
+// 			Serial.println(Name);
+// 			if(Name != "/Images\0" && Name != "/Music\0" && Name != "/Video\0"
+// 			 && Name != "/System Volume Information\0" && _SD.exists(String(Name + "/" + Name + ".BIN")))
+// 			{
 				
-				Serial.println(Name);
-				directories[directoryCount] = Name.substring(1);
-				counter++;
-				directoryCount++;
-			}
-		  }
-		file = root.openNextFile();
-	}
-}
+// 				Serial.println(Name);
+// 				directories[directoryCount] = Name.substring(1);
+// 				counter++;
+// 				directoryCount++;
+// 			}
+// 		  }
+// 		file = root.openNextFile();
+// 	}
+// }
 
 void MAKERphone::performUpdate(Stream &updateSource, size_t updateSize) {
 	if (Update.begin(updateSize)) {
@@ -1020,511 +1016,511 @@ void MAKERphone::updateFromFS(String FilePath) {
 }
 void MAKERphone::mainMenu()
 {
-	while (buttons.kpd.pin_read(BTN_A) == 0);
-	Serial.println("entered main menu");
-	dataRefreshFlag = 0;
-	mp.listDirectories("/");
-	while (1)
-	{
-		int8_t index = gui.scrollingMainMenu();
-		Serial.println(index);
-		delay(5);
-		if(index < 10) 
-		{
-			if (titles[index] == "Apps")
-			{
-				display.fillScreen(TFT_BLACK);
-				update();
-				if(SDinsertedFlag)
-				{
-					while(!_SD.begin(5, SPI, 8000000));
-					listBinaries("/", 0);
-					int8_t index = gui.menu("Load from SD", BinaryFiles, binaryCount);
+	// while (buttons.kpd.pin_read(BTN_A) == 0);
+	// Serial.println("entered main menu");
+	// dataRefreshFlag = 0;
+	// mp.listDirectories("/");
+	// while (1)
+	// {
+	// 	int8_t index = gui.scrollingMainMenu();
+	// 	Serial.println(index);
+	// 	delay(5);
+	// 	if(index < 10) 
+	// 	{
+	// 		if (titles[index] == "Apps")
+	// 		{
+	// 			display.fillScreen(TFT_BLACK);
+	// 			update();
+	// 			if(SDinsertedFlag)
+	// 			{
+	// 				while(!_SD.begin(5, SPI, 8000000));
+	// 				listBinaries("/", 0);
+	// 				int8_t index = gui.menu("Load from SD", BinaryFiles, binaryCount);
 
-					if (index != -1) {  //IF BUTTON "BACK" WAS NOT PRESSED
-						display.fillScreen(TFT_BLACK);
-						display.setCursor(0,display.height() / 2 - 16);
-						display.printCenter("LOADING NOW...");
-						while(!update());
-
-
-						updateFromFS(BinaryFiles[index]);
-					}
-				}
-				else
-				{
-					display.setCursor(0, display.height()/2 - 20);
-					display.setTextFont(2);
-					display.printCenter("No SD inserted!");
-					display.setCursor(0, display.height()/2);
-					display.printCenter("Insert SD card and reset");
-					uint32_t tempMillis = millis();
-					while(millis() < tempMillis + 2000 && !buttons.released(BTN_A) && !buttons.released(BTN_B))
-						update();
-					while(!update());
-				}
+	// 				if (index != -1) {  //IF BUTTON "BACK" WAS NOT PRESSED
+	// 					display.fillScreen(TFT_BLACK);
+	// 					display.setCursor(0,display.height() / 2 - 16);
+	// 					display.printCenter("LOADING NOW...");
+	// 					while(!update());
 
 
+	// 					updateFromFS(BinaryFiles[index]);
+	// 				}
+	// 			}
+	// 			else
+	// 			{
+	// 				display.setCursor(0, display.height()/2 - 20);
+	// 				display.setTextFont(2);
+	// 				display.printCenter("No SD inserted!");
+	// 				display.setCursor(0, display.height()/2);
+	// 				display.printCenter("Insert SD card and reset");
+	// 				uint32_t tempMillis = millis();
+	// 				while(millis() < tempMillis + 2000 && !buttons.released(BTN_A) && !buttons.released(BTN_B))
+	// 					update();
+	// 				while(!update());
+	// 			}
 
-			}
 
-			if (titles[index] == "Messages")
-			{
-				display.fillScreen(TFT_BLACK);
-				display.setTextColor(TFT_WHITE);
-				if(simInserted && !airplaneMode)
-				{
-					display.fillScreen(TFT_BLACK);
-					if(resolutionMode)
-						display.setCursor(0, display.height()/2);
-					else
-						display.setCursor(0, display.height()/2 - 16);
-					display.printCenter("Loading messages...");
-					while(!update());
-					messagesApp();
-				}
-				else if(!simInserted)
-				{
-					display.setCursor(0, display.height()/2 - 20);
-					display.setTextFont(2);
-					display.printCenter("No SIM inserted!");
-					display.setCursor(0, display.height()/2);
-					display.printCenter("Insert SIM and reset");
-					uint32_t tempMillis = millis();
-					while(millis() < tempMillis + 2000 && !buttons.released(BTN_A) && !buttons.released(BTN_B))
-						update();
-					while(!update());
-				}
-				else if(airplaneMode)
-				{
-					display.setCursor(0, display.height()/2 - 20);
-					display.setTextFont(2);
-					display.printCenter("Can't access SMS!");
-					display.setCursor(0, display.height()/2);
-					display.printCenter("Turn off airplane mode");
-					uint32_t tempMillis = millis();
-					while(millis() < tempMillis + 2000 && !buttons.released(BTN_A) && !buttons.released(BTN_B))
-						update();
-					while(!update());
-				}
 
-			}
+	// 		}
 
-			if (titles[index] == "Media")
-			{
-				display.fillScreen(TFT_BLACK);
-				display.setTextColor(TFT_WHITE);
-				if(SDinsertedFlag)
-					mediaApp();
-				else
-				{
-					display.setCursor(0, display.height()/2 - 20);
-					display.setTextFont(2);
-					display.printCenter("No SD inserted!");
-					display.setCursor(0, display.height()/2);
-					display.printCenter("Insert SD card and reset");
-					uint32_t tempMillis = millis();
-					while(millis() < tempMillis + 2000 && !buttons.released(BTN_A) && !buttons.released(BTN_B))
-						update();
-					while(!update());
-				}
-			}
+	// 		if (titles[index] == "Messages")
+	// 		{
+	// 			display.fillScreen(TFT_BLACK);
+	// 			display.setTextColor(TFT_WHITE);
+	// 			if(simInserted && !airplaneMode)
+	// 			{
+	// 				display.fillScreen(TFT_BLACK);
+	// 				if(resolutionMode)
+	// 					display.setCursor(0, display.height()/2);
+	// 				else
+	// 					display.setCursor(0, display.height()/2 - 16);
+	// 				display.printCenter("Loading messages...");
+	// 				while(!update());
+	// 				messagesApp();
+	// 			}
+	// 			else if(!simInserted)
+	// 			{
+	// 				display.setCursor(0, display.height()/2 - 20);
+	// 				display.setTextFont(2);
+	// 				display.printCenter("No SIM inserted!");
+	// 				display.setCursor(0, display.height()/2);
+	// 				display.printCenter("Insert SIM and reset");
+	// 				uint32_t tempMillis = millis();
+	// 				while(millis() < tempMillis + 2000 && !buttons.released(BTN_A) && !buttons.released(BTN_B))
+	// 					update();
+	// 				while(!update());
+	// 			}
+	// 			else if(airplaneMode)
+	// 			{
+	// 				display.setCursor(0, display.height()/2 - 20);
+	// 				display.setTextFont(2);
+	// 				display.printCenter("Can't access SMS!");
+	// 				display.setCursor(0, display.height()/2);
+	// 				display.printCenter("Turn off airplane mode");
+	// 				uint32_t tempMillis = millis();
+	// 				while(millis() < tempMillis + 2000 && !buttons.released(BTN_A) && !buttons.released(BTN_B))
+	// 					update();
+	// 				while(!update());
+	// 			}
 
-			if (titles[index] == "Phone")
-			{
-				display.fillScreen(TFT_BLACK);
-				display.setTextColor(TFT_WHITE);
-				if(simInserted && !airplaneMode)
-					phoneApp();
-				else if(!simInserted)
-				{
-					display.setCursor(0, display.height()/2 - 20);
-					display.setTextFont(2);
-					display.printCenter("No SIM inserted!");
-					display.setCursor(0, display.height()/2);
-					display.printCenter("Insert SIM and reset");
-					uint32_t tempMillis = millis();
-					while(millis() < tempMillis + 2000 && !buttons.released(BTN_A) && !buttons.released(BTN_B))
-						update();
-					while(!update());
-				}
-				else if(airplaneMode)
-				{
-					display.setCursor(0, display.height()/2 - 20);
-					display.setTextFont(2);
-					display.printCenter("Can't dial numbers");
-					display.setCursor(0, display.height()/2);
-					display.printCenter("Turn off airplane mode");
-					uint32_t tempMillis = millis();
-					while(millis() < tempMillis + 2000 && !buttons.released(BTN_A) && !buttons.released(BTN_B))
-						update();
-					while(!update());
-				}
-			}
-			if (titles[index] == "Contacts") {
-				display.fillScreen(TFT_BLACK);
-				display.setTextColor(TFT_WHITE);
-				if(SDinsertedFlag && !airplaneMode)
-				{
-					display.fillScreen(TFT_BLACK);
-					if(resolutionMode)
-					{
-						display.setCursor(22, 30);
-						display.print("Loading");
-						display.setCursor(20, 36);
-						display.print("contacts...");
-					}
-					else
-					{
-						display.setCursor(0,display.height()/2 -16);
-						display.printCenter("Loading contacts...");
-					}
-					contactsAppSD();
-				}
-				else if(!SDinsertedFlag)
-				{
-					display.setCursor(0, display.height()/2 - 20);
-					display.setTextFont(2);
-					display.printCenter("No SD inserted!");
-					display.setCursor(0, display.height()/2);
-					display.printCenter("Insert SD and reset");
-					uint32_t tempMillis = millis();
-					while(millis() < tempMillis + 2000 && !buttons.released(BTN_A) && !buttons.released(BTN_B))
-						update();
-					while(!update());
-				}
-				else if(airplaneMode)
-				{
-					display.setCursor(0, display.height()/2 - 20);
-					display.setTextFont(2);
-					display.printCenter("Can't access contacts!");
-					display.setCursor(0, display.height()/2);
-					display.printCenter("Turn off airplane mode");
-					uint32_t tempMillis = millis();
-					while(millis() < tempMillis + 2000 && !buttons.released(BTN_A) && !buttons.released(BTN_B))
-						update();
-					while(!update());
-				}
+	// 		}
 
-			}
+	// 		if (titles[index] == "Media")
+	// 		{
+	// 			display.fillScreen(TFT_BLACK);
+	// 			display.setTextColor(TFT_WHITE);
+	// 			if(SDinsertedFlag)
+	// 				mediaApp();
+	// 			else
+	// 			{
+	// 				display.setCursor(0, display.height()/2 - 20);
+	// 				display.setTextFont(2);
+	// 				display.printCenter("No SD inserted!");
+	// 				display.setCursor(0, display.height()/2);
+	// 				display.printCenter("Insert SD card and reset");
+	// 				uint32_t tempMillis = millis();
+	// 				while(millis() < tempMillis + 2000 && !buttons.released(BTN_A) && !buttons.released(BTN_B))
+	// 					update();
+	// 				while(!update());
+	// 			}
+	// 		}
 
-			if (titles[index] == "Settings")
-			{
-				Serial.println("entering");
-				delay(5);
-				if(settingsApp())
-					return;
-			}
-			if(titles[index] == "Clock")
-				clockApp();
-			if(titles[index] == "Flashlight")
-				flashlightApp();
-			if (index == -2)
-			{
-				Serial.println("pressed");
-				break;
-			}
-			if (index == -3) // DEBUG MODE
-				debugMode();
-		}
-		else
-		{
-			display.fillScreen(TFT_BLACK);
-			display.setCursor(0,display.height() / 2 - 16);
-			display.printCenter("LOADING NOW...");
-			while(!update());
+	// 		if (titles[index] == "Phone")
+	// 		{
+	// 			display.fillScreen(TFT_BLACK);
+	// 			display.setTextColor(TFT_WHITE);
+	// 			if(simInserted && !airplaneMode)
+	// 				phoneApp();
+	// 			else if(!simInserted)
+	// 			{
+	// 				display.setCursor(0, display.height()/2 - 20);
+	// 				display.setTextFont(2);
+	// 				display.printCenter("No SIM inserted!");
+	// 				display.setCursor(0, display.height()/2);
+	// 				display.printCenter("Insert SIM and reset");
+	// 				uint32_t tempMillis = millis();
+	// 				while(millis() < tempMillis + 2000 && !buttons.released(BTN_A) && !buttons.released(BTN_B))
+	// 					update();
+	// 				while(!update());
+	// 			}
+	// 			else if(airplaneMode)
+	// 			{
+	// 				display.setCursor(0, display.height()/2 - 20);
+	// 				display.setTextFont(2);
+	// 				display.printCenter("Can't dial numbers");
+	// 				display.setCursor(0, display.height()/2);
+	// 				display.printCenter("Turn off airplane mode");
+	// 				uint32_t tempMillis = millis();
+	// 				while(millis() < tempMillis + 2000 && !buttons.released(BTN_A) && !buttons.released(BTN_B))
+	// 					update();
+	// 				while(!update());
+	// 			}
+	// 		}
+	// 		if (titles[index] == "Contacts") {
+	// 			display.fillScreen(TFT_BLACK);
+	// 			display.setTextColor(TFT_WHITE);
+	// 			if(SDinsertedFlag && !airplaneMode)
+	// 			{
+	// 				display.fillScreen(TFT_BLACK);
+	// 				if(resolutionMode)
+	// 				{
+	// 					display.setCursor(22, 30);
+	// 					display.print("Loading");
+	// 					display.setCursor(20, 36);
+	// 					display.print("contacts...");
+	// 				}
+	// 				else
+	// 				{
+	// 					display.setCursor(0,display.height()/2 -16);
+	// 					display.printCenter("Loading contacts...");
+	// 				}
+	// 				contactsAppSD();
+	// 			}
+	// 			else if(!SDinsertedFlag)
+	// 			{
+	// 				display.setCursor(0, display.height()/2 - 20);
+	// 				display.setTextFont(2);
+	// 				display.printCenter("No SD inserted!");
+	// 				display.setCursor(0, display.height()/2);
+	// 				display.printCenter("Insert SD and reset");
+	// 				uint32_t tempMillis = millis();
+	// 				while(millis() < tempMillis + 2000 && !buttons.released(BTN_A) && !buttons.released(BTN_B))
+	// 					update();
+	// 				while(!update());
+	// 			}
+	// 			else if(airplaneMode)
+	// 			{
+	// 				display.setCursor(0, display.height()/2 - 20);
+	// 				display.setTextFont(2);
+	// 				display.printCenter("Can't access contacts!");
+	// 				display.setCursor(0, display.height()/2);
+	// 				display.printCenter("Turn off airplane mode");
+	// 				uint32_t tempMillis = millis();
+	// 				while(millis() < tempMillis + 2000 && !buttons.released(BTN_A) && !buttons.released(BTN_B))
+	// 					update();
+	// 				while(!update());
+	// 			}
 
-			String foo = directories[index - 10];
-			initWavLib();
-			updateFromFS(String("/" + foo + "/" + foo + ".bin"));
-		}
-		update();
-	}
+	// 		}
+
+	// 		if (titles[index] == "Settings")
+	// 		{
+	// 			Serial.println("entering");
+	// 			delay(5);
+	// 			if(settingsApp())
+	// 				return;
+	// 		}
+	// 		if(titles[index] == "Clock")
+	// 			clockApp();
+	// 		if(titles[index] == "Flashlight")
+	// 			flashlightApp();
+	// 		if (index == -2)
+	// 		{
+	// 			Serial.println("pressed");
+	// 			break;
+	// 		}
+	// 		if (index == -3) // DEBUG MODE
+	// 			debugMode();
+	// 	}
+	// 	else
+	// 	{
+	// 		display.fillScreen(TFT_BLACK);
+	// 		display.setCursor(0,display.height() / 2 - 16);
+	// 		display.printCenter("LOADING NOW...");
+	// 		while(!update());
+
+	// 		String foo = directories[index - 10];
+	// 		initWavLib();
+	// 		updateFromFS(String("/" + foo + "/" + foo + ".bin"));
+	// 	}
+	// 	update();
+	// }
 }
 void MAKERphone::bigIconsMainMenu() {
 	
-	while (buttons.kpd.pin_read(BTN_A) == 0);
-	Serial.println("entered main menu");
-	Serial.flush();
-	while (1)
-	{
+	// while (buttons.kpd.pin_read(BTN_A) == 0);
+	// Serial.println("entered main menu");
+	// Serial.flush();
+	// while (1)
+	// {
 
 		
-		int8_t index = gui.drawBigIconsCursor((width+2)*2, (bigIconHeight*2 + 3), 3, 2, 3, 17);
-		if (titles[index] == "Apps")
-		{
-			display.fillScreen(TFT_BLACK);
-			update();
-			if(SDinsertedFlag)
-			{
-				while(!_SD.begin(5, SPI, 8000000));
-				listBinaries("/", 0);
-				if(binaryCount > 0)
-				{
-					int8_t index = gui.menu("Load from SD", BinaryFiles, binaryCount);
-					if (index != -1) 
-					{  //IF BUTTON "BACK" WAS NOT PRESSED
-						display.fillScreen(TFT_BLACK);
-						display.setCursor(0,display.height() / 2 - 16);
-						display.printCenter("LOADING NOW...");
-						while(!update());
+	// 	int8_t index = gui.drawBigIconsCursor((width+2)*2, (bigIconHeight*2 + 3), 3, 2, 3, 17);
+	// 	if (titles[index] == "Apps")
+	// 	{
+	// 		display.fillScreen(TFT_BLACK);
+	// 		update();
+	// 		if(SDinsertedFlag)
+	// 		{
+	// 			while(!_SD.begin(5, SPI, 8000000));
+	// 			listBinaries("/", 0);
+	// 			if(binaryCount > 0)
+	// 			{
+	// 				int8_t index = gui.menu("Load from SD", BinaryFiles, binaryCount);
+	// 				if (index != -1) 
+	// 				{  //IF BUTTON "BACK" WAS NOT PRESSED
+	// 					display.fillScreen(TFT_BLACK);
+	// 					display.setCursor(0,display.height() / 2 - 16);
+	// 					display.printCenter("LOADING NOW...");
+	// 					while(!update());
 
 
-						updateFromFS(BinaryFiles[index]);
-					}
-				}
-				else
-				{
-					display.setCursor(0, display.height()/2 - 16);
-					display.setTextFont(2);
-					display.printCenter("No .BIN files!");
-					uint32_t tempMillis = millis();
-					while(millis() < tempMillis + 2000)
-					{
-						update();
-						if(buttons.pressed(BTN_A) || buttons.pressed(BTN_B))
-						{
-							while(!buttons.released(BTN_A) && !buttons.released(BTN_B))
-								update();
-							break;
-						}
-					}
-					while(!update());
-				}
-			}
-			else
-			{
-				display.setCursor(0, display.height()/2 - 20);
-				display.setTextFont(2);
-				display.printCenter("No SD inserted!");
-				display.setCursor(0, display.height()/2);
-				display.printCenter("Insert SD card and reset");
-				uint32_t tempMillis = millis();
-				while(millis() < tempMillis + 2000)
-				{
-					update();
-					if(buttons.pressed(BTN_A) || buttons.pressed(BTN_B))
-					{
-						while(!buttons.released(BTN_A) && !buttons.released(BTN_B))
-							update();
-						break;
-					}
-				}
-				while(!update());
-			}
-		}
+	// 					updateFromFS(BinaryFiles[index]);
+	// 				}
+	// 			}
+	// 			else
+	// 			{
+	// 				display.setCursor(0, display.height()/2 - 16);
+	// 				display.setTextFont(2);
+	// 				display.printCenter("No .BIN files!");
+	// 				uint32_t tempMillis = millis();
+	// 				while(millis() < tempMillis + 2000)
+	// 				{
+	// 					update();
+	// 					if(buttons.pressed(BTN_A) || buttons.pressed(BTN_B))
+	// 					{
+	// 						while(!buttons.released(BTN_A) && !buttons.released(BTN_B))
+	// 							update();
+	// 						break;
+	// 					}
+	// 				}
+	// 				while(!update());
+	// 			}
+	// 		}
+	// 		else
+	// 		{
+	// 			display.setCursor(0, display.height()/2 - 20);
+	// 			display.setTextFont(2);
+	// 			display.printCenter("No SD inserted!");
+	// 			display.setCursor(0, display.height()/2);
+	// 			display.printCenter("Insert SD card and reset");
+	// 			uint32_t tempMillis = millis();
+	// 			while(millis() < tempMillis + 2000)
+	// 			{
+	// 				update();
+	// 				if(buttons.pressed(BTN_A) || buttons.pressed(BTN_B))
+	// 				{
+	// 					while(!buttons.released(BTN_A) && !buttons.released(BTN_B))
+	// 						update();
+	// 					break;
+	// 				}
+	// 			}
+	// 			while(!update());
+	// 		}
+	// 	}
 
-		if (titles[index] == "Messages")
-		{
+	// 	if (titles[index] == "Messages")
+	// 	{
 			
-			display.fillScreen(TFT_BLACK);
-			display.setTextColor(TFT_WHITE);
-			if(simInserted && !airplaneMode)
-			{
-				display.fillScreen(TFT_BLACK);
-				if(resolutionMode)
-					display.setCursor(0, display.height()/2);
-				else
-					display.setCursor(0, display.height()/2 - 16);
-				display.printCenter("Loading messages...");
-				while(!update());
-				messagesApp();
-			}
-			else if(!simInserted)
-			{
-				display.setCursor(0, display.height()/2 - 20);
-				display.setTextFont(2);
-				display.printCenter("No SIM inserted!");
-				display.setCursor(0, display.height()/2);
-				display.printCenter("Insert SIM and reset");
-				uint32_t tempMillis = millis();
-				while(millis() < tempMillis + 2000)
-				{
-					update();
-					if(buttons.pressed(BTN_A) || buttons.pressed(BTN_B))
-					{
-						while(!buttons.released(BTN_A) && !buttons.released(BTN_B))
-							update();
-						break;
-					}
-				}
-				while(!update());
-			}
-			else if(airplaneMode)
-			{
-				display.setCursor(0, display.height()/2 - 20);
-				display.setTextFont(2);
-				display.printCenter("Can't access SMS!");
-				display.setCursor(0, display.height()/2);
-				display.printCenter("Turn off airplane mode");
-				uint32_t tempMillis = millis();
-				while(millis() < tempMillis + 2000)
-				{
-					update();
-					if(buttons.pressed(BTN_A) || buttons.pressed(BTN_B))
-					{
-						while(!buttons.released(BTN_A) && !buttons.released(BTN_B))
-							update();
-						break;
-					}
-				}
-				while(!update());
-			}
+	// 		display.fillScreen(TFT_BLACK);
+	// 		display.setTextColor(TFT_WHITE);
+	// 		if(simInserted && !airplaneMode)
+	// 		{
+	// 			display.fillScreen(TFT_BLACK);
+	// 			if(resolutionMode)
+	// 				display.setCursor(0, display.height()/2);
+	// 			else
+	// 				display.setCursor(0, display.height()/2 - 16);
+	// 			display.printCenter("Loading messages...");
+	// 			while(!update());
+	// 			messagesApp();
+	// 		}
+	// 		else if(!simInserted)
+	// 		{
+	// 			display.setCursor(0, display.height()/2 - 20);
+	// 			display.setTextFont(2);
+	// 			display.printCenter("No SIM inserted!");
+	// 			display.setCursor(0, display.height()/2);
+	// 			display.printCenter("Insert SIM and reset");
+	// 			uint32_t tempMillis = millis();
+	// 			while(millis() < tempMillis + 2000)
+	// 			{
+	// 				update();
+	// 				if(buttons.pressed(BTN_A) || buttons.pressed(BTN_B))
+	// 				{
+	// 					while(!buttons.released(BTN_A) && !buttons.released(BTN_B))
+	// 						update();
+	// 					break;
+	// 				}
+	// 			}
+	// 			while(!update());
+	// 		}
+	// 		else if(airplaneMode)
+	// 		{
+	// 			display.setCursor(0, display.height()/2 - 20);
+	// 			display.setTextFont(2);
+	// 			display.printCenter("Can't access SMS!");
+	// 			display.setCursor(0, display.height()/2);
+	// 			display.printCenter("Turn off airplane mode");
+	// 			uint32_t tempMillis = millis();
+	// 			while(millis() < tempMillis + 2000)
+	// 			{
+	// 				update();
+	// 				if(buttons.pressed(BTN_A) || buttons.pressed(BTN_B))
+	// 				{
+	// 					while(!buttons.released(BTN_A) && !buttons.released(BTN_B))
+	// 						update();
+	// 					break;
+	// 				}
+	// 			}
+	// 			while(!update());
+	// 		}
 
-		}
+	// 	}
 
-		if (titles[index] == "Media")
-		{
-			display.fillScreen(TFT_BLACK);
-			display.setTextColor(TFT_WHITE);
-			if(SDinsertedFlag)
-				mediaApp();
-			else
-			{
-				display.setCursor(0, display.height()/2 - 20);
-				display.setTextFont(2);
-				display.printCenter("No SD inserted!");
-				display.setCursor(0, display.height()/2);
-				display.printCenter("Insert SD card and reset");
-				uint32_t tempMillis = millis();
-				while(millis() < tempMillis + 2000)
-				{
-					update();
-					if(buttons.pressed(BTN_A) || buttons.pressed(BTN_B))
-					{
-						while(!buttons.released(BTN_A) && !buttons.released(BTN_B))
-							update();
-						break;
-					}
-				}while(!update());
-			}
-		}
-		if (titles[index] == "Phone")
-		{
-			display.fillScreen(TFT_BLACK);
-			display.setTextColor(TFT_WHITE);
-			if(simInserted && !airplaneMode)
-				phoneApp();
-			else if(!simInserted)
-			{
-				display.setCursor(0, display.height()/2 - 20);
-				display.setTextFont(2);
-				display.printCenter("No SIM inserted!");
-				display.setCursor(0, display.height()/2);
-				display.printCenter("Insert SIM and reset");
-				uint32_t tempMillis = millis();
-				while(millis() < tempMillis + 2000)
-				{
-					update();
-					if(buttons.pressed(BTN_A) || buttons.pressed(BTN_B))
-					{
-						while(!buttons.released(BTN_A) && !buttons.released(BTN_B))
-							update();
-						break;
-					}
-				}
-				while(!update());
-			}
-			else if(airplaneMode)
-			{
-				display.setCursor(0, display.height()/2 - 20);
-				display.setTextFont(2);
-				display.printCenter("Can't dial numbers");
-				display.setCursor(0, display.height()/2);
-				display.printCenter("Turn off airplane mode");
-				uint32_t tempMillis = millis();
-				while(millis() < tempMillis + 2000)
-				{
-					update();
-					if(buttons.pressed(BTN_A) || buttons.pressed(BTN_B))
-					{
-						while(!buttons.released(BTN_A) && !buttons.released(BTN_B))
-							update();
-						break;
-					}
-				}
-				while(!update());
-			}
-		}
-		if (titles[index] == "Contacts") {
-			display.fillScreen(TFT_BLACK);
-			display.setTextColor(TFT_WHITE);
-			if(SDinsertedFlag && !airplaneMode)
-			{
-				display.fillScreen(TFT_BLACK);
-				if(resolutionMode)
-				{
-					display.setCursor(22, 30);
-					display.print("Loading");
-					display.setCursor(20, 36);
-					display.print("contacts...");
-				}
-				else
-				{
-					display.setCursor(0,display.height()/2 -16);
-					display.printCenter("Loading contacts...");
-				}
-				contactsAppSD();
-			}
-			else if(!SDinsertedFlag)
-			{
-				display.setCursor(0, display.height()/2 - 20);
-				display.setTextFont(2);
-				display.printCenter("No SD inserted!");
-				display.setCursor(0, display.height()/2);
-				display.printCenter("Insert SD and reset");
-				uint32_t tempMillis = millis();
-				while(millis() < tempMillis + 2000)
-				{
-					update();
-					if(buttons.pressed(BTN_A) || buttons.pressed(BTN_B))
-					{
-						while(!buttons.released(BTN_A) && !buttons.released(BTN_B))
-							update();
-						break;
-					}
-				}
-				while(!update());
-			}
-			else if(airplaneMode)
-			{
-				display.setCursor(0, display.height()/2 - 20);
-				display.setTextFont(2);
-				display.printCenter("Can't access contacts!");
-				display.setCursor(0, display.height()/2);
-				display.printCenter("Turn off airplane mode");
-				uint32_t tempMillis = millis();
-				while(millis() < tempMillis + 2000)
-				{
-					update();
-					if(buttons.pressed(BTN_A) || buttons.pressed(BTN_B))
-					{
-						while(!buttons.released(BTN_A) && !buttons.released(BTN_B))
-							update();
-						break;
-					}
-				}
-				while(!update());
-			}
+	// 	if (titles[index] == "Media")
+	// 	{
+	// 		display.fillScreen(TFT_BLACK);
+	// 		display.setTextColor(TFT_WHITE);
+	// 		if(SDinsertedFlag)
+	// 			mediaApp();
+	// 		else
+	// 		{
+	// 			display.setCursor(0, display.height()/2 - 20);
+	// 			display.setTextFont(2);
+	// 			display.printCenter("No SD inserted!");
+	// 			display.setCursor(0, display.height()/2);
+	// 			display.printCenter("Insert SD card and reset");
+	// 			uint32_t tempMillis = millis();
+	// 			while(millis() < tempMillis + 2000)
+	// 			{
+	// 				update();
+	// 				if(buttons.pressed(BTN_A) || buttons.pressed(BTN_B))
+	// 				{
+	// 					while(!buttons.released(BTN_A) && !buttons.released(BTN_B))
+	// 						update();
+	// 					break;
+	// 				}
+	// 			}while(!update());
+	// 		}
+	// 	}
+	// 	if (titles[index] == "Phone")
+	// 	{
+	// 		display.fillScreen(TFT_BLACK);
+	// 		display.setTextColor(TFT_WHITE);
+	// 		if(simInserted && !airplaneMode)
+	// 			phoneApp();
+	// 		else if(!simInserted)
+	// 		{
+	// 			display.setCursor(0, display.height()/2 - 20);
+	// 			display.setTextFont(2);
+	// 			display.printCenter("No SIM inserted!");
+	// 			display.setCursor(0, display.height()/2);
+	// 			display.printCenter("Insert SIM and reset");
+	// 			uint32_t tempMillis = millis();
+	// 			while(millis() < tempMillis + 2000)
+	// 			{
+	// 				update();
+	// 				if(buttons.pressed(BTN_A) || buttons.pressed(BTN_B))
+	// 				{
+	// 					while(!buttons.released(BTN_A) && !buttons.released(BTN_B))
+	// 						update();
+	// 					break;
+	// 				}
+	// 			}
+	// 			while(!update());
+	// 		}
+	// 		else if(airplaneMode)
+	// 		{
+	// 			display.setCursor(0, display.height()/2 - 20);
+	// 			display.setTextFont(2);
+	// 			display.printCenter("Can't dial numbers");
+	// 			display.setCursor(0, display.height()/2);
+	// 			display.printCenter("Turn off airplane mode");
+	// 			uint32_t tempMillis = millis();
+	// 			while(millis() < tempMillis + 2000)
+	// 			{
+	// 				update();
+	// 				if(buttons.pressed(BTN_A) || buttons.pressed(BTN_B))
+	// 				{
+	// 					while(!buttons.released(BTN_A) && !buttons.released(BTN_B))
+	// 						update();
+	// 					break;
+	// 				}
+	// 			}
+	// 			while(!update());
+	// 		}
+	// 	}
+	// 	if (titles[index] == "Contacts") {
+	// 		display.fillScreen(TFT_BLACK);
+	// 		display.setTextColor(TFT_WHITE);
+	// 		if(SDinsertedFlag && !airplaneMode)
+	// 		{
+	// 			display.fillScreen(TFT_BLACK);
+	// 			if(resolutionMode)
+	// 			{
+	// 				display.setCursor(22, 30);
+	// 				display.print("Loading");
+	// 				display.setCursor(20, 36);
+	// 				display.print("contacts...");
+	// 			}
+	// 			else
+	// 			{
+	// 				display.setCursor(0,display.height()/2 -16);
+	// 				display.printCenter("Loading contacts...");
+	// 			}
+	// 			contactsAppSD();
+	// 		}
+	// 		else if(!SDinsertedFlag)
+	// 		{
+	// 			display.setCursor(0, display.height()/2 - 20);
+	// 			display.setTextFont(2);
+	// 			display.printCenter("No SD inserted!");
+	// 			display.setCursor(0, display.height()/2);
+	// 			display.printCenter("Insert SD and reset");
+	// 			uint32_t tempMillis = millis();
+	// 			while(millis() < tempMillis + 2000)
+	// 			{
+	// 				update();
+	// 				if(buttons.pressed(BTN_A) || buttons.pressed(BTN_B))
+	// 				{
+	// 					while(!buttons.released(BTN_A) && !buttons.released(BTN_B))
+	// 						update();
+	// 					break;
+	// 				}
+	// 			}
+	// 			while(!update());
+	// 		}
+	// 		else if(airplaneMode)
+	// 		{
+	// 			display.setCursor(0, display.height()/2 - 20);
+	// 			display.setTextFont(2);
+	// 			display.printCenter("Can't access contacts!");
+	// 			display.setCursor(0, display.height()/2);
+	// 			display.printCenter("Turn off airplane mode");
+	// 			uint32_t tempMillis = millis();
+	// 			while(millis() < tempMillis + 2000)
+	// 			{
+	// 				update();
+	// 				if(buttons.pressed(BTN_A) || buttons.pressed(BTN_B))
+	// 				{
+	// 					while(!buttons.released(BTN_A) && !buttons.released(BTN_B))
+	// 						update();
+	// 					break;
+	// 				}
+	// 			}
+	// 			while(!update());
+	// 		}
 
-		}
+	// 	}
 
-		if (titles[index] == "Settings")
-		{
-			Serial.println("entering");
-			delay(5);
-			if(settingsApp())
-				return;
-		}
-		if (index == -2)
-		{
-			Serial.println("pressed");
-			break;
-		}
-		if (index == -3) // DEBUG MODE
-			debugMode();
-		update();
-	}
+	// 	if (titles[index] == "Settings")
+	// 	{
+	// 		Serial.println("entering");
+	// 		delay(5);
+	// 		if(settingsApp())
+	// 			return;
+	// 	}
+	// 	if (index == -2)
+	// 	{
+	// 		Serial.println("pressed");
+	// 		break;
+	// 	}
+	// 	if (index == -3) // DEBUG MODE
+	// 		debugMode();
+	// 	update();
+	// }
 }
 void MAKERphone::callNumber(String number) {
 	dataRefreshFlag = 0;
@@ -2335,137 +2331,137 @@ void MAKERphone::debugMode()
 //Messages app
 void MAKERphone::messagesApp() {
 	
-	dataRefreshFlag = 0;
-	//sim800.println("AT+CMGL=\"REC READ\"");
-	//sim800.flush();
-	/*while (sim800.available())
-	input += (char)sim800.read();*/
-	while(!simReady)
-		update();
-	input = readAllSms();
-	while (input == "")
-	{
-		input = readSerial();
-	}
+	// dataRefreshFlag = 0;
+	// //sim800.println("AT+CMGL=\"REC READ\"");
+	// //sim800.flush();
+	// /*while (sim800.available())
+	// input += (char)sim800.read();*/
+	// while(!simReady)
+	// 	update();
+	// input = readAllSms();
+	// while (input == "")
+	// {
+	// 	input = readSerial();
+	// }
 	
-	if (input == "ERROR")
-	{
-		display.fillScreen(TFT_BLACK);
-		if(resolutionMode)
-		{
-			display.setCursor(0, display.height()/2);
-			display.setFreeFont(TT1);
-		}
-		else
-		{
-			display.setCursor(0, display.height()/2 - 16);
-			display.setTextFont(2);
-		}
-		display.setTextColor(TFT_WHITE);
-		display.printCenter("Error loading SMS!");
-		while (!update());
-		while (!buttons.released(BTN_A) && !buttons.released(BTN_B))
-			update();
-	}
-	else if (input == "OK")
-	{
-		display.setFreeFont(TT1);
-		display.fillScreen(TFT_BLACK);
-		if(resolutionMode)
-		{
-			display.setCursor(0, display.height()/2);
-			display.setFreeFont(TT1);
-		}
-		else
-		{
-			display.setCursor(0, display.height()/2 - 16);
-			display.setTextFont(2);
-		}
-		display.setTextColor(TFT_WHITE);
-		display.printCenter("No messages :(");
-		while (!update());
-		while (!buttons.released(BTN_A) && !buttons.released(BTN_B))
-			update();
-	}
-	else
-	{
-		Serial.println(input);
-		delay(5);
+	// if (input == "ERROR")
+	// {
+	// 	display.fillScreen(TFT_BLACK);
+	// 	if(resolutionMode)
+	// 	{
+	// 		display.setCursor(0, display.height()/2);
+	// 		display.setFreeFont(TT1);
+	// 	}
+	// 	else
+	// 	{
+	// 		display.setCursor(0, display.height()/2 - 16);
+	// 		display.setTextFont(2);
+	// 	}
+	// 	display.setTextColor(TFT_WHITE);
+	// 	display.printCenter("Error loading SMS!");
+	// 	while (!update());
+	// 	while (!buttons.released(BTN_A) && !buttons.released(BTN_B))
+	// 		update();
+	// }
+	// else if (input == "OK")
+	// {
+	// 	display.setFreeFont(TT1);
+	// 	display.fillScreen(TFT_BLACK);
+	// 	if(resolutionMode)
+	// 	{
+	// 		display.setCursor(0, display.height()/2);
+	// 		display.setFreeFont(TT1);
+	// 	}
+	// 	else
+	// 	{
+	// 		display.setCursor(0, display.height()/2 - 16);
+	// 		display.setTextFont(2);
+	// 	}
+	// 	display.setTextColor(TFT_WHITE);
+	// 	display.printCenter("No messages :(");
+	// 	while (!update());
+	// 	while (!buttons.released(BTN_A) && !buttons.released(BTN_B))
+	// 		update();
+	// }
+	// else
+	// {
+	// 	Serial.println(input);
+	// 	delay(5);
 
 
-		/////////////////////////////////////////////////////
-		//parsing the raw input data for contact number,
-		//date and text content
-		////////////////////////////////////////////////////
-		uint16_t numberOfTexts = countSubstring(input, "+CMGL:");
-		for (uint8_t i = 0; i < numberOfTexts; i++)
-		{
-			start = input.indexOf("\n", input.indexOf("CMGL:", end));
-			end = input.indexOf("\n", start + 1);
-			smsContent[i] = input.substring(start + 1, end);
-		}
+	// 	/////////////////////////////////////////////////////
+	// 	//parsing the raw input data for contact number,
+	// 	//date and text content
+	// 	////////////////////////////////////////////////////
+	// 	uint16_t numberOfTexts = countSubstring(input, "+CMGL:");
+	// 	for (uint8_t i = 0; i < numberOfTexts; i++)
+	// 	{
+	// 		start = input.indexOf("\n", input.indexOf("CMGL:", end));
+	// 		end = input.indexOf("\n", start + 1);
+	// 		smsContent[i] = input.substring(start + 1, end);
+	// 	}
 
 
-		end = 0;
-		for (uint8_t i = 0; i < numberOfTexts; i++)
-		{
-			start = input.indexOf("D\",\"", input.indexOf("CMGL:", end));
-			end = input.indexOf("\"", start + 4);
-			phoneNumber[i] = input.substring(start + 4, end);
-		}
-		//////////////////////////////////////////
-		//Parsing for date and time of sending
-		////////////////////////////
-		end = 0;
-		for (uint8_t i = 0; i < numberOfTexts; i++)
-		{
-			start = input.indexOf("\"\",\"", input.indexOf("CMGL:", end));
-			end = input.indexOf("\"", start + 4);
-			tempDate[i] = input.substring(start + 4, end);
-		}
+	// 	end = 0;
+	// 	for (uint8_t i = 0; i < numberOfTexts; i++)
+	// 	{
+	// 		start = input.indexOf("D\",\"", input.indexOf("CMGL:", end));
+	// 		end = input.indexOf("\"", start + 4);
+	// 		phoneNumber[i] = input.substring(start + 4, end);
+	// 	}
+	// 	//////////////////////////////////////////
+	// 	//Parsing for date and time of sending
+	// 	////////////////////////////
+	// 	end = 0;
+	// 	for (uint8_t i = 0; i < numberOfTexts; i++)
+	// 	{
+	// 		start = input.indexOf("\"\",\"", input.indexOf("CMGL:", end));
+	// 		end = input.indexOf("\"", start + 4);
+	// 		tempDate[i] = input.substring(start + 4, end);
+	// 	}
 
-		int8_t index = -8;
-		for (uint8_t i = 0; i < numberOfTexts; i++)
-		{
+	// 	int8_t index = -8;
+	// 	for (uint8_t i = 0; i < numberOfTexts; i++)
+	// 	{
 
-			char c1, c2; //buffer for saving date and time numerals in form of characters
-			c1 = tempDate[i].charAt(index + 8);
-			c2 = tempDate[i].charAt(index + 9);
-			smsYear[i] = 2000 + ((c1 - '0') * 10) + (c2 - '0');
+	// 		char c1, c2; //buffer for saving date and time numerals in form of characters
+	// 		c1 = tempDate[i].charAt(index + 8);
+	// 		c2 = tempDate[i].charAt(index + 9);
+	// 		smsYear[i] = 2000 + ((c1 - '0') * 10) + (c2 - '0');
 
-			c1 = tempDate[i].charAt(index + 11);
-			c2 = tempDate[i].charAt(index + 12);
-			smsMonth[i] = ((c1 - '0') * 10) + (c2 - '0');
+	// 		c1 = tempDate[i].charAt(index + 11);
+	// 		c2 = tempDate[i].charAt(index + 12);
+	// 		smsMonth[i] = ((c1 - '0') * 10) + (c2 - '0');
 
-			c1 = tempDate[i].charAt(index + 14);
-			c2 = tempDate[i].charAt(index + 15);
-			smsDay[i] = ((c1 - '0') * 10) + (c2 - '0');
+	// 		c1 = tempDate[i].charAt(index + 14);
+	// 		c2 = tempDate[i].charAt(index + 15);
+	// 		smsDay[i] = ((c1 - '0') * 10) + (c2 - '0');
 
-			c1 = tempDate[i].charAt(index + 17);
-			c2 = tempDate[i].charAt(index + 18);
-			smsHour[i] = ((c1 - '0') * 10) + (c2 - '0');
+	// 		c1 = tempDate[i].charAt(index + 17);
+	// 		c2 = tempDate[i].charAt(index + 18);
+	// 		smsHour[i] = ((c1 - '0') * 10) + (c2 - '0');
 
-			c1 = tempDate[i].charAt(index + 20);
-			c2 = tempDate[i].charAt(index + 21);
-			smsMinute[i] = ((c1 - '0') * 10) + (c2 - '0');
+	// 		c1 = tempDate[i].charAt(index + 20);
+	// 		c2 = tempDate[i].charAt(index + 21);
+	// 		smsMinute[i] = ((c1 - '0') * 10) + (c2 - '0');
 
-			c1 = tempDate[i].charAt(index + 23);
-			c2 = tempDate[i].charAt(index + 24);
-			smsSecond[i] = ((c1 - '0') * 10) + (c2 - '0');
-		}
+	// 		c1 = tempDate[i].charAt(index + 23);
+	// 		c2 = tempDate[i].charAt(index + 24);
+	// 		smsSecond[i] = ((c1 - '0') * 10) + (c2 - '0');
+	// 	}
 
-		while (1)
-		{
-			int16_t menuChoice = smsMenu("Messages", phoneNumber, tempDate, smsContent, numberOfTexts);
-			Serial.println(menuChoice);
-			if (menuChoice == -1)
-				break;
-			else if (menuChoice == 0)
-				composeSMS();
-			else
-				viewSms(smsContent[menuChoice-1], phoneNumber[menuChoice-1], tempDate[menuChoice-1]);
-		}
-	}
+	// 	while (1)
+	// 	{
+	// 		int16_t menuChoice = smsMenu("Messages", phoneNumber, tempDate, smsContent, numberOfTexts);
+	// 		Serial.println(menuChoice);
+	// 		if (menuChoice == -1)
+	// 			break;
+	// 		else if (menuChoice == 0)
+	// 			composeSMS();
+	// 		else
+	// 			viewSms(smsContent[menuChoice-1], phoneNumber[menuChoice-1], tempDate[menuChoice-1]);
+	// 	}
+	// }
 }
 uint16_t MAKERphone::countSubstring(String string, String substring) {
 	if (substring.length() == 0) return 0;
@@ -2478,1697 +2474,1697 @@ uint16_t MAKERphone::countSubstring(String string, String substring) {
 	return count;
 }
 String MAKERphone::readSms(uint8_t index) {
-	String buffer;
-	Serial1.print(F("AT+CMGF=1\r"));
-	if ((readSerial().indexOf("ER")) == -1) {
-		Serial1.print(F("AT+CMGR="));
-		Serial1.print(index);
-		Serial1.print("\r");
-		buffer = readSerial();
-		if (buffer.indexOf("CMGR:") != -1) {
-			return buffer;
-		}
-		else return "";
-	}
-	else
-		return "";
+	// String buffer;
+	// Serial1.print(F("AT+CMGF=1\r"));
+	// if ((readSerial().indexOf("ER")) == -1) {
+	// 	Serial1.print(F("AT+CMGR="));
+	// 	Serial1.print(index);
+	// 	Serial1.print("\r");
+	// 	buffer = readSerial();
+	// 	if (buffer.indexOf("CMGR:") != -1) {
+	// 		return buffer;
+	// 	}
+	// 	else return "";
+	// }
+	// else
+	// 	return "";
 }
 String MAKERphone::readAllSms() {
 	
-	Serial1.print(F("AT+CMGL=\"ALL\"\r"));
-	buffer = readSerial();
-	delay(10);
-	if (buffer.indexOf("CMGL:") != -1) {
-		return buffer;
-	}
-	else if (buffer.indexOf("ERROR", buffer.indexOf("AT+CMGL")) != -1)
-		return "ERROR";
-	else if (buffer.indexOf("CMGL:") == -1 && buffer.indexOf("OK", buffer.indexOf("AT+CMGL")) != -1)
-		return "OK";
-	else
-		return "";
+	// Serial1.print(F("AT+CMGL=\"ALL\"\r"));
+	// buffer = readSerial();
+	// delay(10);
+	// if (buffer.indexOf("CMGL:") != -1) {
+	// 	return buffer;
+	// }
+	// else if (buffer.indexOf("ERROR", buffer.indexOf("AT+CMGL")) != -1)
+	// 	return "ERROR";
+	// else if (buffer.indexOf("CMGL:") == -1 && buffer.indexOf("OK", buffer.indexOf("AT+CMGL")) != -1)
+	// 	return "OK";
+	// else
+	// 	return "";
 
 
 }
 void MAKERphone::viewSms(String content, String contact, String date) {
-	y = 14;  //Beggining point
-	unsigned long buttonHeld = millis();
-	unsigned long elapsedMillis = millis();
-	bool blinkState = 1;
-	while (1)
-	{
-		display.fillScreen(TFT_DARKGREY);
-		display.setTextWrap(1);
-		//while (kpd.pin_read(3))
-		//{
+	// y = 14;  //Beggining point
+	// unsigned long buttonHeld = millis();
+	// unsigned long elapsedMillis = millis();
+	// bool blinkState = 1;
+	// while (1)
+	// {
+	// 	display.fillScreen(TFT_DARKGREY);
+	// 	display.setTextWrap(1);
+	// 	//while (kpd.pin_read(3))
+	// 	//{
 
-		display.setCursor(1, y);
-		display.print(content);
-		if (buttons.kpd.pin_read(BTN_DOWN) == 0) { //BUTTON DOWN
-			Serial.println(display.cursor_y);
-			if (display.cursor_y >= 128)
-			{
-				buttonHeld = millis();
+	// 	display.setCursor(1, y);
+	// 	display.print(content);
+	// 	if (buttons.kpd.pin_read(BTN_DOWN) == 0) { //BUTTON DOWN
+	// 		Serial.println(display.cursor_y);
+	// 		if (display.cursor_y >= 128)
+	// 		{
+	// 			buttonHeld = millis();
 
-				if (buttons.kpd.pin_read(BTN_DOWN) == 1)
-				{
-					y -= 4;
-					break;
-				}
+	// 			if (buttons.kpd.pin_read(BTN_DOWN) == 1)
+	// 			{
+	// 				y -= 4;
+	// 				break;
+	// 			}
 
-				while (buttons.kpd.pin_read(BTN_DOWN) == 0)
-				{
-					if (millis() - buttonHeld > 100) {
-						y -= 4;
-						break;
-					}
-				}
-			}
-		}
+	// 			while (buttons.kpd.pin_read(BTN_DOWN) == 0)
+	// 			{
+	// 				if (millis() - buttonHeld > 100) {
+	// 					y -= 4;
+	// 					break;
+	// 				}
+	// 			}
+	// 		}
+	// 	}
 
-		if (buttons.kpd.pin_read(BTN_UP) == 0) { //BUTTON UP
-			if (y < 14)
-			{
-				buttonHeld = millis();
+	// 	if (buttons.kpd.pin_read(BTN_UP) == 0) { //BUTTON UP
+	// 		if (y < 14)
+	// 		{
+	// 			buttonHeld = millis();
 
-				if (buttons.kpd.pin_read(BTN_UP) == 1)
-				{
-					y += 4;
-					break;
-				}
+	// 			if (buttons.kpd.pin_read(BTN_UP) == 1)
+	// 			{
+	// 				y += 4;
+	// 				break;
+	// 			}
 
-				while (buttons.kpd.pin_read(BTN_UP) == 0)
-				{
-					if (millis() - buttonHeld > 100) {
-						y += 4;
-						break;
-					}
-				}
-			}
+	// 			while (buttons.kpd.pin_read(BTN_UP) == 0)
+	// 			{
+	// 				if (millis() - buttonHeld > 100) {
+	// 					y += 4;
+	// 					break;
+	// 				}
+	// 			}
+	// 		}
 
-		}
+	// 	}
 
-		if (buttons.released(BTN_B)) //BUTTON BACK
-		{
-			while (!update());
-			break;
-		}
-		//}
-		// last draw the top entry thing
+	// 	if (buttons.released(BTN_B)) //BUTTON BACK
+	// 	{
+	// 		while (!update());
+	// 		break;
+	// 	}
+	// 	//}
+	// 	// last draw the top entry thing
 
-		if (millis() - elapsedMillis >= 1000) {
-			elapsedMillis = millis();
-			blinkState = !blinkState;
-		}
+	// 	if (millis() - elapsedMillis >= 1000) {
+	// 		elapsedMillis = millis();
+	// 		blinkState = !blinkState;
+	// 	}
 
-		if (blinkState == 1)
-		{
-			display.setTextColor(TFT_WHITE);
-			if(resolutionMode)
-			{
-				display.fillRect(0, 0, display.width(), 7, TFT_DARKGREY);
-				display.setFreeFont(TT1);
-				display.setCursor(1, 6);
-				display.drawFastHLine(0, 7, LCDWIDTH, TFT_BLACK);
-			}
-			else
-			{
-				display.fillRect(0, 0, display.width(), 14, TFT_DARKGREY);
-				display.setTextFont(2);
-				display.setCursor(2,-1);
-				display.drawFastHLine(0, 14, display.width(), TFT_WHITE);
+	// 	if (blinkState == 1)
+	// 	{
+	// 		display.setTextColor(TFT_WHITE);
+	// 		if(resolutionMode)
+	// 		{
+	// 			display.fillRect(0, 0, display.width(), 7, TFT_DARKGREY);
+	// 			display.setFreeFont(TT1);
+	// 			display.setCursor(1, 6);
+	// 			display.drawFastHLine(0, 7, LCDWIDTH, TFT_BLACK);
+	// 		}
+	// 		else
+	// 		{
+	// 			display.fillRect(0, 0, display.width(), 14, TFT_DARKGREY);
+	// 			display.setTextFont(2);
+	// 			display.setCursor(2,-1);
+	// 			display.drawFastHLine(0, 14, display.width(), TFT_WHITE);
 
-			}
-			display.print("From: ");
-			display.print(contact);
-		}
-		else
-		{
-			display.setTextColor(TFT_WHITE);
-			if(resolutionMode)
-			{
-				display.fillRect(0, 0, display.width(), 7, TFT_DARKGREY);
-				display.setFreeFont(TT1);
-				display.setCursor(1, 6);
-				display.drawFastHLine(0, 7, LCDWIDTH, TFT_BLACK);
-			}
-			else
-			{
-				display.fillRect(0, 0, display.width(), 14, TFT_DARKGREY);
-				display.setTextFont(2);
-				display.setCursor(2,-1);
-				display.drawFastHLine(0, 14, display.width(), TFT_WHITE);
-			}
-			display.print(date);
-		}
+	// 		}
+	// 		display.print("From: ");
+	// 		display.print(contact);
+	// 	}
+	// 	else
+	// 	{
+	// 		display.setTextColor(TFT_WHITE);
+	// 		if(resolutionMode)
+	// 		{
+	// 			display.fillRect(0, 0, display.width(), 7, TFT_DARKGREY);
+	// 			display.setFreeFont(TT1);
+	// 			display.setCursor(1, 6);
+	// 			display.drawFastHLine(0, 7, LCDWIDTH, TFT_BLACK);
+	// 		}
+	// 		else
+	// 		{
+	// 			display.fillRect(0, 0, display.width(), 14, TFT_DARKGREY);
+	// 			display.setTextFont(2);
+	// 			display.setCursor(2,-1);
+	// 			display.drawFastHLine(0, 14, display.width(), TFT_WHITE);
+	// 		}
+	// 		display.print(date);
+	// 	}
 
-		update();
-	}
+	// 	update();
+	// }
 }
 void MAKERphone::smsMenuDrawBox(String contact, String date, String content, uint8_t i, int32_t y) {
-	uint8_t scale;
-	uint8_t offset;
-	uint8_t boxHeight;
-	uint8_t composeHeight;
-	display.setTextSize(1);
-	if(resolutionMode)
-	{
-		scale = 1;
-		offset = menuYOffset;
-		composeHeight=12;
-		boxHeight = 21;
-		display.setFreeFont(TT1);
-	}
-	else
-	{
-		scale = 2;
-		offset = 19;
-		composeHeight=21;
-		boxHeight = 30;
-		display.setTextFont(2);
-	}
-	y += (i-1) * (boxHeight-1) + composeHeight + offset;
-	if (y < 0 || y > display.height()) {
-		return;
-	}
-	if(resolutionMode)
-	{
-		display.fillRect(scale, y + 1, display.width() - 2, boxHeight-2, TFT_DARKGREY);
-		display.setTextColor(TFT_WHITE);
-		display.setCursor(2*scale, y + 2);
-		display.drawString(contact, 3, y + 2);
-		display.drawString(date, 3, y + 8);
-		display.drawString(content, 3, y + 14);
-	}
-	else
-	{
-		String monthsList[] = {"JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"};
-		display.fillRect(1, y + 1, display.width() - 2, boxHeight-2, TFT_DARKGREY);
-		display.setTextColor(TFT_WHITE);
-		display.setCursor(4, y + 2);
-		display.drawString(contact, 3, y-1);
+	// uint8_t scale;
+	// uint8_t offset;
+	// uint8_t boxHeight;
+	// uint8_t composeHeight;
+	// display.setTextSize(1);
+	// if(resolutionMode)
+	// {
+	// 	scale = 1;
+	// 	offset = menuYOffset;
+	// 	composeHeight=12;
+	// 	boxHeight = 21;
+	// 	display.setFreeFont(TT1);
+	// }
+	// else
+	// {
+	// 	scale = 2;
+	// 	offset = 19;
+	// 	composeHeight=21;
+	// 	boxHeight = 30;
+	// 	display.setTextFont(2);
+	// }
+	// y += (i-1) * (boxHeight-1) + composeHeight + offset;
+	// if (y < 0 || y > display.height()) {
+	// 	return;
+	// }
+	// if(resolutionMode)
+	// {
+	// 	display.fillRect(scale, y + 1, display.width() - 2, boxHeight-2, TFT_DARKGREY);
+	// 	display.setTextColor(TFT_WHITE);
+	// 	display.setCursor(2*scale, y + 2);
+	// 	display.drawString(contact, 3, y + 2);
+	// 	display.drawString(date, 3, y + 8);
+	// 	display.drawString(content, 3, y + 14);
+	// }
+	// else
+	// {
+	// 	String monthsList[] = {"JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"};
+	// 	display.fillRect(1, y + 1, display.width() - 2, boxHeight-2, TFT_DARKGREY);
+	// 	display.setTextColor(TFT_WHITE);
+	// 	display.setCursor(4, y + 2);
+	// 	display.drawString(contact, 3, y-1);
 
-		//display.drawString(date, 3, y + 10);
-		display.drawString(content, 3, y + 13);
-		display.setTextFont(1);
-		display.setCursor(124, y+3);
-		display.print(monthsList[smsMonth[i-1]-1]);
-		display.print(" ");
-		display.print(smsDay[i - 1]);
-	}
+	// 	//display.drawString(date, 3, y + 10);
+	// 	display.drawString(content, 3, y + 13);
+	// 	display.setTextFont(1);
+	// 	display.setCursor(124, y+3);
+	// 	display.print(monthsList[smsMonth[i-1]-1]);
+	// 	display.print(" ");
+	// 	display.print(smsDay[i - 1]);
+	// }
 
 }
 void MAKERphone::smsMenuDrawCursor(uint8_t i, int32_t y) {
-	uint8_t offset;
-	uint8_t boxHeight;
-	uint8_t composeHeight;
-	if(resolutionMode)
-	{
-		offset = menuYOffset;
-		composeHeight=12;
-		boxHeight = 21;
-		display.setTextSize(1);
-	}
-	else
-	{
-		offset = 19;
-		composeHeight=21;
-		boxHeight = 30;
-		display.setTextSize(2);
-	}
-	if (millis() % 500 <= 250) {
-		return;
-	}
-	y += (i-1) * (boxHeight-1) + composeHeight + offset;
-	display.drawRect(0, y, display.width(), boxHeight, TFT_RED);
+	// uint8_t offset;
+	// uint8_t boxHeight;
+	// uint8_t composeHeight;
+	// if(resolutionMode)
+	// {
+	// 	offset = menuYOffset;
+	// 	composeHeight=12;
+	// 	boxHeight = 21;
+	// 	display.setTextSize(1);
+	// }
+	// else
+	// {
+	// 	offset = 19;
+	// 	composeHeight=21;
+	// 	boxHeight = 30;
+	// 	display.setTextSize(2);
+	// }
+	// if (millis() % 500 <= 250) {
+	// 	return;
+	// }
+	// y += (i-1) * (boxHeight-1) + composeHeight + offset;
+	// display.drawRect(0, y, display.width(), boxHeight, TFT_RED);
 }
 int16_t MAKERphone::smsMenu(const char* title, String* contact, String *date, String *content, uint8_t length) {
-	uint8_t cursor = 0;
-	int32_t cameraY = 0;
-	int32_t cameraY_actual = 0;
-	uint8_t scale;
-	uint8_t offset;
-	uint8_t boxHeight;
-	if(resolutionMode)
-	{
-		scale = 1;
-		offset = menuYOffset;
-		boxHeight = 21;
-	}
-	else
-	{
-		scale = 2;
-		offset = 19;
-		boxHeight = 30;
-	}
-	while (1) {
-		while (!update());
-		display.fillScreen(TFT_BLACK);
-		display.setCursor(0, 0);
-		cameraY_actual = (cameraY_actual + cameraY) / 2;
-		if (cameraY_actual - cameraY == 1) {
-			cameraY_actual = cameraY;
-		}
+	// uint8_t cursor = 0;
+	// int32_t cameraY = 0;
+	// int32_t cameraY_actual = 0;
+	// uint8_t scale;
+	// uint8_t offset;
+	// uint8_t boxHeight;
+	// if(resolutionMode)
+	// {
+	// 	scale = 1;
+	// 	offset = menuYOffset;
+	// 	boxHeight = 21;
+	// }
+	// else
+	// {
+	// 	scale = 2;
+	// 	offset = 19;
+	// 	boxHeight = 30;
+	// }
+	// while (1) {
+	// 	while (!update());
+	// 	display.fillScreen(TFT_BLACK);
+	// 	display.setCursor(0, 0);
+	// 	cameraY_actual = (cameraY_actual + cameraY) / 2;
+	// 	if (cameraY_actual - cameraY == 1) {
+	// 		cameraY_actual = cameraY;
+	// 	}
 
-		for (uint8_t i = 0; i < length+1; i++) {
-			if (i == 0)
-				smsMenuComposeBox(i, cameraY_actual);
-			else
-				smsMenuDrawBox(contact[i-1], date[i-1], content[i-1], i, cameraY_actual);
-		}
-		if (cursor == 0)
-			smsMenuComposeBoxCursor(cursor, cameraY_actual);
-		else
-			smsMenuDrawCursor(cursor, cameraY_actual);
+	// 	for (uint8_t i = 0; i < length+1; i++) {
+	// 		if (i == 0)
+	// 			smsMenuComposeBox(i, cameraY_actual);
+	// 		else
+	// 			smsMenuDrawBox(contact[i-1], date[i-1], content[i-1], i, cameraY_actual);
+	// 	}
+	// 	if (cursor == 0)
+	// 		smsMenuComposeBoxCursor(cursor, cameraY_actual);
+	// 	else
+	// 		smsMenuDrawCursor(cursor, cameraY_actual);
 
-		// last draw the top entry thing
+	// 	// last draw the top entry thing
 
-		if(resolutionMode)
-		{
-			display.fillRect(0, 0, display.width(), 6, TFT_DARKGREY);
-			display.setFreeFont(TT1);
-			display.setCursor(0,5);
-			display.drawFastHLine(0, 6, BUF2WIDTH, TFT_WHITE);
-		}
-		else
-		{
-			display.fillRect(0, 0, display.width(), 14, TFT_DARKGREY);
-			display.setTextFont(2);
-			display.setCursor(1,-2);
-			display.drawFastHLine(0, 14, BUF2WIDTH, TFT_WHITE);
-		}
-		display.setTextSize(1);
-		display.setTextColor(TFT_WHITE);
-		display.print(title);
+	// 	if(resolutionMode)
+	// 	{
+	// 		display.fillRect(0, 0, display.width(), 6, TFT_DARKGREY);
+	// 		display.setFreeFont(TT1);
+	// 		display.setCursor(0,5);
+	// 		display.drawFastHLine(0, 6, BUF2WIDTH, TFT_WHITE);
+	// 	}
+	// 	else
+	// 	{
+	// 		display.fillRect(0, 0, display.width(), 14, TFT_DARKGREY);
+	// 		display.setTextFont(2);
+	// 		display.setCursor(1,-2);
+	// 		display.drawFastHLine(0, 14, BUF2WIDTH, TFT_WHITE);
+	// 	}
+	// 	display.setTextSize(1);
+	// 	display.setTextColor(TFT_WHITE);
+	// 	display.print(title);
 
-		if (buttons.released(BTN_A)) {   //BUTTON CONFIRM
-			gui.osc->note(75, 0.05);
-			gui.osc->play();
-			while (!update());// Exit when pressed
-			break;
-		}
+	// 	if (buttons.released(BTN_A)) {   //BUTTON CONFIRM
+	// 		gui.osc->note(75, 0.05);
+	// 		gui.osc->play();
+	// 		while (!update());// Exit when pressed
+	// 		break;
+	// 	}
 
-		if (buttons.released(BTN_UP)) {  //BUTTON UP
-			gui.osc->note(75, 0.05);
-			gui.osc->play();
+	// 	if (buttons.released(BTN_UP)) {  //BUTTON UP
+	// 		gui.osc->note(75, 0.05);
+	// 		gui.osc->play();
 
-			if (cursor == 0) {
-				cursor = length - 1;
-				if (length > 2) {
-					cameraY = -(cursor - 1) * (boxHeight-1);
-				}
-			}
-			else {
-				cursor--;
-				if (cursor > 0 && (cursor * (boxHeight-1) + cameraY + offset) < 14*scale) {
-					cameraY += (boxHeight-1);
-				}
-			}
-		}
+	// 		if (cursor == 0) {
+	// 			cursor = length - 1;
+	// 			if (length > 2) {
+	// 				cameraY = -(cursor - 1) * (boxHeight-1);
+	// 			}
+	// 		}
+	// 		else {
+	// 			cursor--;
+	// 			if (cursor > 0 && (cursor * (boxHeight-1) + cameraY + offset) < 14*scale) {
+	// 				cameraY += (boxHeight-1);
+	// 			}
+	// 		}
+	// 	}
 
-		if (buttons.released(BTN_DOWN)) { //BUTTON DOWN
-			gui.osc->note(75, 0.05);
-			gui.osc->play();
+	// 	if (buttons.released(BTN_DOWN)) { //BUTTON DOWN
+	// 		gui.osc->note(75, 0.05);
+	// 		gui.osc->play();
 
-			cursor++;
-			if (cursor > 0)
-			{
-				if (((cursor - 1) * (boxHeight-1) + composeBoxHeight + cameraY + offset) > 40*scale) {
-					cameraY -= boxHeight-1;
-				}
-			}
-			else
-			{
-				if ((cursor * (boxHeight-1) + cameraY + offset) > 40*scale) {
-					cameraY -= boxHeight-1;
-				}
-			}
-			if (cursor > length) {
-				cursor = 0;
-				cameraY = 0;
+	// 		cursor++;
+	// 		if (cursor > 0)
+	// 		{
+	// 			if (((cursor - 1) * (boxHeight-1) + composeBoxHeight + cameraY + offset) > 40*scale) {
+	// 				cameraY -= boxHeight-1;
+	// 			}
+	// 		}
+	// 		else
+	// 		{
+	// 			if ((cursor * (boxHeight-1) + cameraY + offset) > 40*scale) {
+	// 				cameraY -= boxHeight-1;
+	// 			}
+	// 		}
+	// 		if (cursor > length) {
+	// 			cursor = 0;
+	// 			cameraY = 0;
 
-			}
+	// 		}
 
-		}
+	// 	}
 
-		if (buttons.released(BTN_B) == 1) //BUTTON BACK
-		{
-			return -1;
-		}
-	}
-	return cursor;
+	// 	if (buttons.released(BTN_B) == 1) //BUTTON BACK
+	// 	{
+	// 		return -1;
+	// 	}
+	// }
+	// return cursor;
 
 }
 void MAKERphone::smsMenuComposeBoxCursor(uint8_t i, int32_t y) {
-	uint8_t offset;
-	uint8_t boxHeight;
-	if(resolutionMode)
-	{
-		offset = menuYOffset;
-		boxHeight=composeBoxHeight;
-	}
-	else
-	{
-		offset = 19;
-		boxHeight=21;
-	}
-	if (millis() % 500 <= 250) {
-		return;
-	}
-	y += offset;
-	display.drawRect(0, y, display.width(), boxHeight+1, TFT_RED);
+	// uint8_t offset;
+	// uint8_t boxHeight;
+	// if(resolutionMode)
+	// {
+	// 	offset = menuYOffset;
+	// 	boxHeight=composeBoxHeight;
+	// }
+	// else
+	// {
+	// 	offset = 19;
+	// 	boxHeight=21;
+	// }
+	// if (millis() % 500 <= 250) {
+	// 	return;
+	// }
+	// y += offset;
+	// display.drawRect(0, y, display.width(), boxHeight+1, TFT_RED);
 }
 void MAKERphone::smsMenuComposeBox(uint8_t i, int32_t y) {
-	uint8_t scale;
-	uint8_t offset;
-	uint8_t boxHeight;
-	display.setTextSize(1);
-	if(resolutionMode)
-	{
-		scale = 1;
-		offset = menuYOffset;
-		boxHeight=12;
-		display.setTextFont(1);
+	// uint8_t scale;
+	// uint8_t offset;
+	// uint8_t boxHeight;
+	// display.setTextSize(1);
+	// if(resolutionMode)
+	// {
+	// 	scale = 1;
+	// 	offset = menuYOffset;
+	// 	boxHeight=12;
+	// 	display.setTextFont(1);
 
-	}
-	else
-	{
-		scale = 2;
-		offset = 19;
-		boxHeight=21;
-		display.setTextFont(2);
-	}
-	y += offset;
-	if (y < 0 || y > display.height()) {
-		return;
-	}
-	display.fillRect(1, y + 1, display.width() - 2, boxHeight-1, TFT_DARKGREY);
-	display.drawBitmap(2*scale, y + 2, composeIcon, TFT_WHITE, scale);
-	display.setTextColor(TFT_WHITE);
-	display.drawString("New SMS", 20*scale, y+3);
-	display.setFreeFont(TT1);
+	// }
+	// else
+	// {
+	// 	scale = 2;
+	// 	offset = 19;
+	// 	boxHeight=21;
+	// 	display.setTextFont(2);
+	// }
+	// y += offset;
+	// if (y < 0 || y > display.height()) {
+	// 	return;
+	// }
+	// display.fillRect(1, y + 1, display.width() - 2, boxHeight-1, TFT_DARKGREY);
+	// display.drawBitmap(2*scale, y + 2, composeIcon, TFT_WHITE, scale);
+	// display.setTextColor(TFT_WHITE);
+	// display.drawString("New SMS", 20*scale, y+3);
+	// display.setFreeFont(TT1);
 
 }
 void MAKERphone::composeSMS()
 {
-	textPointer = 0;
-	if(resolutionMode)
-		y = 10;  //Beggining point
-	else
-		y = 16;
-	String content = "";
-	String contact = "";
-	String prevContent = "";
-	char key = NO_KEY;
-	bool cursor = 0; //editing contacts or text content
-	unsigned long elapsedMillis = millis();
-	bool blinkState = 1;
-	uint8_t scale;
+	// textPointer = 0;
+	// if(resolutionMode)
+	// 	y = 10;  //Beggining point
+	// else
+	// 	y = 16;
+	// String content = "";
+	// String contact = "";
+	// String prevContent = "";
+	// char key = NO_KEY;
+	// bool cursor = 0; //editing contacts or text content
+	// unsigned long elapsedMillis = millis();
+	// bool blinkState = 1;
+	// uint8_t scale;
 
-	while (1)
-	{
-
-
-		display.fillScreen(TFT_DARKGREY);
-
-		display.setTextColor(TFT_WHITE);
-		if(resolutionMode)
-		{
-			scale = 1;
-			display.fillRect(0, 0, display.width(), 7, TFT_DARKGREY);
-			display.setFreeFont(TT1);
-			display.setCursor(1, 6);
-			display.drawFastHLine(0, 7, LCDWIDTH, TFT_BLACK);
-		}
-		else
-		{
-			scale = 2;
-			display.fillRect(0, 0, display.width(), 14, TFT_DARKGREY);
-			display.setTextFont(2);
-			display.setCursor(2,-1);
-			display.drawFastHLine(0, 14, display.width(), TFT_WHITE);
-
-		}
-		display.print("To: ");
-
-		if (millis() - elapsedMillis >= multi_tap_threshold) //cursor blinking routine
-		{
-			elapsedMillis = millis();
-			blinkState = !blinkState;
-		}
-		if (cursor == 0) //inputting the contact number
-		{
-			key = buttons.kpdNum.getKey();
-			if (key == 'A') //clear number
-				contact = "";
-			else if (key == 'C')
-				contact.remove(contact.length() - 1);
-			if (key != NO_KEY && isdigit(key))
-				contact += key;
-			display.setTextWrap(1);
-			display.setCursor(1*scale, y);
-			if(resolutionMode)
-				display.setTextFont(1);
-			if (content == "")
-			{
-				display.setTextColor(TFT_LIGHTGREY);
-				display.print(F("Compose..."));
-				display.setTextColor(TFT_WHITE);
-			}
-			else
-				display.print(content);
-			if(resolutionMode)
-			{
-				display.setFreeFont(TT1);
-				display.setCursor(13, 6);
-			}
-			else
-				display.setCursor(27, -1);
-
-			display.print(contact);
-			if (blinkState == 1)
-			{
-				if(resolutionMode)
-					display.drawFastVLine(display.getCursorX(), display.getCursorY()-5, 5, TFT_WHITE);
-				else
-					display.drawFastVLine(display.getCursorX(), display.getCursorY()+3, 10, TFT_WHITE);
-			}
-		}
-		else //inputting the text content
-		{
-			display.setTextColor(TFT_WHITE);
-			if(resolutionMode)
-				display.setCursor(1, 6);
-			else
-				display.setCursor(2, -1);
-			display.print("To: ");
-			display.print(contact);
-			prevContent = content;
-			content = textInput(content);
-			if (prevContent != content)
-			{
-				blinkState = 1;
-				elapsedMillis = millis();
-			}
-			display.setTextWrap(1);
-			display.setCursor(1*scale, y);
-			if(resolutionMode)
-				display.setTextFont(1);
-			display.print(content);
-			if(resolutionMode)
-				display.setFreeFont(TT1);
-			if(blinkState == 1)
-			{
-				if(resolutionMode)
-					display.drawFastVLine(display.getCursorX(), display.getCursorY(), 7, TFT_WHITE);
-				else
-					display.drawFastVLine(display.getCursorX(), display.getCursorY()+3, 10, TFT_WHITE);
-			}
-
-			/*if (blinkState == 1)
-			{
-				display.fillRect(0, 0, display.width(), 7, TFT_DARKGREY);
-				display.setTextColor(TFT_WHITE);
-				display.setCursor(1, 6);
-				display.print("From: ");
-				display.print(contact);
-				display.drawFastHLine(0, 7, LCDWIDTH, TFT_BLACK);
-			}
-			else
-			{
-				display.setTextColor(TFT_WHITE);
-				display.setCursor(1, 6);
-				display.drawFastHLine(0, 7, LCDWIDTH, TFT_BLACK);
-			}*/
-		}
-		if (buttons.kpd.pin_read(BTN_UP) == 0 && cursor == 1) { //BUTTON UP
-			/*Serial.println(display.cursor_y);
-			if (display.cursor_y >= 64)
-			{
-				buttonHeld = millis();
-
-				if (buttons.kpd.pin_read(BTN_UP) == 1)
-				{
-					y -= 2;
-					break;
-				}
-
-				while (buttons.kpd.pin_read(BTN_UP) == 0)
-				{
-					if (millis() - buttonHeld > 100) {
-						y -= 2;
-						break;
-					}
-				}
-			}*/
-			cursor = 0;
-		}
-
-		if (buttons.kpd.pin_read(BTN_DOWN) == 0 && cursor == 0) { //BUTTON DOWN
-			/*if (y < 14)
-			{
+	// while (1)
+	// {
 
 
-				buttonHeld = millis();
+	// 	display.fillScreen(TFT_DARKGREY);
 
-				if (buttons.kpd.pin_read(BTN_DOWN) == 1)
-				{
-					y += 2;
-					break;
-				}
+	// 	display.setTextColor(TFT_WHITE);
+	// 	if(resolutionMode)
+	// 	{
+	// 		scale = 1;
+	// 		display.fillRect(0, 0, display.width(), 7, TFT_DARKGREY);
+	// 		display.setFreeFont(TT1);
+	// 		display.setCursor(1, 6);
+	// 		display.drawFastHLine(0, 7, LCDWIDTH, TFT_BLACK);
+	// 	}
+	// 	else
+	// 	{
+	// 		scale = 2;
+	// 		display.fillRect(0, 0, display.width(), 14, TFT_DARKGREY);
+	// 		display.setTextFont(2);
+	// 		display.setCursor(2,-1);
+	// 		display.drawFastHLine(0, 14, display.width(), TFT_WHITE);
 
-				while (buttons.kpd.pin_read(BTN_DOWN) == 0)
-				{
-					if (millis() - buttonHeld > 100) {
-						y += 2;
-						break;
-					}
-				}
-			}*/
-			cursor = 1;
+	// 	}
+	// 	display.print("To: ");
 
-		}
+	// 	if (millis() - elapsedMillis >= multi_tap_threshold) //cursor blinking routine
+	// 	{
+	// 		elapsedMillis = millis();
+	// 		blinkState = !blinkState;
+	// 	}
+	// 	if (cursor == 0) //inputting the contact number
+	// 	{
+	// 		key = buttons.kpdNum.getKey();
+	// 		if (key == 'A') //clear number
+	// 			contact = "";
+	// 		else if (key == 'C')
+	// 			contact.remove(contact.length() - 1);
+	// 		if (key != NO_KEY && isdigit(key))
+	// 			contact += key;
+	// 		display.setTextWrap(1);
+	// 		display.setCursor(1*scale, y);
+	// 		if(resolutionMode)
+	// 			display.setTextFont(1);
+	// 		if (content == "")
+	// 		{
+	// 			display.setTextColor(TFT_LIGHTGREY);
+	// 			display.print(F("Compose..."));
+	// 			display.setTextColor(TFT_WHITE);
+	// 		}
+	// 		else
+	// 			display.print(content);
+	// 		if(resolutionMode)
+	// 		{
+	// 			display.setFreeFont(TT1);
+	// 			display.setCursor(13, 6);
+	// 		}
+	// 		else
+	// 			display.setCursor(27, -1);
 
-		if (buttons.released(BTN_B)) //BUTTON BACK
-		{
-			while (!update());
-			break;
-		}
-		if (buttons.released(BTN_A) && contact != "" && content != "") // SEND SMS
-		{
-			display.fillScreen(TFT_BLACK);
-			if(resolutionMode)
-			{
-				display.setCursor(0, display.height()/2);
-				display.setFreeFont(TT1);
-			}
-			else
-			{
-				display.setCursor(0, display.height()/2 - 16);
-				display.setTextFont(2);
-			}
-			display.printCenter("Sending text...");
-			while (!update());
-			Serial1.print("AT+CMGS=\"");
-			Serial1.print(contact);
-			Serial1.println("\"");
-			while (!Serial1.available());
-			Serial.println(Serial1.readString());
-			delay(5);
-			Serial1.print(content);
-			while (!Serial1.available());
-			Serial.println(Serial1.readString());
-			delay(5);
-			Serial1.println((char)26);
-			while (Serial1.readString().indexOf("OK") != -1);
-			display.fillScreen(TFT_BLACK);
-			display.printCenter("Text sent!");
-			while (!update());
-			delay(1000);
-			break;
-		}
+	// 		display.print(contact);
+	// 		if (blinkState == 1)
+	// 		{
+	// 			if(resolutionMode)
+	// 				display.drawFastVLine(display.getCursorX(), display.getCursorY()-5, 5, TFT_WHITE);
+	// 			else
+	// 				display.drawFastVLine(display.getCursorX(), display.getCursorY()+3, 10, TFT_WHITE);
+	// 		}
+	// 	}
+	// 	else //inputting the text content
+	// 	{
+	// 		display.setTextColor(TFT_WHITE);
+	// 		if(resolutionMode)
+	// 			display.setCursor(1, 6);
+	// 		else
+	// 			display.setCursor(2, -1);
+	// 		display.print("To: ");
+	// 		display.print(contact);
+	// 		prevContent = content;
+	// 		content = textInput(content);
+	// 		if (prevContent != content)
+	// 		{
+	// 			blinkState = 1;
+	// 			elapsedMillis = millis();
+	// 		}
+	// 		display.setTextWrap(1);
+	// 		display.setCursor(1*scale, y);
+	// 		if(resolutionMode)
+	// 			display.setTextFont(1);
+	// 		display.print(content);
+	// 		if(resolutionMode)
+	// 			display.setFreeFont(TT1);
+	// 		if(blinkState == 1)
+	// 		{
+	// 			if(resolutionMode)
+	// 				display.drawFastVLine(display.getCursorX(), display.getCursorY(), 7, TFT_WHITE);
+	// 			else
+	// 				display.drawFastVLine(display.getCursorX(), display.getCursorY()+3, 10, TFT_WHITE);
+	// 		}
+
+	// 		/*if (blinkState == 1)
+	// 		{
+	// 			display.fillRect(0, 0, display.width(), 7, TFT_DARKGREY);
+	// 			display.setTextColor(TFT_WHITE);
+	// 			display.setCursor(1, 6);
+	// 			display.print("From: ");
+	// 			display.print(contact);
+	// 			display.drawFastHLine(0, 7, LCDWIDTH, TFT_BLACK);
+	// 		}
+	// 		else
+	// 		{
+	// 			display.setTextColor(TFT_WHITE);
+	// 			display.setCursor(1, 6);
+	// 			display.drawFastHLine(0, 7, LCDWIDTH, TFT_BLACK);
+	// 		}*/
+	// 	}
+	// 	if (buttons.kpd.pin_read(BTN_UP) == 0 && cursor == 1) { //BUTTON UP
+	// 		/*Serial.println(display.cursor_y);
+	// 		if (display.cursor_y >= 64)
+	// 		{
+	// 			buttonHeld = millis();
+
+	// 			if (buttons.kpd.pin_read(BTN_UP) == 1)
+	// 			{
+	// 				y -= 2;
+	// 				break;
+	// 			}
+
+	// 			while (buttons.kpd.pin_read(BTN_UP) == 0)
+	// 			{
+	// 				if (millis() - buttonHeld > 100) {
+	// 					y -= 2;
+	// 					break;
+	// 				}
+	// 			}
+	// 		}*/
+	// 		cursor = 0;
+	// 	}
+
+	// 	if (buttons.kpd.pin_read(BTN_DOWN) == 0 && cursor == 0) { //BUTTON DOWN
+	// 		/*if (y < 14)
+	// 		{
+
+
+	// 			buttonHeld = millis();
+
+	// 			if (buttons.kpd.pin_read(BTN_DOWN) == 1)
+	// 			{
+	// 				y += 2;
+	// 				break;
+	// 			}
+
+	// 			while (buttons.kpd.pin_read(BTN_DOWN) == 0)
+	// 			{
+	// 				if (millis() - buttonHeld > 100) {
+	// 					y += 2;
+	// 					break;
+	// 				}
+	// 			}
+	// 		}*/
+	// 		cursor = 1;
+
+	// 	}
+
+	// 	if (buttons.released(BTN_B)) //BUTTON BACK
+	// 	{
+	// 		while (!update());
+	// 		break;
+	// 	}
+	// 	if (buttons.released(BTN_A) && contact != "" && content != "") // SEND SMS
+	// 	{
+	// 		display.fillScreen(TFT_BLACK);
+	// 		if(resolutionMode)
+	// 		{
+	// 			display.setCursor(0, display.height()/2);
+	// 			display.setFreeFont(TT1);
+	// 		}
+	// 		else
+	// 		{
+	// 			display.setCursor(0, display.height()/2 - 16);
+	// 			display.setTextFont(2);
+	// 		}
+	// 		display.printCenter("Sending text...");
+	// 		while (!update());
+	// 		Serial1.print("AT+CMGS=\"");
+	// 		Serial1.print(contact);
+	// 		Serial1.println("\"");
+	// 		while (!Serial1.available());
+	// 		Serial.println(Serial1.readString());
+	// 		delay(5);
+	// 		Serial1.print(content);
+	// 		while (!Serial1.available());
+	// 		Serial.println(Serial1.readString());
+	// 		delay(5);
+	// 		Serial1.println((char)26);
+	// 		while (Serial1.readString().indexOf("OK") != -1);
+	// 		display.fillScreen(TFT_BLACK);
+	// 		display.printCenter("Text sent!");
+	// 		while (!update());
+	// 		delay(1000);
+	// 		break;
+	// 	}
 
 
 
 
-		update();
-	}
+	// 	update();
+	// }
 }
 
 //Contacts app
 
-uint8_t MAKERphone::deleteContact(String contact, String number, String id)
-{
-	unsigned long elapsedMillis = millis();
-	bool blinkState = 1;
-	while (1)
-	{
-		display.fillScreen(TFT_BLACK);
-		if(resolutionMode)
-		{
-			display.fillRect(0, 0, display.width(), 6, TFT_DARKGREY);
-			display.setFreeFont(TT1);
-			display.setCursor(0,5);
-			display.drawFastHLine(0, 6, BUF2WIDTH, TFT_WHITE);
-		}
-		else
-		{
-			display.fillRect(0, 0, display.width(), 14, TFT_DARKGREY);
-			display.setTextFont(2);
-			display.setCursor(0,-2);
-			display.drawFastHLine(0, 14, BUF2WIDTH, TFT_WHITE);
-		}
-		display.setTextColor(TFT_WHITE);
-		display.print("Delete contact");
-
-		if (millis() - elapsedMillis >= multi_tap_threshold) {
-		elapsedMillis = millis();
-		blinkState = !blinkState;
-		}
-
-		display.setTextColor(TFT_WHITE);
-		display.setCursor(4, 17);
-		display.print("Are you sure?");
-		display.setCursor(4, 33);
-		display.print(contact);
-		display.setCursor(4, 49);
-		display.print(number);
-
-		if (blinkState){
-			display.drawRect(display.width() / 2 - 29, 102, 30*2, 9*2, TFT_RED);
-			display.setTextColor(TFT_RED);
-			display.setCursor(28*2, 103);
-			display.printCenter("DELETE");
-		}
-		else {
-			display.fillRect(display.width() / 2 - 29, 102, 30*2, 9*2, TFT_RED);
-			display.setTextColor(TFT_WHITE);
-			display.setCursor(28*2, 103);
-			display.print("DELETE");
-		}
-
-
-
-		if (buttons.released(BTN_B)) //BUTTON BACK
-		{
-			Serial.println("Go back");
-			while (!update());
-			break;
-		}
-		if (buttons.released(BTN_A)) // DELETE
-		{
-			Serial.println("DElete");
-			display.fillScreen(TFT_BLACK);
-			display.setTextFont(2);
-			display.setCursor(34, display.height()/2 -16);
-			display.printCenter("Deleting contact...");
-			while (!update());
-
-			Serial1.print("AT+CPBW=");
-			Serial1.println(id);
-			Serial.print("AT+CPBW=");
-			Serial.println(id);
-
-			while (Serial1.readString().indexOf("OK") != -1);
-			display.fillScreen(TFT_BLACK);
-			display.printCenter("Contact deleted!");
-			Serial.println("Contact deleted");
-			while (!update());
-			delay(1000);
-			return 1;
-		}
-
-		update();
-	}
-	return 0;
-}
-
-uint8_t MAKERphone::newContact()
-{
-	textPointer = 0;
-	y = 20;  //Beggining point
-	String content = "";
-	String contact = "";
-	String prevContent = "";
-	char key = NO_KEY;
-	bool cursor = 0; //editing contacts or text content
-	unsigned long elapsedMillis = millis();
-	bool blinkState = 1;
-	while (1)
-	{
-		display.fillScreen(TFT_BLACK);
-		if(resolutionMode)
-		{
-			display.fillRect(0, 0, display.width(), 6, TFT_DARKGREY);
-			display.setFreeFont(TT1);
-			display.setCursor(0,5);
-			display.drawFastHLine(0, 6, BUF2WIDTH, TFT_WHITE);
-		}
-		else
-		{
-			display.fillRect(0, 0, display.width(), 14, TFT_DARKGREY);
-			display.setTextFont(2);
-			display.setCursor(0,-2);
-			display.drawFastHLine(0, 14, BUF2WIDTH, TFT_WHITE);
-		}
-		display.setTextColor(TFT_WHITE);
-		display.print("Contacts");
-		if (millis() - elapsedMillis >= multi_tap_threshold) //cursor blinking routine
-		{
-		elapsedMillis = millis();
-		blinkState = !blinkState;
-		}
-		if (cursor == 0) //inputting the contact number
-		{
-			key = buttons.kpdNum.getKey();
-			if (key == 'A') //clear number
-				contact = "";
-			else if (key == 'C')
-				contact.remove(contact.length() - 1);
-			if (key != NO_KEY && isdigit(key) && contact.length() < 14)
-				contact += key;
-			display.setTextWrap(1);
-			display.setCursor(4, 20);
-			display.setTextFont(2);
-			if (content == "")
-			{
-				display.setTextColor(TFT_LIGHTGREY);
-				display.print(F("Name"));
-				display.setTextColor(TFT_WHITE);
-			}
-			else
-				display.print(content);
-			display.setTextFont(2);
-			display.setCursor(4, 38);
-			display.print("Num: ");
-			display.print(contact);
-			if (blinkState == 1)
-				display.drawFastVLine(display.getCursorX() + 1, display.getCursorY() + 3, 11, TFT_WHITE);
-		}
-		else //inputting contact name
-		{
-			display.setTextColor(TFT_WHITE);
-			display.setCursor(2*2, 38);
-			display.print("Num: ");
-			if (contact == "")
-			{
-				display.setTextColor(TFT_LIGHTGREY);
-				display.print(F("xxxxxxxx"));
-				display.setTextColor(TFT_WHITE);
-			}
-			else
-				display.print(contact);
-			prevContent = content;
-			content = textInput(content, 12);
-			if (prevContent != content)
-			{
-				blinkState = 1;
-				elapsedMillis = millis();
-			}
-			display.setTextColor(TFT_LIGHTGREY);
-			display.setTextWrap(1);
-			display.setCursor(2*2, 10*2);
-			display.print(content);
-			display.setTextColor(TFT_WHITE);
-			if(blinkState == 1)
-				display.drawFastVLine(display.getCursorX() + 1, display.getCursorY() + 3, 11, TFT_WHITE);
-		}
-
-		display.fillRect(display.width() / 2 - 29, 102, 30*2, 9*2, TFT_GREENYELLOW);
-		display.setTextColor(TFT_WHITE);
-		display.setCursor(31*2, 103);
-		display.printCenter("SAVE");
-
-		if (buttons.kpd.pin_read(BTN_DOWN) == 0 && cursor == 1) { //BUTTON UP
-		cursor = 0;
-		}
-
-		if (buttons.kpd.pin_read(BTN_UP) == 0 && cursor == 0) { //BUTTON DOWN
-		cursor = 1;
-		}
-
-		if (buttons.released(BTN_B)) //BUTTON BACK
-		{
-		while (!update());
-		break;
-		}
-		if (buttons.released(BTN_A)) // SAVE CONTACT
-		{
-			if(contact != "" && content != "")
-			{
-				// international numbers ?
-				// AT+CPBW=,”6187759088″,129,”Adam”
-
-				display.fillScreen(TFT_BLACK);
-				display.setCursor(34, display.height()/2 -16);
-				display.printCenter("Inserting contact");
-				while (!update());
-
-				Serial1.print("AT+CPBW=,\"");
-				Serial1.print(contact);
-				Serial1.print("\",129,\"");
-				Serial1.print(content);
-				Serial1.println("\"");
-
-				while (Serial1.readString().indexOf("OK") != -1);
-				display.fillScreen(TFT_BLACK);
-				display.setCursor(34, display.height()/2 -16);
-				display.printCenter("Contact inserted");
-				while (!update());
-				delay(1000);
-				return 1;
-			}
-		}
-		update();
-	}
-	return 0;
-
-}
-
-
-void MAKERphone::contactsMenuDrawBox(String contact, String number, uint8_t i, int32_t y) {
-	uint8_t offset;
-	uint8_t boxHeight;
-	if(resolutionMode)
-	{
-		offset = menuYOffset;
-		boxHeight = 14;
-	}
-	else
-	{
-		offset = 19;
-		boxHeight = 28;
-	}
-	y += i * boxHeight + offset;
-	if (y < 0 || y > display.height()) {
-		return;
-	}
-	if(resolutionMode)
-	{
-		display.setTextSize(1);
-		display.setFreeFont(TT1);
-		display.fillRect(1, y + 1, display.width() - 2, 13, TFT_DARKGREY);
-		display.setTextColor(TFT_WHITE);
-		display.setCursor(2, y + 2);
-		display.drawString(contact, 3, y + 2);
-		display.drawString(number, 3, y + 8);
-	}
-	else
-	{
-		display.setTextSize(1);
-		display.setTextFont(2);
-		display.fillRect(1, y + 1, display.width() - 2, boxHeight-1, TFT_DARKGREY);
-		display.setTextColor(TFT_WHITE);
-		display.setCursor(2, y + 2);
-		display.drawString(contact, 4, y);
-		display.drawString(number, 4, y + 12);
-	}
-
-}
-void MAKERphone::contactsMenuDrawCursor(uint8_t i, int32_t y) {
-	uint8_t offset;
-	uint8_t boxHeight;
-	if(resolutionMode)
-	{
-		offset = menuYOffset;
-		boxHeight = 14;
-	}
-	else
-	{
-		offset = 19;
-		boxHeight = 28;
-	}
-	if (millis() % 500 <= 250) {
-		return;
-	}
-	y += i * boxHeight + offset;
-	display.drawRect(0, y, display.width(), boxHeight + 1, TFT_RED);
-}
-void MAKERphone::contactsMenuNewBoxCursor(uint8_t i, int32_t y) {
-	uint8_t offset;
-	uint8_t boxHeight;
-	if(resolutionMode)
-	{
-		offset = menuYOffset;
-		boxHeight = 14;
-	}
-	else
-	{
-		offset = 19;
-		boxHeight = 28;
-	}
-	if (millis() % 500 <= 250) {
-		return;
-	}
-	y += offset + 1;
-	display.drawRect(0, y, display.width(), boxHeight, TFT_RED);
-}
-void MAKERphone::contactsMenuNewBox(uint8_t i, int32_t y) {
-	uint8_t offset;
-	uint8_t boxHeight;
-	if(resolutionMode)
-	{
-		offset = menuYOffset;
-		boxHeight = 14;
-	}
-	else
-	{
-		offset = 19;
-		boxHeight = 28;
-	}
-	y += offset + 1;
-	if (y < 0 || y > display.height()) {
-		return;
-	}
-	if(resolutionMode)
-	{
-		display.fillRect(1, y + 1, display.width() - 2, boxHeight - 2, TFT_DARKGREY);
-		display.drawBitmap(0, y + 2, newContactIcon, TFT_WHITE);
-		display.setTextColor(TFT_WHITE);
-		display.setCursor(12, y + 3);
-		display.setTextFont(1);
-		display.print("New contact");
-		display.setFreeFont(TT1);
-	}
-	else
-	{
-		display.setTextSize(1);
-		display.fillRect(1, y + 1, display.width() - 2, boxHeight - 2, TFT_DARKGREY);
-		display.drawBitmap(2, y + 4, newContactIcon, TFT_WHITE, 2);
-		display.setTextColor(TFT_WHITE);
-		display.setCursor(32, y + 6);
-		display.setTextFont(2);
-		display.print("New contact");
-	}
-
-}
-int MAKERphone::contactsMenu(const char* title, String* contact, String *number, uint8_t length) {
-	Serial.println("contactsMenu()");
-	uint8_t cursor = 0;
-	int32_t cameraY = 0;
-	int32_t cameraY_actual = 0;
-	uint8_t offset;
-	uint8_t boxHeight;
-	if(resolutionMode)
-	{
-		offset = menuYOffset;
-		boxHeight = 14;
-	}
-	else
-	{
-		offset = 19;
-		boxHeight = 28;
-	}
-	while (1) {
-		while (!update());
-		display.fillScreen(TFT_BLACK);
-		display.setCursor(0, 0);
-		cameraY_actual = (cameraY_actual + cameraY) / 2;
-		if (cameraY_actual - cameraY == 1) {
-		cameraY_actual = cameraY;
-		}
-
-		for (uint8_t i = 0; i < length + 1; i++) {
-		if(i == 0){
-			contactsMenuNewBox(i, cameraY_actual);
-		} else {
-			contactsMenuDrawBox(contact[i-1], number[i-1], i, cameraY_actual);
-		}
-		}
-		if(cursor == 0){
-		contactsMenuNewBoxCursor(cursor, cameraY_actual);
-		} else {
-		contactsMenuDrawCursor(cursor, cameraY_actual);
-		}
-
-		// last draw the top entry thing
-		if(resolutionMode)
-		{
-			display.fillRect(0, 0, display.width(), 6, TFT_DARKGREY);
-			display.setFreeFont(TT1);
-			display.setCursor(0,5);
-			display.drawFastHLine(0, 6, BUF2WIDTH, TFT_WHITE);
-		}
-		else
-		{
-			display.fillRect(0, 0, display.width(), 14, TFT_DARKGREY);
-			display.setTextFont(2);
-			display.setCursor(0,-2);
-			display.drawFastHLine(0, 14, BUF2WIDTH, TFT_WHITE);
-		}
-		display.setTextSize(1);
-		display.setTextColor(TFT_WHITE);
-		display.print(title);
-
-		if (buttons.kpd.pin_read(BTN_A) == 0) {   //BUTTON CONFIRM
-		while (buttons.kpd.pin_read(BTN_A) == 0);// Exit when pressed
-		break;
-		}
-		if (buttons.kpd.pin_read(BTN_LEFT) == 0 && cursor != 0) {
-		while (buttons.kpd.pin_read(BTN_LEFT) == 0); // Delete
-		return -1000 + cursor;
-		}
-		if (buttons.kpd.pin_read(BTN_RIGHT) == 0 && cursor != 0) {
-		while (buttons.kpd.pin_read(BTN_RIGHT) == 0); // Edit contact
-		return -3000 + cursor;
-		}
-
-		if (buttons.kpd.pin_read(BTN_UP) == 0) {  //BUTTON UP
-		while (buttons.kpd.pin_read(BTN_UP) == 0);
-		if (cursor == 0) {
-			cursor = length;
-			if (length > 2) {
-			cameraY = -(cursor - 2) * (boxHeight+1);
-			}
-		}
-		else {
-			cursor--;
-			if (cursor > 0 && (cursor * (boxHeight+1) + cameraY + offset) < (boxHeight+1)) {
-			cameraY += (boxHeight+1);
-			}
-		}
-		}
-
-		if (buttons.kpd.pin_read(BTN_DOWN) == 0) { //BUTTON DOWN
-		while (buttons.kpd.pin_read(BTN_DOWN) == 0);
-
-		cursor++;
-		if ((cursor * (boxHeight+1) + cameraY + offset) > 48) {
-			cameraY -= (boxHeight+1);
-		}
-		if (cursor >= length + 1) {
-			cursor = 0;
-			cameraY = 0;
-
-		}
-
-		}
-		if (buttons.released(BTN_B) == 1) //BUTTON BACK
-		{
-		while (!update());
-		return -2;
-		}
-	}
-	return cursor;
-}
-void MAKERphone::contactsApp() {
-	delay(5);
-	Serial.println("Loaded ?");
-	int change = 0;
-	String input = readAllContacts();
-	int count_try = 0;
-	while (input == "") {
-		if(count_try > 0) delay(1000);
-		if(count_try > 4) return;
-		Serial.println("try again");
-		input = readAllContacts();
-		count_try++;
-	}
-	if (input.indexOf("CPBR:") == -1)
-	{
-		display.fillScreen(TFT_BLACK);
-		if(resolutionMode)
-		{
-			display.setCursor(0, display.height()/2);
-			display.setFreeFont(TT1);
-		}
-		else
-		{
-			display.setCursor(0, display.height()/2 - 16);
-			display.setTextFont(2);
-		}
-		display.printCenter("No contacts  :(");
-		while (buttons.released(BTN_B) == 0)//BUTTON BACK
-		while (!update());
-		while (!update());
-	}
-	else
-	{
-		uint8_t contactNumber = countSubstring(input, "CPBR:");
-		Serial.println(contactNumber);
-
-		/////////////////////////////////
-		//Variables for contact parsing
-		////////////////////////////////
-		String phoneNumber[contactNumber];
-		String contactName[contactNumber];
-		String contact_id[contactNumber];
-		uint16_t start;
-		uint16_t end = 0;
-		uint16_t foo = 0;
-		uint16_t bar = 0;
-		/////////////////////////////////////////////////////
-		//parsing the raw data input for contact number,
-		//date and text content
-		////////////////////////////////////////////////////
-		Serial.println(input);
-		for (uint8_t i = 0; i < contactNumber; i++)
-		{
-			foo = input.indexOf(" ", input.indexOf("CPBR:", end));
-			bar = input.indexOf("\"", input.indexOf("CPBR:", end));
-			contact_id[i] = input.substring(foo+1, bar-1);
-
-			start = input.indexOf("\"", input.indexOf("CPBR:", end));
-			end = input.indexOf("\"", start + 1);
-			phoneNumber[i] = input.substring(start + 1, end);
-
-			start = input.indexOf("\"", end + 1);
-			end = input.indexOf("\"", start + 1);
-			contactName[i] = input.substring(start + 1, end);
-		}
-
-		while(1){
-			int menuChoice = -1;
-			if(change == 1 || change == -10){
-				if(change == 1)
-				{
-					display.fillScreen(TFT_BLACK);
-					display.setTextFont(2);
-					display.setCursor(34, display.height()/2 - 16);
-					display.printCenter("Reloading data...");
-					while (!update());
-
-					delay(1000);
-
-					input = "";
-					int count_try = 0;
-					bool flag = 0;
-					while (input == "") {
-						if(count_try > 4) { flag = 1; break; }
-						delay(1000);
-						Serial.println("try again");
-						input = readAllContacts();
-						count_try++;
-					}
-
-					if (input.indexOf("CPBR:") == -1 || flag) {
-						display.fillScreen(TFT_BLACK);
-						display.setCursor(16, 35);
-						display.setFreeFont(TT1);
-						display.print("No contacts  :(");
-						while (buttons.released(BTN_B) == 0) //BUTTON BACK
-						while (!update());
-						while (!update());
-						break;
-					}
-				}
-
-				uint8_t contactNumber = countSubstring(input, "CPBR:");
-				Serial.println(contactNumber);
-
-				/////////////////////////////////
-				//Variables for contact parsing
-				////////////////////////////////
-				// String phoneNumber[contactNumber];
-				// String contactName[contactNumber];
-				// String contact_id[contactNumber];
-				uint16_t start;
-				uint16_t end = 0;
-				uint16_t foo = 0;
-				uint16_t bar = 0;
-				/////////////////////////////////////////////////////
-				//parsing the raw data input for contact number,
-				//date and text content
-				////////////////////////////////////////////////////
-				Serial.println(input);
-				for (uint8_t i = 0; i < contactNumber; i++)
-				{
-					foo = input.indexOf(" ", input.indexOf("CPBR:", end));
-					bar = input.indexOf("\"", input.indexOf("CPBR:", end));
-					contact_id[i] = input.substring(foo+1, bar-1);
-
-					start = input.indexOf("\"", input.indexOf("CPBR:", end));
-					end = input.indexOf("\"", start + 1);
-					phoneNumber[i] = input.substring(start + 1, end);
-
-					start = input.indexOf("\"", end + 1);
-					end = input.indexOf("\"", start + 1);
-					contactName[i] = input.substring(start + 1, end);
-				}
-
-				Serial.print("done parsing data\ncontact number:");
-				Serial.println(contactNumber);
-				Serial.println(sizeof(contactName));
-				for(int i = 0; i<contactNumber; i++){
-					Serial.println(contactName[i]);
-					delay(5);
-				}
-
-				menuChoice = contactsMenu("Contacts", contactName, phoneNumber, contactNumber);
-				change = -10;
-			} else menuChoice = contactsMenu("Contacts", contactName, phoneNumber, contactNumber);
-
-			update();
-			if (menuChoice != -2)
-			{
-				Serial.println(menuChoice);
-				if (menuChoice == 0){
-				if(newContact()){
-					change = 1;
-				}
-				} else if (menuChoice < -1000){
-					Serial.println("Edit this concat");
-				} else if (menuChoice < -10){
-					int id = menuChoice + 1000 - 1;
-					if(deleteContact(contactName[id], phoneNumber[id], contact_id[id])){
-						change = 1;
-					}
-				} else {
-					callNumber(phoneNumber[menuChoice - 1]);
-					while(!update());
-				}
-			} else {
-				break;
-			}
-		}
-	}
-}
-
-uint8_t MAKERphone::deleteContactSD(String name, String number)
-{
-	unsigned long elapsedMillis = millis();
-	bool blinkState = 1;
-	while (1)
-	{
-		display.fillScreen(TFT_BLACK);
-		if(resolutionMode)
-		{
-			display.fillRect(0, 0, display.width(), 6, TFT_DARKGREY);
-			display.setFreeFont(TT1);
-			display.setCursor(0,5);
-			display.drawFastHLine(0, 6, BUF2WIDTH, TFT_WHITE);
-		}
-		else
-		{
-			display.fillRect(0, 0, display.width(), 14, TFT_DARKGREY);
-			display.setTextFont(2);
-			display.setCursor(0,-2);
-			display.drawFastHLine(0, 14, BUF2WIDTH, TFT_WHITE);
-		}
-		display.setTextColor(TFT_WHITE);
-		display.print("Delete contact");
-
-		if (millis() - elapsedMillis >= multi_tap_threshold) {
-		elapsedMillis = millis();
-		blinkState = !blinkState;
-		}
-
-		display.setTextColor(TFT_WHITE);
-		display.setCursor(4, 17);
-		display.print("Are you sure?");
-		display.setCursor(4, 33);
-		display.print(name);
-		display.setCursor(4, 49);
-		display.print(number);
-
-		if (blinkState){
-			display.drawRect(display.width() / 2 - 29, 102, 30*2, 9*2, TFT_RED);
-			display.setTextColor(TFT_RED);
-			display.setCursor(28*2, 103);
-			display.printCenter("DELETE");
-		}
-		else {
-			display.fillRect(display.width() / 2 - 29, 102, 30*2, 9*2, TFT_RED);
-			display.setTextColor(TFT_WHITE);
-			display.setCursor(28*2, 103);
-			display.print("DELETE");
-		}
-
-
-
-		if (buttons.released(BTN_B)) //BUTTON BACK
-		{
-			Serial.println("Go back");
-			while (!update());
-			break;
-		}
-		if (buttons.released(BTN_A)) // DELETE
-		{
-			Serial.println("DElete");
-			display.fillScreen(TFT_BLACK);
-			display.setTextFont(2);
-			display.setCursor(34, display.height()/2 -16);
-			display.printCenter("Deleting contact...");
-			while (!update());
-			return 1;
-		}
-		update();
-	}
-	return 0;
-}
-
-void MAKERphone::contactsAppSD(){
-	Serial.println("");
-	Serial.println("Begin contacts");
-	SDAudioFile file = _SD.open("/contacts.json", "r");
-
-	if(file.size() < 2){ // empty -> FILL
-		Serial.println("Override");
-		file.close();
-		JsonArray& jarr = mp.jb.parseArray("[{\"name\":\"foo\", \"number\":\"099\"}]");
-		delay(10);
-		SDAudioFile file1 = _SD.open("/contacts.json", "w");
-		jarr.prettyPrintTo(file1);
-		file1.close();
-		file = _SD.open("/contacts.json", "r");
-		while(!file)
-			Serial.println("CONTACTS ERROR");
-	}
-
-	JsonArray& jarr = mp.jb.parseArray(file);
-
-	if(!jarr.success())
-	{
-		Serial.println("Error");
-		display.fillScreen(TFT_BLACK);
-		if(resolutionMode)
-		{
-			display.setCursor(0, display.height()/2);
-			display.setFreeFont(TT1);
-		}
-		else
-		{
-			display.setCursor(0, display.height()/2 - 16);
-			display.setTextFont(2);
-		}
-		display.printCenter("Error loading contacts");
-		while (buttons.released(BTN_B) == 0)//BUTTON BACK
-		while (!update());
-		while (!update());
-	}
-	else
-	{
-		// Maybe later read from core.json
-		// uint8_t contactNumber = countSubstring(input, "CPBR:");
-		// Serial.println(contactNumber);
-
-		Serial.println("Read from .json");
-		for (JsonObject& elem : jarr) {
-			Serial.println(elem["name"].as<char*>());
-			Serial.println(elem["number"].as<char*>());
-		}
-
-		while(1){
-			int menuChoice = -1;
-			menuChoice = contactsMenuSD(&jarr);
-
-			update();
-			if (menuChoice != -2)
-			{
-				if (menuChoice == 0){
-					String name, number;
-					if(newContactSD(&name, &number)){
-						JsonObject& newContact = mp.jb.createObject();
-						newContact["name"] = name;
-						newContact["number"] = number;
-						jarr.add(newContact);
-						SDAudioFile file = _SD.open("/contacts.json");
-						jarr.prettyPrintTo(file);
-						file.close();
-					}
-				} else if (menuChoice < -10){
-					int id = menuChoice + 1000 - 1;
-					if(deleteContactSD(jarr[id]["name"], jarr[id]["number"])){
-						jarr.remove(id);
-						SDAudioFile file = _SD.open("/contacts.json");
-						jarr.prettyPrintTo(file);
-						file.close();
-					}
-				// EDIT
-				} else {
-					callNumber(jarr[menuChoice - 1]["number"].as<char*>());
-					while(!update());
-				}
-			} else {
-				break;
-			}
-		}
-	}
-}
-
-uint8_t MAKERphone::newContactSD(String *name, String *number)
-{
-	textPointer = 0;
-	y = 20;  //Beggining point
-	String content = "";
-	String contact = "";
-	String prevContent = "";
-	char key = NO_KEY;
-	bool cursor = 0; //editing contacts or text content
-	unsigned long elapsedMillis = millis();
-	bool blinkState = 1;
-	while (1)
-	{
-		display.fillScreen(TFT_BLACK);
-		if(resolutionMode)
-		{
-			display.fillRect(0, 0, display.width(), 6, TFT_DARKGREY);
-			display.setFreeFont(TT1);
-			display.setCursor(0,5);
-			display.drawFastHLine(0, 6, BUF2WIDTH, TFT_WHITE);
-		}
-		else
-		{
-			display.fillRect(0, 0, display.width(), 14, TFT_DARKGREY);
-			display.setTextFont(2);
-			display.setCursor(0,-2);
-			display.drawFastHLine(0, 14, BUF2WIDTH, TFT_WHITE);
-		}
-		display.setTextColor(TFT_WHITE);
-		display.print("Contacts");
-		if (millis() - elapsedMillis >= multi_tap_threshold) //cursor blinking routine
-		{
-		elapsedMillis = millis();
-		blinkState = !blinkState;
-		}
-		if (cursor == 0) //inputting the contact number
-		{
-			key = buttons.kpdNum.getKey();
-			if (key == 'A') //clear number
-				contact = "";
-			else if (key == 'C')
-				contact.remove(contact.length() - 1);
-			if (key != NO_KEY && isdigit(key) && contact.length() < 14)
-				contact += key;
-			display.setTextWrap(1);
-			display.setCursor(4, 20);
-			display.setTextFont(2);
-			if (content == "")
-			{
-				display.setTextColor(TFT_LIGHTGREY);
-				display.print(F("Name"));
-				display.setTextColor(TFT_WHITE);
-			}
-			else
-				display.print(content);
-			display.setTextFont(2);
-			display.setCursor(4, 38);
-			display.print("Num: ");
-			display.print(contact);
-			if (blinkState == 1)
-				display.drawFastVLine(display.getCursorX() + 1, display.getCursorY() + 3, 11, TFT_WHITE);
-		}
-		else //inputting contact name
-		{
-			display.setTextColor(TFT_WHITE);
-			display.setCursor(2*2, 38);
-			display.print("Num: ");
-			if (contact == "")
-			{
-				display.setTextColor(TFT_LIGHTGREY);
-				display.print(F("xxxxxxxx"));
-				display.setTextColor(TFT_WHITE);
-			}
-			else
-				display.print(contact);
-			prevContent = content;
-			content = textInput(content, 12);
-			if (prevContent != content)
-			{
-				blinkState = 1;
-				elapsedMillis = millis();
-			}
-			display.setTextColor(TFT_LIGHTGREY);
-			display.setTextWrap(1);
-			display.setCursor(2*2, 10*2);
-			display.print(content);
-			display.setTextColor(TFT_WHITE);
-			if(blinkState == 1)
-				display.drawFastVLine(display.getCursorX() + 1, display.getCursorY() + 3, 11, TFT_WHITE);
-		}
-
-		display.fillRect(display.width() / 2 - 29, 102, 30*2, 9*2, TFT_GREENYELLOW);
-		display.setTextColor(TFT_WHITE);
-		display.setCursor(31*2, 103);
-		display.printCenter("SAVE");
-
-		if (buttons.kpd.pin_read(BTN_DOWN) == 0 && cursor == 1) { //BUTTON UP
-		cursor = 0;
-		}
-
-		if (buttons.kpd.pin_read(BTN_UP) == 0 && cursor == 0) { //BUTTON DOWN
-		cursor = 1;
-		}
-
-		if (buttons.released(BTN_B)) //BUTTON BACK
-		{
-		while (!update());
-		break;
-		}
-		if (buttons.released(BTN_A)) // SAVE CONTACT
-		{
-			if(contact != "" && content != "")
-			{
-				*name = contact;
-				*number = content;
-				return 1;
-			}
-		}
-		update();
-	}
-	return 0;
-}
-
-int MAKERphone::contactsMenuSD(JsonArray *contacts){
-	uint8_t cursor = 0;
-	int32_t cameraY = 0;
-	int32_t cameraY_actual = 0;
-	uint8_t offset;
-	uint8_t boxHeight;
-	uint8_t length = contacts->size();
-	if(resolutionMode)
-	{
-		offset = menuYOffset;
-		boxHeight = 14;
-	}
-	else
-	{
-		offset = 19;
-		boxHeight = 28;
-	}
-	while (1) {
-		while (!update());
-		display.fillScreen(TFT_BLACK);
-		display.setCursor(0, 0);
-		cameraY_actual = (cameraY_actual + cameraY) / 2;
-		if (cameraY_actual - cameraY == 1) {
-		cameraY_actual = cameraY;
-		}
-
-		contactsMenuNewBox(0, cameraY_actual);
-
-		int i = 0;
-		for (JsonObject& elem : *contacts) {
-			contactsMenuDrawBoxSD(elem["name"].as<char*>(), elem["number"].as<char*>(), i+1, cameraY_actual);
-			i++;
-		}
-		if(cursor == 0){
-			contactsMenuNewBoxCursor(cursor, cameraY_actual);
-		} else {
-			contactsMenuDrawCursor(cursor, cameraY_actual);
-		}
-
-		// last draw the top entry thing
-		if(resolutionMode)
-		{
-			display.fillRect(0, 0, display.width(), 6, TFT_DARKGREY);
-			display.setFreeFont(TT1);
-			display.setCursor(0,5);
-			display.drawFastHLine(0, 6, BUF2WIDTH, TFT_WHITE);
-		}
-		else
-		{
-			display.fillRect(0, 0, display.width(), 14, TFT_DARKGREY);
-			display.setTextFont(2);
-			display.setCursor(0,-2);
-			display.drawFastHLine(0, 14, BUF2WIDTH, TFT_WHITE);
-		}
-		display.setTextSize(1);
-		display.setTextColor(TFT_WHITE);
-		display.print("Contacts");
-
-		if (buttons.kpd.pin_read(BTN_A) == 0) {   //BUTTON CONFIRM
-		while (buttons.kpd.pin_read(BTN_A) == 0);// Exit when pressed
-		break;
-		}
-		if (buttons.kpd.pin_read(BTN_LEFT) == 0 && cursor != 0) {
-		while (buttons.kpd.pin_read(BTN_LEFT) == 0); // Delete
-		return -1000 + cursor;
-		}
-		if (buttons.kpd.pin_read(BTN_RIGHT) == 0 && cursor != 0) {
-		while (buttons.kpd.pin_read(BTN_RIGHT) == 0); // Edit contact
-		return -3000 + cursor;
-		}
-
-		if (buttons.kpd.pin_read(BTN_UP) == 0) {  //BUTTON UP
-		while (buttons.kpd.pin_read(BTN_UP) == 0);
-		if (cursor == 0) {
-			cursor = length;
-			if (length > 2) {
-			cameraY = -(cursor - 2) * (boxHeight+1);
-			}
-		}
-		else {
-			cursor--;
-			if (cursor > 0 && (cursor * (boxHeight+1) + cameraY + offset) < (boxHeight+1)) {
-			cameraY += (boxHeight+1);
-			}
-		}
-		}
-
-		if (buttons.kpd.pin_read(BTN_DOWN) == 0) { //BUTTON DOWN
-		while (buttons.kpd.pin_read(BTN_DOWN) == 0);
-
-		cursor++;
-		if ((cursor * (boxHeight+1) + cameraY + offset) > 48) {
-			cameraY -= (boxHeight+1);
-		}
-		if (cursor >= length + 1) {
-			cursor = 0;
-			cameraY = 0;
-
-		}
-
-		}
-		if (buttons.released(BTN_B) == 1) //BUTTON BACK
-		{
-		while (!update());
-		return -2;
-		}
-	}
-	return cursor;
-}
-
-void MAKERphone::contactsMenuDrawBoxSD(String name, String number, uint8_t i, int32_t y) {
-	uint8_t offset;
-	uint8_t boxHeight;
-	if(resolutionMode)
-	{
-		offset = menuYOffset;
-		boxHeight = 14;
-	}
-	else
-	{
-		offset = 19;
-		boxHeight = 28;
-	}
-	y += i * boxHeight + offset;
-	if (y < 0 || y > display.height()) {
-		return;
-	}
-	if(resolutionMode)
-	{
-		display.setTextSize(1);
-		display.setFreeFont(TT1);
-		display.fillRect(1, y + 1, display.width() - 2, 13, TFT_DARKGREY);
-		display.setTextColor(TFT_WHITE);
-		display.setCursor(2, y + 2);
-		display.drawString(name, 3, y + 2);
-		display.drawString(number, 3, y + 8);
-	}
-	else
-	{
-		display.setTextSize(1);
-		display.setTextFont(2);
-		display.fillRect(1, y + 1, display.width() - 2, boxHeight-1, TFT_DARKGREY);
-		display.setTextColor(TFT_WHITE);
-		display.setCursor(2, y + 2);
-		display.drawString(name, 4, y);
-		display.drawString(number, 4, y + 12);
-	}
-
-}
-
-String MAKERphone::readAllContacts() {
-	String buffer;
-	Serial1.print(F("AT+CPBR=1,250\r"));
-	buffer = readSerial();
-	delay(5);
-	if (buffer.indexOf("CPBR:") != -1 || buffer.indexOf("OK") != -1) {
-		return buffer;
-	}
-	else return "";
-}
+// uint8_t MAKERphone::deleteContact(String contact, String number, String id)
+// {
+// 	unsigned long elapsedMillis = millis();
+// 	bool blinkState = 1;
+// 	while (1)
+// 	{
+// 		display.fillScreen(TFT_BLACK);
+// 		if(resolutionMode)
+// 		{
+// 			display.fillRect(0, 0, display.width(), 6, TFT_DARKGREY);
+// 			display.setFreeFont(TT1);
+// 			display.setCursor(0,5);
+// 			display.drawFastHLine(0, 6, BUF2WIDTH, TFT_WHITE);
+// 		}
+// 		else
+// 		{
+// 			display.fillRect(0, 0, display.width(), 14, TFT_DARKGREY);
+// 			display.setTextFont(2);
+// 			display.setCursor(0,-2);
+// 			display.drawFastHLine(0, 14, BUF2WIDTH, TFT_WHITE);
+// 		}
+// 		display.setTextColor(TFT_WHITE);
+// 		display.print("Delete contact");
+
+// 		if (millis() - elapsedMillis >= multi_tap_threshold) {
+// 		elapsedMillis = millis();
+// 		blinkState = !blinkState;
+// 		}
+
+// 		display.setTextColor(TFT_WHITE);
+// 		display.setCursor(4, 17);
+// 		display.print("Are you sure?");
+// 		display.setCursor(4, 33);
+// 		display.print(contact);
+// 		display.setCursor(4, 49);
+// 		display.print(number);
+
+// 		if (blinkState){
+// 			display.drawRect(display.width() / 2 - 29, 102, 30*2, 9*2, TFT_RED);
+// 			display.setTextColor(TFT_RED);
+// 			display.setCursor(28*2, 103);
+// 			display.printCenter("DELETE");
+// 		}
+// 		else {
+// 			display.fillRect(display.width() / 2 - 29, 102, 30*2, 9*2, TFT_RED);
+// 			display.setTextColor(TFT_WHITE);
+// 			display.setCursor(28*2, 103);
+// 			display.print("DELETE");
+// 		}
+
+
+
+// 		if (buttons.released(BTN_B)) //BUTTON BACK
+// 		{
+// 			Serial.println("Go back");
+// 			while (!update());
+// 			break;
+// 		}
+// 		if (buttons.released(BTN_A)) // DELETE
+// 		{
+// 			Serial.println("DElete");
+// 			display.fillScreen(TFT_BLACK);
+// 			display.setTextFont(2);
+// 			display.setCursor(34, display.height()/2 -16);
+// 			display.printCenter("Deleting contact...");
+// 			while (!update());
+
+// 			Serial1.print("AT+CPBW=");
+// 			Serial1.println(id);
+// 			Serial.print("AT+CPBW=");
+// 			Serial.println(id);
+
+// 			while (Serial1.readString().indexOf("OK") != -1);
+// 			display.fillScreen(TFT_BLACK);
+// 			display.printCenter("Contact deleted!");
+// 			Serial.println("Contact deleted");
+// 			while (!update());
+// 			delay(1000);
+// 			return 1;
+// 		}
+
+// 		update();
+// 	}
+// 	return 0;
+// }
+
+// uint8_t MAKERphone::newContact()
+// {
+// 	textPointer = 0;
+// 	y = 20;  //Beggining point
+// 	String content = "";
+// 	String contact = "";
+// 	String prevContent = "";
+// 	char key = NO_KEY;
+// 	bool cursor = 0; //editing contacts or text content
+// 	unsigned long elapsedMillis = millis();
+// 	bool blinkState = 1;
+// 	while (1)
+// 	{
+// 		display.fillScreen(TFT_BLACK);
+// 		if(resolutionMode)
+// 		{
+// 			display.fillRect(0, 0, display.width(), 6, TFT_DARKGREY);
+// 			display.setFreeFont(TT1);
+// 			display.setCursor(0,5);
+// 			display.drawFastHLine(0, 6, BUF2WIDTH, TFT_WHITE);
+// 		}
+// 		else
+// 		{
+// 			display.fillRect(0, 0, display.width(), 14, TFT_DARKGREY);
+// 			display.setTextFont(2);
+// 			display.setCursor(0,-2);
+// 			display.drawFastHLine(0, 14, BUF2WIDTH, TFT_WHITE);
+// 		}
+// 		display.setTextColor(TFT_WHITE);
+// 		display.print("Contacts");
+// 		if (millis() - elapsedMillis >= multi_tap_threshold) //cursor blinking routine
+// 		{
+// 		elapsedMillis = millis();
+// 		blinkState = !blinkState;
+// 		}
+// 		if (cursor == 0) //inputting the contact number
+// 		{
+// 			key = buttons.kpdNum.getKey();
+// 			if (key == 'A') //clear number
+// 				contact = "";
+// 			else if (key == 'C')
+// 				contact.remove(contact.length() - 1);
+// 			if (key != NO_KEY && isdigit(key) && contact.length() < 14)
+// 				contact += key;
+// 			display.setTextWrap(1);
+// 			display.setCursor(4, 20);
+// 			display.setTextFont(2);
+// 			if (content == "")
+// 			{
+// 				display.setTextColor(TFT_LIGHTGREY);
+// 				display.print(F("Name"));
+// 				display.setTextColor(TFT_WHITE);
+// 			}
+// 			else
+// 				display.print(content);
+// 			display.setTextFont(2);
+// 			display.setCursor(4, 38);
+// 			display.print("Num: ");
+// 			display.print(contact);
+// 			if (blinkState == 1)
+// 				display.drawFastVLine(display.getCursorX() + 1, display.getCursorY() + 3, 11, TFT_WHITE);
+// 		}
+// 		else //inputting contact name
+// 		{
+// 			display.setTextColor(TFT_WHITE);
+// 			display.setCursor(2*2, 38);
+// 			display.print("Num: ");
+// 			if (contact == "")
+// 			{
+// 				display.setTextColor(TFT_LIGHTGREY);
+// 				display.print(F("xxxxxxxx"));
+// 				display.setTextColor(TFT_WHITE);
+// 			}
+// 			else
+// 				display.print(contact);
+// 			prevContent = content;
+// 			content = textInput(content, 12);
+// 			if (prevContent != content)
+// 			{
+// 				blinkState = 1;
+// 				elapsedMillis = millis();
+// 			}
+// 			display.setTextColor(TFT_LIGHTGREY);
+// 			display.setTextWrap(1);
+// 			display.setCursor(2*2, 10*2);
+// 			display.print(content);
+// 			display.setTextColor(TFT_WHITE);
+// 			if(blinkState == 1)
+// 				display.drawFastVLine(display.getCursorX() + 1, display.getCursorY() + 3, 11, TFT_WHITE);
+// 		}
+
+// 		display.fillRect(display.width() / 2 - 29, 102, 30*2, 9*2, TFT_GREENYELLOW);
+// 		display.setTextColor(TFT_WHITE);
+// 		display.setCursor(31*2, 103);
+// 		display.printCenter("SAVE");
+
+// 		if (buttons.kpd.pin_read(BTN_DOWN) == 0 && cursor == 1) { //BUTTON UP
+// 		cursor = 0;
+// 		}
+
+// 		if (buttons.kpd.pin_read(BTN_UP) == 0 && cursor == 0) { //BUTTON DOWN
+// 		cursor = 1;
+// 		}
+
+// 		if (buttons.released(BTN_B)) //BUTTON BACK
+// 		{
+// 		while (!update());
+// 		break;
+// 		}
+// 		if (buttons.released(BTN_A)) // SAVE CONTACT
+// 		{
+// 			if(contact != "" && content != "")
+// 			{
+// 				// international numbers ?
+// 				// AT+CPBW=,”6187759088″,129,”Adam”
+
+// 				display.fillScreen(TFT_BLACK);
+// 				display.setCursor(34, display.height()/2 -16);
+// 				display.printCenter("Inserting contact");
+// 				while (!update());
+
+// 				Serial1.print("AT+CPBW=,\"");
+// 				Serial1.print(contact);
+// 				Serial1.print("\",129,\"");
+// 				Serial1.print(content);
+// 				Serial1.println("\"");
+
+// 				while (Serial1.readString().indexOf("OK") != -1);
+// 				display.fillScreen(TFT_BLACK);
+// 				display.setCursor(34, display.height()/2 -16);
+// 				display.printCenter("Contact inserted");
+// 				while (!update());
+// 				delay(1000);
+// 				return 1;
+// 			}
+// 		}
+// 		update();
+// 	}
+// 	return 0;
+
+// }
+
+
+// void MAKERphone::contactsMenuDrawBox(String contact, String number, uint8_t i, int32_t y) {
+// 	uint8_t offset;
+// 	uint8_t boxHeight;
+// 	if(resolutionMode)
+// 	{
+// 		offset = menuYOffset;
+// 		boxHeight = 14;
+// 	}
+// 	else
+// 	{
+// 		offset = 19;
+// 		boxHeight = 28;
+// 	}
+// 	y += i * boxHeight + offset;
+// 	if (y < 0 || y > display.height()) {
+// 		return;
+// 	}
+// 	if(resolutionMode)
+// 	{
+// 		display.setTextSize(1);
+// 		display.setFreeFont(TT1);
+// 		display.fillRect(1, y + 1, display.width() - 2, 13, TFT_DARKGREY);
+// 		display.setTextColor(TFT_WHITE);
+// 		display.setCursor(2, y + 2);
+// 		display.drawString(contact, 3, y + 2);
+// 		display.drawString(number, 3, y + 8);
+// 	}
+// 	else
+// 	{
+// 		display.setTextSize(1);
+// 		display.setTextFont(2);
+// 		display.fillRect(1, y + 1, display.width() - 2, boxHeight-1, TFT_DARKGREY);
+// 		display.setTextColor(TFT_WHITE);
+// 		display.setCursor(2, y + 2);
+// 		display.drawString(contact, 4, y);
+// 		display.drawString(number, 4, y + 12);
+// 	}
+
+// }
+// void MAKERphone::contactsMenuDrawCursor(uint8_t i, int32_t y) {
+// 	uint8_t offset;
+// 	uint8_t boxHeight;
+// 	if(resolutionMode)
+// 	{
+// 		offset = menuYOffset;
+// 		boxHeight = 14;
+// 	}
+// 	else
+// 	{
+// 		offset = 19;
+// 		boxHeight = 28;
+// 	}
+// 	if (millis() % 500 <= 250) {
+// 		return;
+// 	}
+// 	y += i * boxHeight + offset;
+// 	display.drawRect(0, y, display.width(), boxHeight + 1, TFT_RED);
+// }
+// void MAKERphone::contactsMenuNewBoxCursor(uint8_t i, int32_t y) {
+// 	uint8_t offset;
+// 	uint8_t boxHeight;
+// 	if(resolutionMode)
+// 	{
+// 		offset = menuYOffset;
+// 		boxHeight = 14;
+// 	}
+// 	else
+// 	{
+// 		offset = 19;
+// 		boxHeight = 28;
+// 	}
+// 	if (millis() % 500 <= 250) {
+// 		return;
+// 	}
+// 	y += offset + 1;
+// 	display.drawRect(0, y, display.width(), boxHeight, TFT_RED);
+// }
+// void MAKERphone::contactsMenuNewBox(uint8_t i, int32_t y) {
+// 	uint8_t offset;
+// 	uint8_t boxHeight;
+// 	if(resolutionMode)
+// 	{
+// 		offset = menuYOffset;
+// 		boxHeight = 14;
+// 	}
+// 	else
+// 	{
+// 		offset = 19;
+// 		boxHeight = 28;
+// 	}
+// 	y += offset + 1;
+// 	if (y < 0 || y > display.height()) {
+// 		return;
+// 	}
+// 	if(resolutionMode)
+// 	{
+// 		display.fillRect(1, y + 1, display.width() - 2, boxHeight - 2, TFT_DARKGREY);
+// 		display.drawBitmap(0, y + 2, newContactIcon, TFT_WHITE);
+// 		display.setTextColor(TFT_WHITE);
+// 		display.setCursor(12, y + 3);
+// 		display.setTextFont(1);
+// 		display.print("New contact");
+// 		display.setFreeFont(TT1);
+// 	}
+// 	else
+// 	{
+// 		display.setTextSize(1);
+// 		display.fillRect(1, y + 1, display.width() - 2, boxHeight - 2, TFT_DARKGREY);
+// 		display.drawBitmap(2, y + 4, newContactIcon, TFT_WHITE, 2);
+// 		display.setTextColor(TFT_WHITE);
+// 		display.setCursor(32, y + 6);
+// 		display.setTextFont(2);
+// 		display.print("New contact");
+// 	}
+
+// }
+// int MAKERphone::contactsMenu(const char* title, String* contact, String *number, uint8_t length) {
+// 	Serial.println("contactsMenu()");
+// 	uint8_t cursor = 0;
+// 	int32_t cameraY = 0;
+// 	int32_t cameraY_actual = 0;
+// 	uint8_t offset;
+// 	uint8_t boxHeight;
+// 	if(resolutionMode)
+// 	{
+// 		offset = menuYOffset;
+// 		boxHeight = 14;
+// 	}
+// 	else
+// 	{
+// 		offset = 19;
+// 		boxHeight = 28;
+// 	}
+// 	while (1) {
+// 		while (!update());
+// 		display.fillScreen(TFT_BLACK);
+// 		display.setCursor(0, 0);
+// 		cameraY_actual = (cameraY_actual + cameraY) / 2;
+// 		if (cameraY_actual - cameraY == 1) {
+// 		cameraY_actual = cameraY;
+// 		}
+
+// 		for (uint8_t i = 0; i < length + 1; i++) {
+// 		if(i == 0){
+// 			contactsMenuNewBox(i, cameraY_actual);
+// 		} else {
+// 			contactsMenuDrawBox(contact[i-1], number[i-1], i, cameraY_actual);
+// 		}
+// 		}
+// 		if(cursor == 0){
+// 		contactsMenuNewBoxCursor(cursor, cameraY_actual);
+// 		} else {
+// 		contactsMenuDrawCursor(cursor, cameraY_actual);
+// 		}
+
+// 		// last draw the top entry thing
+// 		if(resolutionMode)
+// 		{
+// 			display.fillRect(0, 0, display.width(), 6, TFT_DARKGREY);
+// 			display.setFreeFont(TT1);
+// 			display.setCursor(0,5);
+// 			display.drawFastHLine(0, 6, BUF2WIDTH, TFT_WHITE);
+// 		}
+// 		else
+// 		{
+// 			display.fillRect(0, 0, display.width(), 14, TFT_DARKGREY);
+// 			display.setTextFont(2);
+// 			display.setCursor(0,-2);
+// 			display.drawFastHLine(0, 14, BUF2WIDTH, TFT_WHITE);
+// 		}
+// 		display.setTextSize(1);
+// 		display.setTextColor(TFT_WHITE);
+// 		display.print(title);
+
+// 		if (buttons.kpd.pin_read(BTN_A) == 0) {   //BUTTON CONFIRM
+// 		while (buttons.kpd.pin_read(BTN_A) == 0);// Exit when pressed
+// 		break;
+// 		}
+// 		if (buttons.kpd.pin_read(BTN_LEFT) == 0 && cursor != 0) {
+// 		while (buttons.kpd.pin_read(BTN_LEFT) == 0); // Delete
+// 		return -1000 + cursor;
+// 		}
+// 		if (buttons.kpd.pin_read(BTN_RIGHT) == 0 && cursor != 0) {
+// 		while (buttons.kpd.pin_read(BTN_RIGHT) == 0); // Edit contact
+// 		return -3000 + cursor;
+// 		}
+
+// 		if (buttons.kpd.pin_read(BTN_UP) == 0) {  //BUTTON UP
+// 		while (buttons.kpd.pin_read(BTN_UP) == 0);
+// 		if (cursor == 0) {
+// 			cursor = length;
+// 			if (length > 2) {
+// 			cameraY = -(cursor - 2) * (boxHeight+1);
+// 			}
+// 		}
+// 		else {
+// 			cursor--;
+// 			if (cursor > 0 && (cursor * (boxHeight+1) + cameraY + offset) < (boxHeight+1)) {
+// 			cameraY += (boxHeight+1);
+// 			}
+// 		}
+// 		}
+
+// 		if (buttons.kpd.pin_read(BTN_DOWN) == 0) { //BUTTON DOWN
+// 		while (buttons.kpd.pin_read(BTN_DOWN) == 0);
+
+// 		cursor++;
+// 		if ((cursor * (boxHeight+1) + cameraY + offset) > 48) {
+// 			cameraY -= (boxHeight+1);
+// 		}
+// 		if (cursor >= length + 1) {
+// 			cursor = 0;
+// 			cameraY = 0;
+
+// 		}
+
+// 		}
+// 		if (buttons.released(BTN_B) == 1) //BUTTON BACK
+// 		{
+// 		while (!update());
+// 		return -2;
+// 		}
+// 	}
+// 	return cursor;
+// }
+// void MAKERphone::contactsApp() {
+// 	delay(5);
+// 	Serial.println("Loaded ?");
+// 	int change = 0;
+// 	String input = readAllContacts();
+// 	int count_try = 0;
+// 	while (input == "") {
+// 		if(count_try > 0) delay(1000);
+// 		if(count_try > 4) return;
+// 		Serial.println("try again");
+// 		input = readAllContacts();
+// 		count_try++;
+// 	}
+// 	if (input.indexOf("CPBR:") == -1)
+// 	{
+// 		display.fillScreen(TFT_BLACK);
+// 		if(resolutionMode)
+// 		{
+// 			display.setCursor(0, display.height()/2);
+// 			display.setFreeFont(TT1);
+// 		}
+// 		else
+// 		{
+// 			display.setCursor(0, display.height()/2 - 16);
+// 			display.setTextFont(2);
+// 		}
+// 		display.printCenter("No contacts  :(");
+// 		while (buttons.released(BTN_B) == 0)//BUTTON BACK
+// 		while (!update());
+// 		while (!update());
+// 	}
+// 	else
+// 	{
+// 		uint8_t contactNumber = countSubstring(input, "CPBR:");
+// 		Serial.println(contactNumber);
+
+// 		/////////////////////////////////
+// 		//Variables for contact parsing
+// 		////////////////////////////////
+// 		String phoneNumber[contactNumber];
+// 		String contactName[contactNumber];
+// 		String contact_id[contactNumber];
+// 		uint16_t start;
+// 		uint16_t end = 0;
+// 		uint16_t foo = 0;
+// 		uint16_t bar = 0;
+// 		/////////////////////////////////////////////////////
+// 		//parsing the raw data input for contact number,
+// 		//date and text content
+// 		////////////////////////////////////////////////////
+// 		Serial.println(input);
+// 		for (uint8_t i = 0; i < contactNumber; i++)
+// 		{
+// 			foo = input.indexOf(" ", input.indexOf("CPBR:", end));
+// 			bar = input.indexOf("\"", input.indexOf("CPBR:", end));
+// 			contact_id[i] = input.substring(foo+1, bar-1);
+
+// 			start = input.indexOf("\"", input.indexOf("CPBR:", end));
+// 			end = input.indexOf("\"", start + 1);
+// 			phoneNumber[i] = input.substring(start + 1, end);
+
+// 			start = input.indexOf("\"", end + 1);
+// 			end = input.indexOf("\"", start + 1);
+// 			contactName[i] = input.substring(start + 1, end);
+// 		}
+
+// 		while(1){
+// 			int menuChoice = -1;
+// 			if(change == 1 || change == -10){
+// 				if(change == 1)
+// 				{
+// 					display.fillScreen(TFT_BLACK);
+// 					display.setTextFont(2);
+// 					display.setCursor(34, display.height()/2 - 16);
+// 					display.printCenter("Reloading data...");
+// 					while (!update());
+
+// 					delay(1000);
+
+// 					input = "";
+// 					int count_try = 0;
+// 					bool flag = 0;
+// 					while (input == "") {
+// 						if(count_try > 4) { flag = 1; break; }
+// 						delay(1000);
+// 						Serial.println("try again");
+// 						input = readAllContacts();
+// 						count_try++;
+// 					}
+
+// 					if (input.indexOf("CPBR:") == -1 || flag) {
+// 						display.fillScreen(TFT_BLACK);
+// 						display.setCursor(16, 35);
+// 						display.setFreeFont(TT1);
+// 						display.print("No contacts  :(");
+// 						while (buttons.released(BTN_B) == 0) //BUTTON BACK
+// 						while (!update());
+// 						while (!update());
+// 						break;
+// 					}
+// 				}
+
+// 				uint8_t contactNumber = countSubstring(input, "CPBR:");
+// 				Serial.println(contactNumber);
+
+// 				/////////////////////////////////
+// 				//Variables for contact parsing
+// 				////////////////////////////////
+// 				// String phoneNumber[contactNumber];
+// 				// String contactName[contactNumber];
+// 				// String contact_id[contactNumber];
+// 				uint16_t start;
+// 				uint16_t end = 0;
+// 				uint16_t foo = 0;
+// 				uint16_t bar = 0;
+// 				/////////////////////////////////////////////////////
+// 				//parsing the raw data input for contact number,
+// 				//date and text content
+// 				////////////////////////////////////////////////////
+// 				Serial.println(input);
+// 				for (uint8_t i = 0; i < contactNumber; i++)
+// 				{
+// 					foo = input.indexOf(" ", input.indexOf("CPBR:", end));
+// 					bar = input.indexOf("\"", input.indexOf("CPBR:", end));
+// 					contact_id[i] = input.substring(foo+1, bar-1);
+
+// 					start = input.indexOf("\"", input.indexOf("CPBR:", end));
+// 					end = input.indexOf("\"", start + 1);
+// 					phoneNumber[i] = input.substring(start + 1, end);
+
+// 					start = input.indexOf("\"", end + 1);
+// 					end = input.indexOf("\"", start + 1);
+// 					contactName[i] = input.substring(start + 1, end);
+// 				}
+
+// 				Serial.print("done parsing data\ncontact number:");
+// 				Serial.println(contactNumber);
+// 				Serial.println(sizeof(contactName));
+// 				for(int i = 0; i<contactNumber; i++){
+// 					Serial.println(contactName[i]);
+// 					delay(5);
+// 				}
+
+// 				menuChoice = contactsMenu("Contacts", contactName, phoneNumber, contactNumber);
+// 				change = -10;
+// 			} else menuChoice = contactsMenu("Contacts", contactName, phoneNumber, contactNumber);
+
+// 			update();
+// 			if (menuChoice != -2)
+// 			{
+// 				Serial.println(menuChoice);
+// 				if (menuChoice == 0){
+// 				if(newContact()){
+// 					change = 1;
+// 				}
+// 				} else if (menuChoice < -1000){
+// 					Serial.println("Edit this concat");
+// 				} else if (menuChoice < -10){
+// 					int id = menuChoice + 1000 - 1;
+// 					if(deleteContact(contactName[id], phoneNumber[id], contact_id[id])){
+// 						change = 1;
+// 					}
+// 				} else {
+// 					callNumber(phoneNumber[menuChoice - 1]);
+// 					while(!update());
+// 				}
+// 			} else {
+// 				break;
+// 			}
+// 		}
+// 	}
+// }
+
+// uint8_t MAKERphone::deleteContactSD(String name, String number)
+// {
+// 	unsigned long elapsedMillis = millis();
+// 	bool blinkState = 1;
+// 	while (1)
+// 	{
+// 		display.fillScreen(TFT_BLACK);
+// 		if(resolutionMode)
+// 		{
+// 			display.fillRect(0, 0, display.width(), 6, TFT_DARKGREY);
+// 			display.setFreeFont(TT1);
+// 			display.setCursor(0,5);
+// 			display.drawFastHLine(0, 6, BUF2WIDTH, TFT_WHITE);
+// 		}
+// 		else
+// 		{
+// 			display.fillRect(0, 0, display.width(), 14, TFT_DARKGREY);
+// 			display.setTextFont(2);
+// 			display.setCursor(0,-2);
+// 			display.drawFastHLine(0, 14, BUF2WIDTH, TFT_WHITE);
+// 		}
+// 		display.setTextColor(TFT_WHITE);
+// 		display.print("Delete contact");
+
+// 		if (millis() - elapsedMillis >= multi_tap_threshold) {
+// 		elapsedMillis = millis();
+// 		blinkState = !blinkState;
+// 		}
+
+// 		display.setTextColor(TFT_WHITE);
+// 		display.setCursor(4, 17);
+// 		display.print("Are you sure?");
+// 		display.setCursor(4, 33);
+// 		display.print(name);
+// 		display.setCursor(4, 49);
+// 		display.print(number);
+
+// 		if (blinkState){
+// 			display.drawRect(display.width() / 2 - 29, 102, 30*2, 9*2, TFT_RED);
+// 			display.setTextColor(TFT_RED);
+// 			display.setCursor(28*2, 103);
+// 			display.printCenter("DELETE");
+// 		}
+// 		else {
+// 			display.fillRect(display.width() / 2 - 29, 102, 30*2, 9*2, TFT_RED);
+// 			display.setTextColor(TFT_WHITE);
+// 			display.setCursor(28*2, 103);
+// 			display.print("DELETE");
+// 		}
+
+
+
+// 		if (buttons.released(BTN_B)) //BUTTON BACK
+// 		{
+// 			Serial.println("Go back");
+// 			while (!update());
+// 			break;
+// 		}
+// 		if (buttons.released(BTN_A)) // DELETE
+// 		{
+// 			Serial.println("DElete");
+// 			display.fillScreen(TFT_BLACK);
+// 			display.setTextFont(2);
+// 			display.setCursor(34, display.height()/2 -16);
+// 			display.printCenter("Deleting contact...");
+// 			while (!update());
+// 			return 1;
+// 		}
+// 		update();
+// 	}
+// 	return 0;
+// }
+
+// void MAKERphone::contactsAppSD(){
+// 	Serial.println("");
+// 	Serial.println("Begin contacts");
+// 	SDAudioFile file = _SD.open("/contacts.json", "r");
+
+// 	if(file.size() < 2){ // empty -> FILL
+// 		Serial.println("Override");
+// 		file.close();
+// 		JsonArray& jarr = mp.jb.parseArray("[{\"name\":\"foo\", \"number\":\"099\"}]");
+// 		delay(10);
+// 		SDAudioFile file1 = _SD.open("/contacts.json", "w");
+// 		jarr.prettyPrintTo(file1);
+// 		file1.close();
+// 		file = _SD.open("/contacts.json", "r");
+// 		while(!file)
+// 			Serial.println("CONTACTS ERROR");
+// 	}
+
+// 	JsonArray& jarr = mp.jb.parseArray(file);
+
+// 	if(!jarr.success())
+// 	{
+// 		Serial.println("Error");
+// 		display.fillScreen(TFT_BLACK);
+// 		if(resolutionMode)
+// 		{
+// 			display.setCursor(0, display.height()/2);
+// 			display.setFreeFont(TT1);
+// 		}
+// 		else
+// 		{
+// 			display.setCursor(0, display.height()/2 - 16);
+// 			display.setTextFont(2);
+// 		}
+// 		display.printCenter("Error loading contacts");
+// 		while (buttons.released(BTN_B) == 0)//BUTTON BACK
+// 		while (!update());
+// 		while (!update());
+// 	}
+// 	else
+// 	{
+// 		// Maybe later read from core.json
+// 		// uint8_t contactNumber = countSubstring(input, "CPBR:");
+// 		// Serial.println(contactNumber);
+
+// 		Serial.println("Read from .json");
+// 		for (JsonObject& elem : jarr) {
+// 			Serial.println(elem["name"].as<char*>());
+// 			Serial.println(elem["number"].as<char*>());
+// 		}
+
+// 		while(1){
+// 			int menuChoice = -1;
+// 			menuChoice = contactsMenuSD(&jarr);
+
+// 			update();
+// 			if (menuChoice != -2)
+// 			{
+// 				if (menuChoice == 0){
+// 					String name, number;
+// 					if(newContactSD(&name, &number)){
+// 						JsonObject& newContact = mp.jb.createObject();
+// 						newContact["name"] = name;
+// 						newContact["number"] = number;
+// 						jarr.add(newContact);
+// 						SDAudioFile file = _SD.open("/contacts.json");
+// 						jarr.prettyPrintTo(file);
+// 						file.close();
+// 					}
+// 				} else if (menuChoice < -10){
+// 					int id = menuChoice + 1000 - 1;
+// 					if(deleteContactSD(jarr[id]["name"], jarr[id]["number"])){
+// 						jarr.remove(id);
+// 						SDAudioFile file = _SD.open("/contacts.json");
+// 						jarr.prettyPrintTo(file);
+// 						file.close();
+// 					}
+// 				// EDIT
+// 				} else {
+// 					callNumber(jarr[menuChoice - 1]["number"].as<char*>());
+// 					while(!update());
+// 				}
+// 			} else {
+// 				break;
+// 			}
+// 		}
+// 	}
+// }
+
+// uint8_t MAKERphone::newContactSD(String *name, String *number)
+// {
+// 	textPointer = 0;
+// 	y = 20;  //Beggining point
+// 	String content = "";
+// 	String contact = "";
+// 	String prevContent = "";
+// 	char key = NO_KEY;
+// 	bool cursor = 0; //editing contacts or text content
+// 	unsigned long elapsedMillis = millis();
+// 	bool blinkState = 1;
+// 	while (1)
+// 	{
+// 		display.fillScreen(TFT_BLACK);
+// 		if(resolutionMode)
+// 		{
+// 			display.fillRect(0, 0, display.width(), 6, TFT_DARKGREY);
+// 			display.setFreeFont(TT1);
+// 			display.setCursor(0,5);
+// 			display.drawFastHLine(0, 6, BUF2WIDTH, TFT_WHITE);
+// 		}
+// 		else
+// 		{
+// 			display.fillRect(0, 0, display.width(), 14, TFT_DARKGREY);
+// 			display.setTextFont(2);
+// 			display.setCursor(0,-2);
+// 			display.drawFastHLine(0, 14, BUF2WIDTH, TFT_WHITE);
+// 		}
+// 		display.setTextColor(TFT_WHITE);
+// 		display.print("Contacts");
+// 		if (millis() - elapsedMillis >= multi_tap_threshold) //cursor blinking routine
+// 		{
+// 		elapsedMillis = millis();
+// 		blinkState = !blinkState;
+// 		}
+// 		if (cursor == 0) //inputting the contact number
+// 		{
+// 			key = buttons.kpdNum.getKey();
+// 			if (key == 'A') //clear number
+// 				contact = "";
+// 			else if (key == 'C')
+// 				contact.remove(contact.length() - 1);
+// 			if (key != NO_KEY && isdigit(key) && contact.length() < 14)
+// 				contact += key;
+// 			display.setTextWrap(1);
+// 			display.setCursor(4, 20);
+// 			display.setTextFont(2);
+// 			if (content == "")
+// 			{
+// 				display.setTextColor(TFT_LIGHTGREY);
+// 				display.print(F("Name"));
+// 				display.setTextColor(TFT_WHITE);
+// 			}
+// 			else
+// 				display.print(content);
+// 			display.setTextFont(2);
+// 			display.setCursor(4, 38);
+// 			display.print("Num: ");
+// 			display.print(contact);
+// 			if (blinkState == 1)
+// 				display.drawFastVLine(display.getCursorX() + 1, display.getCursorY() + 3, 11, TFT_WHITE);
+// 		}
+// 		else //inputting contact name
+// 		{
+// 			display.setTextColor(TFT_WHITE);
+// 			display.setCursor(2*2, 38);
+// 			display.print("Num: ");
+// 			if (contact == "")
+// 			{
+// 				display.setTextColor(TFT_LIGHTGREY);
+// 				display.print(F("xxxxxxxx"));
+// 				display.setTextColor(TFT_WHITE);
+// 			}
+// 			else
+// 				display.print(contact);
+// 			prevContent = content;
+// 			content = textInput(content, 12);
+// 			if (prevContent != content)
+// 			{
+// 				blinkState = 1;
+// 				elapsedMillis = millis();
+// 			}
+// 			display.setTextColor(TFT_LIGHTGREY);
+// 			display.setTextWrap(1);
+// 			display.setCursor(2*2, 10*2);
+// 			display.print(content);
+// 			display.setTextColor(TFT_WHITE);
+// 			if(blinkState == 1)
+// 				display.drawFastVLine(display.getCursorX() + 1, display.getCursorY() + 3, 11, TFT_WHITE);
+// 		}
+
+// 		display.fillRect(display.width() / 2 - 29, 102, 30*2, 9*2, TFT_GREENYELLOW);
+// 		display.setTextColor(TFT_WHITE);
+// 		display.setCursor(31*2, 103);
+// 		display.printCenter("SAVE");
+
+// 		if (buttons.kpd.pin_read(BTN_DOWN) == 0 && cursor == 1) { //BUTTON UP
+// 		cursor = 0;
+// 		}
+
+// 		if (buttons.kpd.pin_read(BTN_UP) == 0 && cursor == 0) { //BUTTON DOWN
+// 		cursor = 1;
+// 		}
+
+// 		if (buttons.released(BTN_B)) //BUTTON BACK
+// 		{
+// 		while (!update());
+// 		break;
+// 		}
+// 		if (buttons.released(BTN_A)) // SAVE CONTACT
+// 		{
+// 			if(contact != "" && content != "")
+// 			{
+// 				*name = contact;
+// 				*number = content;
+// 				return 1;
+// 			}
+// 		}
+// 		update();
+// 	}
+// 	return 0;
+// }
+
+// int MAKERphone::contactsMenuSD(JsonArray *contacts){
+// 	uint8_t cursor = 0;
+// 	int32_t cameraY = 0;
+// 	int32_t cameraY_actual = 0;
+// 	uint8_t offset;
+// 	uint8_t boxHeight;
+// 	uint8_t length = contacts->size();
+// 	if(resolutionMode)
+// 	{
+// 		offset = menuYOffset;
+// 		boxHeight = 14;
+// 	}
+// 	else
+// 	{
+// 		offset = 19;
+// 		boxHeight = 28;
+// 	}
+// 	while (1) {
+// 		while (!update());
+// 		display.fillScreen(TFT_BLACK);
+// 		display.setCursor(0, 0);
+// 		cameraY_actual = (cameraY_actual + cameraY) / 2;
+// 		if (cameraY_actual - cameraY == 1) {
+// 		cameraY_actual = cameraY;
+// 		}
+
+// 		contactsMenuNewBox(0, cameraY_actual);
+
+// 		int i = 0;
+// 		for (JsonObject& elem : *contacts) {
+// 			contactsMenuDrawBoxSD(elem["name"].as<char*>(), elem["number"].as<char*>(), i+1, cameraY_actual);
+// 			i++;
+// 		}
+// 		if(cursor == 0){
+// 			contactsMenuNewBoxCursor(cursor, cameraY_actual);
+// 		} else {
+// 			contactsMenuDrawCursor(cursor, cameraY_actual);
+// 		}
+
+// 		// last draw the top entry thing
+// 		if(resolutionMode)
+// 		{
+// 			display.fillRect(0, 0, display.width(), 6, TFT_DARKGREY);
+// 			display.setFreeFont(TT1);
+// 			display.setCursor(0,5);
+// 			display.drawFastHLine(0, 6, BUF2WIDTH, TFT_WHITE);
+// 		}
+// 		else
+// 		{
+// 			display.fillRect(0, 0, display.width(), 14, TFT_DARKGREY);
+// 			display.setTextFont(2);
+// 			display.setCursor(0,-2);
+// 			display.drawFastHLine(0, 14, BUF2WIDTH, TFT_WHITE);
+// 		}
+// 		display.setTextSize(1);
+// 		display.setTextColor(TFT_WHITE);
+// 		display.print("Contacts");
+
+// 		if (buttons.kpd.pin_read(BTN_A) == 0) {   //BUTTON CONFIRM
+// 		while (buttons.kpd.pin_read(BTN_A) == 0);// Exit when pressed
+// 		break;
+// 		}
+// 		if (buttons.kpd.pin_read(BTN_LEFT) == 0 && cursor != 0) {
+// 		while (buttons.kpd.pin_read(BTN_LEFT) == 0); // Delete
+// 		return -1000 + cursor;
+// 		}
+// 		if (buttons.kpd.pin_read(BTN_RIGHT) == 0 && cursor != 0) {
+// 		while (buttons.kpd.pin_read(BTN_RIGHT) == 0); // Edit contact
+// 		return -3000 + cursor;
+// 		}
+
+// 		if (buttons.kpd.pin_read(BTN_UP) == 0) {  //BUTTON UP
+// 		while (buttons.kpd.pin_read(BTN_UP) == 0);
+// 		if (cursor == 0) {
+// 			cursor = length;
+// 			if (length > 2) {
+// 			cameraY = -(cursor - 2) * (boxHeight+1);
+// 			}
+// 		}
+// 		else {
+// 			cursor--;
+// 			if (cursor > 0 && (cursor * (boxHeight+1) + cameraY + offset) < (boxHeight+1)) {
+// 			cameraY += (boxHeight+1);
+// 			}
+// 		}
+// 		}
+
+// 		if (buttons.kpd.pin_read(BTN_DOWN) == 0) { //BUTTON DOWN
+// 		while (buttons.kpd.pin_read(BTN_DOWN) == 0);
+
+// 		cursor++;
+// 		if ((cursor * (boxHeight+1) + cameraY + offset) > 48) {
+// 			cameraY -= (boxHeight+1);
+// 		}
+// 		if (cursor >= length + 1) {
+// 			cursor = 0;
+// 			cameraY = 0;
+
+// 		}
+
+// 		}
+// 		if (buttons.released(BTN_B) == 1) //BUTTON BACK
+// 		{
+// 		while (!update());
+// 		return -2;
+// 		}
+// 	}
+// 	return cursor;
+// }
+
+// void MAKERphone::contactsMenuDrawBoxSD(String name, String number, uint8_t i, int32_t y) {
+// 	uint8_t offset;
+// 	uint8_t boxHeight;
+// 	if(resolutionMode)
+// 	{
+// 		offset = menuYOffset;
+// 		boxHeight = 14;
+// 	}
+// 	else
+// 	{
+// 		offset = 19;
+// 		boxHeight = 28;
+// 	}
+// 	y += i * boxHeight + offset;
+// 	if (y < 0 || y > display.height()) {
+// 		return;
+// 	}
+// 	if(resolutionMode)
+// 	{
+// 		display.setTextSize(1);
+// 		display.setFreeFont(TT1);
+// 		display.fillRect(1, y + 1, display.width() - 2, 13, TFT_DARKGREY);
+// 		display.setTextColor(TFT_WHITE);
+// 		display.setCursor(2, y + 2);
+// 		display.drawString(name, 3, y + 2);
+// 		display.drawString(number, 3, y + 8);
+// 	}
+// 	else
+// 	{
+// 		display.setTextSize(1);
+// 		display.setTextFont(2);
+// 		display.fillRect(1, y + 1, display.width() - 2, boxHeight-1, TFT_DARKGREY);
+// 		display.setTextColor(TFT_WHITE);
+// 		display.setCursor(2, y + 2);
+// 		display.drawString(name, 4, y);
+// 		display.drawString(number, 4, y + 12);
+// 	}
+
+// }
+
+// String MAKERphone::readAllContacts() {
+// 	String buffer;
+// 	Serial1.print(F("AT+CPBR=1,250\r"));
+// 	buffer = readSerial();
+// 	delay(5);
+// 	if (buffer.indexOf("CPBR:") != -1 || buffer.indexOf("OK") != -1) {
+// 		return buffer;
+// 	}
+// 	else return "";
+// }
 
 
 //Phone app
@@ -4314,932 +4310,932 @@ void MAKERphone::dialer() {
 //Media app
 
 void MAKERphone::mediaApp() {
-	dataRefreshFlag = 0;
-	while(1)
-	{
-		int8_t input = mediaMenu(mediaItems, 2);
+	// dataRefreshFlag = 0;
+	// while(1)
+	// {
+	// 	int8_t input = mediaMenu(mediaItems, 2);
 
-		if(input == 0) //music
-		{
-			listAudio("/Music", 1);
-			if(audioCount > 0)
-			{
-				int16_t index =0;
-				while (1)
-				{
-					index = audioPlayerMenu("Select file to play:", audioFiles, audioCount, index);
-					if (index == -1)
-						break;
-					display.fillScreen(TFT_LIGHTGREY);
-					audioPlayer(index);
-				} 
-			}
-			else
-			{
-				display.fillScreen(TFT_BLACK);
-				display.setCursor(0, display.height()/2 - 16);
-				display.setTextFont(2);
-				display.printCenter("No audio files!");
-				uint32_t tempMillis = millis();
-				while(millis() < tempMillis + 2000)
-				{
-					update();
-					if(buttons.pressed(BTN_A) || buttons.pressed(BTN_B))
-					{
-						while(!buttons.released(BTN_A) && !buttons.released(BTN_B))
-							update();
-						break;
-					}
-				}
-				while(!update());
-			}
-		}
-		else if(input == 1) //photos
-		{
-			display.setTextColor(TFT_BLACK);
-			display.setTextSize(1);
-			display.setTextFont(2);
-			display.drawRect(14, 45, 134, 38, TFT_BLACK);
-			display.drawRect(13, 44, 136, 40, TFT_BLACK);
-			display.fillRect(15, 46, 132, 36, TFT_WHITE);
-			display.setCursor(47, 55);
-			display.printCenter("Loading photos");
-			while(!update());
-			listPhotos("/Images", 0);
-			if(photoCount > 0)
-			{
-				int16_t index = 0;
-				while (1)
-				{
-					index = audioPlayerMenu("Select photo to open:", photoFiles, photoCount, index);
-					if (index == -1)
-						break;
+	// 	if(input == 0) //music
+	// 	{
+	// 		listAudio("/Music", 1);
+	// 		if(audioCount > 0)
+	// 		{
+	// 			int16_t index =0;
+	// 			while (1)
+	// 			{
+	// 				index = audioPlayerMenu("Select file to play:", audioFiles, audioCount, index);
+	// 				if (index == -1)
+	// 					break;
+	// 				display.fillScreen(TFT_LIGHTGREY);
+	// 				audioPlayer(index);
+	// 			} 
+	// 		}
+	// 		else
+	// 		{
+	// 			display.fillScreen(TFT_BLACK);
+	// 			display.setCursor(0, display.height()/2 - 16);
+	// 			display.setTextFont(2);
+	// 			display.printCenter("No audio files!");
+	// 			uint32_t tempMillis = millis();
+	// 			while(millis() < tempMillis + 2000)
+	// 			{
+	// 				update();
+	// 				if(buttons.pressed(BTN_A) || buttons.pressed(BTN_B))
+	// 				{
+	// 					while(!buttons.released(BTN_A) && !buttons.released(BTN_B))
+	// 						update();
+	// 					break;
+	// 				}
+	// 			}
+	// 			while(!update());
+	// 		}
+	// 	}
+	// 	else if(input == 1) //photos
+	// 	{
+	// 		display.setTextColor(TFT_BLACK);
+	// 		display.setTextSize(1);
+	// 		display.setTextFont(2);
+	// 		display.drawRect(14, 45, 134, 38, TFT_BLACK);
+	// 		display.drawRect(13, 44, 136, 40, TFT_BLACK);
+	// 		display.fillRect(15, 46, 132, 36, TFT_WHITE);
+	// 		display.setCursor(47, 55);
+	// 		display.printCenter("Loading photos");
+	// 		while(!update());
+	// 		listPhotos("/Images", 0);
+	// 		if(photoCount > 0)
+	// 		{
+	// 			int16_t index = 0;
+	// 			while (1)
+	// 			{
+	// 				index = audioPlayerMenu("Select photo to open:", photoFiles, photoCount, index);
+	// 				if (index == -1)
+	// 					break;
 	
-					if(photoFiles[index].endsWith(".bmp") || photoFiles[index].endsWith(".BMP"))
-						display.drawBmp(photoFiles[index], 0,0);
-					else
-						drawJpeg(photoFiles[index], 0, 0);
-					Serial.println(index);
-					while(!update());
-					while(1)
-					{
+	// 				if(photoFiles[index].endsWith(".bmp") || photoFiles[index].endsWith(".BMP"))
+	// 					display.drawBmp(photoFiles[index], 0,0);
+	// 				else
+	// 					drawJpeg(photoFiles[index], 0, 0);
+	// 				Serial.println(index);
+	// 				while(!update());
+	// 				while(1)
+	// 				{
 						
-						if(buttons.released(BTN_A) || buttons.released(BTN_B))
-							break;
-						if(buttons.released(BTN_LEFT))
-						{
-							if(index > 0)
-								index--;
-							else
-								index = photoCount - 1;
-							if(photoFiles[index].endsWith(".bmp") || photoFiles[index].endsWith(".BMP"))
-								display.drawBmp(photoFiles[index], 0,0);
-							else
-								drawJpeg(photoFiles[index], 0, 0);
-							while(!update());
-						}
-						if(buttons.released(BTN_RIGHT))
-						{
-							if(index < photoCount - 1)
-								index++;
-							else
-								index = 0;
-							if(photoFiles[index].endsWith(".bmp") || photoFiles[index].endsWith(".BMP"))
-								display.drawBmp(photoFiles[index], 0,0);
-							else
-								drawJpeg(photoFiles[index], 0, 0);
-							while(!update());
-						}
-						update();
-					}
-					Serial.println("out");
-					while(!update());
-				} 
-			}
-			else
-			{
-				display.fillScreen(TFT_BLACK);
-				display.setCursor(0, display.height()/2 - 16);
-				display.setTextFont(2);
-				display.printCenter("No photos found!");
-				uint32_t tempMillis = millis();
-				while(millis() < tempMillis + 2000)
-				{
-					update();
-					if(buttons.pressed(BTN_A) || buttons.pressed(BTN_B))
-					{
-						while(!buttons.released(BTN_A) && !buttons.released(BTN_B))
-							update();
-						break;
-					}
-				}
-				while(!update());
-			}
-			while(!update());
-		}
-		else if(input == -1)
-			break;
-	}
+	// 					if(buttons.released(BTN_A) || buttons.released(BTN_B))
+	// 						break;
+	// 					if(buttons.released(BTN_LEFT))
+	// 					{
+	// 						if(index > 0)
+	// 							index--;
+	// 						else
+	// 							index = photoCount - 1;
+	// 						if(photoFiles[index].endsWith(".bmp") || photoFiles[index].endsWith(".BMP"))
+	// 							display.drawBmp(photoFiles[index], 0,0);
+	// 						else
+	// 							drawJpeg(photoFiles[index], 0, 0);
+	// 						while(!update());
+	// 					}
+	// 					if(buttons.released(BTN_RIGHT))
+	// 					{
+	// 						if(index < photoCount - 1)
+	// 							index++;
+	// 						else
+	// 							index = 0;
+	// 						if(photoFiles[index].endsWith(".bmp") || photoFiles[index].endsWith(".BMP"))
+	// 							display.drawBmp(photoFiles[index], 0,0);
+	// 						else
+	// 							drawJpeg(photoFiles[index], 0, 0);
+	// 						while(!update());
+	// 					}
+	// 					update();
+	// 				}
+	// 				Serial.println("out");
+	// 				while(!update());
+	// 			} 
+	// 		}
+	// 		else
+	// 		{
+	// 			display.fillScreen(TFT_BLACK);
+	// 			display.setCursor(0, display.height()/2 - 16);
+	// 			display.setTextFont(2);
+	// 			display.printCenter("No photos found!");
+	// 			uint32_t tempMillis = millis();
+	// 			while(millis() < tempMillis + 2000)
+	// 			{
+	// 				update();
+	// 				if(buttons.pressed(BTN_A) || buttons.pressed(BTN_B))
+	// 				{
+	// 					while(!buttons.released(BTN_A) && !buttons.released(BTN_B))
+	// 						update();
+	// 					break;
+	// 				}
+	// 			}
+	// 			while(!update());
+	// 		}
+	// 		while(!update());
+	// 	}
+	// 	else if(input == -1)
+	// 		break;
+	// }
 }
 int8_t MAKERphone::mediaMenu(String* title, uint8_t length) {
-	bool pressed = 0;
-	uint8_t cursor = 0;
-	int32_t cameraY = 0;
-	int32_t cameraY_actual = 0;
-	dataRefreshFlag = 0;
+	// bool pressed = 0;
+	// uint8_t cursor = 0;
+	// int32_t cameraY = 0;
+	// int32_t cameraY_actual = 0;
+	// dataRefreshFlag = 0;
 
-	uint8_t boxHeight;
-	boxHeight = 54; //actually 2 less than that
-	while (1) {
-		while (!update());
-		display.fillScreen(TFT_BLACK);
-		display.setCursor(0, 0);
-		cameraY_actual = (cameraY_actual + cameraY) / 2;
-		if (cameraY_actual - cameraY == 1) {
-			cameraY_actual = cameraY;
-		}
+	// uint8_t boxHeight;
+	// boxHeight = 54; //actually 2 less than that
+	// while (1) {
+	// 	while (!update());
+	// 	display.fillScreen(TFT_BLACK);
+	// 	display.setCursor(0, 0);
+	// 	cameraY_actual = (cameraY_actual + cameraY) / 2;
+	// 	if (cameraY_actual - cameraY == 1) {
+	// 		cameraY_actual = cameraY;
+	// 	}
 
-		for (uint8_t i = 0; i < length; i++) {
-			mediaMenuDrawBox(title[i], i, cameraY_actual);
-		}
-		mediaMenuDrawCursor(cursor, cameraY_actual, pressed);
+	// 	for (uint8_t i = 0; i < length; i++) {
+	// 		mediaMenuDrawBox(title[i], i, cameraY_actual);
+	// 	}
+	// 	mediaMenuDrawCursor(cursor, cameraY_actual, pressed);
 
-		if (!buttons.pressed(BTN_DOWN) && !buttons.pressed(BTN_UP))
-			pressed = 0;
+	// 	if (!buttons.pressed(BTN_DOWN) && !buttons.pressed(BTN_UP))
+	// 		pressed = 0;
 
-		if (buttons.released(BTN_A)) {   //BUTTON CONFIRM
-			gui.osc->note(75, 0.05);
-			gui.osc->play();
-			while (!update());// Exit when pressed
-			break;
-		}
+	// 	if (buttons.released(BTN_A)) {   //BUTTON CONFIRM
+	// 		gui.osc->note(75, 0.05);
+	// 		gui.osc->play();
+	// 		while (!update());// Exit when pressed
+	// 		break;
+	// 	}
 
-		if (buttons.released(BTN_UP)) {  //BUTTON UP
-			gui.osc->note(75, 0.05);
-			gui.osc->play();
-			if (cursor == 0) {
-				cursor = length - 1;
-				if (length > 6) {
-					cameraY = -(cursor - 2) * boxHeight;
-				}
-			}
-			else {
-				cursor--;
-				if (cursor > 0 && (cursor * boxHeight + cameraY + settingsMenuYOffset) < boxHeight) {
-					cameraY += 15;
-				}
-			}
-			pressed = 1;
-		}
+	// 	if (buttons.released(BTN_UP)) {  //BUTTON UP
+	// 		gui.osc->note(75, 0.05);
+	// 		gui.osc->play();
+	// 		if (cursor == 0) {
+	// 			cursor = length - 1;
+	// 			if (length > 6) {
+	// 				cameraY = -(cursor - 2) * boxHeight;
+	// 			}
+	// 		}
+	// 		else {
+	// 			cursor--;
+	// 			if (cursor > 0 && (cursor * boxHeight + cameraY + settingsMenuYOffset) < boxHeight) {
+	// 				cameraY += 15;
+	// 			}
+	// 		}
+	// 		pressed = 1;
+	// 	}
 
-		if (buttons.released(BTN_DOWN)) { //BUTTON DOWN
-			gui.osc->note(75, 0.05);
-			gui.osc->play();
-			cursor++;
-			if ((cursor * boxHeight + cameraY + settingsMenuYOffset) > 128) {
-				cameraY -= boxHeight;
-			}
-			if (cursor >= length) {
-				cursor = 0;
-				cameraY = 0;
+	// 	if (buttons.released(BTN_DOWN)) { //BUTTON DOWN
+	// 		gui.osc->note(75, 0.05);
+	// 		gui.osc->play();
+	// 		cursor++;
+	// 		if ((cursor * boxHeight + cameraY + settingsMenuYOffset) > 128) {
+	// 			cameraY -= boxHeight;
+	// 		}
+	// 		if (cursor >= length) {
+	// 			cursor = 0;
+	// 			cameraY = 0;
 
-			}
-			pressed = 1;
-		}
+	// 		}
+	// 		pressed = 1;
+	// 	}
 
 
-		if (buttons.released(BTN_B) == 1) //BUTTON BACK
-		{
-			return -1;
-		}
-	}
+	// 	if (buttons.released(BTN_B) == 1) //BUTTON BACK
+	// 	{
+	// 		return -1;
+	// 	}
+	// }
 
-	return cursor;
+	// return cursor;
 
 }
 void MAKERphone::mediaMenuDrawBox(String title, uint8_t i, int32_t y) {
-	uint8_t scale;
-	uint8_t boxHeight;
-	uint8_t offset = 11;
-	scale = 2;
-	boxHeight = 54;
-	y += i * boxHeight + offset;
-	if (y < 0 || y > display.width()) {
-		return;
-	}
-
-
-	if (title == "Music") //red
-	{
-		display.fillRect(2, y + 1, display.width() - 4, boxHeight-2, 0xFC92);
-		display.drawIcon(mediaMusicIcon, 4, y + 3, 24,24,2);
-	}
-	if (title == "Photo") //blue
-	{
-		display.fillRect(2, y + 1, display.width() - 4, boxHeight-2, 0x963F);
-		display.drawIcon(mediaPhotoIcon, 4, y + 3, 24,24,2, 0xFC92);
-	}
-	// if (title == "Video") //yellow
-	// {
-	// 	display.fillRect(2, y + 1, display.width() - 4, boxHeight-2, TFT_DARKGREY);
+	// uint8_t scale;
+	// uint8_t boxHeight;
+	// uint8_t offset = 11;
+	// scale = 2;
+	// boxHeight = 54;
+	// y += i * boxHeight + offset;
+	// if (y < 0 || y > display.width()) {
+	// 	return;
 	// }
-	display.setTextColor(TFT_BLACK);
-	display.setTextSize(2);
-	display.setTextFont(2);
-	display.drawString(title, 60, y +  10);
-	display.setTextColor(TFT_WHITE);
-	display.setTextSize(1);
+
+
+	// if (title == "Music") //red
+	// {
+	// 	display.fillRect(2, y + 1, display.width() - 4, boxHeight-2, 0xFC92);
+	// 	display.drawIcon(mediaMusicIcon, 4, y + 3, 24,24,2);
+	// }
+	// if (title == "Photo") //blue
+	// {
+	// 	display.fillRect(2, y + 1, display.width() - 4, boxHeight-2, 0x963F);
+	// 	display.drawIcon(mediaPhotoIcon, 4, y + 3, 24,24,2, 0xFC92);
+	// }
+	// // if (title == "Video") //yellow
+	// // {
+	// // 	display.fillRect(2, y + 1, display.width() - 4, boxHeight-2, TFT_DARKGREY);
+	// // }
+	// display.setTextColor(TFT_BLACK);
+	// display.setTextSize(2);
+	// display.setTextFont(2);
+	// display.drawString(title, 60, y +  10);
+	// display.setTextColor(TFT_WHITE);
+	// display.setTextSize(1);
 }
 void MAKERphone::mediaMenuDrawCursor(uint8_t i, int32_t y, bool pressed) {
-	uint8_t boxHeight;
-	boxHeight = 54;
-	uint8_t offset = 11;
-	if (millis() % 500 <= 250 && pressed == 0) {
-		return;
-	}
-	y += i * boxHeight + offset;
-	display.drawRect(0, y-1, display.width()-1, boxHeight+2, TFT_RED);
-	display.drawRect(1, y, display.width()-3, boxHeight, TFT_RED);
+	// uint8_t boxHeight;
+	// boxHeight = 54;
+	// uint8_t offset = 11;
+	// if (millis() % 500 <= 250 && pressed == 0) {
+	// 	return;
+	// }
+	// y += i * boxHeight + offset;
+	// display.drawRect(0, y-1, display.width()-1, boxHeight+2, TFT_RED);
+	// display.drawRect(1, y, display.width()-3, boxHeight, TFT_RED);
 }
 
 int16_t MAKERphone::audioPlayerMenu(const char* title, String* items, uint16_t length, uint16_t index) {
 	
-	cameraY = 0;
-	cameraY_actual = 0;
-	String Name;
-	uint8_t scale;
-	uint8_t offset;
-	uint8_t boxHeight;
-	if(resolutionMode)
-	{
-		scale = 1;
-		offset = menuYOffset;
-		boxHeight = 7;
-	}
-	else
-	{
-		scale = 2;
-		offset = 17;
-		boxHeight = 15;
-	}
-	cursor = index;
-	if (length > 12) {
-		cameraY = -cursor * (boxHeight + 1) - 1;
-	}
-	while (1) {
-		display.fillScreen(TFT_BLACK);
-		display.setCursor(0, 0);
-		cameraY_actual = (cameraY_actual + cameraY) / 2;
-		if (cameraY_actual - cameraY == 1) {
-			cameraY_actual = cameraY;
-		}
+	// cameraY = 0;
+	// cameraY_actual = 0;
+	// String Name;
+	// uint8_t scale;
+	// uint8_t offset;
+	// uint8_t boxHeight;
+	// if(resolutionMode)
+	// {
+	// 	scale = 1;
+	// 	offset = menuYOffset;
+	// 	boxHeight = 7;
+	// }
+	// else
+	// {
+	// 	scale = 2;
+	// 	offset = 17;
+	// 	boxHeight = 15;
+	// }
+	// cursor = index;
+	// if (length > 12) {
+	// 	cameraY = -cursor * (boxHeight + 1) - 1;
+	// }
+	// while (1) {
+	// 	display.fillScreen(TFT_BLACK);
+	// 	display.setCursor(0, 0);
+	// 	cameraY_actual = (cameraY_actual + cameraY) / 2;
+	// 	if (cameraY_actual - cameraY == 1) {
+	// 		cameraY_actual = cameraY;
+	// 	}
 
-		for (uint8_t i = 0; i < length; i++) {
-			Name = items[i];
-			while (Name.indexOf("/", start) != -1)
-				start = Name.indexOf("/", start) + 1;
-			Name = Name.substring(start, Name.indexOf("."));
-			gui.menuDrawBox(Name, i, cameraY_actual);
-		}
-		gui.menuDrawCursor(cursor, cameraY_actual);
+	// 	for (uint8_t i = 0; i < length; i++) {
+	// 		Name = items[i];
+	// 		while (Name.indexOf("/", start) != -1)
+	// 			start = Name.indexOf("/", start) + 1;
+	// 		Name = Name.substring(start, Name.indexOf("."));
+	// 		gui.menuDrawBox(Name, i, cameraY_actual);
+	// 	}
+	// 	gui.menuDrawCursor(cursor, cameraY_actual);
 
-		// last draw the top entry thing
-		if(resolutionMode)
-		{
-			display.fillRect(0, 0, display.width(), 6, TFT_DARKGREY);
-			display.setFreeFont(TT1);
-			display.setCursor(0,5);
-			display.drawFastHLine(0, 6, display.width(), TFT_WHITE);
-		}
-		else
-		{
-			display.fillRect(0, 0, display.width(), 14, TFT_DARKGREY);
-			display.setTextFont(2);
-			display.setCursor(0,-2);
-			display.drawFastHLine(0, 14, display.width(), TFT_WHITE);
-		}
-		display.setTextSize(1);
-		display.setTextColor(TFT_WHITE);
-		display.print(title);
+	// 	// last draw the top entry thing
+	// 	if(resolutionMode)
+	// 	{
+	// 		display.fillRect(0, 0, display.width(), 6, TFT_DARKGREY);
+	// 		display.setFreeFont(TT1);
+	// 		display.setCursor(0,5);
+	// 		display.drawFastHLine(0, 6, display.width(), TFT_WHITE);
+	// 	}
+	// 	else
+	// 	{
+	// 		display.fillRect(0, 0, display.width(), 14, TFT_DARKGREY);
+	// 		display.setTextFont(2);
+	// 		display.setCursor(0,-2);
+	// 		display.drawFastHLine(0, 14, display.width(), TFT_WHITE);
+	// 	}
+	// 	display.setTextSize(1);
+	// 	display.setTextColor(TFT_WHITE);
+	// 	display.print(title);
 
-		if (buttons.released(BTN_A)) {   //BUTTON CONFIRM
-			while (!update());
-			break;
-		}
+	// 	if (buttons.released(BTN_A)) {   //BUTTON CONFIRM
+	// 		while (!update());
+	// 		break;
+	// 	}
 
-		if (buttons.released(BTN_UP)) {  //BUTTON UP
+	// 	if (buttons.released(BTN_UP)) {  //BUTTON UP
 
-			while (!update());
-			if (cursor == 0) {
-				cursor = length - 1;
-				if (length > 6*scale) {
-					cameraY = -(cursor - 5) * (boxHeight + 1) - 1;
-				}
-			}
-			else {
-				if (cursor > 0 && (cursor * (boxHeight + 1) - 1 + cameraY + offset) <= boxHeight) {
-					cameraY += (boxHeight + 1);
-				}
-				cursor--;
-			}
+	// 		while (!update());
+	// 		if (cursor == 0) {
+	// 			cursor = length - 1;
+	// 			if (length > 6*scale) {
+	// 				cameraY = -(cursor - 5) * (boxHeight + 1) - 1;
+	// 			}
+	// 		}
+	// 		else {
+	// 			if (cursor > 0 && (cursor * (boxHeight + 1) - 1 + cameraY + offset) <= boxHeight) {
+	// 				cameraY += (boxHeight + 1);
+	// 			}
+	// 			cursor--;
+	// 		}
 			
-		}
+	// 	}
 
-		if (buttons.released(BTN_DOWN)) { //BUTTON DOWN
-			while (!update());
-			cursor++;
-			if ((cursor * (boxHeight + 1) + cameraY + offset) > 54*scale) {
-				cameraY -= (boxHeight + 1);
-			}
-			if (cursor >= length) {
-				cursor = 0;
-				cameraY = 0;
+	// 	if (buttons.released(BTN_DOWN)) { //BUTTON DOWN
+	// 		while (!update());
+	// 		cursor++;
+	// 		if ((cursor * (boxHeight + 1) + cameraY + offset) > 54*scale) {
+	// 			cameraY -= (boxHeight + 1);
+	// 		}
+	// 		if (cursor >= length) {
+	// 			cursor = 0;
+	// 			cameraY = 0;
 
-			}
+	// 		}
 
-		}
-		if (buttons.released(BTN_B)) //BUTTON BACK
-		{
-			while (!update());
-			return -1;
-		}
-		update();
-	}
-	return cursor;
+	// 	}
+	// 	if (buttons.released(BTN_B)) //BUTTON BACK
+	// 	{
+	// 		while (!update());
+	// 		return -1;
+	// 	}
+	// 	update();
+	// }
+	// return cursor;
 
 }
 void MAKERphone::listAudio(const char * dirname, uint8_t levels) {
-	audioCount = 0;
-	while(!_SD.begin(5, SPI, 9000000))
-        Serial.println("SD ERROR");
-	Serial.printf("Listing directory: %s\n", dirname);
-	SDAudioFile root = _SD.open(dirname);
-	if (!root) {
-		Serial.println("Failed to open directory");
-		return;
-	}
-	if (!root.isDirectory()) {
-		Serial.println("Not a directory");
-		return;
-	}
-	int counter = 1;
-	uint8_t start = 0;
-	SDAudioFile file = root.openNextFile();
-	while (file) {
-		char temp[100];
-		// file.getName(temp, 100);
-		String Name(file.name());
-		Serial.println(Name);
-		if (Name.endsWith(F(".MP3")) || Name.endsWith(F(".mp3")) 
-		 || Name.endsWith(F(".wav")) || Name.endsWith(F(".WAV")))
-		{
-			Serial.print(counter);
-			Serial.print(".   ");
-			Serial.println(Name);
-			audioFiles[counter - 1] = Name;
-			Serial.println(Name);
-			audioCount++;
-			counter++;
-		}
-		file = root.openNextFile();
-	}
+	// audioCount = 0;
+	// while(!_SD.begin(5, SPI, 9000000))
+    //     Serial.println("SD ERROR");
+	// Serial.printf("Listing directory: %s\n", dirname);
+	// SDAudioFile root = _SD.open(dirname);
+	// if (!root) {
+	// 	Serial.println("Failed to open directory");
+	// 	return;
+	// }
+	// if (!root.isDirectory()) {
+	// 	Serial.println("Not a directory");
+	// 	return;
+	// }
+	// int counter = 1;
+	// uint8_t start = 0;
+	// SDAudioFile file = root.openNextFile();
+	// while (file) {
+	// 	char temp[100];
+	// 	// file.getName(temp, 100);
+	// 	String Name(file.name());
+	// 	Serial.println(Name);
+	// 	if (Name.endsWith(F(".MP3")) || Name.endsWith(F(".mp3")) 
+	// 	 || Name.endsWith(F(".wav")) || Name.endsWith(F(".WAV")))
+	// 	{
+	// 		Serial.print(counter);
+	// 		Serial.print(".   ");
+	// 		Serial.println(Name);
+	// 		audioFiles[counter - 1] = Name;
+	// 		Serial.println(Name);
+	// 		audioCount++;
+	// 		counter++;
+	// 	}
+	// 	file = root.openNextFile();
+	// }
 }
 void MAKERphone::audioPlayer(uint16_t index) {
-	uint8_t scale= 2;
-	bool out = 0;
-	char c = NO_KEY;
-	bool playState = 1;
-	bool loop = 0;
-	bool shuffleReset = 0;
-	bool allTrue = 0;
-	bool shuffle = 0;
-	bool shuffleList[audioCount];
-	uint32_t buttonsRefreshMillis = millis();
-	MPTrack* trackArray[audioCount];
-	MPTrack* mp3;
-	for(int i = 0; i < audioCount;i++)
-	{
-		String songName = audioFiles[i];
-		char test[songName.length() + 1];
-		songName.toCharArray(test, songName.length() + 1);
-		Serial.println(test);
-		delay(5);
-		trackArray[i] = new MPTrack(test);
-	}
-	while(1)
-	{
-		uint8_t x = 1;
-		uint8_t y = 53;
-		int8_t i = 0;
+	// uint8_t scale= 2;
+	// bool out = 0;
+	// char c = NO_KEY;
+	// bool playState = 1;
+	// bool loop = 0;
+	// bool shuffleReset = 0;
+	// bool allTrue = 0;
+	// bool shuffle = 0;
+	// bool shuffleList[audioCount];
+	// uint32_t buttonsRefreshMillis = millis();
+	// MPTrack* trackArray[audioCount];
+	// MPTrack* mp3;
+	// for(int i = 0; i < audioCount;i++)
+	// {
+	// 	String songName = audioFiles[i];
+	// 	char test[songName.length() + 1];
+	// 	songName.toCharArray(test, songName.length() + 1);
+	// 	Serial.println(test);
+	// 	delay(5);
+	// 	trackArray[i] = new MPTrack(test);
+	// }
+	// while(1)
+	// {
+	// 	uint8_t x = 1;
+	// 	uint8_t y = 53;
+	// 	int8_t i = 0;
 
 		
-		long elapsedMillis = millis();
-		display.fillScreen(backgroundColors[backgroundIndex]);
-		//draw bitmaps
-		display.drawBitmap(2*scale, 20*scale, previous, TFT_BLACK, scale);
-		display.drawBitmap(65*scale, 20*scale, next, TFT_BLACK, scale);
-		display.drawBitmap(2*scale, 75, repeatSprite, TFT_BLACK, scale);
-		display.drawBitmap(66*scale, 37*scale, shuffleIcon, TFT_BLACK, scale);
-		if(playState)
-			display.drawBitmap(37*scale, 19*scale, play, TFT_BLACK, scale);
-		else
-			display.drawBitmap(72, 40, pause2, TFT_BLACK, scale);
-		display.drawBitmap(17*scale, 2*scale, cover2, TFT_BLACK, scale);
-		//prepare for text printing
-		display.setTextColor(TFT_BLACK);
+	// 	long elapsedMillis = millis();
+	// 	display.fillScreen(backgroundColors[backgroundIndex]);
+	// 	//draw bitmaps
+	// 	display.drawBitmap(2*scale, 20*scale, previous, TFT_BLACK, scale);
+	// 	display.drawBitmap(65*scale, 20*scale, next, TFT_BLACK, scale);
+	// 	display.drawBitmap(2*scale, 75, repeatSprite, TFT_BLACK, scale);
+	// 	display.drawBitmap(66*scale, 37*scale, shuffleIcon, TFT_BLACK, scale);
+	// 	if(playState)
+	// 		display.drawBitmap(37*scale, 19*scale, play, TFT_BLACK, scale);
+	// 	else
+	// 		display.drawBitmap(72, 40, pause2, TFT_BLACK, scale);
+	// 	display.drawBitmap(17*scale, 2*scale, cover2, TFT_BLACK, scale);
+	// 	//prepare for text printing
+	// 	display.setTextColor(TFT_BLACK);
 
 
-		display.setTextSize(1);
-		display.setTextWrap(0);
-		//drawtext
-		display.setCursor(4, 2);
-		display.print(volume);
-		display.setCursor(1, 111);
-		if(audioFiles[index].length() > 20)
-			display.print(audioFiles[index]);
-		else
-			display.printCenter(audioFiles[index]);
-		display.fillRect(141,74, 4,4, shuffle ? TFT_BLACK : backgroundColors[backgroundIndex]);
-		display.fillRect(14,73, 4,4, loop ? TFT_BLACK : backgroundColors[backgroundIndex]);
+	// 	display.setTextSize(1);
+	// 	display.setTextWrap(0);
+	// 	//drawtext
+	// 	display.setCursor(4, 2);
+	// 	display.print(volume);
+	// 	display.setCursor(1, 111);
+	// 	if(audioFiles[index].length() > 20)
+	// 		display.print(audioFiles[index]);
+	// 	else
+	// 		display.printCenter(audioFiles[index]);
+	// 	display.fillRect(141,74, 4,4, shuffle ? TFT_BLACK : backgroundColors[backgroundIndex]);
+	// 	display.fillRect(14,73, 4,4, loop ? TFT_BLACK : backgroundColors[backgroundIndex]);
 
-		while(!update());
-		mp3 = trackArray[index];
-		addTrack(mp3);
-		if(playState)
-			mp3->play();
-		mp3->setVolume(256*14/volume);
-		while (1) 
-		{
-			c = buttons.kpdNum.getKey();
-			if (buttons.released(BTN_B))
-			{
+	// 	while(!update());
+	// 	mp3 = trackArray[index];
+	// 	addTrack(mp3);
+	// 	if(playState)
+	// 		mp3->play();
+	// 	mp3->setVolume(256*14/volume);
+	// 	while (1) 
+	// 	{
+	// 		c = buttons.kpdNum.getKey();
+	// 		if (buttons.released(BTN_B))
+	// 		{
 
-				mp3->stop();
-				removeTrack(mp3);
-				Serial.println("Stopped");
-				delay(5);
-				while (!update());
+	// 			mp3->stop();
+	// 			removeTrack(mp3);
+	// 			Serial.println("Stopped");
+	// 			delay(5);
+	// 			while (!update());
 			
-				out = 1;
-				break;
-			}
+	// 			out = 1;
+	// 			break;
+	// 		}
 
-			if (buttons.released(BTN_A)) //PLAY/PAUSE BUTTON
-			{
+	// 		if (buttons.released(BTN_A)) //PLAY/PAUSE BUTTON
+	// 		{
 				
-				if(playState)
-				{
-					mp3->pause();
-					display.fillScreen(backgroundColors[backgroundIndex]);
+	// 			if(playState)
+	// 			{
+	// 				mp3->pause();
+	// 				display.fillScreen(backgroundColors[backgroundIndex]);
 
-					//draw bitmaps
-					display.drawBitmap(2*scale, 20*scale, previous, TFT_BLACK, scale);
-					display.drawBitmap(65*scale, 20*scale, next, TFT_BLACK, scale);
-					display.drawBitmap(2*scale, 75, repeatSprite, TFT_BLACK, scale);
-					display.drawBitmap(66*scale, 37*scale, shuffleIcon, TFT_BLACK, scale);
-					display.drawBitmap(72, 40, pause2, TFT_BLACK, scale);
-					display.drawBitmap(17*scale, 2*scale, cover2, TFT_BLACK, scale);
+	// 				//draw bitmaps
+	// 				display.drawBitmap(2*scale, 20*scale, previous, TFT_BLACK, scale);
+	// 				display.drawBitmap(65*scale, 20*scale, next, TFT_BLACK, scale);
+	// 				display.drawBitmap(2*scale, 75, repeatSprite, TFT_BLACK, scale);
+	// 				display.drawBitmap(66*scale, 37*scale, shuffleIcon, TFT_BLACK, scale);
+	// 				display.drawBitmap(72, 40, pause2, TFT_BLACK, scale);
+	// 				display.drawBitmap(17*scale, 2*scale, cover2, TFT_BLACK, scale);
 
-					//prepare for text printing
-					display.setTextColor(TFT_BLACK);
-					display.setTextSize(1);
-					display.setTextWrap(0);
+	// 				//prepare for text printing
+	// 				display.setTextColor(TFT_BLACK);
+	// 				display.setTextSize(1);
+	// 				display.setTextWrap(0);
 
-					//drawtext
-					display.setCursor(1, 111);
-					if(audioFiles[index].length() > 20)
-						display.print(audioFiles[index]);
-					else
-						display.printCenter(audioFiles[index]);
-					display.setCursor(4, 2);
-					display.print(volume);
-					display.fillRect(141,74, 4,4, shuffle ? TFT_BLACK : backgroundColors[backgroundIndex]);
-					display.fillRect(14,73, 4,4, loop ? TFT_BLACK : backgroundColors[backgroundIndex]);
+	// 				//drawtext
+	// 				display.setCursor(1, 111);
+	// 				if(audioFiles[index].length() > 20)
+	// 					display.print(audioFiles[index]);
+	// 				else
+	// 					display.printCenter(audioFiles[index]);
+	// 				display.setCursor(4, 2);
+	// 				display.print(volume);
+	// 				display.fillRect(141,74, 4,4, shuffle ? TFT_BLACK : backgroundColors[backgroundIndex]);
+	// 				display.fillRect(14,73, 4,4, loop ? TFT_BLACK : backgroundColors[backgroundIndex]);
 				
-				}
-				else
-				{
-					shuffleReset = 0;
-					display.fillScreen(backgroundColors[backgroundIndex]);
+	// 			}
+	// 			else
+	// 			{
+	// 				shuffleReset = 0;
+	// 				display.fillScreen(backgroundColors[backgroundIndex]);
 
-					//draw bitmaps
-					display.drawBitmap(2*scale, 20*scale, previous, TFT_BLACK, scale);
-					display.drawBitmap(65*scale, 20*scale, next, TFT_BLACK, scale);
-					display.drawBitmap(2*scale, 75, repeatSprite, TFT_BLACK, scale);
-					display.drawBitmap(66*scale, 37*scale, shuffleIcon, TFT_BLACK, scale);
-					display.drawBitmap(37*scale, 19*scale, play, TFT_BLACK, scale);
-					display.drawBitmap(17*scale, 2*scale, cover2, TFT_BLACK, scale);
+	// 				//draw bitmaps
+	// 				display.drawBitmap(2*scale, 20*scale, previous, TFT_BLACK, scale);
+	// 				display.drawBitmap(65*scale, 20*scale, next, TFT_BLACK, scale);
+	// 				display.drawBitmap(2*scale, 75, repeatSprite, TFT_BLACK, scale);
+	// 				display.drawBitmap(66*scale, 37*scale, shuffleIcon, TFT_BLACK, scale);
+	// 				display.drawBitmap(37*scale, 19*scale, play, TFT_BLACK, scale);
+	// 				display.drawBitmap(17*scale, 2*scale, cover2, TFT_BLACK, scale);
 
 
 
-					//prepare for text printing
-					display.setTextColor(TFT_BLACK);
-					display.setTextSize(1);
-					display.setTextWrap(0);
+	// 				//prepare for text printing
+	// 				display.setTextColor(TFT_BLACK);
+	// 				display.setTextSize(1);
+	// 				display.setTextWrap(0);
 
-					//drawtext
-					display.setCursor(1, 111);
-					if(audioFiles[index].length() > 20)
-						display.print(audioFiles[index]);
-					else
-						display.printCenter(audioFiles[index]);
-					display.setCursor(4, 2);
-					display.print(volume);
-					display.fillRect(141,74, 4,4, shuffle ? TFT_BLACK : backgroundColors[backgroundIndex]);
-					display.fillRect(14,73, 4,4, loop ? TFT_BLACK : backgroundColors[backgroundIndex]);
-					while(!update());
-					mp3->resume();
-				}
-				playState = !playState;
-				while (!update());
-			}
+	// 				//drawtext
+	// 				display.setCursor(1, 111);
+	// 				if(audioFiles[index].length() > 20)
+	// 					display.print(audioFiles[index]);
+	// 				else
+	// 					display.printCenter(audioFiles[index]);
+	// 				display.setCursor(4, 2);
+	// 				display.print(volume);
+	// 				display.fillRect(141,74, 4,4, shuffle ? TFT_BLACK : backgroundColors[backgroundIndex]);
+	// 				display.fillRect(14,73, 4,4, loop ? TFT_BLACK : backgroundColors[backgroundIndex]);
+	// 				while(!update());
+	// 				mp3->resume();
+	// 			}
+	// 			playState = !playState;
+	// 			while (!update());
+	// 		}
 
-			if (buttons.released(BTN_DOWN) && volume > 0) //DOWN
-			{
+	// 		if (buttons.released(BTN_DOWN) && volume > 0) //DOWN
+	// 		{
 				
-				volume--;
-				mp3->setVolume(256*14/volume);
-				//prepare for text printing
-				tft.setTextColor(TFT_BLACK);
-				tft.setTextFont(2);
-				tft.setTextSize(1);
-				tft.setTextWrap(0);
-				tft.fillRect(4,2, 15, 15, backgroundColors[backgroundIndex]);
-				//drawtext
-				tft.setCursor(4, 2);
-				tft.print(volume);
+	// 			volume--;
+	// 			mp3->setVolume(256*14/volume);
+	// 			//prepare for text printing
+	// 			tft.setTextColor(TFT_BLACK);
+	// 			tft.setTextFont(2);
+	// 			tft.setTextSize(1);
+	// 			tft.setTextWrap(0);
+	// 			tft.fillRect(4,2, 15, 15, backgroundColors[backgroundIndex]);
+	// 			//drawtext
+	// 			tft.setCursor(4, 2);
+	// 			tft.print(volume);
 
-				//prepare for text printing
-				display.setTextColor(TFT_BLACK);
-				display.setTextFont(2);
-				display.setTextSize(1);
-				display.setTextWrap(0);
-				display.fillRect(4,2, 15, 15, backgroundColors[backgroundIndex]);
-				//drawtext
-				display.setCursor(4, 2);
-				display.print(volume);
-				while (!update());
-			}
+	// 			//prepare for text printing
+	// 			display.setTextColor(TFT_BLACK);
+	// 			display.setTextFont(2);
+	// 			display.setTextSize(1);
+	// 			display.setTextWrap(0);
+	// 			display.fillRect(4,2, 15, 15, backgroundColors[backgroundIndex]);
+	// 			//drawtext
+	// 			display.setCursor(4, 2);
+	// 			display.print(volume);
+	// 			while (!update());
+	// 		}
 
-			if (buttons.released(BTN_UP) && volume < 14) //UP
-			{
+	// 		if (buttons.released(BTN_UP) && volume < 14) //UP
+	// 		{
 				
-				volume++;
-				mp3->setVolume(256*14/volume);
-				//prepare for text printing
-				tft.setTextColor(TFT_BLACK);
-				tft.setTextFont(2);
-				tft.setTextSize(1);
-				tft.setTextWrap(0);
-				tft.fillRect(4,2, 15, 15, backgroundColors[backgroundIndex]);
-				//drawtext
-				tft.setCursor(4, 2);
-				tft.print(volume);
-				//prepare for text printing
-				display.setTextColor(TFT_BLACK);
-				display.setTextFont(2);
-				display.setTextSize(1);
-				display.setTextWrap(0);
-				display.fillRect(4,2, 15, 15, backgroundColors[backgroundIndex]);
-				//drawtext
-				display.setCursor(4, 2);
-				display.print(volume);
-				while (!update());
-			}
-			if(buttons.released(BTN_LEFT)) //previous
-			{
-				playState = 1;
-				if(shuffle && !shuffleReset)
-				{
-					bool allTrue=1;
-					for(int i = 0; i < audioCount;i++)
-						if(!shuffleList[i])
-							allTrue = 0;
-					if(allTrue)
-					{
-						memset(shuffleList, 0, sizeof(shuffleList));
-						if(!loop)
-						{
-							playState = 0;
-							shuffleReset = 1;
-						}
-					}
-					uint16_t randNumber = random(0,audioCount);
+	// 			volume++;
+	// 			mp3->setVolume(256*14/volume);
+	// 			//prepare for text printing
+	// 			tft.setTextColor(TFT_BLACK);
+	// 			tft.setTextFont(2);
+	// 			tft.setTextSize(1);
+	// 			tft.setTextWrap(0);
+	// 			tft.fillRect(4,2, 15, 15, backgroundColors[backgroundIndex]);
+	// 			//drawtext
+	// 			tft.setCursor(4, 2);
+	// 			tft.print(volume);
+	// 			//prepare for text printing
+	// 			display.setTextColor(TFT_BLACK);
+	// 			display.setTextFont(2);
+	// 			display.setTextSize(1);
+	// 			display.setTextWrap(0);
+	// 			display.fillRect(4,2, 15, 15, backgroundColors[backgroundIndex]);
+	// 			//drawtext
+	// 			display.setCursor(4, 2);
+	// 			display.print(volume);
+	// 			while (!update());
+	// 		}
+	// 		if(buttons.released(BTN_LEFT)) //previous
+	// 		{
+	// 			playState = 1;
+	// 			if(shuffle && !shuffleReset)
+	// 			{
+	// 				bool allTrue=1;
+	// 				for(int i = 0; i < audioCount;i++)
+	// 					if(!shuffleList[i])
+	// 						allTrue = 0;
+	// 				if(allTrue)
+	// 				{
+	// 					memset(shuffleList, 0, sizeof(shuffleList));
+	// 					if(!loop)
+	// 					{
+	// 						playState = 0;
+	// 						shuffleReset = 1;
+	// 					}
+	// 				}
+	// 				uint16_t randNumber = random(0,audioCount);
 					
-					while(shuffleList[randNumber])
-						randNumber = random(0,audioCount);
-					index = randNumber;
-					shuffleList[randNumber] = 1;
-				}
-				else
-				{
-					if(!loop && !shuffleReset)
-					{
-						if(index > 0)
-							index--;
-						else
-						{
-							playState = 0;
-							index = audioCount-1;
-						}
-					}
-				}
-				if(shuffleReset)
-					playState = 0;
-				mp3->stop();
-				removeTrack(mp3);
-				while(!update());
-				break;
-			}
-			if(buttons.released(BTN_RIGHT)) //next
-			{
-				playState = 1;
-				if(shuffle && !shuffleReset)
-				{
-					bool allTrue=1;
-					for(int i = 0; i < audioCount;i++)
-						if(!shuffleList[i])
-							allTrue = 0;
-					if(allTrue)
-					{
-						memset(shuffleList, 0, sizeof(shuffleList));
-						if(!loop)
-						{
-							playState = 0;
-							shuffleReset = 1;
-						}
-					}
-					uint16_t randNumber = random(0,audioCount);
+	// 				while(shuffleList[randNumber])
+	// 					randNumber = random(0,audioCount);
+	// 				index = randNumber;
+	// 				shuffleList[randNumber] = 1;
+	// 			}
+	// 			else
+	// 			{
+	// 				if(!loop && !shuffleReset)
+	// 				{
+	// 					if(index > 0)
+	// 						index--;
+	// 					else
+	// 					{
+	// 						playState = 0;
+	// 						index = audioCount-1;
+	// 					}
+	// 				}
+	// 			}
+	// 			if(shuffleReset)
+	// 				playState = 0;
+	// 			mp3->stop();
+	// 			removeTrack(mp3);
+	// 			while(!update());
+	// 			break;
+	// 		}
+	// 		if(buttons.released(BTN_RIGHT)) //next
+	// 		{
+	// 			playState = 1;
+	// 			if(shuffle && !shuffleReset)
+	// 			{
+	// 				bool allTrue=1;
+	// 				for(int i = 0; i < audioCount;i++)
+	// 					if(!shuffleList[i])
+	// 						allTrue = 0;
+	// 				if(allTrue)
+	// 				{
+	// 					memset(shuffleList, 0, sizeof(shuffleList));
+	// 					if(!loop)
+	// 					{
+	// 						playState = 0;
+	// 						shuffleReset = 1;
+	// 					}
+	// 				}
+	// 				uint16_t randNumber = random(0,audioCount);
 					
-					while(shuffleList[randNumber] == 1 || index == randNumber)
-						randNumber = random(0,audioCount);
-					index = randNumber;
-					shuffleList[randNumber] = 1;
-				}
-				else if(!shuffle && !shuffleReset)
-				{
-					if(!loop && !shuffleReset)
-					{
-						if(index < audioCount - 1)
-							index++;
-						else
-						{
-							shuffleReset = 1;
-							index = 0;
-							playState = 0;
-						}
-					}
-					// index = (index < audioCount - 1) ? index++ : 0;
-				}
-				if(shuffleReset)
-					playState = 0;
-				mp3->stop();
-				removeTrack(mp3);
-				while(!update());
-				break;
-			}
-			if(c == 'A') //shuffle button
-			{
-				if(!shuffle)
-					memset(shuffleList, 0, sizeof(shuffleList));
-				shuffle = !shuffle;
-				tft.fillRect(141,74, 4,4, shuffle ? TFT_BLACK : backgroundColors[backgroundIndex]);
-				display.fillRect(141,74, 4,4, shuffle ? TFT_BLACK : backgroundColors[backgroundIndex]);
-				shuffleList[index] = 1;
+	// 				while(shuffleList[randNumber] == 1 || index == randNumber)
+	// 					randNumber = random(0,audioCount);
+	// 				index = randNumber;
+	// 				shuffleList[randNumber] = 1;
+	// 			}
+	// 			else if(!shuffle && !shuffleReset)
+	// 			{
+	// 				if(!loop && !shuffleReset)
+	// 				{
+	// 					if(index < audioCount - 1)
+	// 						index++;
+	// 					else
+	// 					{
+	// 						shuffleReset = 1;
+	// 						index = 0;
+	// 						playState = 0;
+	// 					}
+	// 				}
+	// 				// index = (index < audioCount - 1) ? index++ : 0;
+	// 			}
+	// 			if(shuffleReset)
+	// 				playState = 0;
+	// 			mp3->stop();
+	// 			removeTrack(mp3);
+	// 			while(!update());
+	// 			break;
+	// 		}
+	// 		if(c == 'A') //shuffle button
+	// 		{
+	// 			if(!shuffle)
+	// 				memset(shuffleList, 0, sizeof(shuffleList));
+	// 			shuffle = !shuffle;
+	// 			tft.fillRect(141,74, 4,4, shuffle ? TFT_BLACK : backgroundColors[backgroundIndex]);
+	// 			display.fillRect(141,74, 4,4, shuffle ? TFT_BLACK : backgroundColors[backgroundIndex]);
+	// 			shuffleList[index] = 1;
 
-			}
-			if(c == 'C') //loop button
-			{
-				loop = !loop;
-				tft.fillRect(14,73, 4,4, loop ? TFT_BLACK : backgroundColors[backgroundIndex]);
-				display.fillRect(14,73, 4,4, loop ? TFT_BLACK : backgroundColors[backgroundIndex]);
-			}
-			update();
-			if(mp3->isPlaying() < 1 && playState) //if the current song is finished, play the next one
-			{
-				if(shuffle && !shuffleReset)
-				{
-					allTrue=1;
-					for(int i = 0; i < audioCount;i++)
-						if(!shuffleList[i])
-							allTrue = 0;
-					if(allTrue)
-					{
-						memset(shuffleList, 0, sizeof(shuffleList));
-						if(!loop)
-						{
-							playState = 0;
-							shuffleReset = 1;
-						}
-					}
-					uint16_t randNumber = random(0,audioCount);
+	// 		}
+	// 		if(c == 'C') //loop button
+	// 		{
+	// 			loop = !loop;
+	// 			tft.fillRect(14,73, 4,4, loop ? TFT_BLACK : backgroundColors[backgroundIndex]);
+	// 			display.fillRect(14,73, 4,4, loop ? TFT_BLACK : backgroundColors[backgroundIndex]);
+	// 		}
+	// 		update();
+	// 		if(mp3->isPlaying() < 1 && playState) //if the current song is finished, play the next one
+	// 		{
+	// 			if(shuffle && !shuffleReset)
+	// 			{
+	// 				allTrue=1;
+	// 				for(int i = 0; i < audioCount;i++)
+	// 					if(!shuffleList[i])
+	// 						allTrue = 0;
+	// 				if(allTrue)
+	// 				{
+	// 					memset(shuffleList, 0, sizeof(shuffleList));
+	// 					if(!loop)
+	// 					{
+	// 						playState = 0;
+	// 						shuffleReset = 1;
+	// 					}
+	// 				}
+	// 				uint16_t randNumber = random(0,audioCount);
 					
-					while(shuffleList[randNumber] || index == randNumber)
-						randNumber = random(0,audioCount);
-					index = randNumber;
-					shuffleList[randNumber] = 1;
-				}
-				else if(!shuffle && !shuffleReset)
-				{
-					if(!loop)
-					{
-						if(index < audioCount - 1)
-							index++;
-						else
-						{
-							index = 0;
-							playState = 0;
-						}
-					}
-				}
-				break;
-			}
-		}
-		if(out)
-			break;
-	}
-	for(int i = 0; i < audioCount;i++)
-	{
-		removeTrack(trackArray[i]);
-		trackArray[i]->~MPTrack();
+	// 				while(shuffleList[randNumber] || index == randNumber)
+	// 					randNumber = random(0,audioCount);
+	// 				index = randNumber;
+	// 				shuffleList[randNumber] = 1;
+	// 			}
+	// 			else if(!shuffle && !shuffleReset)
+	// 			{
+	// 				if(!loop)
+	// 				{
+	// 					if(index < audioCount - 1)
+	// 						index++;
+	// 					else
+	// 					{
+	// 						index = 0;
+	// 						playState = 0;
+	// 					}
+	// 				}
+	// 			}
+	// 			break;
+	// 		}
+	// 	}
+	// 	if(out)
+	// 		break;
+	// }
+	// for(int i = 0; i < audioCount;i++)
+	// {
+	// 	removeTrack(trackArray[i]);
+	// 	trackArray[i]->~MPTrack();
 
-	}
+	// }
 }
 
 void MAKERphone::drawJpeg(String filename, int xpos, int ypos) {
 
-  Serial.println("===========================");
-  Serial.print("Drawing file: "); Serial.println(filename);
-  Serial.println("===========================");
+  // Serial.println("===========================");
+  // Serial.print("Drawing file: "); Serial.println(filename);
+  // Serial.println("===========================");
 
-  // Open the named file (the Jpeg decoder library will close it after rendering image)
-  SDAudioFile jpegFile = _SD.open( filename);    // SDAudioFile handle reference for SPIFFS
-  //  SDAudioFile jpegSDAudioFile = _SD.open( filename, FILE_READ);  // or, file handle reference for SD library
+  // // Open the named file (the Jpeg decoder library will close it after rendering image)
+  // SDAudioFile jpegFile = _SD.open( filename);    // SDAudioFile handle reference for SPIFFS
+  // //  SDAudioFile jpegSDAudioFile = _SD.open( filename, FILE_READ);  // or, file handle reference for SD library
 
-  if ( !jpegFile ) {
-    Serial.print("ERROR: SDAudioFile \""); Serial.print(filename); Serial.println ("\" not found!");
-    return;
-  }
+  // if ( !jpegFile ) {
+  //   Serial.print("ERROR: SDAudioFile \""); Serial.print(filename); Serial.println ("\" not found!");
+  //   return;
+  // }
 
-  // Use one of the three following methods to initialise the decoder:
-  //boolean decoded = JpegDec.decodeFsFile(jpegFile); // Pass a SPIFFS file handle to the decoder,
-  //boolean decoded = JpegDec.decodeSdFile(jpegFile); // or pass the SD file handle to the decoder,
-  boolean decoded = JpegDec.decodeSdFile(jpegFile);  // or pass the filename (leading / distinguishes SPIFFS files)
-  // Note: the filename can be a String or character array type
-  if (decoded) {
-    // print information about the image to the serial port
-    jpegInfo();
+  // // Use one of the three following methods to initialise the decoder:
+  // //boolean decoded = JpegDec.decodeFsFile(jpegFile); // Pass a SPIFFS file handle to the decoder,
+  // //boolean decoded = JpegDec.decodeSdFile(jpegFile); // or pass the SD file handle to the decoder,
+  // boolean decoded = JpegDec.decodeSdFile(jpegFile);  // or pass the filename (leading / distinguishes SPIFFS files)
+  // // Note: the filename can be a String or character array type
+  // if (decoded) {
+  //   // print information about the image to the serial port
+  //   jpegInfo();
 
-    // render the image onto the screen at given coordinates
-    jpegRender(xpos, ypos);
-  }
-  else {
-    Serial.println("Jpeg file format not supported!");
-  }
+  //   // render the image onto the screen at given coordinates
+  //   jpegRender(xpos, ypos);
+  // }
+  // else {
+  //   Serial.println("Jpeg file format not supported!");
+  // }
 }
 void MAKERphone::listPhotos(const char * dirname, uint8_t levels) {
-	photoCount = 0;
+	// photoCount = 0;
 	
-	Serial.printf("Listing directory: %s\n", dirname);
-	SDAudioFile root = _SD.open(dirname);
-	if (!root) {
-		Serial.println("Failed to open directory");
-		return;
-	}
-	if (!root.isDirectory()) {
-		Serial.println("Not a directory");
-		return;
-	}
-	int counter = 1;
-	uint8_t start = 0;
-	SDAudioFile file = root.openNextFile();
-	while (file) {
-		char temp[100];
-		// file.getName(temp, 100);
-		String Name(file.name());
-		Serial.println(Name);
-		if (Name.endsWith(F(".jpeg")) || Name.endsWith(F(".JPEG"))
-		|| Name.endsWith(F(".jpg")) || Name.endsWith(F(".JPG"))
-		|| Name.endsWith(F(".bmp")) || Name.endsWith(F(".BMP")))
-		{
-			Serial.print(counter);
-			Serial.print(".   ");
-			Serial.println(Name);
-			photoFiles[counter - 1] = Name;
-			Serial.println(Name);
-			photoCount++;
-			counter++;
-		}
-		file = root.openNextFile();
-	}
+	// Serial.printf("Listing directory: %s\n", dirname);
+	// SDAudioFile root = _SD.open(dirname);
+	// if (!root) {
+	// 	Serial.println("Failed to open directory");
+	// 	return;
+	// }
+	// if (!root.isDirectory()) {
+	// 	Serial.println("Not a directory");
+	// 	return;
+	// }
+	// int counter = 1;
+	// uint8_t start = 0;
+	// SDAudioFile file = root.openNextFile();
+	// while (file) {
+	// 	char temp[100];
+	// 	// file.getName(temp, 100);
+	// 	String Name(file.name());
+	// 	Serial.println(Name);
+	// 	if (Name.endsWith(F(".jpeg")) || Name.endsWith(F(".JPEG"))
+	// 	|| Name.endsWith(F(".jpg")) || Name.endsWith(F(".JPG"))
+	// 	|| Name.endsWith(F(".bmp")) || Name.endsWith(F(".BMP")))
+	// 	{
+	// 		Serial.print(counter);
+	// 		Serial.print(".   ");
+	// 		Serial.println(Name);
+	// 		photoFiles[counter - 1] = Name;
+	// 		Serial.println(Name);
+	// 		photoCount++;
+	// 		counter++;
+	// 	}
+	// 	file = root.openNextFile();
+	// }
 }
 void MAKERphone::jpegRender(int xpos, int ypos) {
-	Serial.println("JPEG render");
-	delay(5);
+	// Serial.println("JPEG render");
+	// delay(5);
 
-	// retrieve infomration about the image
-	uint16_t *pImg;
-	uint16_t mcu_w = JpegDec.MCUWidth;
-	uint16_t mcu_h = JpegDec.MCUHeight;
-	uint32_t max_x = JpegDec.width;
-	uint32_t max_y = JpegDec.height;
+	// // retrieve infomration about the image
+	// uint16_t *pImg;
+	// uint16_t mcu_w = JpegDec.MCUWidth;
+	// uint16_t mcu_h = JpegDec.MCUHeight;
+	// uint32_t max_x = JpegDec.width;
+	// uint32_t max_y = JpegDec.height;
 
-	// Jpeg images are drawn as a set of image block (tiles) called Minimum Coding Units (MCUs)
-	// Typically these MCUs are 16x16 pixel blocks
-	// Determine the width and height of the right and bottom edge image blocks
-	Serial.println("Here");
-	delay(5);
-	uint32_t min_w = min(mcu_w, max_x % mcu_w);
+	// // Jpeg images are drawn as a set of image block (tiles) called Minimum Coding Units (MCUs)
+	// // Typically these MCUs are 16x16 pixel blocks
+	// // Determine the width and height of the right and bottom edge image blocks
+	// Serial.println("Here");
+	// delay(5);
+	// uint32_t min_w = min(mcu_w, max_x % mcu_w);
 	
-	uint32_t min_h = min(mcu_h, max_y % mcu_h);
+	// uint32_t min_h = min(mcu_h, max_y % mcu_h);
 
-	// save the current image block size
-	uint32_t win_w = mcu_w;
-	uint32_t win_h = mcu_h;
+	// // save the current image block size
+	// uint32_t win_w = mcu_w;
+	// uint32_t win_h = mcu_h;
 
-	// record the current time so we can measure how long it takes to draw an image
-	uint32_t drawTime = millis();
+	// // record the current time so we can measure how long it takes to draw an image
+	// uint32_t drawTime = millis();
 
-	// save the coordinate of the right and bottom edges to assist image cropping
-	// to the screen size
-	max_x += xpos;
-	max_y += ypos;
+	// // save the coordinate of the right and bottom edges to assist image cropping
+	// // to the screen size
+	// max_x += xpos;
+	// max_y += ypos;
 	
-	// read each MCU block until there are no more
-	while (JpegDec.readSwappedBytes())
-	{ // Swap byte order so the SPI buffer can be used
+	// // read each MCU block until there are no more
+	// while (JpegDec.readSwappedBytes())
+	// { // Swap byte order so the SPI buffer can be used
 
-		// save a pointer to the image block
-		pImg = JpegDec.pImage;
+	// 	// save a pointer to the image block
+	// 	pImg = JpegDec.pImage;
 
-		// calculate where the image block should be drawn on the screen
-		int mcu_x = JpegDec.MCUx * mcu_w + xpos; // Calculate coordinates of top left corner of current MCU
-		int mcu_y = JpegDec.MCUy * mcu_h + ypos;
+	// 	// calculate where the image block should be drawn on the screen
+	// 	int mcu_x = JpegDec.MCUx * mcu_w + xpos; // Calculate coordinates of top left corner of current MCU
+	// 	int mcu_y = JpegDec.MCUy * mcu_h + ypos;
 
-		// check if the image block size needs to be changed for the right edge
-		if (mcu_x + mcu_w <= max_x)
-			win_w = mcu_w;
-		else
-			win_w = min_w;
+	// 	// check if the image block size needs to be changed for the right edge
+	// 	if (mcu_x + mcu_w <= max_x)
+	// 		win_w = mcu_w;
+	// 	else
+	// 		win_w = min_w;
 
-		// check if the image block size needs to be changed for the bottom edge
-		if (mcu_y + mcu_h <= max_y)
-			win_h = mcu_h;
-		else
-			win_h = min_h;
+	// 	// check if the image block size needs to be changed for the bottom edge
+	// 	if (mcu_y + mcu_h <= max_y)
+	// 		win_h = mcu_h;
+	// 	else
+	// 		win_h = min_h;
 
-		// copy pixels into a contiguous block
-		if (win_w != mcu_w)
-		{
-			uint16_t *cImg;
-			int p = 0;
-			cImg = pImg + win_w;
-			for (int h = 1; h < win_h; h++)
-			{
-				p += mcu_w;
-				for (int w = 0; w < win_w; w++)
-				{
-					*cImg = *(pImg + w + p);
-					cImg++;
-				}
-			}
-		}
+	// 	// copy pixels into a contiguous block
+	// 	if (win_w != mcu_w)
+	// 	{
+	// 		uint16_t *cImg;
+	// 		int p = 0;
+	// 		cImg = pImg + win_w;
+	// 		for (int h = 1; h < win_h; h++)
+	// 		{
+	// 			p += mcu_w;
+	// 			for (int w = 0; w < win_w; w++)
+	// 			{
+	// 				*cImg = *(pImg + w + p);
+	// 				cImg++;
+	// 			}
+	// 		}
+	// 	}
 
-		// draw image MCU block only if it will fit on the screen
-		if ((mcu_x + win_w) <= display.width() && (mcu_y + win_h) <= display.height())
-		{
-			display.setSwapBytes(1);
-			display.pushImage(mcu_x, mcu_y, win_w, win_h, pImg);
-		}
+	// 	// draw image MCU block only if it will fit on the screen
+	// 	if ((mcu_x + win_w) <= display.width() && (mcu_y + win_h) <= display.height())
+	// 	{
+	// 		display.setSwapBytes(1);
+	// 		display.pushImage(mcu_x, mcu_y, win_w, win_h, pImg);
+	// 	}
 
-		else if ((mcu_y + win_h) >= display.height())
-			JpegDec.abort();
+	// 	else if ((mcu_y + win_h) >= display.height())
+	// 		JpegDec.abort();
 
-  }
+  // }
 
-  // calculate how long it took to draw the image
-  drawTime = millis() - drawTime; // Calculate the time it took
+  // // calculate how long it took to draw the image
+  // drawTime = millis() - drawTime; // Calculate the time it took
 
-  // print the results to the serial port
-  Serial.print  ("Total render time was    : "); Serial.print(drawTime); Serial.println(" ms");
-  Serial.println("=====================================");
+  // // print the results to the serial port
+  // Serial.print  ("Total render time was    : "); Serial.print(drawTime); Serial.println(" ms");
+  // Serial.println("=====================================");
 
 }
 void MAKERphone::jpegInfo() {
 
-  Serial.println("===============");
-  Serial.println("JPEG image info");
-  Serial.println("===============");
-  Serial.print  ("Width      :"); Serial.println(JpegDec.width);
-  Serial.print  ("Height     :"); Serial.println(JpegDec.height);
-  Serial.print  ("Components :"); Serial.println(JpegDec.comps);
-  Serial.print  ("MCU / row  :"); Serial.println(JpegDec.MCUSPerRow);
-  Serial.print  ("MCU / col  :"); Serial.println(JpegDec.MCUSPerCol);
-  Serial.print  ("Scan type  :"); Serial.println(JpegDec.scanType);
-  Serial.print  ("MCU width  :"); Serial.println(JpegDec.MCUWidth);
-  Serial.print  ("MCU height :"); Serial.println(JpegDec.MCUHeight);
-  Serial.println("===============");
-  Serial.println("");
+  // Serial.println("===============");
+  // Serial.println("JPEG image info");
+  // Serial.println("===============");
+  // Serial.print  ("Width      :"); Serial.println(JpegDec.width);
+  // Serial.print  ("Height     :"); Serial.println(JpegDec.height);
+  // Serial.print  ("Components :"); Serial.println(JpegDec.comps);
+  // Serial.print  ("MCU / row  :"); Serial.println(JpegDec.MCUSPerRow);
+  // Serial.print  ("MCU / col  :"); Serial.println(JpegDec.MCUSPerCol);
+  // Serial.print  ("Scan type  :"); Serial.println(JpegDec.scanType);
+  // Serial.print  ("MCU width  :"); Serial.println(JpegDec.MCUWidth);
+  // Serial.print  ("MCU height :"); Serial.println(JpegDec.MCUHeight);
+  // Serial.println("===============");
+  // Serial.println("");
 }
 
 
@@ -5893,221 +5889,221 @@ void MAKERphone::displayMenu() {
 	sleepTimeActual = sleepTimeActualBuffer;
 }
 void MAKERphone::soundMenu() {
-	_SD.begin(5, SPI, 8000000);
-	listRingtones("/ringtones", 0);
-	listNotifications("/notifications", 0);
+	// _SD.begin(5, SPI, 8000000);
+	// listRingtones("/ringtones", 0);
+	// listNotifications("/notifications", 0);
 	
-	ringtone = "/ringtones/chiptune.mp3";
-	notification = "/notifications/to-the-point.mp3";
-	String parsedRingtone;
-	String parsedNotification;
-	uint8_t start = 0;
-	int8_t i;
-	display.setTextFont(1);
-	display.setTextColor(TFT_BLACK);
-	uint8_t cursor = 0;
-	while (ringtone.indexOf("/", start) != -1)
-		start = ringtone.indexOf("/", start) + 1;
-	parsedRingtone = ringtone.substring(start, ringtone.indexOf("."));
-	start = 0;
-	while (notification.indexOf("/", start) != -1)
-		start = notification.indexOf("/", start) + 1;
-	parsedNotification = notification.substring(start, notification.indexOf("."));
-	while (1)
-	{
-		display.setTextFont(2);
-		display.fillScreen(0xA7FF);
-		display.setCursor(20, 4);
-		display.printCenter("Volume");
-		display.drawRect(33, 12*2, 47*2, 4*2, TFT_BLACK);
-		display.drawBitmap(4*2, 10*2, noSound, TFT_BLACK, 2);
-		display.drawBitmap(67*2, 10*2, fullSound, TFT_BLACK, 2);
-		display.fillRect(35, 13*2, volume * 3*2, 2*2, TFT_BLACK);
-		display.setCursor(15, 37);
-		display.printCenter("Ringtone");
-		display.drawRect(3*2, 55, 74*2, 11*2, TFT_BLACK);
-		display.setCursor(6*2, 58);
-		display.print(parsedRingtone);
+	// ringtone = "/ringtones/chiptune.mp3";
+	// notification = "/notifications/to-the-point.mp3";
+	// String parsedRingtone;
+	// String parsedNotification;
+	// uint8_t start = 0;
+	// int8_t i;
+	// display.setTextFont(1);
+	// display.setTextColor(TFT_BLACK);
+	// uint8_t cursor = 0;
+	// while (ringtone.indexOf("/", start) != -1)
+	// 	start = ringtone.indexOf("/", start) + 1;
+	// parsedRingtone = ringtone.substring(start, ringtone.indexOf("."));
+	// start = 0;
+	// while (notification.indexOf("/", start) != -1)
+	// 	start = notification.indexOf("/", start) + 1;
+	// parsedNotification = notification.substring(start, notification.indexOf("."));
+	// while (1)
+	// {
+	// 	display.setTextFont(2);
+	// 	display.fillScreen(0xA7FF);
+	// 	display.setCursor(20, 4);
+	// 	display.printCenter("Volume");
+	// 	display.drawRect(33, 12*2, 47*2, 4*2, TFT_BLACK);
+	// 	display.drawBitmap(4*2, 10*2, noSound, TFT_BLACK, 2);
+	// 	display.drawBitmap(67*2, 10*2, fullSound, TFT_BLACK, 2);
+	// 	display.fillRect(35, 13*2, volume * 3*2, 2*2, TFT_BLACK);
+	// 	display.setCursor(15, 37);
+	// 	display.printCenter("Ringtone");
+	// 	display.drawRect(3*2, 55, 74*2, 11*2, TFT_BLACK);
+	// 	display.setCursor(6*2, 58);
+	// 	display.print(parsedRingtone);
 
-		display.setCursor(5, 82);
-		display.printCenter("Notification");
-		display.drawRect(3*2, 100, 74*2, 11*2, TFT_BLACK);
-		display.setCursor(6*2, 103);
-		display.print(parsedNotification);
+	// 	display.setCursor(5, 82);
+	// 	display.printCenter("Notification");
+	// 	display.drawRect(3*2, 100, 74*2, 11*2, TFT_BLACK);
+	// 	display.setCursor(6*2, 103);
+	// 	display.print(parsedNotification);
 
-		if (cursor == 0)
-		{
-			if (millis() % 1000 <= 500)
-			{
-				display.drawBitmap(4*2, 10*2, noSound, TFT_BLACK, 2);
-				display.drawBitmap(67*2, 10*2, fullSound, TFT_BLACK, 2);
-			}
-			else
-			{
-				display.drawBitmap(4*2, 10*2, noSound, 0xA7FF, 2);
-				display.drawBitmap(67*2, 10*2, fullSound, 0xA7FF, 2);
-			}
-			if (buttons.released(BTN_LEFT) && volume != 0)
-			{
-				volume--;
-				gui.osc->setVolume(256 * volume / 14);
-				gui.osc->note(75, 0.05);
-				gui.osc->play();
-				while(!update());
-			}
-			if (buttons.released(BTN_RIGHT) && volume != 15)
-			{
-				volume++;
-				gui.osc->setVolume(256 * volume / 14);
-				gui.osc->note(75, 0.05);
-				gui.osc->play();
-				while(!update());
-			}
-		}
-		if (cursor == 1)
-		{
-			if (millis() % 1000 <= 500)
-				display.drawRect(3*2, 55, 74*2, 11*2, TFT_BLACK);
-			else
-				display.drawRect(3*2, 55, 74*2, 11*2, 0xA7FF);
+	// 	if (cursor == 0)
+	// 	{
+	// 		if (millis() % 1000 <= 500)
+	// 		{
+	// 			display.drawBitmap(4*2, 10*2, noSound, TFT_BLACK, 2);
+	// 			display.drawBitmap(67*2, 10*2, fullSound, TFT_BLACK, 2);
+	// 		}
+	// 		else
+	// 		{
+	// 			display.drawBitmap(4*2, 10*2, noSound, 0xA7FF, 2);
+	// 			display.drawBitmap(67*2, 10*2, fullSound, 0xA7FF, 2);
+	// 		}
+	// 		if (buttons.released(BTN_LEFT) && volume != 0)
+	// 		{
+	// 			volume--;
+	// 			gui.osc->setVolume(256 * volume / 14);
+	// 			gui.osc->note(75, 0.05);
+	// 			gui.osc->play();
+	// 			while(!update());
+	// 		}
+	// 		if (buttons.released(BTN_RIGHT) && volume != 15)
+	// 		{
+	// 			volume++;
+	// 			gui.osc->setVolume(256 * volume / 14);
+	// 			gui.osc->note(75, 0.05);
+	// 			gui.osc->play();
+	// 			while(!update());
+	// 		}
+	// 	}
+	// 	if (cursor == 1)
+	// 	{
+	// 		if (millis() % 1000 <= 500)
+	// 			display.drawRect(3*2, 55, 74*2, 11*2, TFT_BLACK);
+	// 		else
+	// 			display.drawRect(3*2, 55, 74*2, 11*2, 0xA7FF);
 
-			if (buttons.released(BTN_A))
-			{
-				gui.osc->note(75, 0.05);
-				gui.osc->play();
-				while(!update());
-				display.setFreeFont(TT1);
-				Serial.println(ringtoneCount);
-				i = audioPlayerMenu("Select ringtone:", ringtoneFiles, ringtoneCount);
-				display.setTextColor(TFT_BLACK);
-				if (i >= 0)
-					ringtone = ringtoneFiles[i];
-				else
-					Serial.println("pressed B in menu");
-				start = 0;
-				while (ringtone.indexOf("/", start) != -1)
-					start = ringtone.indexOf("/", start) + 1;
-				parsedRingtone = ringtone.substring(start, ringtone.indexOf("."));
-			}
-		}
-		if (cursor == 2)
-		{
-			gui.osc->note(75, 0.05);
-			gui.osc->play();
-			if (millis() % 1000 <= 500)
-				display.drawRect(3*2, 100, 74*2, 11*2, TFT_BLACK);
-			else
-				display.drawRect(3*2, 100, 74*2, 11*2, 0xA7FF);
+	// 		if (buttons.released(BTN_A))
+	// 		{
+	// 			gui.osc->note(75, 0.05);
+	// 			gui.osc->play();
+	// 			while(!update());
+	// 			display.setFreeFont(TT1);
+	// 			Serial.println(ringtoneCount);
+	// 			i = audioPlayerMenu("Select ringtone:", ringtoneFiles, ringtoneCount);
+	// 			display.setTextColor(TFT_BLACK);
+	// 			if (i >= 0)
+	// 				ringtone = ringtoneFiles[i];
+	// 			else
+	// 				Serial.println("pressed B in menu");
+	// 			start = 0;
+	// 			while (ringtone.indexOf("/", start) != -1)
+	// 				start = ringtone.indexOf("/", start) + 1;
+	// 			parsedRingtone = ringtone.substring(start, ringtone.indexOf("."));
+	// 		}
+	// 	}
+	// 	if (cursor == 2)
+	// 	{
+	// 		gui.osc->note(75, 0.05);
+	// 		gui.osc->play();
+	// 		if (millis() % 1000 <= 500)
+	// 			display.drawRect(3*2, 100, 74*2, 11*2, TFT_BLACK);
+	// 		else
+	// 			display.drawRect(3*2, 100, 74*2, 11*2, 0xA7FF);
 
-			if (buttons.released(BTN_A))
-			{
-				while(!update());
-				display.setFreeFont(TT1);
-				i = audioPlayerMenu("Select notification:", notificationFiles, notificationCount);
-				display.setTextColor(TFT_BLACK);
-				if (i >= 0)
-					notification = notificationFiles[i];
-				start = 0;
-				while (notification.indexOf("/", start) != -1)
-					start = notification.indexOf("/", start) + 1;
-				parsedNotification = notification.substring(start, notification.indexOf("."));
-			}
-		}
+	// 		if (buttons.released(BTN_A))
+	// 		{
+	// 			while(!update());
+	// 			display.setFreeFont(TT1);
+	// 			i = audioPlayerMenu("Select notification:", notificationFiles, notificationCount);
+	// 			display.setTextColor(TFT_BLACK);
+	// 			if (i >= 0)
+	// 				notification = notificationFiles[i];
+	// 			start = 0;
+	// 			while (notification.indexOf("/", start) != -1)
+	// 				start = notification.indexOf("/", start) + 1;
+	// 			parsedNotification = notification.substring(start, notification.indexOf("."));
+	// 		}
+	// 	}
 
-		if (buttons.released(BTN_UP))
-		{
-			gui.osc->note(75, 0.05);
-			gui.osc->play();
-			if (cursor == 0)
-				cursor = 2;
-			else
-				cursor--;
-			while(!update());
-		}
-		if (buttons.released(BTN_DOWN))
-		{
-			gui.osc->note(75, 0.05);
-			gui.osc->play();
-			if (cursor == 2)
-				cursor = 0;
-			else
-				cursor++;
-			while(!update());
-		}
-		if (buttons.released(BTN_B)) //BUTTON BACK
-			break;
-		update();
-	}
+	// 	if (buttons.released(BTN_UP))
+	// 	{
+	// 		gui.osc->note(75, 0.05);
+	// 		gui.osc->play();
+	// 		if (cursor == 0)
+	// 			cursor = 2;
+	// 		else
+	// 			cursor--;
+	// 		while(!update());
+	// 	}
+	// 	if (buttons.released(BTN_DOWN))
+	// 	{
+	// 		gui.osc->note(75, 0.05);
+	// 		gui.osc->play();
+	// 		if (cursor == 2)
+	// 			cursor = 0;
+	// 		else
+	// 			cursor++;
+	// 		while(!update());
+	// 	}
+	// 	if (buttons.released(BTN_B)) //BUTTON BACK
+	// 		break;
+	// 	update();
+	// }
 }
 void MAKERphone::listRingtones(const char * dirname, uint8_t levels) {
-	ringtoneCount = 0;
+	// ringtoneCount = 0;
 	
-	Serial.printf("Listing directory: %s\n", dirname);
+	// Serial.printf("Listing directory: %s\n", dirname);
 
-	SDAudioFile root = _SD.open(dirname);
-	if (!root) {
-		Serial.println("Failed to open directory");
-		return;
-	}
-	if (!root.isDirectory()) {
-		Serial.println("Not a directory");
-		return;
+	// SDAudioFile root = _SD.open(dirname);
+	// if (!root) {
+	// 	Serial.println("Failed to open directory");
+	// 	return;
+	// }
+	// if (!root.isDirectory()) {
+	// 	Serial.println("Not a directory");
+	// 	return;
 
-	}
-	int counter = 1;
-	SDAudioFile file = root.openNextFile();
-	while (file) {
-		char temp[100];
-		// file.getName(temp, 100);
-		String Name(file.name());
-		Serial.println(Name);
-		if (Name.endsWith(F(".MP3")) || Name.endsWith(F(".mp3")))
-		{
-			Serial.print(counter);
-			Serial.print(".   ");
-			Serial.println(Name);
-			ringtoneFiles[counter - 1] = Name;
-			Serial.println(Name);
-			ringtoneCount++;
-			counter++;
-		}
-		file = root.openNextFile();
-	}
+	// }
+	// int counter = 1;
+	// SDAudioFile file = root.openNextFile();
+	// while (file) {
+	// 	char temp[100];
+	// 	// file.getName(temp, 100);
+	// 	String Name(file.name());
+	// 	Serial.println(Name);
+	// 	if (Name.endsWith(F(".MP3")) || Name.endsWith(F(".mp3")))
+	// 	{
+	// 		Serial.print(counter);
+	// 		Serial.print(".   ");
+	// 		Serial.println(Name);
+	// 		ringtoneFiles[counter - 1] = Name;
+	// 		Serial.println(Name);
+	// 		ringtoneCount++;
+	// 		counter++;
+	// 	}
+	// 	file = root.openNextFile();
+	// }
 }
 void MAKERphone::listNotifications(const char * dirname, uint8_t levels) {
-	notificationCount = 0;
+	// notificationCount = 0;
 	
-	Serial.printf("Listing directory: %s\n", dirname);
+	// Serial.printf("Listing directory: %s\n", dirname);
 
-	SDAudioFile root = _SD.open(dirname);
-	if (!root) {
-		Serial.println("Failed to open directory");
-		return;
-	}
-	if (!root.isDirectory()) {
-		Serial.println("Not a directory");
-		return;
+	// SDAudioFile root = _SD.open(dirname);
+	// if (!root) {
+	// 	Serial.println("Failed to open directory");
+	// 	return;
+	// }
+	// if (!root.isDirectory()) {
+	// 	Serial.println("Not a directory");
+	// 	return;
 
-	}
-	int counter = 1;
-	SDAudioFile file = root.openNextFile();
-	while (file) {
-		char temp[100];
-		// file.getName(temp, 100);
-		String Name(file.name());
-		Serial.println(Name);
-		if (Name.endsWith(F(".MP3")) || Name.endsWith(F(".mp3")))
-		{
-			Serial.print(counter);
-			Serial.print(".   ");
-			Serial.println(Name);
-			notificationFiles[counter - 1] = Name;
-			Serial.println(Name);
-			notificationCount++;
-			counter++;
-		}
-		file = root.openNextFile();
-	}
+	// }
+	// int counter = 1;
+	// SDAudioFile file = root.openNextFile();
+	// while (file) {
+	// 	char temp[100];
+	// 	// file.getName(temp, 100);
+	// 	String Name(file.name());
+	// 	Serial.println(Name);
+	// 	if (Name.endsWith(F(".MP3")) || Name.endsWith(F(".mp3")))
+	// 	{
+	// 		Serial.print(counter);
+	// 		Serial.print(".   ");
+	// 		Serial.println(Name);
+	// 		notificationFiles[counter - 1] = Name;
+	// 		Serial.println(Name);
+	// 		notificationCount++;
+	// 		counter++;
+	// 	}
+	// 	file = root.openNextFile();
+	// }
 }
 void MAKERphone::securityMenu() {
 	
@@ -8218,354 +8214,354 @@ void MAKERphone::clockAlarmMenuDrawBox(uint8_t alarmIndex, uint8_t i, int32_t y)
 }
 void MAKERphone::clockAlarmEdit(uint8_t index)
 {
-	bool enabled = 0;
-	bool repeat = 0;
-	uint8_t hours = 12;
-	uint8_t mins = 0;
-	String temp;
-	bool days[7] = {0, 0, 0, 0, 1, 1, 0};
-	uint8_t cursorX = 0;
-	uint8_t cursorY = 0;
-	char key;
-	uint32_t blinkMillis = millis();
-	uint32_t color = TFT_BLACK;
-	bool blinkState = 1;
-	String parsedAlarmTrack = "alarm.wav";
-	String localAlarmTrack = "/Music/alarm.wav";
+	// bool enabled = 0;
+	// bool repeat = 0;
+	// uint8_t hours = 12;
+	// uint8_t mins = 0;
+	// String temp;
+	// bool days[7] = {0, 0, 0, 0, 1, 1, 0};
+	// uint8_t cursorX = 0;
+	// uint8_t cursorY = 0;
+	// char key;
+	// uint32_t blinkMillis = millis();
+	// uint32_t color = TFT_BLACK;
+	// bool blinkState = 1;
+	// String parsedAlarmTrack = "alarm.wav";
+	// String localAlarmTrack = "/Music/alarm.wav";
 
-	if(alarmEnabled[index] != 2)
-	{
-		hours = alarmHours[index];
-		mins = alarmMins[index];
-		enabled = alarmEnabled[index];
-		localAlarmTrack = alarmTrack[index];
-		for(int i = 0; i < 7; i++)
-		{
-			days[i] = alarmRepeatDays[index][i];
-		}
-		repeat = alarmRepeat[index];
-	}
-	while(1)
-	{
-		color = TFT_BLACK;
-		key = buttons.kpdNum.getKey();
-		display.fillScreen(0xFC92);
-		//Hour black
-		display.setTextColor(TFT_BLACK);
-		display.setCursor(15, 8);
-		display.setTextFont(2);
-		display.setTextSize(2);
-		temp = "";
-		if (hours < 10)
-			temp.concat("0");
-		temp.concat(hours);
-		temp.concat(":");
-		if (mins < 10)
-			temp.concat("0");
-		temp.concat(mins);
-		display.print(temp);
-		display.drawRect(115, 15, 20, 20, TFT_BLACK);
-		display.drawRect(116, 16, 18, 18, TFT_BLACK);
-		if(enabled)
-		{
-			display.setTextFont(1);
-			display.setTextSize(2);
-			display.setCursor(120, 18);
-			display.print("X");
-			display.setTextFont(2);
-		}
-		else
-			color = TFT_DARKGREY;
-		display.setTextColor(color);
-		display.setCursor(15,45);
-		display.setTextSize(1);
-		if(enabled)
-		{
-			if(!repeat)
-			{
-				display.setCursor(42, 45);
-				display.print("once/");
-				display.setTextColor(TFT_DARKGREY);
-				display.print("repeat");
-				display.setCursor(85,63);
-				display.printCenter("M T W T F S S");
-				temp = "";
-				for(int i = 0; i<7;i++)
-				{
-					temp.concat(days[i] ? "X" : "O");
-					if(i < 6)
-						temp.concat(" ");
-				}
-				display.setCursor(0,78);
-				display.printCenter(temp);
-				display.setTextColor(TFT_BLACK);
-			}
-			else
-			{
-				display.setCursor(42, 45);
-				display.setTextColor(TFT_DARKGREY);
-				display.print("once");
-				display.setTextColor(TFT_BLACK);
-				display.print("/repeat");
-				display.setCursor(85,63);
-				display.printCenter("M T W T F S S");
-				temp = "";
-				for(int i = 0; i<7;i++)
-				{
-					temp.concat(days[i] ? "X" : "O");
-					if(i < 6)
-						temp.concat(" ");
-				}
-				display.setCursor(0,78);
-				display.printCenter(temp);
-			}
+	// if(alarmEnabled[index] != 2)
+	// {
+	// 	hours = alarmHours[index];
+	// 	mins = alarmMins[index];
+	// 	enabled = alarmEnabled[index];
+	// 	localAlarmTrack = alarmTrack[index];
+	// 	for(int i = 0; i < 7; i++)
+	// 	{
+	// 		days[i] = alarmRepeatDays[index][i];
+	// 	}
+	// 	repeat = alarmRepeat[index];
+	// }
+	// while(1)
+	// {
+	// 	color = TFT_BLACK;
+	// 	key = buttons.kpdNum.getKey();
+	// 	display.fillScreen(0xFC92);
+	// 	//Hour black
+	// 	display.setTextColor(TFT_BLACK);
+	// 	display.setCursor(15, 8);
+	// 	display.setTextFont(2);
+	// 	display.setTextSize(2);
+	// 	temp = "";
+	// 	if (hours < 10)
+	// 		temp.concat("0");
+	// 	temp.concat(hours);
+	// 	temp.concat(":");
+	// 	if (mins < 10)
+	// 		temp.concat("0");
+	// 	temp.concat(mins);
+	// 	display.print(temp);
+	// 	display.drawRect(115, 15, 20, 20, TFT_BLACK);
+	// 	display.drawRect(116, 16, 18, 18, TFT_BLACK);
+	// 	if(enabled)
+	// 	{
+	// 		display.setTextFont(1);
+	// 		display.setTextSize(2);
+	// 		display.setCursor(120, 18);
+	// 		display.print("X");
+	// 		display.setTextFont(2);
+	// 	}
+	// 	else
+	// 		color = TFT_DARKGREY;
+	// 	display.setTextColor(color);
+	// 	display.setCursor(15,45);
+	// 	display.setTextSize(1);
+	// 	if(enabled)
+	// 	{
+	// 		if(!repeat)
+	// 		{
+	// 			display.setCursor(42, 45);
+	// 			display.print("once/");
+	// 			display.setTextColor(TFT_DARKGREY);
+	// 			display.print("repeat");
+	// 			display.setCursor(85,63);
+	// 			display.printCenter("M T W T F S S");
+	// 			temp = "";
+	// 			for(int i = 0; i<7;i++)
+	// 			{
+	// 				temp.concat(days[i] ? "X" : "O");
+	// 				if(i < 6)
+	// 					temp.concat(" ");
+	// 			}
+	// 			display.setCursor(0,78);
+	// 			display.printCenter(temp);
+	// 			display.setTextColor(TFT_BLACK);
+	// 		}
+	// 		else
+	// 		{
+	// 			display.setCursor(42, 45);
+	// 			display.setTextColor(TFT_DARKGREY);
+	// 			display.print("once");
+	// 			display.setTextColor(TFT_BLACK);
+	// 			display.print("/repeat");
+	// 			display.setCursor(85,63);
+	// 			display.printCenter("M T W T F S S");
+	// 			temp = "";
+	// 			for(int i = 0; i<7;i++)
+	// 			{
+	// 				temp.concat(days[i] ? "X" : "O");
+	// 				if(i < 6)
+	// 					temp.concat(" ");
+	// 			}
+	// 			display.setCursor(0,78);
+	// 			display.printCenter(temp);
+	// 		}
 
-		}
-		else
-		{
-			display.printCenter("once/repeat");
-			display.setCursor(85,63);
-			display.printCenter("M T W T F S S");
-			temp = "";
-			for(int i = 0; i<7;i++)
-			{
-				temp.concat(days[i] ? "X" : "O");
-				if(i < 6)
-					temp.concat(" ");
-			}
-			display.setCursor(0,78);
-			display.printCenter(temp);
-		}
-		display.drawRect(20, 98, 120, 20, color);
-		display.drawRect(19, 97, 122, 22, color);
-		display.setCursor(0,100);
-		display.printCenter(parsedAlarmTrack);
-		if(millis()-blinkMillis >= 350)
-		{
-			blinkState = !blinkState;
-			blinkMillis = millis();
-		}
-		switch (cursorY)
-		{
-			case 0:
-				if(key != NO_KEY)
-				{
-					blinkState = 1;
-					blinkMillis = millis();
-				}
-				switch (cursorX)
-				{
-					case 0:
-						if(key == 'C')
-							hours /= 10;
-						else if (key != 'B' && key != 'D' && key != '#' && key != '*' && key != NO_KEY && hours < 10)
-							hours = hours * 10 + key - 48;
-						if(!blinkState)
-							display.fillRect(0, 0, 46, 50, 0xFC92);
-					break;
-					case 1:
-						if(key == 'C')
-							mins /= 10;
-						else if (key != 'B' && key != 'D' && key != '#' && key != '*' && key != NO_KEY && mins < 10)
-							mins = mins * 10 + key - 48;
-						if(!blinkState)
-							display.fillRect(51, 0, 40, 45, 0xFC92);
-					break;
-					case 2:
-						if(!blinkState)
-						{
-							display.drawRect(115, 15, 20, 20, 0xFC92);
-							display.drawRect(116, 16, 18, 18, 0xFC92);
-						}
-						if(buttons.released(BTN_A))
-						{
-							while(!update());
-							enabled = !enabled;
-							blinkState = 1;
-							blinkMillis = millis();
-						}
-					break;
-				}
+	// 	}
+	// 	else
+	// 	{
+	// 		display.printCenter("once/repeat");
+	// 		display.setCursor(85,63);
+	// 		display.printCenter("M T W T F S S");
+	// 		temp = "";
+	// 		for(int i = 0; i<7;i++)
+	// 		{
+	// 			temp.concat(days[i] ? "X" : "O");
+	// 			if(i < 6)
+	// 				temp.concat(" ");
+	// 		}
+	// 		display.setCursor(0,78);
+	// 		display.printCenter(temp);
+	// 	}
+	// 	display.drawRect(20, 98, 120, 20, color);
+	// 	display.drawRect(19, 97, 122, 22, color);
+	// 	display.setCursor(0,100);
+	// 	display.printCenter(parsedAlarmTrack);
+	// 	if(millis()-blinkMillis >= 350)
+	// 	{
+	// 		blinkState = !blinkState;
+	// 		blinkMillis = millis();
+	// 	}
+	// 	switch (cursorY)
+	// 	{
+	// 		case 0:
+	// 			if(key != NO_KEY)
+	// 			{
+	// 				blinkState = 1;
+	// 				blinkMillis = millis();
+	// 			}
+	// 			switch (cursorX)
+	// 			{
+	// 				case 0:
+	// 					if(key == 'C')
+	// 						hours /= 10;
+	// 					else if (key != 'B' && key != 'D' && key != '#' && key != '*' && key != NO_KEY && hours < 10)
+	// 						hours = hours * 10 + key - 48;
+	// 					if(!blinkState)
+	// 						display.fillRect(0, 0, 46, 50, 0xFC92);
+	// 				break;
+	// 				case 1:
+	// 					if(key == 'C')
+	// 						mins /= 10;
+	// 					else if (key != 'B' && key != 'D' && key != '#' && key != '*' && key != NO_KEY && mins < 10)
+	// 						mins = mins * 10 + key - 48;
+	// 					if(!blinkState)
+	// 						display.fillRect(51, 0, 40, 45, 0xFC92);
+	// 				break;
+	// 				case 2:
+	// 					if(!blinkState)
+	// 					{
+	// 						display.drawRect(115, 15, 20, 20, 0xFC92);
+	// 						display.drawRect(116, 16, 18, 18, 0xFC92);
+	// 					}
+	// 					if(buttons.released(BTN_A))
+	// 					{
+	// 						while(!update());
+	// 						enabled = !enabled;
+	// 						blinkState = 1;
+	// 						blinkMillis = millis();
+	// 					}
+	// 				break;
+	// 			}
 				
-				if(buttons.released(BTN_RIGHT) && cursorX < 2)
-				{
-					blinkState = 0;
-					blinkMillis = millis();
-					cursorX++;
-					mins %= 60;
-					hours %= 24;
-					while(!update());
-				}
-				if(buttons.released(BTN_LEFT) && cursorX > 0)
-				{
-					blinkState = 0;
-					blinkMillis = millis();
-					cursorX--;
-					mins %= 60;
-					hours %= 24;
-					while(!update());
-				}
-			break;
+	// 			if(buttons.released(BTN_RIGHT) && cursorX < 2)
+	// 			{
+	// 				blinkState = 0;
+	// 				blinkMillis = millis();
+	// 				cursorX++;
+	// 				mins %= 60;
+	// 				hours %= 24;
+	// 				while(!update());
+	// 			}
+	// 			if(buttons.released(BTN_LEFT) && cursorX > 0)
+	// 			{
+	// 				blinkState = 0;
+	// 				blinkMillis = millis();
+	// 				cursorX--;
+	// 				mins %= 60;
+	// 				hours %= 24;
+	// 				while(!update());
+	// 			}
+	// 		break;
 
-			case 1:
-				cursorX = repeat;
-				if(!blinkState)
-				{
-					if(cursorX == 0)
-						display.fillRect(0, 50, 71, 12, 0xFC92); 
-					else if(cursorX == 1)
-						display.fillRect(78, 48, 50, 14, 0xFC92);
-				}
-				if(buttons.released(BTN_RIGHT) && cursorX < 1)
-				{
-					blinkState = 0;
-					blinkMillis = millis();
-					repeat = 1;
-					while(!update());
-				}
-				if(buttons.released(BTN_LEFT) && cursorX > 0)
-				{
-					blinkState = 0;
-					blinkMillis = millis();
-					repeat = 0;
-					while(!update());
-				}
-			break;
+	// 		case 1:
+	// 			cursorX = repeat;
+	// 			if(!blinkState)
+	// 			{
+	// 				if(cursorX == 0)
+	// 					display.fillRect(0, 50, 71, 12, 0xFC92); 
+	// 				else if(cursorX == 1)
+	// 					display.fillRect(78, 48, 50, 14, 0xFC92);
+	// 			}
+	// 			if(buttons.released(BTN_RIGHT) && cursorX < 1)
+	// 			{
+	// 				blinkState = 0;
+	// 				blinkMillis = millis();
+	// 				repeat = 1;
+	// 				while(!update());
+	// 			}
+	// 			if(buttons.released(BTN_LEFT) && cursorX > 0)
+	// 			{
+	// 				blinkState = 0;
+	// 				blinkMillis = millis();
+	// 				repeat = 0;
+	// 				while(!update());
+	// 			}
+	// 		break;
 
-			case 2:
-				if(!blinkState)
-					display.fillRect(29 + 14*cursorX, 64, 15, 15, 0xFC92);
-				if(buttons.released(BTN_RIGHT) && cursorX < 6)
-				{
-					cursorX++;
-					blinkState = 0;
-					blinkMillis = millis();
-					while(!update());
-				}
-				if(buttons.released(BTN_LEFT) && cursorX > 0)
-				{
-					cursorX--;
-					blinkState = 0;
-					blinkMillis = millis();
-					while(!update());
-				}
-				if(buttons.released(BTN_A))
-				{
-					days[cursorX] = !days[cursorX];
-					blinkState = 1;
-					blinkMillis = millis();
-					while(!update());
-				}
-			break;
+	// 		case 2:
+	// 			if(!blinkState)
+	// 				display.fillRect(29 + 14*cursorX, 64, 15, 15, 0xFC92);
+	// 			if(buttons.released(BTN_RIGHT) && cursorX < 6)
+	// 			{
+	// 				cursorX++;
+	// 				blinkState = 0;
+	// 				blinkMillis = millis();
+	// 				while(!update());
+	// 			}
+	// 			if(buttons.released(BTN_LEFT) && cursorX > 0)
+	// 			{
+	// 				cursorX--;
+	// 				blinkState = 0;
+	// 				blinkMillis = millis();
+	// 				while(!update());
+	// 			}
+	// 			if(buttons.released(BTN_A))
+	// 			{
+	// 				days[cursorX] = !days[cursorX];
+	// 				blinkState = 1;
+	// 				blinkMillis = millis();
+	// 				while(!update());
+	// 			}
+	// 		break;
 
-			case 3:
-				if(!blinkState)
-				{
-					display.drawRect(20, 98, 120, 20, 0xFC92);
-					display.drawRect(19, 97, 122, 22, 0xFC92);
-				}
-				if(buttons.released(BTN_A))
-				{
-					while(!update());
-					display.setFreeFont(TT1);
-					listAudio("/Music", 1);
-					int16_t i = 0;
-					if(audioCount == 0)
-					{
-						display.fillScreen(0xFC92);
-						display.setCursor(0, display.height()/2 - 16);
-						display.setTextFont(2);
-						display.printCenter("No audio tracks found!");
-						uint32_t tempMillis = millis();
-						while(millis() < tempMillis + 2000)
-						{
-							update();
-							if(buttons.pressed(BTN_A) || buttons.pressed(BTN_B))
-							{
-								while(!buttons.released(BTN_A) && !buttons.released(BTN_B))
-									update();
-								break;
-							}
-						}
-					}
-					else
-					{
-						i = audioPlayerMenu("Select alarm:", audioFiles, audioCount);
-						display.setTextColor(TFT_BLACK);
-						if (i >= 0)
-							localAlarmTrack = audioFiles[i];
-						uint16_t start = 0;
-						while (localAlarmTrack.indexOf("/", start) != -1)
-							start = localAlarmTrack.indexOf("/", start) + 1;
-						parsedAlarmTrack = localAlarmTrack.substring(start);
-					}
+	// 		case 3:
+	// 			if(!blinkState)
+	// 			{
+	// 				display.drawRect(20, 98, 120, 20, 0xFC92);
+	// 				display.drawRect(19, 97, 122, 22, 0xFC92);
+	// 			}
+	// 			if(buttons.released(BTN_A))
+	// 			{
+	// 				while(!update());
+	// 				display.setFreeFont(TT1);
+	// 				listAudio("/Music", 1);
+	// 				int16_t i = 0;
+	// 				if(audioCount == 0)
+	// 				{
+	// 					display.fillScreen(0xFC92);
+	// 					display.setCursor(0, display.height()/2 - 16);
+	// 					display.setTextFont(2);
+	// 					display.printCenter("No audio tracks found!");
+	// 					uint32_t tempMillis = millis();
+	// 					while(millis() < tempMillis + 2000)
+	// 					{
+	// 						update();
+	// 						if(buttons.pressed(BTN_A) || buttons.pressed(BTN_B))
+	// 						{
+	// 							while(!buttons.released(BTN_A) && !buttons.released(BTN_B))
+	// 								update();
+	// 							break;
+	// 						}
+	// 					}
+	// 				}
+	// 				else
+	// 				{
+	// 					// i = audioPlayerMenu("Select alarm:", audioFiles, audioCount);
+	// 					// display.setTextColor(TFT_BLACK);
+	// 					// if (i >= 0)
+	// 					// 	localAlarmTrack = audioFiles[i];
+	// 					// uint16_t start = 0;
+	// 					// while (localAlarmTrack.indexOf("/", start) != -1)
+	// 					// 	start = localAlarmTrack.indexOf("/", start) + 1;
+	// 					// parsedAlarmTrack = localAlarmTrack.substring(start);
+	// 				}
 
-				}
+	// 			}
 
-			break;
-		}
-		if(buttons.released(BTN_UP) && cursorY>0)
-		{
-			if (cursorY == 3 && !repeat)
-				cursorY--;
-			cursorY--;
-			cursorX = 0;
-			blinkState = 0;
-			blinkMillis = millis();
-			while(!update());
-		}
-		if (buttons.released(BTN_DOWN) && cursorY < 4 && enabled)
-		{
-			if (cursorY == 1 && !repeat)
-				cursorY++;
-			cursorY++;
-			cursorX = 0;
-			blinkState = 0;
-			blinkMillis = millis();
-			while(!update());
+	// 		break;
+	// 	}
+	// 	if(buttons.released(BTN_UP) && cursorY>0)
+	// 	{
+	// 		if (cursorY == 3 && !repeat)
+	// 			cursorY--;
+	// 		cursorY--;
+	// 		cursorX = 0;
+	// 		blinkState = 0;
+	// 		blinkMillis = millis();
+	// 		while(!update());
+	// 	}
+	// 	if (buttons.released(BTN_DOWN) && cursorY < 4 && enabled)
+	// 	{
+	// 		if (cursorY == 1 && !repeat)
+	// 			cursorY++;
+	// 		cursorY++;
+	// 		cursorX = 0;
+	// 		blinkState = 0;
+	// 		blinkMillis = millis();
+	// 		while(!update());
 
-		}
-		if(buttons.released(BTN_B))
-		{
-			while(!update());
-			display.setTextColor(TFT_BLACK);
-			display.setTextSize(1);
-			display.setTextFont(2);
-			display.drawRect(14, 45, 134, 38, TFT_BLACK);
-			display.drawRect(13, 44, 136, 40, TFT_BLACK);
-			display.fillRect(15, 46, 132, 36, 0xFC92);
-			display.setCursor(47, 48);
-			display.printCenter("Save and exit?");
-			display.setCursor(47, 61);
-			display.printCenter("A: yes    B:cancel");
-			while(1)
-			{
-				if(buttons.released(BTN_B))
-				{
-					while(!update());
-					break;
-				}
-				if(buttons.released(BTN_A))
-				{
-					while(!update());
-					alarmHours[index] = hours;
-					alarmMins[index] = mins;
-					alarmEnabled[index] = enabled;
-					alarmTrack[index] = localAlarmTrack;
-					for(int i = 0; i < 7; i++)
-					{
-						alarmRepeatDays[index][i] = days[i];
-					}
-					alarmRepeat[index] = repeat;
-					saveAlarms();
-					//save RTC and exit
-					return;
-				}
-				while(!update());
-			}
-		}
-		update();
-	}
+	// 	}
+	// 	if(buttons.released(BTN_B))
+	// 	{
+	// 		while(!update());
+	// 		display.setTextColor(TFT_BLACK);
+	// 		display.setTextSize(1);
+	// 		display.setTextFont(2);
+	// 		display.drawRect(14, 45, 134, 38, TFT_BLACK);
+	// 		display.drawRect(13, 44, 136, 40, TFT_BLACK);
+	// 		display.fillRect(15, 46, 132, 36, 0xFC92);
+	// 		display.setCursor(47, 48);
+	// 		display.printCenter("Save and exit?");
+	// 		display.setCursor(47, 61);
+	// 		display.printCenter("A: yes    B:cancel");
+	// 		while(1)
+	// 		{
+	// 			if(buttons.released(BTN_B))
+	// 			{
+	// 				while(!update());
+	// 				break;
+	// 			}
+	// 			if(buttons.released(BTN_A))
+	// 			{
+	// 				while(!update());
+	// 				alarmHours[index] = hours;
+	// 				alarmMins[index] = mins;
+	// 				alarmEnabled[index] = enabled;
+	// 				alarmTrack[index] = localAlarmTrack;
+	// 				for(int i = 0; i < 7; i++)
+	// 				{
+	// 					alarmRepeatDays[index][i] = days[i];
+	// 				}
+	// 				alarmRepeat[index] = repeat;
+	// 				saveAlarms();
+	// 				//save RTC and exit
+	// 				return;
+	// 			}
+	// 			while(!update());
+	// 		}
+	// 	}
+	// 	update();
+	// }
 	
 }
 void MAKERphone::clockTimer()
@@ -9808,613 +9804,613 @@ int8_t GUI::menu(const char* title, String* items, uint8_t length) {
 
 }
 uint8_t GUI::drawCursor(uint8_t xoffset, uint8_t yoffset, uint8_t xelements, uint8_t yelements, uint8_t xstart, uint8_t ystart) {
-	uint8_t index = 0;
-	uint8_t cursorX = 0;
-	uint8_t cursorY = 0;
-	long elapsedMillis = millis();
-	long elapsedMillis2 = millis();
-	while (1)
-	{
-		mp.display.fillScreen(TFT_BLACK);
-		mp.display.setFreeFont(TT1);
-		mp.display.setTextSize(1);
-		mp.display.setTextColor(TFT_WHITE);
-		mp.display.drawString("Test", 0, 0);
-		mp.display.drawFastHLine(0, 6, BUFWIDTH, TFT_WHITE);
-		// Draw the icons
-		mp.display.drawIcon(messages, 1, 8, width, height);
-		mp.display.drawIcon(media, 26, 8, width, height);
-		mp.display.drawIcon(contacts, 51, 8, width, height);
-		mp.display.drawIcon(settings, 1, 33, width, height);
-		mp.display.drawIcon(phone, 26, 33, width, height);
-		mp.display.drawIcon(apps, 51, 33, width, height);
+	// uint8_t index = 0;
+	// uint8_t cursorX = 0;
+	// uint8_t cursorY = 0;
+	// long elapsedMillis = millis();
+	// long elapsedMillis2 = millis();
+	// while (1)
+	// {
+	// 	mp.display.fillScreen(TFT_BLACK);
+	// 	mp.display.setFreeFont(TT1);
+	// 	mp.display.setTextSize(1);
+	// 	mp.display.setTextColor(TFT_WHITE);
+	// 	mp.display.drawString("Test", 0, 0);
+	// 	mp.display.drawFastHLine(0, 6, BUFWIDTH, TFT_WHITE);
+	// 	// Draw the icons
+	// 	mp.display.drawIcon(messages, 1, 8, width, height);
+	// 	mp.display.drawIcon(media, 26, 8, width, height);
+	// 	mp.display.drawIcon(contacts, 51, 8, width, height);
+	// 	mp.display.drawIcon(settings, 1, 33, width, height);
+	// 	mp.display.drawIcon(phone, 26, 33, width, height);
+	// 	mp.display.drawIcon(apps, 51, 33, width, height);
 
-		mp.display.fillRect(0, 0, 80, 6, TFT_BLACK);
-		index = cursorY * xelements + cursorX;
-		mp.display.drawString(mp.titles[index], 0, 0);
-		//kpd.begin(14, 27);
+	// 	mp.display.fillRect(0, 0, 80, 6, TFT_BLACK);
+	// 	index = cursorY * xelements + cursorX;
+	// 	mp.display.drawString(mp.titles[index], 0, 0);
+	// 	//kpd.begin(14, 27);
 
-		if (millis() - elapsedMillis >= 250) {
-			elapsedMillis = millis();
-			cursorState = !cursorState;
-		}
-		if (millis() - elapsedMillis2 >= 100) {
-			elapsedMillis2 = millis();
-			previousButtonState = mp.kpd.pin_read(BTN_B);
-		}
-
-
-		if (cursorState == 1)
-			mp.display.drawRect(xstart + cursorX * xoffset, ystart + cursorY * yoffset, width + 2, height + 2, TFT_RED);
-		else
-			mp.display.drawRect(xstart + cursorX * xoffset, ystart + cursorY * yoffset, width + 2, height + 2, TFT_BLACK);
-
-		///////////////////////////////
-		//////Checking for button input
-		///////////////////////////////
-		if (mp.buttons.kpd.pin_read(BTN_A) == 0) //CONFIRM
-		{
-			while (mp.buttons.kpd.pin_read(BTN_A) == 0);
-			return cursorY * xelements + cursorX;  //returns index of selected icon
-
-		}
-		if (mp.buttons.kpd.pin_read(BTN_DOWN) == 0) //UP
-		{
-			mp.leds[0] = CRGB::Black;
-			mp.leds[7] = CRGB::Black;
-			FastLED.show();
-			mp.vibration(200);
-			FastLED.clear();
-
-			while (mp.buttons.kpd.pin_read(BTN_DOWN) == 0);
-			mp.display.drawRect(xstart + cursorX * xoffset, ystart + cursorY * yoffset, width + 2, height + 2, TFT_BLACK);
-			if (cursorY == 0) {
-				cursorY = yelements - 1;
-			}
-			else
-				cursorY--;
-			elapsedMillis = millis();
-			cursorState = 1;
-		}
-		if (mp.buttons.kpd.pin_read(BTN_UP) == 0)//DOWN
-		{
-
-			mp.leds[3] = CRGB::Blue;
-			mp.leds[4] = CRGB::Blue;
-			FastLED.show();
-			mp.vibration(200);
-			FastLED.clear();
-
-			while (mp.buttons.kpd.pin_read(BTN_UP) == 0);
-			mp.display.drawRect(xstart + cursorX * xoffset, ystart + cursorY * yoffset, width + 2, height + 2, TFT_BLACK);
-			if (cursorY == yelements - 1) {
-				cursorY = 0;
-			}
-			else
-				cursorY++;
-			elapsedMillis = millis();
-			cursorState = 1;
-		}
-		if (mp.buttons.kpd.pin_read(BTN_LEFT) == 0) //LEFT
-		{
-			mp.leds[6] = CRGB::Blue;
-			mp.leds[5] = CRGB::Blue;
-			FastLED.show();
-			mp.vibration(200);
-			FastLED.clear();
-
-			while (mp.buttons.kpd.pin_read(BTN_LEFT) == 0);
-			mp.display.drawRect(xstart + cursorX * xoffset, ystart + cursorY * yoffset, width + 2, height + 2, TFT_BLACK);
-			if (cursorX == 0) {
-				cursorX = xelements - 1;
-			}
-			else
-				cursorX--;
-			elapsedMillis = millis();
-			cursorState = 1;
-		}
-		if (mp.buttons.kpd.pin_read(BTN_RIGHT) == 0)//RIGHT
-		{
-			mp.leds[1] = CRGB::Blue;
-			mp.leds[2] = CRGB::Blue;
-			FastLED.show();
-			mp.vibration(200);
-			FastLED.clear();
-
-			while (mp.buttons.kpd.pin_read(BTN_RIGHT) == 0);
-			mp.display.drawRect(xstart + cursorX * xoffset, ystart + cursorY * yoffset, width + 2, height + 2, TFT_BLACK);
-			if (cursorX == xelements - 1) {
-				cursorX = 0;
-			}
-			else
-				cursorX++;
-			elapsedMillis = millis();
-			cursorState = 1;
-		}
-		if (mp.buttons.kpd.pin_read(BTN_B) == 0 && previousButtonState == 1)//LOCK BUTTON
-		{
-			mp.leds[0] = CRGB::Red;
-			mp.leds[7] = CRGB::Red;
-			FastLED.show();
-			mp.vibration(200);
-			FastLED.clear();
-
-			Serial.println("entered lock screen");
-			mp.lockScreen();
-			Serial.println("exited lock screen");
-		}
-		mp.update();
+	// 	if (millis() - elapsedMillis >= 250) {
+	// 		elapsedMillis = millis();
+	// 		cursorState = !cursorState;
+	// 	}
+	// 	if (millis() - elapsedMillis2 >= 100) {
+	// 		elapsedMillis2 = millis();
+	// 		previousButtonState = mp.kpd.pin_read(BTN_B);
+	// 	}
 
 
-	}
+	// 	if (cursorState == 1)
+	// 		mp.display.drawRect(xstart + cursorX * xoffset, ystart + cursorY * yoffset, width + 2, height + 2, TFT_RED);
+	// 	else
+	// 		mp.display.drawRect(xstart + cursorX * xoffset, ystart + cursorY * yoffset, width + 2, height + 2, TFT_BLACK);
+
+	// 	///////////////////////////////
+	// 	//////Checking for button input
+	// 	///////////////////////////////
+	// 	if (mp.buttons.kpd.pin_read(BTN_A) == 0) //CONFIRM
+	// 	{
+	// 		while (mp.buttons.kpd.pin_read(BTN_A) == 0);
+	// 		return cursorY * xelements + cursorX;  //returns index of selected icon
+
+	// 	}
+	// 	if (mp.buttons.kpd.pin_read(BTN_DOWN) == 0) //UP
+	// 	{
+	// 		mp.leds[0] = CRGB::Black;
+	// 		mp.leds[7] = CRGB::Black;
+	// 		FastLED.show();
+	// 		mp.vibration(200);
+	// 		FastLED.clear();
+
+	// 		while (mp.buttons.kpd.pin_read(BTN_DOWN) == 0);
+	// 		mp.display.drawRect(xstart + cursorX * xoffset, ystart + cursorY * yoffset, width + 2, height + 2, TFT_BLACK);
+	// 		if (cursorY == 0) {
+	// 			cursorY = yelements - 1;
+	// 		}
+	// 		else
+	// 			cursorY--;
+	// 		elapsedMillis = millis();
+	// 		cursorState = 1;
+	// 	}
+	// 	if (mp.buttons.kpd.pin_read(BTN_UP) == 0)//DOWN
+	// 	{
+
+	// 		mp.leds[3] = CRGB::Blue;
+	// 		mp.leds[4] = CRGB::Blue;
+	// 		FastLED.show();
+	// 		mp.vibration(200);
+	// 		FastLED.clear();
+
+	// 		while (mp.buttons.kpd.pin_read(BTN_UP) == 0);
+	// 		mp.display.drawRect(xstart + cursorX * xoffset, ystart + cursorY * yoffset, width + 2, height + 2, TFT_BLACK);
+	// 		if (cursorY == yelements - 1) {
+	// 			cursorY = 0;
+	// 		}
+	// 		else
+	// 			cursorY++;
+	// 		elapsedMillis = millis();
+	// 		cursorState = 1;
+	// 	}
+	// 	if (mp.buttons.kpd.pin_read(BTN_LEFT) == 0) //LEFT
+	// 	{
+	// 		mp.leds[6] = CRGB::Blue;
+	// 		mp.leds[5] = CRGB::Blue;
+	// 		FastLED.show();
+	// 		mp.vibration(200);
+	// 		FastLED.clear();
+
+	// 		while (mp.buttons.kpd.pin_read(BTN_LEFT) == 0);
+	// 		mp.display.drawRect(xstart + cursorX * xoffset, ystart + cursorY * yoffset, width + 2, height + 2, TFT_BLACK);
+	// 		if (cursorX == 0) {
+	// 			cursorX = xelements - 1;
+	// 		}
+	// 		else
+	// 			cursorX--;
+	// 		elapsedMillis = millis();
+	// 		cursorState = 1;
+	// 	}
+	// 	if (mp.buttons.kpd.pin_read(BTN_RIGHT) == 0)//RIGHT
+	// 	{
+	// 		mp.leds[1] = CRGB::Blue;
+	// 		mp.leds[2] = CRGB::Blue;
+	// 		FastLED.show();
+	// 		mp.vibration(200);
+	// 		FastLED.clear();
+
+	// 		while (mp.buttons.kpd.pin_read(BTN_RIGHT) == 0);
+	// 		mp.display.drawRect(xstart + cursorX * xoffset, ystart + cursorY * yoffset, width + 2, height + 2, TFT_BLACK);
+	// 		if (cursorX == xelements - 1) {
+	// 			cursorX = 0;
+	// 		}
+	// 		else
+	// 			cursorX++;
+	// 		elapsedMillis = millis();
+	// 		cursorState = 1;
+	// 	}
+	// 	if (mp.buttons.kpd.pin_read(BTN_B) == 0 && previousButtonState == 1)//LOCK BUTTON
+	// 	{
+	// 		mp.leds[0] = CRGB::Red;
+	// 		mp.leds[7] = CRGB::Red;
+	// 		FastLED.show();
+	// 		mp.vibration(200);
+	// 		FastLED.clear();
+
+	// 		Serial.println("entered lock screen");
+	// 		mp.lockScreen();
+	// 		Serial.println("exited lock screen");
+	// 	}
+	// 	mp.update();
+
+
+	// }
 }
 int8_t GUI::drawBigIconsCursor(uint8_t xoffset, uint8_t yoffset, uint8_t xelements, uint8_t yelements, uint8_t xstart, uint8_t ystart) {
-	String passcode = "";
-	uint8_t index = 0;
-	uint8_t cursorX = 0;
-	uint8_t cursorY = 0;
-	uint32_t passcodeMillis = millis();
-	long elapsedMillis = millis();
-	long elapsedMillis2 = millis();
-	uint8_t scale;
-	if(mp.resolutionMode)
-		scale = 1;
-	else
-		scale = 2;
-	while(!mp.update());
-	while (1)
-	{
+	// String passcode = "";
+	// uint8_t index = 0;
+	// uint8_t cursorX = 0;
+	// uint8_t cursorY = 0;
+	// uint32_t passcodeMillis = millis();
+	// long elapsedMillis = millis();
+	// long elapsedMillis2 = millis();
+	// uint8_t scale;
+	// if(mp.resolutionMode)
+	// 	scale = 1;
+	// else
+	// 	scale = 2;
+	// while(!mp.update());
+	// while (1)
+	// {
 		
-		mp.display.fillScreen(TFT_BLACK);
+	// 	mp.display.fillScreen(TFT_BLACK);
 
-		mp.display.setTextSize(1);
-		mp.display.setTextColor(TFT_WHITE);
+	// 	mp.display.setTextSize(1);
+	// 	mp.display.setTextColor(TFT_WHITE);
 
-		// Draw the icons
-		mp.display.drawIcon(bigMessages, 2*scale, 9*scale, width, bigIconHeight, scale);
-		mp.display.drawIcon(bigMedia, 28*scale, 9*scale, width, bigIconHeight, scale);
-		mp.display.drawIcon(bigContacts, 54*scale, 9*scale, width, bigIconHeight, scale);
-		mp.display.drawIcon(bigSettings, 2*scale, 37*scale, width, bigIconHeight, scale);
-		mp.display.drawIcon(bigPhone, 28*scale, 37*scale, width, bigIconHeight, scale);
-		mp.display.drawIcon(bigApps, 54*scale, 37*scale, width, bigIconHeight, scale);
+	// 	// Draw the icons
+	// 	mp.display.drawIcon(bigMessages, 2*scale, 9*scale, width, bigIconHeight, scale);
+	// 	mp.display.drawIcon(bigMedia, 28*scale, 9*scale, width, bigIconHeight, scale);
+	// 	mp.display.drawIcon(bigContacts, 54*scale, 9*scale, width, bigIconHeight, scale);
+	// 	mp.display.drawIcon(bigSettings, 2*scale, 37*scale, width, bigIconHeight, scale);
+	// 	mp.display.drawIcon(bigPhone, 28*scale, 37*scale, width, bigIconHeight, scale);
+	// 	mp.display.drawIcon(bigApps, 54*scale, 37*scale, width, bigIconHeight, scale);
 
-		mp.display.fillRect(0, 0, 80*scale, 6*scale, TFT_BLACK);
-		index = cursorY * xelements + cursorX;
-		if(mp.resolutionMode)
-		{
-			mp.display.setFreeFont(TT1);
-			mp.display.setCursor(0,5);
-			mp.display.drawFastHLine(0, 6, BUF2WIDTH, TFT_WHITE);
-		}
-		else
-		{
-			mp.display.setTextFont(2);
-			mp.display.setCursor(0,-2);
-			mp.display.drawFastHLine(0, 14, BUF2WIDTH, TFT_WHITE);
-		}
-		mp.display.print(mp.titles[index]);
+	// 	mp.display.fillRect(0, 0, 80*scale, 6*scale, TFT_BLACK);
+	// 	index = cursorY * xelements + cursorX;
+	// 	if(mp.resolutionMode)
+	// 	{
+	// 		mp.display.setFreeFont(TT1);
+	// 		mp.display.setCursor(0,5);
+	// 		mp.display.drawFastHLine(0, 6, BUF2WIDTH, TFT_WHITE);
+	// 	}
+	// 	else
+	// 	{
+	// 		mp.display.setTextFont(2);
+	// 		mp.display.setCursor(0,-2);
+	// 		mp.display.drawFastHLine(0, 14, BUF2WIDTH, TFT_WHITE);
+	// 	}
+	// 	mp.display.print(mp.titles[index]);
 
-		if (millis() - elapsedMillis >= 250) {
-			elapsedMillis = millis();
-			cursorState = !cursorState;
-		}
-		if (millis() - elapsedMillis2 >= 100) {
-			elapsedMillis2 = millis();
-			previousButtonState = mp.kpd.pin_read(BTN_B);
-		}
-		if (millis() - passcodeMillis >= 1000)
-			passcode = "";
+	// 	if (millis() - elapsedMillis >= 250) {
+	// 		elapsedMillis = millis();
+	// 		cursorState = !cursorState;
+	// 	}
+	// 	if (millis() - elapsedMillis2 >= 100) {
+	// 		elapsedMillis2 = millis();
+	// 		previousButtonState = mp.kpd.pin_read(BTN_B);
+	// 	}
+	// 	if (millis() - passcodeMillis >= 1000)
+	// 		passcode = "";
 
-		if (cursorState == 1)
-		{
-			// mp.display.drawRect((xstart + cursorX * xoffset)*scale, (ystart + cursorY * yoffset)*scale+1, (width + 2)*scale, (bigIconHeight + 2)*scale-1, TFT_RED);
-			mp.display.drawRect((xstart + cursorX * xoffset), (ystart + cursorY * yoffset), (width + 1)*scale, (bigIconHeight + 1)*scale, TFT_RED);
-			mp.display.drawRect((xstart + cursorX * xoffset)-1, (ystart + cursorY * yoffset)-1, (width + 2)*scale, (bigIconHeight + 2)*scale, TFT_RED);
-		}
-		else
-		{
-			// mp.display.drawRect((xstart + cursorX * xoffset)*scale, (ystart + cursorY * yoffset)*scale + 1, (width + 2)*scale, (bigIconHeight + 2)*scale-1, TFT_BLACK);
-			mp.display.drawRect((xstart + cursorX * xoffset), (ystart + cursorY * yoffset), (width + 1)*scale, (bigIconHeight + 1)*scale, TFT_BLACK);
-			mp.display.drawRect((xstart + cursorX * xoffset)-1, (ystart + cursorY * yoffset)-1, (width + 2)*scale, (bigIconHeight + 2)*scale, TFT_BLACK);
-		}
+	// 	if (cursorState == 1)
+	// 	{
+	// 		// mp.display.drawRect((xstart + cursorX * xoffset)*scale, (ystart + cursorY * yoffset)*scale+1, (width + 2)*scale, (bigIconHeight + 2)*scale-1, TFT_RED);
+	// 		mp.display.drawRect((xstart + cursorX * xoffset), (ystart + cursorY * yoffset), (width + 1)*scale, (bigIconHeight + 1)*scale, TFT_RED);
+	// 		mp.display.drawRect((xstart + cursorX * xoffset)-1, (ystart + cursorY * yoffset)-1, (width + 2)*scale, (bigIconHeight + 2)*scale, TFT_RED);
+	// 	}
+	// 	else
+	// 	{
+	// 		// mp.display.drawRect((xstart + cursorX * xoffset)*scale, (ystart + cursorY * yoffset)*scale + 1, (width + 2)*scale, (bigIconHeight + 2)*scale-1, TFT_BLACK);
+	// 		mp.display.drawRect((xstart + cursorX * xoffset), (ystart + cursorY * yoffset), (width + 1)*scale, (bigIconHeight + 1)*scale, TFT_BLACK);
+	// 		mp.display.drawRect((xstart + cursorX * xoffset)-1, (ystart + cursorY * yoffset)-1, (width + 2)*scale, (bigIconHeight + 2)*scale, TFT_BLACK);
+	// 	}
 
-		///////////////////////////////////////
-		//////Checking for button input////////
-		///////////////////////////////////////
-		if (mp.buttons.released(BTN_A)) //CONFIRM
-		{
-			while (!mp.update());
-			return cursorY * xelements + cursorX;  //returns index of selected icon
+	// 	///////////////////////////////////////
+	// 	//////Checking for button input////////
+	// 	///////////////////////////////////////
+	// 	if (mp.buttons.released(BTN_A)) //CONFIRM
+	// 	{
+	// 		while (!mp.update());
+	// 		return cursorY * xelements + cursorX;  //returns index of selected icon
 
-		}
-		if (mp.buttons.pressed(BTN_DOWN)) //DOWN
-		{
-			passcode += "DOWN";
-			passcodeMillis = millis();
-			mp.leds[0] = CRGB::Blue;
-			mp.leds[7] = CRGB::Blue;
-			while(!mp.update());
-			mp.vibration(200);
-			FastLED.clear();
-			while (!mp.update());
+	// 	}
+	// 	if (mp.buttons.pressed(BTN_DOWN)) //DOWN
+	// 	{
+	// 		passcode += "DOWN";
+	// 		passcodeMillis = millis();
+	// 		mp.leds[0] = CRGB::Blue;
+	// 		mp.leds[7] = CRGB::Blue;
+	// 		while(!mp.update());
+	// 		mp.vibration(200);
+	// 		FastLED.clear();
+	// 		while (!mp.update());
 
-			while (mp.buttons.kpd.pin_read(BTN_DOWN) == 0);
-			mp.display.drawRect((xstart + cursorX * xoffset), (ystart + cursorY * yoffset), (width + 2)*scale, (bigIconHeight + 2)*scale, TFT_BLACK);
-			if (cursorY == 0) {
-				cursorY = yelements - 1;
-			}
-			else
-				cursorY--;
-			elapsedMillis = millis();
-			cursorState = 1;
-		}
-		if (mp.buttons.kpd.pin_read(BTN_UP) == 0)//UP
-		{
-			passcode += "UP";
-			passcodeMillis = millis();
-			mp.leds[3] = CRGB::Blue;
-			mp.leds[4] = CRGB::Blue;
-			while (!mp.update());
-			mp.vibration(200);
-			FastLED.clear();
-			while (!mp.update());
+	// 		while (mp.buttons.kpd.pin_read(BTN_DOWN) == 0);
+	// 		mp.display.drawRect((xstart + cursorX * xoffset), (ystart + cursorY * yoffset), (width + 2)*scale, (bigIconHeight + 2)*scale, TFT_BLACK);
+	// 		if (cursorY == 0) {
+	// 			cursorY = yelements - 1;
+	// 		}
+	// 		else
+	// 			cursorY--;
+	// 		elapsedMillis = millis();
+	// 		cursorState = 1;
+	// 	}
+	// 	if (mp.buttons.kpd.pin_read(BTN_UP) == 0)//UP
+	// 	{
+	// 		passcode += "UP";
+	// 		passcodeMillis = millis();
+	// 		mp.leds[3] = CRGB::Blue;
+	// 		mp.leds[4] = CRGB::Blue;
+	// 		while (!mp.update());
+	// 		mp.vibration(200);
+	// 		FastLED.clear();
+	// 		while (!mp.update());
 
-			while (mp.buttons.kpd.pin_read(BTN_UP) == 0);
-			mp.display.drawRect((xstart + cursorX * xoffset), (ystart + cursorY * yoffset), (width + 2)*scale, (bigIconHeight + 2)*scale, TFT_BLACK);
-			if (cursorY == yelements - 1) {
-				cursorY = 0;
-			}
-			else
-				cursorY++;
-			elapsedMillis = millis();
-			cursorState = 1;
-		}
-		if (mp.buttons.kpd.pin_read(BTN_LEFT) == 0) //LEFT
-		{
-			passcode += "LEFT";
-			passcodeMillis = millis();
-			mp.leds[6] = CRGB::Blue;
-			mp.leds[5] = CRGB::Blue;
-			while (!mp.update());
-			mp.vibration(200);
-			FastLED.clear();
-			while (!mp.update());
+	// 		while (mp.buttons.kpd.pin_read(BTN_UP) == 0);
+	// 		mp.display.drawRect((xstart + cursorX * xoffset), (ystart + cursorY * yoffset), (width + 2)*scale, (bigIconHeight + 2)*scale, TFT_BLACK);
+	// 		if (cursorY == yelements - 1) {
+	// 			cursorY = 0;
+	// 		}
+	// 		else
+	// 			cursorY++;
+	// 		elapsedMillis = millis();
+	// 		cursorState = 1;
+	// 	}
+	// 	if (mp.buttons.kpd.pin_read(BTN_LEFT) == 0) //LEFT
+	// 	{
+	// 		passcode += "LEFT";
+	// 		passcodeMillis = millis();
+	// 		mp.leds[6] = CRGB::Blue;
+	// 		mp.leds[5] = CRGB::Blue;
+	// 		while (!mp.update());
+	// 		mp.vibration(200);
+	// 		FastLED.clear();
+	// 		while (!mp.update());
 
-			while (mp.buttons.kpd.pin_read(BTN_LEFT) == 0);
-			mp.display.drawRect((xstart + cursorX * xoffset), (ystart + cursorY * yoffset), (width + 2)*scale, (bigIconHeight + 2)*scale, TFT_BLACK);
-			if (cursorX == 0) {
-				cursorX = xelements - 1;
-			}
-			else
-				cursorX--;
-			elapsedMillis = millis();
-			cursorState = 1;
-		}
-		if (mp.buttons.kpd.pin_read(BTN_RIGHT) == 0)//RIGHT
-		{
-			passcode += "RIGHT";
-			passcodeMillis = millis();
-			mp.leds[1] = CRGB::Blue;
-			mp.leds[2] = CRGB::Blue;
-			while (!mp.update());
-			mp.vibration(200);
-			FastLED.clear();
-			while (!mp.update());
+	// 		while (mp.buttons.kpd.pin_read(BTN_LEFT) == 0);
+	// 		mp.display.drawRect((xstart + cursorX * xoffset), (ystart + cursorY * yoffset), (width + 2)*scale, (bigIconHeight + 2)*scale, TFT_BLACK);
+	// 		if (cursorX == 0) {
+	// 			cursorX = xelements - 1;
+	// 		}
+	// 		else
+	// 			cursorX--;
+	// 		elapsedMillis = millis();
+	// 		cursorState = 1;
+	// 	}
+	// 	if (mp.buttons.kpd.pin_read(BTN_RIGHT) == 0)//RIGHT
+	// 	{
+	// 		passcode += "RIGHT";
+	// 		passcodeMillis = millis();
+	// 		mp.leds[1] = CRGB::Blue;
+	// 		mp.leds[2] = CRGB::Blue;
+	// 		while (!mp.update());
+	// 		mp.vibration(200);
+	// 		FastLED.clear();
+	// 		while (!mp.update());
 
-			while (mp.buttons.kpd.pin_read(BTN_RIGHT) == 0);
-			mp.display.drawRect((xstart + cursorX * xoffset), (ystart + cursorY * yoffset), (width + 2)*scale, (bigIconHeight + 2)*scale, TFT_BLACK);
-			if (cursorX == xelements - 1) {
-				cursorX = 0;
-			}
-			else
-				cursorX++;
-			elapsedMillis = millis();
-			cursorState = 1;
-		}
-		if (mp.buttons.released(BTN_B))//LOCK BUTTON
-		{
+	// 		while (mp.buttons.kpd.pin_read(BTN_RIGHT) == 0);
+	// 		mp.display.drawRect((xstart + cursorX * xoffset), (ystart + cursorY * yoffset), (width + 2)*scale, (bigIconHeight + 2)*scale, TFT_BLACK);
+	// 		if (cursorX == xelements - 1) {
+	// 			cursorX = 0;
+	// 		}
+	// 		else
+	// 			cursorX++;
+	// 		elapsedMillis = millis();
+	// 		cursorState = 1;
+	// 	}
+	// 	if (mp.buttons.released(BTN_B))//LOCK BUTTON
+	// 	{
 
-			mp.leds[0] = CRGB::Red;
-			mp.leds[7] = CRGB::Red;
-			FastLED.show();
-			mp.vibration(200);
-			FastLED.clear();
-			while(!mp.update());
-			return -2;
-		}
-		if (passcode == "UPUPDOWNDOWNLEFTRIGHTLEFTRIGHT")
-			return -3;
-		mp.update();
-	}
+	// 		mp.leds[0] = CRGB::Red;
+	// 		mp.leds[7] = CRGB::Red;
+	// 		FastLED.show();
+	// 		mp.vibration(200);
+	// 		FastLED.clear();
+	// 		while(!mp.update());
+	// 		return -2;
+	// 	}
+	// 	if (passcode == "UPUPDOWNDOWNLEFTRIGHTLEFTRIGHT")
+	// 		return -3;
+	// 	mp.update();
+	// }
 }
 int16_t GUI::scrollingMainMenu()
 {
-	uint16_t index = 0;
-	uint8_t cursorX = 0;
-	uint8_t cursorY = 0;
-	uint8_t elements = 10 + mp.directoryCount; //10 default apps
-	Serial.println(elements);
-	delay(5);
-	uint8_t x_elements = 3;
-	uint8_t y_elements = ceil((float)elements/x_elements);
+	// uint16_t index = 0;
+	// uint8_t cursorX = 0;
+	// uint8_t cursorY = 0;
+	// uint8_t elements = 10 + mp.directoryCount; //10 default apps
+	// Serial.println(elements);
+	// delay(5);
+	// uint8_t x_elements = 3;
+	// uint8_t y_elements = ceil((float)elements/x_elements);
 	
-	uint8_t pageNumber;
-	if(elements < 6)
-		pageNumber = 0;
-	else
+	// uint8_t pageNumber;
+	// if(elements < 6)
+	// 	pageNumber = 0;
+	// else
 
-		pageNumber = ceil((float)(elements - 6)/3);
+	// 	pageNumber = ceil((float)(elements - 6)/3);
 	
-	Serial.println(pageNumber);
-	Serial.println(y_elements);
-	delay(5);
-	uint8_t pageIndex = 0;
-	uint8_t cameraY = 0;
-	String appNames[] = {"Clock", "Calculator", "Flashlight", "Calendar", "Invaders"};
-	String passcode = "";
-	uint32_t passcodeMillis = millis();
-	uint32_t elapsedMillis = millis();
-	uint32_t elapsedMillis2 = millis();
-	bool newScreen = 1;
-	mp.display.fillScreen(TFT_BLACK);
-	while(!mp.update());
-	while (1)
-	{
+	// Serial.println(pageNumber);
+	// Serial.println(y_elements);
+	// delay(5);
+	// uint8_t pageIndex = 0;
+	// uint8_t cameraY = 0;
+	// String appNames[] = {"Clock", "Calculator", "Flashlight", "Calendar", "Invaders"};
+	// String passcode = "";
+	// uint32_t passcodeMillis = millis();
+	// uint32_t elapsedMillis = millis();
+	// uint32_t elapsedMillis2 = millis();
+	// bool newScreen = 1;
+	// mp.display.fillScreen(TFT_BLACK);
+	// while(!mp.update());
+	// while (1)
+	// {
 		
-		mp.display.fillRect(0,0,mp.display.width(), 14, TFT_BLACK);
-		mp.display.setTextSize(1);
-		mp.display.setTextColor(TFT_WHITE);
+	// 	mp.display.fillRect(0,0,mp.display.width(), 14, TFT_BLACK);
+	// 	mp.display.setTextSize(1);
+	// 	mp.display.setTextColor(TFT_WHITE);
 
-		// Draw the icons
-		if(newScreen)
-		{
-			mp.display.fillScreen(TFT_BLACK);
-			for (int i = 0; i < 6;i++)
-			{
-				uint8_t tempX = i%x_elements;
-				uint8_t tempY = i/x_elements;
-				switch (pageIndex * 3 + i)
-				{
-					case 0:
-						// Serial.println(index);
-						// Serial.println(i);
-						// Serial.println(tempX);
-						// Serial.println(tempY);
-						// Serial.println("-------------");
-						// delay(5);
-						mp.display.drawIcon(bigMessages, 4 + tempX*52, 18 + tempY*56, width, bigIconHeight, 2);
-						break;
-					case 1:
-						mp.display.drawIcon(bigMedia, 4 + tempX*52, 18 + tempY*56, width, bigIconHeight, 2);
-						break;
-					case 2:
-						mp.display.drawIcon(bigContacts, 4 + tempX*52, 18 + tempY*56, width, bigIconHeight, 2);
-						break;
-					case 3:
-						mp.display.drawIcon(bigSettings, 4 + tempX*52, 18 + tempY*56, width, bigIconHeight, 2);
-						break;
-					case 4:
-						mp.display.drawIcon(bigPhone, 4 + tempX*52, 18 + tempY*56, width, bigIconHeight, 2);
-						break;
-					case 5:
-						mp.display.drawIcon(bigApps, 4 + tempX*52, 18 + tempY*56, width, bigIconHeight, 2);
-						break;
-					case 6:
-						mp.display.drawIcon(clock_icon, 4 + tempX*52, 18 + tempY*56, width, bigIconHeight, 2);
-						break;
-					case 7:
-						mp.display.drawIcon(calculator_icon, 4 + tempX*52, 18 + tempY*56, width, bigIconHeight, 2);
-						break;
-					case 8:
-						mp.display.drawIcon(flash_icon, 4 + tempX*52, 18 + tempY*56, width, bigIconHeight, 2);
-						break;
-					case 9:
-						mp.display.drawIcon(calendar_icon, 4 + tempX*52, 18 + tempY*56, width, bigIconHeight, 2);
-						break;
-					// case 10:
-					// 	mp.display.drawBmp("/Invaders/icon.bmp", 4 + tempX * 52, 18 + tempY * 56, 2);
-					// 	break;
-					default: 
-						if(pageIndex * 3 + i < elements)
-						{
-							// Serial.println(mp.directories[pageIndex * 3 + i - 10]);
-							// delay(5);
-							if(_SD.exists(String("/" + mp.directories[pageIndex * 3 + i - 10] + "/icon.bmp")))
-								mp.display.drawBmp(String("/" + mp.directories[pageIndex * 3 + i - 10] + "/icon.bmp"), 4 + tempX * 52, 18 + tempY * 56, 2);
-							else
-								mp.display.drawIcon(defaultIcon, 4 + tempX * 52, 18 + tempY * 56, width, bigIconHeight, 2);
+	// 	// Draw the icons
+	// 	if(newScreen)
+	// 	{
+	// 		mp.display.fillScreen(TFT_BLACK);
+	// 		for (int i = 0; i < 6;i++)
+	// 		{
+	// 			uint8_t tempX = i%x_elements;
+	// 			uint8_t tempY = i/x_elements;
+	// 			switch (pageIndex * 3 + i)
+	// 			{
+	// 				case 0:
+	// 					// Serial.println(index);
+	// 					// Serial.println(i);
+	// 					// Serial.println(tempX);
+	// 					// Serial.println(tempY);
+	// 					// Serial.println("-------------");
+	// 					// delay(5);
+	// 					mp.display.drawIcon(bigMessages, 4 + tempX*52, 18 + tempY*56, width, bigIconHeight, 2);
+	// 					break;
+	// 				case 1:
+	// 					mp.display.drawIcon(bigMedia, 4 + tempX*52, 18 + tempY*56, width, bigIconHeight, 2);
+	// 					break;
+	// 				case 2:
+	// 					mp.display.drawIcon(bigContacts, 4 + tempX*52, 18 + tempY*56, width, bigIconHeight, 2);
+	// 					break;
+	// 				case 3:
+	// 					mp.display.drawIcon(bigSettings, 4 + tempX*52, 18 + tempY*56, width, bigIconHeight, 2);
+	// 					break;
+	// 				case 4:
+	// 					mp.display.drawIcon(bigPhone, 4 + tempX*52, 18 + tempY*56, width, bigIconHeight, 2);
+	// 					break;
+	// 				case 5:
+	// 					mp.display.drawIcon(bigApps, 4 + tempX*52, 18 + tempY*56, width, bigIconHeight, 2);
+	// 					break;
+	// 				case 6:
+	// 					mp.display.drawIcon(clock_icon, 4 + tempX*52, 18 + tempY*56, width, bigIconHeight, 2);
+	// 					break;
+	// 				case 7:
+	// 					mp.display.drawIcon(calculator_icon, 4 + tempX*52, 18 + tempY*56, width, bigIconHeight, 2);
+	// 					break;
+	// 				case 8:
+	// 					mp.display.drawIcon(flash_icon, 4 + tempX*52, 18 + tempY*56, width, bigIconHeight, 2);
+	// 					break;
+	// 				case 9:
+	// 					mp.display.drawIcon(calendar_icon, 4 + tempX*52, 18 + tempY*56, width, bigIconHeight, 2);
+	// 					break;
+	// 				// case 10:
+	// 				// 	mp.display.drawBmp("/Invaders/icon.bmp", 4 + tempX * 52, 18 + tempY * 56, 2);
+	// 				// 	break;
+	// 				default: 
+	// 					if(pageIndex * 3 + i < elements)
+	// 					{
+	// 						// Serial.println(mp.directories[pageIndex * 3 + i - 10]);
+	// 						// delay(5);
+	// 						if(_SD.exists(String("/" + mp.directories[pageIndex * 3 + i - 10] + "/icon.bmp")))
+	// 							mp.display.drawBmp(String("/" + mp.directories[pageIndex * 3 + i - 10] + "/icon.bmp"), 4 + tempX * 52, 18 + tempY * 56, 2);
+	// 						else
+	// 							mp.display.drawIcon(defaultIcon, 4 + tempX * 52, 18 + tempY * 56, width, bigIconHeight, 2);
 							
-						}
-						break;
-				}
-			}
-			newScreen = 0;
-		}
+	// 					}
+	// 					break;
+	// 			}
+	// 		}
+	// 		newScreen = 0;
+	// 	}
 
-		mp.display.fillRect(0, 0, 160, 12, TFT_BLACK);
-		while(cursorY*x_elements + cursorX >= elements)
-			cursorX--;
+	// 	mp.display.fillRect(0, 0, 160, 12, TFT_BLACK);
+	// 	while(cursorY*x_elements + cursorX >= elements)
+	// 		cursorX--;
 	
-		index = cursorY * x_elements + cursorX;
-		// Serial.println(index);
-		// Serial.println(pageIndex);
-		// Serial.println("-----------------");
-		// delay(5);
-		mp.display.setTextFont(2);
-		mp.display.setCursor(0,-2);
-		mp.display.drawFastHLine(0, 14, mp.display.width(), TFT_WHITE);
-		if(index < 10)
-			mp.display.print(mp.titles[index]);
-		else
-			mp.display.print(mp.directories[index-10]);
+	// 	index = cursorY * x_elements + cursorX;
+	// 	// Serial.println(index);
+	// 	// Serial.println(pageIndex);
+	// 	// Serial.println("-----------------");
+	// 	// delay(5);
+	// 	mp.display.setTextFont(2);
+	// 	mp.display.setCursor(0,-2);
+	// 	mp.display.drawFastHLine(0, 14, mp.display.width(), TFT_WHITE);
+	// 	if(index < 10)
+	// 		mp.display.print(mp.titles[index]);
+	// 	else
+	// 		mp.display.print(mp.directories[index-10]);
 		
-		if (millis() - elapsedMillis >= 250) {
-			elapsedMillis = millis();
-			cursorState = !cursorState;
-		}
-		if (millis() - elapsedMillis2 >= 100) {
-			elapsedMillis2 = millis();
-			previousButtonState = mp.kpd.pin_read(BTN_B);
-		}
-		if (millis() - passcodeMillis >= 1000)
-			passcode = "";
+	// 	if (millis() - elapsedMillis >= 250) {
+	// 		elapsedMillis = millis();
+	// 		cursorState = !cursorState;
+	// 	}
+	// 	if (millis() - elapsedMillis2 >= 100) {
+	// 		elapsedMillis2 = millis();
+	// 		previousButtonState = mp.kpd.pin_read(BTN_B);
+	// 	}
+	// 	if (millis() - passcodeMillis >= 1000)
+	// 		passcode = "";
 
-		// mp.display.drawIcon(bigMessages, 4 + cursorX*52, 18 + cursorY*56, width, bigIconHeight, 2);
+	// 	// mp.display.drawIcon(bigMessages, 4 + cursorX*52, 18 + cursorY*56, width, bigIconHeight, 2);
 
-		mp.display.drawRect(3 + cursorX * 52, 17 + (cameraY) * 56, 50, 54, cursorState ? TFT_RED : TFT_BLACK);
-		mp.display.drawRect(2 + cursorX * 52, 16 + (cameraY) * 56, 52, 56, cursorState ? TFT_RED : TFT_BLACK);
+	// 	mp.display.drawRect(3 + cursorX * 52, 17 + (cameraY) * 56, 50, 54, cursorState ? TFT_RED : TFT_BLACK);
+	// 	mp.display.drawRect(2 + cursorX * 52, 16 + (cameraY) * 56, 52, 56, cursorState ? TFT_RED : TFT_BLACK);
 
-		///////////////////////////////////////
-		//////Checking for button input////////
-		///////////////////////////////////////
-		if (mp.buttons.released(BTN_A)) //CONFIRM
-		{
-			// osc->note(75, 0.05);
-			// osc->play();
-			while (!mp.update());
-			return cursorY * x_elements + cursorX;  //returns index of selected icon
-		}
-		if (mp.buttons.released(BTN_UP)) //UP
-		{
-			mp.display.drawRect(3 + cursorX * 52, 17 + (cameraY) * 56, 50, 54, TFT_BLACK);
-			mp.display.drawRect(2 + cursorX * 52, 16 + (cameraY) * 56, 52, 56, TFT_BLACK);
-			osc->note(75, 0.05);
-			osc->play();
-			passcode += "UP";
-			passcodeMillis = millis();
-			mp.leds[0] = CRGB::Blue;
-			mp.leds[7] = CRGB::Blue;
-			while(!mp.update());
-			mp.vibration(200);
-			FastLED.clear();
-			while (!mp.update());
+	// 	///////////////////////////////////////
+	// 	//////Checking for button input////////
+	// 	///////////////////////////////////////
+	// 	if (mp.buttons.released(BTN_A)) //CONFIRM
+	// 	{
+	// 		// osc->note(75, 0.05);
+	// 		// osc->play();
+	// 		while (!mp.update());
+	// 		return cursorY * x_elements + cursorX;  //returns index of selected icon
+	// 	}
+	// 	if (mp.buttons.released(BTN_UP)) //UP
+	// 	{
+	// 		mp.display.drawRect(3 + cursorX * 52, 17 + (cameraY) * 56, 50, 54, TFT_BLACK);
+	// 		mp.display.drawRect(2 + cursorX * 52, 16 + (cameraY) * 56, 52, 56, TFT_BLACK);
+	// 		osc->note(75, 0.05);
+	// 		osc->play();
+	// 		passcode += "UP";
+	// 		passcodeMillis = millis();
+	// 		mp.leds[0] = CRGB::Blue;
+	// 		mp.leds[7] = CRGB::Blue;
+	// 		while(!mp.update());
+	// 		mp.vibration(200);
+	// 		FastLED.clear();
+	// 		while (!mp.update());
 
-			if (cursorY == 0) 
-			{
-				newScreen = 1;
-				cursorY = y_elements-1;
+	// 		if (cursorY == 0) 
+	// 		{
+	// 			newScreen = 1;
+	// 			cursorY = y_elements-1;
 				
-				if(pageNumber > 0)
-				{
-					cameraY = 1;
-					pageIndex = pageNumber;
-				}
-			}
-			else if(cameraY % 2 == 1)
-			{
-				cursorY--;
-				cameraY = 0;
-			}
-			else if(cameraY % 2 == 0 && pageIndex > 0)
-			{
-				newScreen = 1;
-				cameraY = 0;
-				cursorY--;
-				pageIndex--;
-			}
-			elapsedMillis = millis();
-			cursorState = 1;
-		}
-		if (mp.buttons.released(BTN_DOWN))//DOWN
-		{
-			mp.display.drawRect(3 + cursorX * 52, 17 + (cameraY) * 56, 50, 54, TFT_BLACK);
-			mp.display.drawRect(2 + cursorX * 52, 16 + (cameraY) * 56, 52, 56, TFT_BLACK);
-			osc->note(75, 0.05);
-			osc->play();
-			passcode += "DOWN";
-			passcodeMillis = millis();
-			mp.leds[3] = CRGB::Blue;
-			mp.leds[4] = CRGB::Blue;
-			while (!mp.update());
-			mp.vibration(200);
-			FastLED.clear();
-			while (!mp.update());
+	// 			if(pageNumber > 0)
+	// 			{
+	// 				cameraY = 1;
+	// 				pageIndex = pageNumber;
+	// 			}
+	// 		}
+	// 		else if(cameraY % 2 == 1)
+	// 		{
+	// 			cursorY--;
+	// 			cameraY = 0;
+	// 		}
+	// 		else if(cameraY % 2 == 0 && pageIndex > 0)
+	// 		{
+	// 			newScreen = 1;
+	// 			cameraY = 0;
+	// 			cursorY--;
+	// 			pageIndex--;
+	// 		}
+	// 		elapsedMillis = millis();
+	// 		cursorState = 1;
+	// 	}
+	// 	if (mp.buttons.released(BTN_DOWN))//DOWN
+	// 	{
+	// 		mp.display.drawRect(3 + cursorX * 52, 17 + (cameraY) * 56, 50, 54, TFT_BLACK);
+	// 		mp.display.drawRect(2 + cursorX * 52, 16 + (cameraY) * 56, 52, 56, TFT_BLACK);
+	// 		osc->note(75, 0.05);
+	// 		osc->play();
+	// 		passcode += "DOWN";
+	// 		passcodeMillis = millis();
+	// 		mp.leds[3] = CRGB::Blue;
+	// 		mp.leds[4] = CRGB::Blue;
+	// 		while (!mp.update());
+	// 		mp.vibration(200);
+	// 		FastLED.clear();
+	// 		while (!mp.update());
 
-			if (cursorY == y_elements - 1) 
-			{
-				newScreen = 1;
-				cursorY = 0;
-				pageIndex = 0;
-				cameraY = 0;
-			}
-			else if(cameraY % 2 == 0)
-			{
-				cursorY++;
-				cameraY++;
-			}
-			else if (cameraY % 2 == 1 && pageIndex < pageNumber)
-			{
-				newScreen = 1;
-				cameraY = 1;
-				cursorY++;
-				pageIndex++;
-			}
+	// 		if (cursorY == y_elements - 1) 
+	// 		{
+	// 			newScreen = 1;
+	// 			cursorY = 0;
+	// 			pageIndex = 0;
+	// 			cameraY = 0;
+	// 		}
+	// 		else if(cameraY % 2 == 0)
+	// 		{
+	// 			cursorY++;
+	// 			cameraY++;
+	// 		}
+	// 		else if (cameraY % 2 == 1 && pageIndex < pageNumber)
+	// 		{
+	// 			newScreen = 1;
+	// 			cameraY = 1;
+	// 			cursorY++;
+	// 			pageIndex++;
+	// 		}
 			
-			elapsedMillis = millis();
-			cursorState = 1;
-		}
-		if (mp.buttons.released(BTN_LEFT)) //LEFT
-		{
-			mp.display.drawRect(3 + cursorX * 52, 17 + (cameraY) * 56, 50, 54, TFT_BLACK);
-			mp.display.drawRect(2 + cursorX * 52, 16 + (cameraY) * 56, 52, 56, TFT_BLACK);
-			osc->note(75, 0.05);
-			osc->play();
-			passcode += "LEFT";
-			passcodeMillis = millis();
-			mp.leds[6] = CRGB::Blue;
-			mp.leds[5] = CRGB::Blue;
-			while (!mp.update());
-			mp.vibration(200);
-			FastLED.clear();
-			while (!mp.update());
+	// 		elapsedMillis = millis();
+	// 		cursorState = 1;
+	// 	}
+	// 	if (mp.buttons.released(BTN_LEFT)) //LEFT
+	// 	{
+	// 		mp.display.drawRect(3 + cursorX * 52, 17 + (cameraY) * 56, 50, 54, TFT_BLACK);
+	// 		mp.display.drawRect(2 + cursorX * 52, 16 + (cameraY) * 56, 52, 56, TFT_BLACK);
+	// 		osc->note(75, 0.05);
+	// 		osc->play();
+	// 		passcode += "LEFT";
+	// 		passcodeMillis = millis();
+	// 		mp.leds[6] = CRGB::Blue;
+	// 		mp.leds[5] = CRGB::Blue;
+	// 		while (!mp.update());
+	// 		mp.vibration(200);
+	// 		FastLED.clear();
+	// 		while (!mp.update());
 
-			if (cursorX == 0) {
-				cursorX = x_elements - 1;
-			}
-			else
-				cursorX--;
-			elapsedMillis = millis();
-			cursorState = 1;
-		}
-		if (mp.buttons.released(BTN_RIGHT))//RIGHT
-		{
-			mp.display.drawRect(3 + cursorX * 52, 17 + (cameraY) * 56, 50, 54, TFT_BLACK);
-			mp.display.drawRect(2 + cursorX * 52, 16 + (cameraY) * 56, 52, 56, TFT_BLACK);
-			osc->note(75, 0.05);
-			osc->play();
-			passcode += "RIGHT";
-			passcodeMillis = millis();
-			mp.leds[1] = CRGB::Blue;
-			mp.leds[2] = CRGB::Blue;
-			while (!mp.update());
-			mp.vibration(200);
-			FastLED.clear();
-			while (!mp.update());
+	// 		if (cursorX == 0) {
+	// 			cursorX = x_elements - 1;
+	// 		}
+	// 		else
+	// 			cursorX--;
+	// 		elapsedMillis = millis();
+	// 		cursorState = 1;
+	// 	}
+	// 	if (mp.buttons.released(BTN_RIGHT))//RIGHT
+	// 	{
+	// 		mp.display.drawRect(3 + cursorX * 52, 17 + (cameraY) * 56, 50, 54, TFT_BLACK);
+	// 		mp.display.drawRect(2 + cursorX * 52, 16 + (cameraY) * 56, 52, 56, TFT_BLACK);
+	// 		osc->note(75, 0.05);
+	// 		osc->play();
+	// 		passcode += "RIGHT";
+	// 		passcodeMillis = millis();
+	// 		mp.leds[1] = CRGB::Blue;
+	// 		mp.leds[2] = CRGB::Blue;
+	// 		while (!mp.update());
+	// 		mp.vibration(200);
+	// 		FastLED.clear();
+	// 		while (!mp.update());
 
-			if (cursorX == x_elements - 1) {
-				cursorX = 0;
-			}
-			else
-				cursorX++;
-			elapsedMillis = millis();
-			cursorState = 1;
-		}
-		if (mp.buttons.released(BTN_B))//B BUTTON
-		{
+	// 		if (cursorX == x_elements - 1) {
+	// 			cursorX = 0;
+	// 		}
+	// 		else
+	// 			cursorX++;
+	// 		elapsedMillis = millis();
+	// 		cursorState = 1;
+	// 	}
+	// 	if (mp.buttons.released(BTN_B))//B BUTTON
+	// 	{
 
-			mp.leds[0] = CRGB::Red;
-			mp.leds[7] = CRGB::Red;
-			FastLED.show();
-			mp.vibration(200);
-			FastLED.clear();
-			while(!mp.update());
-			return -2;
-		}
-		if (passcode == "UPUPDOWNDOWNLEFTRIGHTLEFTRIGHT")
-			return -3;
-		mp.update();
+	// 		mp.leds[0] = CRGB::Red;
+	// 		mp.leds[7] = CRGB::Red;
+	// 		FastLED.show();
+	// 		mp.vibration(200);
+	// 		FastLED.clear();
+	// 		while(!mp.update());
+	// 		return -2;
+	// 	}
+	// 	if (passcode == "UPUPDOWNDOWNLEFTRIGHTLEFTRIGHT")
+	// 		return -3;
+	// 	mp.update();
 
-	}
+	// }
 }
 void GUI::popup(String text, uint8_t duration) {
 	popupText = text;
