@@ -143,37 +143,6 @@ class Buttons
 
 
 };
-class GUI {
-public:
-	//main menu GUI
-  int16_t scrollingMainMenu();
-  uint8_t drawCursor(uint8_t xoffset, uint8_t yoffset, uint8_t xelements, uint8_t yelements, uint8_t xstart, uint8_t ystart);
-  int8_t drawBigIconsCursor(uint8_t xoffset, uint8_t yoffset, uint8_t xelements, uint8_t yelements, uint8_t xstart, uint8_t ystart);
-  //generic menu GUI
-  void menuDrawBox(String text, uint8_t i, int32_t y);
-  void menuDrawCursor(uint8_t i, int32_t y);
-  int8_t menu(const char* title, String* items, uint8_t length);
-  //lock screen notifications
-  void drawNotificationWindow(uint8_t x, uint8_t y, uint8_t width, uint8_t height, String text);
-  //popup GUI
-  void popup(String text, uint8_t duration);
-  void updatePopup();
-  void homePopup(bool animation = 1);
-  String popupText;
-  uint8_t popupTimeLeft;
-  uint8_t popupTotalTime;
-
-// private:
-  friend class MAKERphone;
-  bool cursorState = 1;
-  
-  bool previousButtonState = 0;
-  uint8_t cursor = 0;
-  int32_t cameraY = 0;
-  int32_t cameraY_actual = 0;
-};
-
-
 
 class MAKERphone:public Buttons
 {
