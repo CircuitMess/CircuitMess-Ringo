@@ -19,11 +19,15 @@ Authors:
 
 #include "MAKERphone.h"
 extern MAKERphone mp;
+
+//audio refresh task
 TaskHandle_t Task1;
 void Task1code( void * pvParameters ){
 	while (true)
 		updateWav();
 }
+
+//core
 void MAKERphone::begin(bool splash) {
 	SDFileSystemClass SD = _SD;
 
@@ -151,7 +155,6 @@ void MAKERphone::begin(bool splash) {
 
 	applySettings();
 }
-
 bool MAKERphone::update() {
 	// bool pressed = 0;
 	//if (digitalRead(INTERRUPT_PIN) == 0) //message is received or incoming call
@@ -457,8 +460,6 @@ void MAKERphone::loader()
 	esp_ota_set_boot_partition(partition2);
 	ESP.restart();
 }
-
-
 void MAKERphone::updateTimeGSM() {
 	Serial1.write("AT+CCLK?\r");
 	//Serial1.flush();
@@ -609,7 +610,7 @@ void MAKERphone::updateFromFS(String FilePath) {
 		Serial.println("Could not load update.bin from sd root");
 	}
 }
-void MAKERphone::incomingCall()
+void MAKERphone::incomingCall() //TODO
 {
 	//String localBuffer = "";
 	//Serial1.print(F("ATD"));
@@ -1054,6 +1055,8 @@ int MAKERphone::multi_tap(byte key)
 	}
 	return 0;
 }
+
+//JPEG drawing
 void MAKERphone::drawJpeg(String filename, int xpos, int ypos) {
 
   Serial.println(F("==========================="));
@@ -1193,6 +1196,8 @@ void MAKERphone::jpegInfo() {
   Serial.println(F("==============="));
   Serial.println();
 }
+
+//settings operations
 void MAKERphone::saveSettings(bool debug)
 {
 	const char * path = "/settings.json";
@@ -1323,6 +1328,7 @@ void MAKERphone::applySettings()
 	osc->setVolume(256 * volume / 14);
 
 }
+
 //save manipulation
 JsonArray& MAKERphone::getJSONfromSAV(const char *path)
 {
@@ -1613,73 +1619,6 @@ void MAKERphone::takeScreenshot()
 	}
 	while(!update());
 	
-}
-
-//Buttons class
-bool Buttons::pressed(uint8_t button) {
-	return states[(uint8_t)button] == 1;
-}
-void Buttons::begin() {
-	kpd.begin(14, 27);
-	kpdNum.begin(14, 27);
-}
-void Buttons::update() {
-	byte buttonsData = 0b0000000;
-
-	for (uint8_t i = 0; i < 8; i++)
-		bitWrite(buttonsData, i, (bool)kpd.pin_read(i));
-	for (uint8_t thisButton = 0; thisButton < NUM_BTN; thisButton++) {
-		//extract the corresponding bit corresponding to the current button
-		//Inverted logic : button pressed = low state = 0
-		bool pressed = (buttonsData & (1 << thisButton)) == 0;
-
-		if (pressed) { //if button pressed
-			if (states[thisButton] < 0xFFFE) { // we want 0xFFFE to be max value for the counter
-				states[thisButton]++; //increase button hold time
-			}
-			else if (states[thisButton] == 0xFFFF) { // if we release / hold again too fast
-				states[thisButton] = 1;
-			}
-		}
-		else {
-			if (states[thisButton] == 0) {//button idle
-				continue;
-			}
-			if (states[thisButton] == 0xFFFF) {//if previously released
-				states[thisButton] = 0; //set to idle
-			}
-			else {
-				states[thisButton] = 0xFFFF; //button just released
-			}
-		}
-	}
-}
-bool Buttons::repeat(uint8_t button, uint16_t period) {
-	if (period <= 1) {
-		if ((states[(uint8_t)button] != 0xFFFF) && (states[(uint8_t)button])) {
-			return true;
-		}
-	}
-	else {
-		if ((states[(uint8_t)button] != 0xFFFF) && ((states[(uint8_t)button] % period) == 1)) {
-			return true;
-		}
-	}
-	return false;
-}
-bool Buttons::released(uint8_t button) {
-	return states[(uint8_t)button] == 0xFFFF;
-}
-bool Buttons::held(uint8_t button, uint16_t time) {
-	return states[(uint8_t)button] == (time + 1);
-}
-uint16_t Buttons::timeHeld(uint8_t button) {
-	if (states[(uint8_t)button] != 0xFFFF) {
-		return states[(uint8_t)button];
-	}
-	else {
-		return 0;
-	}
 }
 
 //Popups
@@ -2075,5 +2014,73 @@ void MAKERphone::homePopup(bool animation)
 			display.drawIcon(popupPixelBrightness,108,70,20,20,2);
 		}
 		update();		
+	}
+}
+
+
+//Buttons class
+bool Buttons::pressed(uint8_t button) {
+	return states[(uint8_t)button] == 1;
+}
+void Buttons::begin() {
+	kpd.begin(14, 27);
+	kpdNum.begin(14, 27);
+}
+void Buttons::update() {
+	byte buttonsData = 0b0000000;
+
+	for (uint8_t i = 0; i < 8; i++)
+		bitWrite(buttonsData, i, (bool)kpd.pin_read(i));
+	for (uint8_t thisButton = 0; thisButton < NUM_BTN; thisButton++) {
+		//extract the corresponding bit corresponding to the current button
+		//Inverted logic : button pressed = low state = 0
+		bool pressed = (buttonsData & (1 << thisButton)) == 0;
+
+		if (pressed) { //if button pressed
+			if (states[thisButton] < 0xFFFE) { // we want 0xFFFE to be max value for the counter
+				states[thisButton]++; //increase button hold time
+			}
+			else if (states[thisButton] == 0xFFFF) { // if we release / hold again too fast
+				states[thisButton] = 1;
+			}
+		}
+		else {
+			if (states[thisButton] == 0) {//button idle
+				continue;
+			}
+			if (states[thisButton] == 0xFFFF) {//if previously released
+				states[thisButton] = 0; //set to idle
+			}
+			else {
+				states[thisButton] = 0xFFFF; //button just released
+			}
+		}
+	}
+}
+bool Buttons::repeat(uint8_t button, uint16_t period) {
+	if (period <= 1) {
+		if ((states[(uint8_t)button] != 0xFFFF) && (states[(uint8_t)button])) {
+			return true;
+		}
+	}
+	else {
+		if ((states[(uint8_t)button] != 0xFFFF) && ((states[(uint8_t)button] % period) == 1)) {
+			return true;
+		}
+	}
+	return false;
+}
+bool Buttons::released(uint8_t button) {
+	return states[(uint8_t)button] == 0xFFFF;
+}
+bool Buttons::held(uint8_t button, uint16_t time) {
+	return states[(uint8_t)button] == (time + 1);
+}
+uint16_t Buttons::timeHeld(uint8_t button) {
+	if (states[(uint8_t)button] != 0xFFFF) {
+		return states[(uint8_t)button];
+	}
+	else {
+		return 0;
 	}
 }
