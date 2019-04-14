@@ -5241,652 +5241,652 @@ void MAKERphone::jpegInfo() {
 
 //Settings app
 int8_t MAKERphone::settingsMenu(String* title, uint8_t length) {
-	bool pressed = 0;
-	uint8_t cursor = 0;
-	int32_t cameraY = 0;
-	int32_t cameraY_actual = 0;
-	dataRefreshFlag = 0;
+	// bool pressed = 0;
+	// uint8_t cursor = 0;
+	// int32_t cameraY = 0;
+	// int32_t cameraY_actual = 0;
+	// dataRefreshFlag = 0;
 
-	uint8_t boxHeight;
-	if(resolutionMode)
-		boxHeight = 15;
-	else
-		boxHeight = 20; //actually 2 less than that
-	while (1) {
-		while (!update());
-		display.fillScreen(TFT_BLACK);
-		display.setCursor(0, 0);
-		cameraY_actual = (cameraY_actual + cameraY) / 2;
-		if (cameraY_actual - cameraY == 1) {
-			cameraY_actual = cameraY;
-		}
+	// uint8_t boxHeight;
+	// if(resolutionMode)
+	// 	boxHeight = 15;
+	// else
+	// 	boxHeight = 20; //actually 2 less than that
+	// while (1) {
+	// 	while (!update());
+	// 	display.fillScreen(TFT_BLACK);
+	// 	display.setCursor(0, 0);
+	// 	cameraY_actual = (cameraY_actual + cameraY) / 2;
+	// 	if (cameraY_actual - cameraY == 1) {
+	// 		cameraY_actual = cameraY;
+	// 	}
 
-		for (uint8_t i = 0; i < length; i++) {
-			settingsMenuDrawBox(title[i], i, cameraY_actual);
-		}
-		settingsMenuDrawCursor(cursor, cameraY_actual, pressed);
+	// 	for (uint8_t i = 0; i < length; i++) {
+	// 		settingsMenuDrawBox(title[i], i, cameraY_actual);
+	// 	}
+	// 	settingsMenuDrawCursor(cursor, cameraY_actual, pressed);
 
-		if (buttons.kpd.pin_read(BTN_DOWN) == 1 && buttons.kpd.pin_read(BTN_UP) == 1)
-			pressed = 0;
+	// 	if (buttons.kpd.pin_read(BTN_DOWN) == 1 && buttons.kpd.pin_read(BTN_UP) == 1)
+	// 		pressed = 0;
 
-		if (buttons.released(BTN_A)) {   //BUTTON CONFIRM
-			gui.osc->note(75, 0.05);
-			gui.osc->play();
+	// 	if (buttons.released(BTN_A)) {   //BUTTON CONFIRM
+	// 		gui.osc->note(75, 0.05);
+	// 		gui.osc->play();
 
-			while (!update());// Exit when pressed
-			break;
-		}
+	// 		while (!update());// Exit when pressed
+	// 		break;
+	// 	}
 
-		if (buttons.released(BTN_UP)) {  //BUTTON UP
-			gui.osc->note(75, 0.05);
-			gui.osc->play();
-			if (cursor == 0) {
-				cursor = length - 1;
-				if (length > 6) {
-					cameraY = -(cursor - 2) * boxHeight;
-				}
-			}
-			else {
-				cursor--;
-				if (cursor > 0 && (cursor * boxHeight + cameraY + settingsMenuYOffset) < boxHeight) {
-					cameraY += 15;
-				}
-			}
-			pressed = 1;
-		}
+	// 	if (buttons.released(BTN_UP)) {  //BUTTON UP
+	// 		gui.osc->note(75, 0.05);
+	// 		gui.osc->play();
+	// 		if (cursor == 0) {
+	// 			cursor = length - 1;
+	// 			if (length > 6) {
+	// 				cameraY = -(cursor - 2) * boxHeight;
+	// 			}
+	// 		}
+	// 		else {
+	// 			cursor--;
+	// 			if (cursor > 0 && (cursor * boxHeight + cameraY + settingsMenuYOffset) < boxHeight) {
+	// 				cameraY += 15;
+	// 			}
+	// 		}
+	// 		pressed = 1;
+	// 	}
 
-		if (buttons.released(BTN_DOWN)) { //BUTTON DOWN
-			gui.osc->note(75, 0.05);
-			gui.osc->play();
-			cursor++;
-			if ((cursor * boxHeight + cameraY + settingsMenuYOffset) > 128) {
-				cameraY -= boxHeight;
-			}
-			if (cursor >= length) {
-				cursor = 0;
-				cameraY = 0;
+	// 	if (buttons.released(BTN_DOWN)) { //BUTTON DOWN
+	// 		gui.osc->note(75, 0.05);
+	// 		gui.osc->play();
+	// 		cursor++;
+	// 		if ((cursor * boxHeight + cameraY + settingsMenuYOffset) > 128) {
+	// 			cameraY -= boxHeight;
+	// 		}
+	// 		if (cursor >= length) {
+	// 			cursor = 0;
+	// 			cameraY = 0;
 
-			}
-			pressed = 1;
-		}
+	// 		}
+	// 		pressed = 1;
+	// 	}
 
 
-		if (buttons.released(BTN_B) == 1) //BUTTON BACK
-		{
-			while(!update());
-			return -1;
-		}
-	}
+	// 	if (buttons.released(BTN_B) == 1) //BUTTON BACK
+	// 	{
+	// 		while(!update());
+	// 		return -1;
+	// 	}
+	// }
 
-	return cursor;
+	// return cursor;
 
 }
 void MAKERphone::settingsMenuDrawBox(String title, uint8_t i, int32_t y) {
-	uint8_t scale;
-	uint8_t boxHeight;
-	if(resolutionMode)
-	{
-		scale = 1;
-		boxHeight = 15;
-	}
-	else
-	{
-		scale = 2;
-		boxHeight = 20;
-	}
-	y += i * boxHeight + settingsMenuYOffset;
-	if (y < 0 || y > display.width()) {
-		return;
-	}
+	// uint8_t scale;
+	// uint8_t boxHeight;
+	// if(resolutionMode)
+	// {
+	// 	scale = 1;
+	// 	boxHeight = 15;
+	// }
+	// else
+	// {
+	// 	scale = 2;
+	// 	boxHeight = 20;
+	// }
+	// y += i * boxHeight + settingsMenuYOffset;
+	// if (y < 0 || y > display.width()) {
+	// 	return;
+	// }
 
 
-	if (title == "Network") //red
-	{
-		display.fillRect(2, y + 1, display.width() - 4, boxHeight-2, 0xFB6D);
-		display.drawBitmap(6, y + 2*scale, network, 0x7800);
-	}
-	if (title == "Display") //green
-	{
-		display.fillRect(2, y + 1, display.width() - 4, boxHeight-2, 0x8FEA);
-		display.drawBitmap(6, y + 2*scale, displayIcon, 0x0341);
-	}
-	if (title == "Date & time") //yellow
-	{
-		display.fillRect(2, y + 1, display.width() - 4, boxHeight-2, 0xFFED);
-		display.drawBitmap(6, y + 2*scale, timeIcon, 0x6B60);
-	}
-	if (title == "Sound")//blue
-	{
-		display.fillRect(2, y + 1, display.width() - 4, boxHeight-2, 0xA7FF);
-		display.drawBitmap(6, y + 2*scale, soundIcon, 0x010F);
-	}
-	if (title == "Security")//purple
-	{
-		display.fillRect(2, y + 1, display.width() - 4, boxHeight-2, 0xED1F);
-		display.drawBitmap(6, y + 2*scale, security, 0x600F);
-	}
-	if (title == "About")//orange
-	{
-		display.fillRect(2, y + 1, display.width() - 4, boxHeight-2, 0xFD29);
-		display.drawBitmap(6, y + 2*scale, about, 0x8200);
-	}
-	display.setTextColor(TFT_BLACK);
-	display.setTextSize(1);
-	display.setTextFont(2);
-	display.drawString(title, 30, y + 2 );
-	display.setTextColor(TFT_WHITE);
-	display.setFreeFont(TT1);
+	// if (title == "Network") //red
+	// {
+	// 	display.fillRect(2, y + 1, display.width() - 4, boxHeight-2, 0xFB6D);
+	// 	display.drawBitmap(6, y + 2*scale, network, 0x7800);
+	// }
+	// if (title == "Display") //green
+	// {
+	// 	display.fillRect(2, y + 1, display.width() - 4, boxHeight-2, 0x8FEA);
+	// 	display.drawBitmap(6, y + 2*scale, displayIcon, 0x0341);
+	// }
+	// if (title == "Date & time") //yellow
+	// {
+	// 	display.fillRect(2, y + 1, display.width() - 4, boxHeight-2, 0xFFED);
+	// 	display.drawBitmap(6, y + 2*scale, timeIcon, 0x6B60);
+	// }
+	// if (title == "Sound")//blue
+	// {
+	// 	display.fillRect(2, y + 1, display.width() - 4, boxHeight-2, 0xA7FF);
+	// 	display.drawBitmap(6, y + 2*scale, soundIcon, 0x010F);
+	// }
+	// if (title == "Security")//purple
+	// {
+	// 	display.fillRect(2, y + 1, display.width() - 4, boxHeight-2, 0xED1F);
+	// 	display.drawBitmap(6, y + 2*scale, security, 0x600F);
+	// }
+	// if (title == "About")//orange
+	// {
+	// 	display.fillRect(2, y + 1, display.width() - 4, boxHeight-2, 0xFD29);
+	// 	display.drawBitmap(6, y + 2*scale, about, 0x8200);
+	// }
+	// display.setTextColor(TFT_BLACK);
+	// display.setTextSize(1);
+	// display.setTextFont(2);
+	// display.drawString(title, 30, y + 2 );
+	// display.setTextColor(TFT_WHITE);
+	// display.setFreeFont(TT1);
 }
 void MAKERphone::settingsMenuDrawCursor(uint8_t i, int32_t y, bool pressed) {
-	uint8_t boxHeight;
-	if(resolutionMode)
-		boxHeight = 15;
-	else
-		boxHeight = 20;
-	if (millis() % 500 <= 250 && pressed == 0) {
-		return;
-	}
-	y += i * boxHeight + settingsMenuYOffset;
-	display.drawRect(0, y-1, display.width()-1, boxHeight+2, TFT_RED);
-	display.drawRect(1, y, display.width()-3, boxHeight, TFT_RED);
+	// uint8_t boxHeight;
+	// if(resolutionMode)
+	// 	boxHeight = 15;
+	// else
+	// 	boxHeight = 20;
+	// if (millis() % 500 <= 250 && pressed == 0) {
+	// 	return;
+	// }
+	// y += i * boxHeight + settingsMenuYOffset;
+	// display.drawRect(0, y-1, display.width()-1, boxHeight+2, TFT_RED);
+	// display.drawRect(1, y, display.width()-3, boxHeight, TFT_RED);
 }
 bool MAKERphone::settingsApp() {
-	while (!update());
-	while (1)
-	{
-		int8_t input = settingsMenu(settingsItems, 6);
-		if (input == -1) //BUTTON BACK
-			break;
-		if (input == 0)
-			networkMenu();
-		if (input == 1)
-			displayMenu();
-		if (input == 2)
-			timeMenu();
-		if (input == 3)
-			soundMenu();
-		if (input == 4)
-			securityMenu();
-		if (input == 5)
-			if(updateMenu())
-				return true;
-	}
+	// while (!update());
+	// while (1)
+	// {
+	// 	int8_t input = settingsMenu(settingsItems, 6);
+	// 	if (input == -1) //BUTTON BACK
+	// 		break;
+	// 	if (input == 0)
+	// 		networkMenu();
+	// 	if (input == 1)
+	// 		displayMenu();
+	// 	if (input == 2)
+	// 		timeMenu();
+	// 	if (input == 3)
+	// 		soundMenu();
+	// 	if (input == 4)
+	// 		securityMenu();
+	// 	if (input == 5)
+	// 		if(updateMenu())
+	// 			return true;
+	// }
 	
 
-	applySettings();
-	display.fillScreen(TFT_BLACK);
-	display.setTextColor(TFT_WHITE);
-	if(SDinsertedFlag)
-	{
-		saveSettings(1);
-		display.setCursor(0, display.height()/2 - 16);
-		display.setTextFont(2);
-		display.printCenter("Settings saved!");
-		uint32_t tempMillis = millis();
-		while(millis() < tempMillis + 2000)
-		{
-			update();
-			if(buttons.pressed(BTN_A) || buttons.pressed(BTN_B))
-			{
-				while(!buttons.released(BTN_A) && !buttons.released(BTN_B))
-					update();
-				break;
-			}
-		}
-		while(!update());
-	}
-	else
-	{
-		display.setCursor(0, display.height()/2 - 20);
-		display.setTextFont(2);
-		display.printCenter("Can't save - No SD!");
-		display.setCursor(0, display.height()/2);
-		display.printCenter("Insert SD card and reset");
-		uint32_t tempMillis = millis();
-		while(millis() < tempMillis + 2000)
-		{
-			update();
-			if(buttons.pressed(BTN_A) || buttons.pressed(BTN_B))
-			{
-				while(!buttons.released(BTN_A) && !buttons.released(BTN_B))
-					update();
-				break;
-			}
-		}
-		while(!update());
-	}
-	return false;
+	// applySettings();
+	// display.fillScreen(TFT_BLACK);
+	// display.setTextColor(TFT_WHITE);
+	// if(SDinsertedFlag)
+	// {
+	// 	saveSettings(1);
+	// 	display.setCursor(0, display.height()/2 - 16);
+	// 	display.setTextFont(2);
+	// 	display.printCenter("Settings saved!");
+	// 	uint32_t tempMillis = millis();
+	// 	while(millis() < tempMillis + 2000)
+	// 	{
+	// 		update();
+	// 		if(buttons.pressed(BTN_A) || buttons.pressed(BTN_B))
+	// 		{
+	// 			while(!buttons.released(BTN_A) && !buttons.released(BTN_B))
+	// 				update();
+	// 			break;
+	// 		}
+	// 	}
+	// 	while(!update());
+	// }
+	// else
+	// {
+	// 	display.setCursor(0, display.height()/2 - 20);
+	// 	display.setTextFont(2);
+	// 	display.printCenter("Can't save - No SD!");
+	// 	display.setCursor(0, display.height()/2);
+	// 	display.printCenter("Insert SD card and reset");
+	// 	uint32_t tempMillis = millis();
+	// 	while(millis() < tempMillis + 2000)
+	// 	{
+	// 		update();
+	// 		if(buttons.pressed(BTN_A) || buttons.pressed(BTN_B))
+	// 		{
+	// 			while(!buttons.released(BTN_A) && !buttons.released(BTN_B))
+	// 				update();
+	// 			break;
+	// 		}
+	// 	}
+	// 	while(!update());
+	// }
+	// return false;
 	
 }
 void MAKERphone::networkMenu() {
-	uint8_t cursor = 0;
-	while (1)
-	{
-		Serial.println(airplaneMode);
-		display.setTextColor(TFT_BLACK);
-		display.fillScreen(0xFB6D);
-		display.setTextFont(2);
-		display.setTextSize(1);
-		display.setCursor(18, 20);
-		display.print("Wifi");
-		display.setCursor(22, 58);
-		display.print("BT");
-		display.setCursor(16, 88);
-		display.print("Plane\n   mode");
+	// uint8_t cursor = 0;
+	// while (1)
+	// {
+	// 	Serial.println(airplaneMode);
+	// 	display.setTextColor(TFT_BLACK);
+	// 	display.fillScreen(0xFB6D);
+	// 	display.setTextFont(2);
+	// 	display.setTextSize(1);
+	// 	display.setCursor(18, 20);
+	// 	display.print("Wifi");
+	// 	display.setCursor(22, 58);
+	// 	display.print("BT");
+	// 	display.setCursor(16, 88);
+	// 	display.print("Plane\n   mode");
 
-		display.setTextFont(2);
-		display.setTextSize(1);
-		display.setCursor(79, 19);
-		display.print("ON");
-		display.setCursor(122, 19);
-		display.print("OFF");
-		display.setCursor(79, 57);
-		display.print("ON");
-		display.setCursor(122, 57);
-		display.print("OFF");
-		display.setCursor(79, 95);
-		display.print("ON");
-		display.setCursor(122, 95);
-		display.print("OFF");
-		switch (cursor) {
+	// 	display.setTextFont(2);
+	// 	display.setTextSize(1);
+	// 	display.setCursor(79, 19);
+	// 	display.print("ON");
+	// 	display.setCursor(122, 19);
+	// 	display.print("OFF");
+	// 	display.setCursor(79, 57);
+	// 	display.print("ON");
+	// 	display.setCursor(122, 57);
+	// 	display.print("OFF");
+	// 	display.setCursor(79, 95);
+	// 	display.print("ON");
+	// 	display.setCursor(122, 95);
+	// 	display.print("OFF");
+	// 	switch (cursor) {
 
-		case 0:
-			if (bt == 1)
-			{
-				display.drawRect(35*2, 27*2, 17*2, 11*2, TFT_BLACK);
-			}
-			else
-			{
-				display.drawRect(57*2, 27*2, 20*2, 11*2, TFT_BLACK);
-			}
-			if (airplaneMode == 1)
-			{
-				display.drawRect(35*2, 46*2, 17*2, 11*2, TFT_BLACK);
-			}
-			else
-			{
-				display.drawRect(57*2, 46*2, 20*2, 11*2, TFT_BLACK);
-			}
-			break;
+	// 	case 0:
+	// 		if (bt == 1)
+	// 		{
+	// 			display.drawRect(35*2, 27*2, 17*2, 11*2, TFT_BLACK);
+	// 		}
+	// 		else
+	// 		{
+	// 			display.drawRect(57*2, 27*2, 20*2, 11*2, TFT_BLACK);
+	// 		}
+	// 		if (airplaneMode == 1)
+	// 		{
+	// 			display.drawRect(35*2, 46*2, 17*2, 11*2, TFT_BLACK);
+	// 		}
+	// 		else
+	// 		{
+	// 			display.drawRect(57*2, 46*2, 20*2, 11*2, TFT_BLACK);
+	// 		}
+	// 		break;
 
-		case 1:
-			if (wifi == 1)
-			{
-				display.drawRect(35*2, 8*2, 17*2, 11*2, TFT_BLACK);
-			}
-			else
-			{
-				display.drawRect(57*2, 8*2, 20*2, 11*2, TFT_BLACK);
-			}
+	// 	case 1:
+	// 		if (wifi == 1)
+	// 		{
+	// 			display.drawRect(35*2, 8*2, 17*2, 11*2, TFT_BLACK);
+	// 		}
+	// 		else
+	// 		{
+	// 			display.drawRect(57*2, 8*2, 20*2, 11*2, TFT_BLACK);
+	// 		}
 
-			if (airplaneMode == 1)
-			{
-				display.drawRect(35*2, 46*2, 17*2, 11*2, TFT_BLACK);
-			}
-			else
-			{
-				display.drawRect(57*2, 46*2, 20*2, 11*2, TFT_BLACK);
-			}
-			break;
+	// 		if (airplaneMode == 1)
+	// 		{
+	// 			display.drawRect(35*2, 46*2, 17*2, 11*2, TFT_BLACK);
+	// 		}
+	// 		else
+	// 		{
+	// 			display.drawRect(57*2, 46*2, 20*2, 11*2, TFT_BLACK);
+	// 		}
+	// 		break;
 
-		case 2:
-			if (wifi == 1)
-			{
-				display.drawRect(35*2, 8*2, 17*2, 11*2, TFT_BLACK);
-			}
-			else
-			{
-				display.drawRect(57*2, 8*2, 20*2, 11*2, TFT_BLACK);
-			}
+	// 	case 2:
+	// 		if (wifi == 1)
+	// 		{
+	// 			display.drawRect(35*2, 8*2, 17*2, 11*2, TFT_BLACK);
+	// 		}
+	// 		else
+	// 		{
+	// 			display.drawRect(57*2, 8*2, 20*2, 11*2, TFT_BLACK);
+	// 		}
 
-			if (bt == 1)
-			{
-				display.drawRect(35*2, 27*2, 17*2, 11*2, TFT_BLACK);
-			}
-			else
-			{
-				display.drawRect(57*2, 27*2, 20*2, 11*2, TFT_BLACK);
-			}
-		}
-
-
+	// 		if (bt == 1)
+	// 		{
+	// 			display.drawRect(35*2, 27*2, 17*2, 11*2, TFT_BLACK);
+	// 		}
+	// 		else
+	// 		{
+	// 			display.drawRect(57*2, 27*2, 20*2, 11*2, TFT_BLACK);
+	// 		}
+	// 	}
 
 
-		if (cursor == 0)
-		{
-			if (millis() % 500 <= 250 && wifi == 1)
-			{
-				display.drawRect(35*2, 8*2, 17*2, 11*2, TFT_BLACK);
-			}
-			else if (millis() % 500 <= 250 && wifi == 0)
-			{
-				display.drawRect(57*2, 8*2, 20*2, 11*2, TFT_BLACK);
-			}
-			if (buttons.kpd.pin_read(BTN_LEFT) == 0 && wifi == 0)
-			{
-				gui.osc->note(75, 0.05);
-				gui.osc->play();
-				wifi = !wifi;
-			}
-			if (buttons.kpd.pin_read(BTN_RIGHT) == 0 && wifi == 1)
-			{
-				gui.osc->note(75, 0.05);            
-				gui.osc->play();
-				wifi = !wifi;
-			}
-		}
-		if (cursor == 1)
-		{
-			if (millis() % 500 <= 250 && bt == 1)
-			{
-				display.drawRect(35*2, 27*2, 17*2, 11*2, TFT_BLACK);
-			}
-			else if (millis() % 500 <= 250 && bt == 0)
-			{
-				display.drawRect(57*2, 27*2, 20*2, 11*2, TFT_BLACK);
-			}
-			if (buttons.kpd.pin_read(BTN_LEFT) == 0 && bt == 0)
-			{
-				gui.osc->note(75, 0.05);
-				gui.osc->play();
-				bt = !bt;
-			}
-			if (buttons.kpd.pin_read(BTN_RIGHT) == 0 && bt == 1)
-			{
-				gui.osc->note(75, 0.05);
-				gui.osc->play();
-				bt = !bt;
-			}
-		}
-		if (cursor == 2)
-		{
-			if (millis() % 500 <= 250 && airplaneMode == 1)
-			{
-				display.drawRect(35*2, 46*2, 17*2, 11*2, TFT_BLACK);
-			}
-			else if (millis() % 500 <= 250 && airplaneMode == 0)
-			{
-				display.drawRect(57*2, 46*2, 20*2, 11*2, TFT_BLACK);
-			}
-			if (buttons.kpd.pin_read(BTN_LEFT) == 0 && airplaneMode == 0)
-			{
-				gui.osc->note(75, 0.05);
-				gui.osc->play();
-				airplaneMode = !airplaneMode;
-			}
-			if (buttons.kpd.pin_read(BTN_RIGHT) == 0 && airplaneMode == 1)
-			{
-				gui.osc->note(75, 0.05);
-				gui.osc->play();
-				airplaneMode = !airplaneMode;
-			}
-		}
 
-		if (buttons.kpd.pin_read(BTN_UP) == 0) 
-		{
-			gui.osc->note(75, 0.05);
-			gui.osc->play();
-			while (buttons.kpd.pin_read(BTN_UP) == 0);
-			if (cursor == 0)
-				cursor = 2;
-			else
-				cursor--;
-		}
-		if (buttons.kpd.pin_read(BTN_DOWN) == 0)
-		{
-			gui.osc->note(75, 0.05);
-			gui.osc->play();
-			while (buttons.kpd.pin_read(BTN_DOWN) == 0);
-			if (cursor == 2)
-				cursor = 0;
-			else
-				cursor++;
 
-		}
-		if (buttons.released(BTN_B)) //BUTTON BACK
-		{
-			while(!update());
-			break;
-		}
+	// 	if (cursor == 0)
+	// 	{
+	// 		if (millis() % 500 <= 250 && wifi == 1)
+	// 		{
+	// 			display.drawRect(35*2, 8*2, 17*2, 11*2, TFT_BLACK);
+	// 		}
+	// 		else if (millis() % 500 <= 250 && wifi == 0)
+	// 		{
+	// 			display.drawRect(57*2, 8*2, 20*2, 11*2, TFT_BLACK);
+	// 		}
+	// 		if (buttons.kpd.pin_read(BTN_LEFT) == 0 && wifi == 0)
+	// 		{
+	// 			gui.osc->note(75, 0.05);
+	// 			gui.osc->play();
+	// 			wifi = !wifi;
+	// 		}
+	// 		if (buttons.kpd.pin_read(BTN_RIGHT) == 0 && wifi == 1)
+	// 		{
+	// 			gui.osc->note(75, 0.05);            
+	// 			gui.osc->play();
+	// 			wifi = !wifi;
+	// 		}
+	// 	}
+	// 	if (cursor == 1)
+	// 	{
+	// 		if (millis() % 500 <= 250 && bt == 1)
+	// 		{
+	// 			display.drawRect(35*2, 27*2, 17*2, 11*2, TFT_BLACK);
+	// 		}
+	// 		else if (millis() % 500 <= 250 && bt == 0)
+	// 		{
+	// 			display.drawRect(57*2, 27*2, 20*2, 11*2, TFT_BLACK);
+	// 		}
+	// 		if (buttons.kpd.pin_read(BTN_LEFT) == 0 && bt == 0)
+	// 		{
+	// 			gui.osc->note(75, 0.05);
+	// 			gui.osc->play();
+	// 			bt = !bt;
+	// 		}
+	// 		if (buttons.kpd.pin_read(BTN_RIGHT) == 0 && bt == 1)
+	// 		{
+	// 			gui.osc->note(75, 0.05);
+	// 			gui.osc->play();
+	// 			bt = !bt;
+	// 		}
+	// 	}
+	// 	if (cursor == 2)
+	// 	{
+	// 		if (millis() % 500 <= 250 && airplaneMode == 1)
+	// 		{
+	// 			display.drawRect(35*2, 46*2, 17*2, 11*2, TFT_BLACK);
+	// 		}
+	// 		else if (millis() % 500 <= 250 && airplaneMode == 0)
+	// 		{
+	// 			display.drawRect(57*2, 46*2, 20*2, 11*2, TFT_BLACK);
+	// 		}
+	// 		if (buttons.kpd.pin_read(BTN_LEFT) == 0 && airplaneMode == 0)
+	// 		{
+	// 			gui.osc->note(75, 0.05);
+	// 			gui.osc->play();
+	// 			airplaneMode = !airplaneMode;
+	// 		}
+	// 		if (buttons.kpd.pin_read(BTN_RIGHT) == 0 && airplaneMode == 1)
+	// 		{
+	// 			gui.osc->note(75, 0.05);
+	// 			gui.osc->play();
+	// 			airplaneMode = !airplaneMode;
+	// 		}
+	// 	}
+
+	// 	if (buttons.kpd.pin_read(BTN_UP) == 0) 
+	// 	{
+	// 		gui.osc->note(75, 0.05);
+	// 		gui.osc->play();
+	// 		while (buttons.kpd.pin_read(BTN_UP) == 0);
+	// 		if (cursor == 0)
+	// 			cursor = 2;
+	// 		else
+	// 			cursor--;
+	// 	}
+	// 	if (buttons.kpd.pin_read(BTN_DOWN) == 0)
+	// 	{
+	// 		gui.osc->note(75, 0.05);
+	// 		gui.osc->play();
+	// 		while (buttons.kpd.pin_read(BTN_DOWN) == 0);
+	// 		if (cursor == 2)
+	// 			cursor = 0;
+	// 		else
+	// 			cursor++;
+
+	// 	}
+	// 	if (buttons.released(BTN_B)) //BUTTON BACK
+	// 	{
+	// 		while(!update());
+	// 		break;
+	// 	}
 			
 
-		update();
-	}
+	// 	update();
+	// }
 }
 void MAKERphone::displayMenu() {
-	display.setTextFont(1);
-	display.setTextColor(TFT_BLACK);
-	uint8_t sleepTimeBuffer = sleepTime;
-	uint16_t sleepTimeActualBuffer = sleepTimeActual;
-	uint8_t cursor = 0;
-	while (1)
-	{
-		display.setTextFont(2);
-		display.setTextSize(1);
-		display.fillScreen(0x8FEA);
-		display.setCursor(9*2, 2);
-		display.printCenter("Brightness");
-		display.drawRect(33, 21, 47*2, 4*2, TFT_BLACK);
-		display.drawBitmap(12, 20, noBrightness, TFT_BLACK, 2);
-		display.drawBitmap(132, 14, fullBrightness, TFT_BLACK, 2);
-		display.fillRect(35, 23, brightness * 9*2, 2*2, TFT_BLACK);
+	// display.setTextFont(1);
+	// display.setTextColor(TFT_BLACK);
+	// uint8_t sleepTimeBuffer = sleepTime;
+	// uint16_t sleepTimeActualBuffer = sleepTimeActual;
+	// uint8_t cursor = 0;
+	// while (1)
+	// {
+	// 	display.setTextFont(2);
+	// 	display.setTextSize(1);
+	// 	display.fillScreen(0x8FEA);
+	// 	display.setCursor(9*2, 2);
+	// 	display.printCenter("Brightness");
+	// 	display.drawRect(33, 21, 47*2, 4*2, TFT_BLACK);
+	// 	display.drawBitmap(12, 20, noBrightness, TFT_BLACK, 2);
+	// 	display.drawBitmap(132, 14, fullBrightness, TFT_BLACK, 2);
+	// 	display.fillRect(35, 23, brightness * 9*2, 2*2, TFT_BLACK);
 
-		display.setCursor(9*2, 32);
-		display.printCenter("LED brightness");
-		display.drawRect(33, 50, 47*2, 4*2, TFT_BLACK);
-		display.fillRect(35, 52, pixelsBrightness * 9*2, 2*2, TFT_BLACK);
+	// 	display.setCursor(9*2, 32);
+	// 	display.printCenter("LED brightness");
+	// 	display.drawRect(33, 50, 47*2, 4*2, TFT_BLACK);
+	// 	display.fillRect(35, 52, pixelsBrightness * 9*2, 2*2, TFT_BLACK);
 
-		String foo = "Sleep: ";
-		if (sleepTimeActualBuffer > 60)
-		{
-			foo += sleepTimeActualBuffer / 60;
-			foo += "min";
-		}
-		else
-		{
-			foo += sleepTimeActualBuffer;
-			foo += "s";
-		}
-		display.setCursor(10*2, 59);
-		display.printCenter(foo);
+	// 	String foo = "Sleep: ";
+	// 	if (sleepTimeActualBuffer > 60)
+	// 	{
+	// 		foo += sleepTimeActualBuffer / 60;
+	// 		foo += "min";
+	// 	}
+	// 	else
+	// 	{
+	// 		foo += sleepTimeActualBuffer;
+	// 		foo += "s";
+	// 	}
+	// 	display.setCursor(10*2, 59);
+	// 	display.printCenter(foo);
 
-		display.drawRect(33, 77, 47*2, 4*2, TFT_BLACK);
-		display.fillRect(35, 79, sleepTimeBuffer * 9*2, 2*2, TFT_BLACK);
+	// 	display.drawRect(33, 77, 47*2, 4*2, TFT_BLACK);
+	// 	display.fillRect(35, 79, sleepTimeBuffer * 9*2, 2*2, TFT_BLACK);
 
-		display.setCursor(12, 72);
-		display.print("0s");
-		display.setCursor(132, 72);
-		display.print("30m");
+	// 	display.setCursor(12, 72);
+	// 	display.print("0s");
+	// 	display.setCursor(132, 72);
+	// 	display.print("30m");
 
-		display.setCursor(11*2, 87);
-		display.printCenter("Background");
-		display.fillRect(16*2, 105, 48*2, 9*2, backgroundColors[backgroundIndex]);
-		display.setCursor(18*2, 105);
-		display.printCenter(backgroundColorsNames[backgroundIndex]);
-		display.drawBitmap(11*2, 107, arrowLeft, TFT_BLACK, 2);
-		display.drawBitmap(65*2, 107, arrowRight, TFT_BLACK, 2);
+	// 	display.setCursor(11*2, 87);
+	// 	display.printCenter("Background");
+	// 	display.fillRect(16*2, 105, 48*2, 9*2, backgroundColors[backgroundIndex]);
+	// 	display.setCursor(18*2, 105);
+	// 	display.printCenter(backgroundColorsNames[backgroundIndex]);
+	// 	display.drawBitmap(11*2, 107, arrowLeft, TFT_BLACK, 2);
+	// 	display.drawBitmap(65*2, 107, arrowRight, TFT_BLACK, 2);
 
-		if (cursor == 0)
-		{
-			if (millis() % 1000 <= 500)
-			{
-				display.drawBitmap(12, 20, noBrightness, TFT_BLACK, 2);
-				display.drawBitmap(132, 14, fullBrightness, TFT_BLACK, 2);
+	// 	if (cursor == 0)
+	// 	{
+	// 		if (millis() % 1000 <= 500)
+	// 		{
+	// 			display.drawBitmap(12, 20, noBrightness, TFT_BLACK, 2);
+	// 			display.drawBitmap(132, 14, fullBrightness, TFT_BLACK, 2);
 
-			}
-			else
-			{
-				display.drawBitmap(12, 20, noBrightness, 0x8FEA, 2);
-				display.drawBitmap(132, 14, fullBrightness, 0x8FEA, 2);
-			}
-			if (buttons.released(BTN_LEFT) && brightness != 0)
-			{
-				gui.osc->note(75, 0.05);
-				gui.osc->play();
-				brightness--;
-				while(!update());
-			}
-			if (buttons.released(BTN_RIGHT) && brightness != 5)
-			{
-				gui.osc->note(75, 0.05);
-				gui.osc->play();
-				brightness++;
-				while(!update());
-			}
-		}
-		if (cursor == 1)
-		{
-			for(int i = 0;i<8;i++)
-			{
-				leds[i] = CRGB::White;
-			}
-			if (buttons.released(BTN_LEFT) && pixelsBrightness!= 0)
-			{
-				gui.osc->note(75, 0.05);
-				gui.osc->play();
-				pixelsBrightness--;
-				while(!update());
-			}
-			if (buttons.released(BTN_RIGHT) && pixelsBrightness!= 5)
-			{
-				gui.osc->note(75, 0.05);
-				gui.osc->play();
-				pixelsBrightness++;
-				while(!update());
-			}
-		}
-		if (cursor == 2)
-		{
-			if (millis() % 1000 <= 500)
-			{
-				display.setCursor(12, 72);
-				display.print("0s");
-				display.setCursor(132, 72);
-				display.print("30m");
-			}
-			else
-			{
-				display.setTextColor(0x8FEA);
-				display.setCursor(12, 72);
-				display.print("0s");
-				display.setCursor(132, 72);
-				display.print("30m");
-				display.setTextColor(TFT_BLACK);
-			}
-			if (buttons.released(BTN_LEFT) && sleepTimeBuffer!= 0)
-			{
-				gui.osc->note(75, 0.05);
-				gui.osc->play();
-				sleepTimeBuffer--;
-				while(!update());
-			}
-			if (buttons.released(BTN_RIGHT) && sleepTimeBuffer!= 5)
-			{
-				gui.osc->note(75, 0.05);
-				gui.osc->play();
-				sleepTimeBuffer++;
-				while(!update());
-			}
-		}
-		if (cursor == 3)
-		{
-			if (millis() % 1000 <= 500)
-			{
-				if (backgroundIndex == 0)
-				{
-					display.fillRect(65*2 , 105, 20, 20, 0x8FEA);
-					display.drawBitmap(11*2, 107, arrowLeft, TFT_BLACK, 2);
-					display.drawBitmap(66*2, 107, arrowRight, TFT_BLACK, 2);
-				}
-				else if (backgroundIndex == 6)
-				{
-					display.fillRect(5*2 , 105, 20, 20, 0x8FEA);
-					display.drawBitmap(10*2, 107, arrowLeft, TFT_BLACK, 2);
-					display.drawBitmap(65*2, 107, arrowRight, TFT_BLACK, 2);
-				}
-				else
-				{
-					display.fillRect(65*2 , 105, 20, 20, 0x8FEA);
-					display.fillRect(5*2, 105, 20, 20, 0x8FEA);
-					display.drawBitmap(10*2, 107, arrowLeft, TFT_BLACK, 2);
-					display.drawBitmap(66*2, 107, arrowRight, TFT_BLACK, 2);
-				}
-			}
-			else
-			{
-				display.drawBitmap(11*2, 107, arrowLeft, TFT_BLACK, 2);
-				display.drawBitmap(65*2, 107, arrowRight, TFT_BLACK, 2);
-			}
-			if (buttons.released(BTN_LEFT) && backgroundIndex != 0)
-			{
-				gui.osc->note(75, 0.05);
-				gui.osc->play();
-				backgroundIndex--;
-				while(!update());
-			}
-			if (buttons.released(BTN_RIGHT) && backgroundIndex != 6)
-			{
-				gui.osc->note(75, 0.05);
-				gui.osc->play();
-				backgroundIndex++;
-				while(!update());
-			}
-		}
+	// 		}
+	// 		else
+	// 		{
+	// 			display.drawBitmap(12, 20, noBrightness, 0x8FEA, 2);
+	// 			display.drawBitmap(132, 14, fullBrightness, 0x8FEA, 2);
+	// 		}
+	// 		if (buttons.released(BTN_LEFT) && brightness != 0)
+	// 		{
+	// 			gui.osc->note(75, 0.05);
+	// 			gui.osc->play();
+	// 			brightness--;
+	// 			while(!update());
+	// 		}
+	// 		if (buttons.released(BTN_RIGHT) && brightness != 5)
+	// 		{
+	// 			gui.osc->note(75, 0.05);
+	// 			gui.osc->play();
+	// 			brightness++;
+	// 			while(!update());
+	// 		}
+	// 	}
+	// 	if (cursor == 1)
+	// 	{
+	// 		for(int i = 0;i<8;i++)
+	// 		{
+	// 			leds[i] = CRGB::White;
+	// 		}
+	// 		if (buttons.released(BTN_LEFT) && pixelsBrightness!= 0)
+	// 		{
+	// 			gui.osc->note(75, 0.05);
+	// 			gui.osc->play();
+	// 			pixelsBrightness--;
+	// 			while(!update());
+	// 		}
+	// 		if (buttons.released(BTN_RIGHT) && pixelsBrightness!= 5)
+	// 		{
+	// 			gui.osc->note(75, 0.05);
+	// 			gui.osc->play();
+	// 			pixelsBrightness++;
+	// 			while(!update());
+	// 		}
+	// 	}
+	// 	if (cursor == 2)
+	// 	{
+	// 		if (millis() % 1000 <= 500)
+	// 		{
+	// 			display.setCursor(12, 72);
+	// 			display.print("0s");
+	// 			display.setCursor(132, 72);
+	// 			display.print("30m");
+	// 		}
+	// 		else
+	// 		{
+	// 			display.setTextColor(0x8FEA);
+	// 			display.setCursor(12, 72);
+	// 			display.print("0s");
+	// 			display.setCursor(132, 72);
+	// 			display.print("30m");
+	// 			display.setTextColor(TFT_BLACK);
+	// 		}
+	// 		if (buttons.released(BTN_LEFT) && sleepTimeBuffer!= 0)
+	// 		{
+	// 			gui.osc->note(75, 0.05);
+	// 			gui.osc->play();
+	// 			sleepTimeBuffer--;
+	// 			while(!update());
+	// 		}
+	// 		if (buttons.released(BTN_RIGHT) && sleepTimeBuffer!= 5)
+	// 		{
+	// 			gui.osc->note(75, 0.05);
+	// 			gui.osc->play();
+	// 			sleepTimeBuffer++;
+	// 			while(!update());
+	// 		}
+	// 	}
+	// 	if (cursor == 3)
+	// 	{
+	// 		if (millis() % 1000 <= 500)
+	// 		{
+	// 			if (backgroundIndex == 0)
+	// 			{
+	// 				display.fillRect(65*2 , 105, 20, 20, 0x8FEA);
+	// 				display.drawBitmap(11*2, 107, arrowLeft, TFT_BLACK, 2);
+	// 				display.drawBitmap(66*2, 107, arrowRight, TFT_BLACK, 2);
+	// 			}
+	// 			else if (backgroundIndex == 6)
+	// 			{
+	// 				display.fillRect(5*2 , 105, 20, 20, 0x8FEA);
+	// 				display.drawBitmap(10*2, 107, arrowLeft, TFT_BLACK, 2);
+	// 				display.drawBitmap(65*2, 107, arrowRight, TFT_BLACK, 2);
+	// 			}
+	// 			else
+	// 			{
+	// 				display.fillRect(65*2 , 105, 20, 20, 0x8FEA);
+	// 				display.fillRect(5*2, 105, 20, 20, 0x8FEA);
+	// 				display.drawBitmap(10*2, 107, arrowLeft, TFT_BLACK, 2);
+	// 				display.drawBitmap(66*2, 107, arrowRight, TFT_BLACK, 2);
+	// 			}
+	// 		}
+	// 		else
+	// 		{
+	// 			display.drawBitmap(11*2, 107, arrowLeft, TFT_BLACK, 2);
+	// 			display.drawBitmap(65*2, 107, arrowRight, TFT_BLACK, 2);
+	// 		}
+	// 		if (buttons.released(BTN_LEFT) && backgroundIndex != 0)
+	// 		{
+	// 			gui.osc->note(75, 0.05);
+	// 			gui.osc->play();
+	// 			backgroundIndex--;
+	// 			while(!update());
+	// 		}
+	// 		if (buttons.released(BTN_RIGHT) && backgroundIndex != 6)
+	// 		{
+	// 			gui.osc->note(75, 0.05);
+	// 			gui.osc->play();
+	// 			backgroundIndex++;
+	// 			while(!update());
+	// 		}
+	// 	}
 
-		if (buttons.released(BTN_UP))
-		{
-			gui.osc->note(75, 0.05);
-			gui.osc->play();
-			while (!update());
-  			if (cursor == 0)
-				cursor = 3;
-			else
-				cursor--;
-		}
-		if (buttons.released(BTN_DOWN))
-		{
-			gui.osc->note(75, 0.05);
-			gui.osc->play();
-			while (!update());
-			if (cursor == 3)
-				cursor = 0;
-			else
-				cursor++;
-		}
+	// 	if (buttons.released(BTN_UP))
+	// 	{
+	// 		gui.osc->note(75, 0.05);
+	// 		gui.osc->play();
+	// 		while (!update());
+  // 			if (cursor == 0)
+	// 			cursor = 3;
+	// 		else
+	// 			cursor--;
+	// 	}
+	// 	if (buttons.released(BTN_DOWN))
+	// 	{
+	// 		gui.osc->note(75, 0.05);
+	// 		gui.osc->play();
+	// 		while (!update());
+	// 		if (cursor == 3)
+	// 			cursor = 0;
+	// 		else
+	// 			cursor++;
+	// 	}
 
-		switch (sleepTimeBuffer) { //interpreting value into actual numbers
-			case 0:
-				sleepTimeActualBuffer = 0;
-				break;
-			case 1:
-				sleepTimeActualBuffer = 10;
-				break;
-			case 2:
-				sleepTimeActualBuffer = 30;
-				break;
-			case 3:
-				sleepTimeActualBuffer = 60;
-				break;
-			case 4:
-				sleepTimeActualBuffer = 600;
-				break;
-			case 5:
-			sleepTimeActualBuffer = 1800;
-			break;
-		}
-		if (buttons.released(BTN_B)) //BUTTON BACK
-			break;
-		update();
+	// 	switch (sleepTimeBuffer) { //interpreting value into actual numbers
+	// 		case 0:
+	// 			sleepTimeActualBuffer = 0;
+	// 			break;
+	// 		case 1:
+	// 			sleepTimeActualBuffer = 10;
+	// 			break;
+	// 		case 2:
+	// 			sleepTimeActualBuffer = 30;
+	// 			break;
+	// 		case 3:
+	// 			sleepTimeActualBuffer = 60;
+	// 			break;
+	// 		case 4:
+	// 			sleepTimeActualBuffer = 600;
+	// 			break;
+	// 		case 5:
+	// 		sleepTimeActualBuffer = 1800;
+	// 		break;
+	// 	}
+	// 	if (buttons.released(BTN_B)) //BUTTON BACK
+	// 		break;
+	// 	update();
 
-		if (brightness == 0)
-			actualBrightness = 230;
-		else
-			actualBrightness = (5 - brightness) * 51;
-		ledcAnalogWrite(LEDC_CHANNEL, actualBrightness);
-	}
-	sleepTimer = millis();
-	sleepTime = sleepTimeBuffer;
-	sleepTimeActual = sleepTimeActualBuffer;
+	// 	if (brightness == 0)
+	// 		actualBrightness = 230;
+	// 	else
+	// 		actualBrightness = (5 - brightness) * 51;
+	// 	ledcAnalogWrite(LEDC_CHANNEL, actualBrightness);
+	// }
+	// sleepTimer = millis();
+	// sleepTime = sleepTimeBuffer;
+	// sleepTimeActual = sleepTimeActualBuffer;
 }
 void MAKERphone::soundMenu() {
 	// _SD.begin(5, SPI, 8000000);
@@ -6107,1386 +6107,1387 @@ void MAKERphone::listNotifications(const char * dirname, uint8_t levels) {
 }
 void MAKERphone::securityMenu() {
 	
-	pinNumber = 1234;
+	// pinNumber = 1234;
 
-	String pinBuffer = "";
-	String reply = "";
-	String oldPin = "";
-	uint32_t elapsedMillis = millis();
-	uint32_t blinkMillis = millis();
-	uint8_t cursor = 0;
-	bool errorMessage = 0;
-	bool confirmMessage = 0;
-	bool saved = 0;
-	char key = NO_KEY;
-	bool blinkState = 0;
-	while (!simReady)
-	{
-		if(resolutionMode)
-		{
-			display.setCursor(0, display.height()/2);
-			display.setFreeFont(TT1);
-		}
-		else
-		{
-			display.setCursor(0, display.height()/2 - 16);
-			display.setTextFont(2);
-		}
-		display.setTextColor(TFT_WHITE);
-		display.fillScreen(TFT_BLACK);
-		display.printCenter("GSM still booting...");
-		update();
-	}
-	while (reply.indexOf("+SPIC:") == -1)
-	{
-		Serial1.println("AT+SPIC");
-		reply = Serial1.readString();
-		Serial.println(reply);
-		delay(5);
-	}
-	timesRemaining = reply.substring(reply.indexOf(" ", reply.indexOf("+SPIC:")), reply.indexOf(",", reply.indexOf(" ", reply.indexOf("+SPIC:")))).toInt();
-	Serial.println(timesRemaining);
-	delay(5);
-	if (timesRemaining == 0) //PUK lock WIP
-	{
-		display.fillScreen(TFT_BLACK);
-		display.setTextColor(TFT_WHITE);
-		display.setCursor(0, display.height()/2 - 16);
-		display.setTextFont(2);
-		display.printCenter("PUK lock");
-		while (!buttons.released(BTN_A))
-			update();
-	}
-	//check if the SIM card is locked
-	while (reply.indexOf("+CLCK:") == -1)
-	{
-		Serial1.println("AT+CLCK=\"SC\", 2");
-		reply = Serial1.readString();
-		Serial.println(reply);
-		delay(5);
-	}
-	if (reply.indexOf("+CLCK: 0") != -1)
-		pinLock = 0;
-	else if (reply.indexOf("+CLCK: 1") != -1)
-		pinLock = 1;
-	bool pinLockBuffer = pinLock;
+	// String pinBuffer = "";
+	// String reply = "";
+	// String oldPin = "";
+	// uint32_t elapsedMillis = millis();
+	// uint32_t blinkMillis = millis();
+	// uint8_t cursor = 0;
+	// bool errorMessage = 0;
+	// bool confirmMessage = 0;
+	// bool saved = 0;
+	// char key = NO_KEY;
+	// bool blinkState = 0;
+	// while (!simReady)
+	// {
+	// 	if(resolutionMode)
+	// 	{
+	// 		display.setCursor(0, display.height()/2);
+	// 		display.setFreeFont(TT1);
+	// 	}
+	// 	else
+	// 	{
+	// 		display.setCursor(0, display.height()/2 - 16);
+	// 		display.setTextFont(2);
+	// 	}
+	// 	display.setTextColor(TFT_WHITE);
+	// 	display.fillScreen(TFT_BLACK);
+	// 	display.printCenter("GSM still booting...");
+	// 	update();
+	// }
+	// while (reply.indexOf("+SPIC:") == -1)
+	// {
+	// 	Serial1.println("AT+SPIC");
+	// 	reply = Serial1.readString();
+	// 	Serial.println(reply);
+	// 	delay(5);
+	// }
+	// timesRemaining = reply.substring(reply.indexOf(" ", reply.indexOf("+SPIC:")), reply.indexOf(",", reply.indexOf(" ", reply.indexOf("+SPIC:")))).toInt();
+	// Serial.println(timesRemaining);
+	// delay(5);
+	// if (timesRemaining == 0) //PUK lock WIP
+	// {
+	// 	display.fillScreen(TFT_BLACK);
+	// 	display.setTextColor(TFT_WHITE);
+	// 	display.setCursor(0, display.height()/2 - 16);
+	// 	display.setTextFont(2);
+	// 	display.printCenter("PUK lock");
+	// 	while (!buttons.released(BTN_A))
+	// 		update();
+	// }
+	// //check if the SIM card is locked
+	// while (reply.indexOf("+CLCK:") == -1)
+	// {
+	// 	Serial1.println("AT+CLCK=\"SC\", 2");
+	// 	reply = Serial1.readString();
+	// 	Serial.println(reply);
+	// 	delay(5);
+	// }
+	// if (reply.indexOf("+CLCK: 0") != -1)
+	// 	pinLock = 0;
+	// else if (reply.indexOf("+CLCK: 1") != -1)
+	// 	pinLock = 1;
+	// bool pinLockBuffer = pinLock;
 
-	while (1)
-	{
-		if (timesRemaining == 0) //PUK lock WIP
-		{
-			display.fillScreen(TFT_BLACK);
-			display.setTextColor(TFT_WHITE);
-			display.setCursor(34, 30);
-			display.printCenter("PUK lock");
-			while (!buttons.pressed(BTN_A))
-				update();
-		}
-		else
-		{
-			display.setTextColor(TFT_BLACK);
-			display.fillScreen(0xED1F);
-			display.setTextFont(2);
-			display.setCursor(8, 15);
-			display.print("PIN lock");
-			display.setCursor(78, 15);
-			display.print("ON");
-			display.setCursor(120, 15);
-			display.print("OFF");
+	// while (1)
+	// {
+	// 	if (timesRemaining == 0) //PUK lock WIP
+	// 	{
+	// 		display.fillScreen(TFT_BLACK);
+	// 		display.setTextColor(TFT_WHITE);
+	// 		display.setCursor(34, 30);
+	// 		display.printCenter("PUK lock");
+	// 		while (!buttons.pressed(BTN_A))
+	// 			update();
+	// 	}
+	// 	else
+	// 	{
+	// 		display.setTextColor(TFT_BLACK);
+	// 		display.fillScreen(0xED1F);
+	// 		display.setTextFont(2);
+	// 		display.setCursor(8, 15);
+	// 		display.print("PIN lock");
+	// 		display.setCursor(78, 15);
+	// 		display.print("ON");
+	// 		display.setCursor(120, 15);
+	// 		display.print("OFF");
 
-			if (pinLockBuffer == 1)
-			{
-				display.setTextColor(TFT_BLACK);
-				display.drawRect(3*2, 40*2, 74*2, 11*2, TFT_BLACK);
-			}
-			else
-			{
-				display.setTextColor(TFT_DARKGREY);
-				display.fillRect(3*2, 40*2, 74*2, 11*2, TFT_DARKGREY);
-			}
-			display.setCursor(4*2, 31*2);
-			display.print("PIN:");
-			display.setCursor(6*2, 83);
-			if (pinBuffer != "")
-				display.printCenter(pinBuffer);
-			else if (pinBuffer == "" && cursor != 1)
-				display.printCenter("****");
-			if (pinLockBuffer == 1 && cursor != 0)
-				display.drawRect(69, 12, 17*2, 11*2, TFT_BLACK);
-			else if (pinLockBuffer == 0 && cursor != 0)
-				display.drawRect(113, 12, 38, 11*2, TFT_BLACK);
-			display.setCursor(2, 111);
-			if (cursor == 1 && !errorMessage && !confirmMessage)
-				display.print("Press A to save PIN");
-			if (millis() - blinkMillis >= multi_tap_threshold) //cursor blinking routine
-			{
-				blinkMillis = millis();
-				blinkState = !blinkState;
-			}
+	// 		if (pinLockBuffer == 1)
+	// 		{
+	// 			display.setTextColor(TFT_BLACK);
+	// 			display.drawRect(3*2, 40*2, 74*2, 11*2, TFT_BLACK);
+	// 		}
+	// 		else
+	// 		{
+	// 			display.setTextColor(TFT_DARKGREY);
+	// 			display.fillRect(3*2, 40*2, 74*2, 11*2, TFT_DARKGREY);
+	// 		}
+	// 		display.setCursor(4*2, 31*2);
+	// 		display.print("PIN:");
+	// 		display.setCursor(6*2, 83);
+	// 		if (pinBuffer != "")
+	// 			display.printCenter(pinBuffer);
+	// 		else if (pinBuffer == "" && cursor != 1)
+	// 			display.printCenter("****");
+	// 		if (pinLockBuffer == 1 && cursor != 0)
+	// 			display.drawRect(69, 12, 17*2, 11*2, TFT_BLACK);
+	// 		else if (pinLockBuffer == 0 && cursor != 0)
+	// 			display.drawRect(113, 12, 38, 11*2, TFT_BLACK);
+	// 		display.setCursor(2, 111);
+	// 		if (cursor == 1 && !errorMessage && !confirmMessage)
+	// 			display.print("Press A to save PIN");
+	// 		if (millis() - blinkMillis >= multi_tap_threshold) //cursor blinking routine
+	// 		{
+	// 			blinkMillis = millis();
+	// 			blinkState = !blinkState;
+	// 		}
 
-			if (cursor == 0)
-			{
-				if (millis() % 500 <= 250 && pinLockBuffer == 1)
-					display.drawRect(69, 12, 17*2, 11*2, TFT_BLACK);
-				else if (millis() % 500 <= 250 && pinLockBuffer == 0)
-					display.drawRect(113, 12, 38, 11*2, TFT_BLACK);
-				if (buttons.released(BTN_LEFT) && pinLockBuffer == 0)
-				{
-					gui.osc->note(75, 0.05);
-					gui.osc->play();
-					pinLockBuffer = !pinLockBuffer;
-				}
-				if (buttons.released(BTN_RIGHT) && pinLockBuffer == 1)
-				{
-					gui.osc->note(75, 0.05);
-					gui.osc->play();
-					pinBuffer = "";
-					pinLockBuffer = !pinLockBuffer;
-					if (pinLock)
-						while (1)
-						{
-							display.setTextFont(2);
-							display.setTextColor(TFT_WHITE);
-							display.fillScreen(TFT_BLACK);
-							display.setCursor(5, 10);
-							display.printCenter("Enter PIN:");
-							display.setCursor(5, 40);
-							display.setTextFont(1);
-							String temp = "Remaining attempts: ";
-							temp += timesRemaining;
-							display.printCenter(temp);
-							display.setTextFont(2);
-							display.setCursor(1, 60);
-							display.printCenter(pinBuffer);
-							display.setCursor(2, 111);
-							display.setTextFont(2);
-							display.print("Press A to confirm");
+	// 		if (cursor == 0)
+	// 		{
+	// 			if (millis() % 500 <= 250 && pinLockBuffer == 1)
+	// 				display.drawRect(69, 12, 17*2, 11*2, TFT_BLACK);
+	// 			else if (millis() % 500 <= 250 && pinLockBuffer == 0)
+	// 				display.drawRect(113, 12, 38, 11*2, TFT_BLACK);
+	// 			if (buttons.released(BTN_LEFT) && pinLockBuffer == 0)
+	// 			{
+	// 				gui.osc->note(75, 0.05);
+	// 				gui.osc->play();
+	// 				pinLockBuffer = !pinLockBuffer;
+	// 			}
+	// 			if (buttons.released(BTN_RIGHT) && pinLockBuffer == 1)
+	// 			{
+	// 				gui.osc->note(75, 0.05);
+	// 				gui.osc->play();
+	// 				pinBuffer = "";
+	// 				pinLockBuffer = !pinLockBuffer;
+	// 				if (pinLock)
+	// 					while (1)
+	// 					{
+	// 						display.setTextFont(2);
+	// 						display.setTextColor(TFT_WHITE);
+	// 						display.fillScreen(TFT_BLACK);
+	// 						display.setCursor(5, 10);
+	// 						display.printCenter("Enter PIN:");
+	// 						display.setCursor(5, 40);
+	// 						display.setTextFont(1);
+	// 						String temp = "Remaining attempts: ";
+	// 						temp += timesRemaining;
+	// 						display.printCenter(temp);
+	// 						display.setTextFont(2);
+	// 						display.setCursor(1, 60);
+	// 						display.printCenter(pinBuffer);
+	// 						display.setCursor(2, 111);
+	// 						display.setTextFont(2);
+	// 						display.print("Press A to confirm");
 
-							key = buttons.kpdNum.getKey();
-							if (key == 'A') //clear number
-								pinBuffer = "";
-							else if (key == 'C' && pinBuffer != "")
-								pinBuffer.remove(pinBuffer.length() - 1);
-							if (key != NO_KEY && isDigit(key) && pinBuffer.length() != 4)
-								pinBuffer += key;
+	// 						key = buttons.kpdNum.getKey();
+	// 						if (key == 'A') //clear number
+	// 							pinBuffer = "";
+	// 						else if (key == 'C' && pinBuffer != "")
+	// 							pinBuffer.remove(pinBuffer.length() - 1);
+	// 						if (key != NO_KEY && isDigit(key) && pinBuffer.length() != 4)
+	// 							pinBuffer += key;
 
-							if (buttons.released(BTN_A))//enter PIN
-							{
-								while(!update());
-								reply = "";
-								Serial1.print(F("AT+CLCK=\"SC\", 0, \""));
-								Serial1.print(pinBuffer);
-								Serial1.println("\"");
-								while (!Serial1.available());
-								while (reply.indexOf("OK", reply.indexOf("AT+CLCK")) == -1 && reply.indexOf("ERROR", reply.indexOf("AT+CLCK")) == -1)
-									reply = Serial1.readString();
-								display.fillScreen(TFT_BLACK);
-								display.setCursor(0, display.height()/2 - 16);
-								display.setTextFont(2);
-								if (reply.indexOf("OK", reply.indexOf("AT+CLCK")) != -1)
-								{
-									display.printCenter("PIN OK :)");
-									while (!update());
-									delay(1000);
-									pinLock = 0;
-									pinLockBuffer = 0;
-									timesRemaining = 3;
-									break;
-								}
-								else if (reply.indexOf("ERROR", reply.indexOf("AT+CLCK")) != -1)
-								{
-
-
-									Serial.println("Start:");
-									Serial.println(reply);
-									Serial.println("End");
-									delay(5);
-									pinBuffer = "";
-									Serial.println(reply.indexOf("password"));
-									delay(5);
-									if (reply.indexOf("password") != -1)
-									{
-										display.printCenter("Wrong PIN :(");
-										timesRemaining--;
-									}
-									else if (reply.indexOf("PUK") != -1)
-									{
-										timesRemaining = 0;
-										break;
-									}
-									else
-										display.printCenter("Invalid PIN");
-									while (!update());
-									delay(2000);
-								}
-								pinBuffer = "";
-							}
-							if (timesRemaining == 0)
-								break;
-							if (buttons.released(BTN_B))
-							{
-								pinLockBuffer = 1;
-								while (!update());
-								break;
-							}
-
-							update();
-						}
-
-				}
-				pinBuffer = "";
-			}
+	// 						if (buttons.released(BTN_A))//enter PIN
+	// 						{
+	// 							while(!update());
+	// 							reply = "";
+	// 							Serial1.print(F("AT+CLCK=\"SC\", 0, \""));
+	// 							Serial1.print(pinBuffer);
+	// 							Serial1.println("\"");
+	// 							while (!Serial1.available());
+	// 							while (reply.indexOf("OK", reply.indexOf("AT+CLCK")) == -1 && reply.indexOf("ERROR", reply.indexOf("AT+CLCK")) == -1)
+	// 								reply = Serial1.readString();
+	// 							display.fillScreen(TFT_BLACK);
+	// 							display.setCursor(0, display.height()/2 - 16);
+	// 							display.setTextFont(2);
+	// 							if (reply.indexOf("OK", reply.indexOf("AT+CLCK")) != -1)
+	// 							{
+	// 								display.printCenter("PIN OK :)");
+	// 								while (!update());
+	// 								delay(1000);
+	// 								pinLock = 0;
+	// 								pinLockBuffer = 0;
+	// 								timesRemaining = 3;
+	// 								break;
+	// 							}
+	// 							else if (reply.indexOf("ERROR", reply.indexOf("AT+CLCK")) != -1)
+	// 							{
 
 
-			else if (cursor == 1 && pinLockBuffer == 1)
-			{
-				key = buttons.kpdNum.getKey();
-				if (key == 'A') //clear number
-					pinBuffer = "";
-				else if (key == 'C')
-					pinBuffer.remove(pinBuffer.length() - 1);
-				if (key != NO_KEY && isdigit(key) && pinBuffer.length() < 4)
-					pinBuffer += key;
-				display.setCursor(6*2, 83);
-				display.setTextFont(2);
-				display.printCenter(pinBuffer);
-				if (blinkState == 1)
-					display.drawFastVLine(display.getCursorX()+1, display.getCursorY()+2, 12, TFT_BLACK);
-				if (buttons.released(BTN_A) && pinBuffer.length() == 4 && confirmMessage == 0)
-				{
-					gui.osc->note(75, 0.05);
-					gui.osc->play();
+	// 								Serial.println("Start:");
+	// 								Serial.println(reply);
+	// 								Serial.println("End");
+	// 								delay(5);
+	// 								pinBuffer = "";
+	// 								Serial.println(reply.indexOf("password"));
+	// 								delay(5);
+	// 								if (reply.indexOf("password") != -1)
+	// 								{
+	// 									display.printCenter("Wrong PIN :(");
+	// 									timesRemaining--;
+	// 								}
+	// 								else if (reply.indexOf("PUK") != -1)
+	// 								{
+	// 									timesRemaining = 0;
+	// 									break;
+	// 								}
+	// 								else
+	// 									display.printCenter("Invalid PIN");
+	// 								while (!update());
+	// 								delay(2000);
+	// 							}
+	// 							pinBuffer = "";
+	// 						}
+	// 						if (timesRemaining == 0)
+	// 							break;
+	// 						if (buttons.released(BTN_B))
+	// 						{
+	// 							pinLockBuffer = 1;
+	// 							while (!update());
+	// 							break;
+	// 						}
 
-					while (!update());
-					pinNumber = pinBuffer.toInt();
+	// 						update();
+	// 					}
 
-					reply = "";
+	// 			}
+	// 			pinBuffer = "";
+	// 		}
 
-					display.fillScreen(0xED1F);
 
-					while (1)
-					{
-						display.setTextFont(2);
-						display.setTextColor(TFT_WHITE);
-						display.fillScreen(TFT_BLACK);
-						display.setCursor(5, 10);
-						display.printCenter("Enter old PIN:");
-						display.setCursor(5, 40);
-						display.setTextFont(1);
-						String temp = "Remaining attempts: ";
-						temp += timesRemaining;
-						display.printCenter(temp);
-						display.setTextFont(2);
-						display.setCursor(1, 60);
-						display.printCenter(oldPin);
-						display.setCursor(2, 111);
-						display.setTextFont(2);
-						display.print("Press A to confirm");
+	// 		else if (cursor == 1 && pinLockBuffer == 1)
+	// 		{
+	// 			key = buttons.kpdNum.getKey();
+	// 			if (key == 'A') //clear number
+	// 				pinBuffer = "";
+	// 			else if (key == 'C')
+	// 				pinBuffer.remove(pinBuffer.length() - 1);
+	// 			if (key != NO_KEY && isdigit(key) && pinBuffer.length() < 4)
+	// 				pinBuffer += key;
+	// 			display.setCursor(6*2, 83);
+	// 			display.setTextFont(2);
+	// 			display.printCenter(pinBuffer);
+	// 			if (blinkState == 1)
+	// 				display.drawFastVLine(display.getCursorX()+1, display.getCursorY()+2, 12, TFT_BLACK);
+	// 			if (buttons.released(BTN_A) && pinBuffer.length() == 4 && confirmMessage == 0)
+	// 			{
+	// 				gui.osc->note(75, 0.05);
+	// 				gui.osc->play();
 
-						key = buttons.kpdNum.getKey();
-						if (key == 'A') //clear number
-							oldPin = "";
-						else if (key == 'C' && oldPin != "")
-							oldPin.remove(oldPin.length() - 1);
-						if (key != NO_KEY && isDigit(key) && oldPin.length() != 4)
-							oldPin += key;
+	// 				while (!update());
+	// 				pinNumber = pinBuffer.toInt();
 
-						if (buttons.released(BTN_A))//enter PIN
-						{
-							while(!update());
-							if (pinLock)
-							{
-								reply = "";
-								Serial1.print(F("AT+CPWD=\"SC\", \""));
-								Serial1.print(oldPin);
-								Serial1.print("\", \"");
-								Serial1.print(pinBuffer);
-								Serial1.println("\"");
-								while (!Serial1.available());
-								while (reply.indexOf("OK", reply.indexOf("AT+CPWD")) == -1 && reply.indexOf("ERROR", reply.indexOf("AT+CPWD")) == -1)
-								{
-									reply = Serial1.readString();
-									Serial.println(reply);
-									delay(5);
-								}
-								display.fillScreen(TFT_BLACK);
-								display.setCursor(0, display.height()/2 - 16);
-								display.setTextFont(2);
-								if (reply.indexOf("OK", reply.indexOf("AT+CPWD")) != -1)
-								{
-									timesRemaining = 3;
-									pinLock = 1;
-									saved = 1;
-									break;
-								}
-								else if (reply.indexOf("ERROR", reply.indexOf("AT+CPWD")) != -1)
-								{
+	// 				reply = "";
 
-									if(reply.indexOf("incorrect") != -1)
-									{
-										oldPin = "";
-										timesRemaining--;
-										display.printCenter("Wrong PIN :(");
-									}
-									else if (reply.indexOf("PUK") != -1)
-									{
-										timesRemaining = 0;
-										break;
-									}
-									else
-										display.printCenter("Invalid PIN");
-									while (!update());
-									delay(2000);
-								}
-							}
-							else
-							{
-								Serial1.print(F("AT+CLCK=\"SC\", 1, \""));
-								Serial1.print(oldPin);
-								Serial1.println("\"");
-								while (!Serial1.available());
-								while (reply.indexOf("OK", reply.indexOf("AT+CLCK")) == -1 && reply.indexOf("ERROR", reply.indexOf("AT+CLCK")) == -1)
-								{
-									reply = Serial1.readString();
-									Serial.println(reply);
-									delay(5);
-								}
-								if (reply.indexOf("OK", reply.indexOf("AT+CLCK")) != -1)
-								{
-									reply = "";
-									Serial1.print(F("AT+CPWD=\"SC\", \""));
-									Serial1.print(oldPin);
-									Serial1.print("\", \"");
-									Serial1.print(pinBuffer);
-									Serial1.println("\"");
-									while (!Serial1.available());
-									while (reply.indexOf("OK", reply.indexOf("AT+CPWD")) == -1 && reply.indexOf("ERROR", reply.indexOf("AT+CPWD")) == -1)
-									{
-										reply = Serial1.readString();
-										Serial.println(reply);
-										delay(5);
-									}
-									display.fillScreen(TFT_BLACK);
-									display.setCursor(0, display.height()/2 - 16);
-									display.setTextFont(2);
-									if (reply.indexOf("OK", reply.indexOf("AT+CPWD")) != -1)
-									{
-										timesRemaining = 3;
-										pinLock = 1;
-										saved = 1;
-										break;
-									}
-									else if (reply.indexOf("ERROR", reply.indexOf("AT+CPWD")) != -1)
-									{
-										oldPin = "";
-										while (!update());
-										timesRemaining--;
-										saved = 0;
-										if (timesRemaining == 0)
-											break;
-										saved = 0;
-									}
-								}
-								else
-								{
+	// 				display.fillScreen(0xED1F);
 
-									saved = 0;
+	// 				while (1)
+	// 				{
+	// 					display.setTextFont(2);
+	// 					display.setTextColor(TFT_WHITE);
+	// 					display.fillScreen(TFT_BLACK);
+	// 					display.setCursor(5, 10);
+	// 					display.printCenter("Enter old PIN:");
+	// 					display.setCursor(5, 40);
+	// 					display.setTextFont(1);
+	// 					String temp = "Remaining attempts: ";
+	// 					temp += timesRemaining;
+	// 					display.printCenter(temp);
+	// 					display.setTextFont(2);
+	// 					display.setCursor(1, 60);
+	// 					display.printCenter(oldPin);
+	// 					display.setCursor(2, 111);
+	// 					display.setTextFont(2);
+	// 					display.print("Press A to confirm");
 
-									display.fillScreen(TFT_BLACK);
-									display.setTextFont(2);
-									display.setCursor(0, display.height()/2 - 16);
-									if (reply.indexOf("incorrect") != -1)
-									{
-										timesRemaining--;
-										display.printCenter("Wrong PIN :(");
-									}
-									else if (reply.indexOf("PUK") != -1)
-									{
-										timesRemaining = 0;
-										break;
-									}
-									else
-										display.printCenter("Invalid PIN");
-									while (!update());
-									delay(2000);
-									Serial.println(timesRemaining);
-									delay(5);
-									if (timesRemaining == 0)
-										break;
-								}
+	// 					key = buttons.kpdNum.getKey();
+	// 					if (key == 'A') //clear number
+	// 						oldPin = "";
+	// 					else if (key == 'C' && oldPin != "")
+	// 						oldPin.remove(oldPin.length() - 1);
+	// 					if (key != NO_KEY && isDigit(key) && oldPin.length() != 4)
+	// 						oldPin += key;
 
-							}
-							oldPin = "";
-						}
-						if (buttons.released(BTN_B))
-						{
-							saved = 0;
-							while (!update());
-							break;
-						}
-						if (timesRemaining == 0)
-							break;
-						update();
-					}
+	// 					if (buttons.released(BTN_A))//enter PIN
+	// 					{
+	// 						while(!update());
+	// 						if (pinLock)
+	// 						{
+	// 							reply = "";
+	// 							Serial1.print(F("AT+CPWD=\"SC\", \""));
+	// 							Serial1.print(oldPin);
+	// 							Serial1.print("\", \"");
+	// 							Serial1.print(pinBuffer);
+	// 							Serial1.println("\"");
+	// 							while (!Serial1.available());
+	// 							while (reply.indexOf("OK", reply.indexOf("AT+CPWD")) == -1 && reply.indexOf("ERROR", reply.indexOf("AT+CPWD")) == -1)
+	// 							{
+	// 								reply = Serial1.readString();
+	// 								Serial.println(reply);
+	// 								delay(5);
+	// 							}
+	// 							display.fillScreen(TFT_BLACK);
+	// 							display.setCursor(0, display.height()/2 - 16);
+	// 							display.setTextFont(2);
+	// 							if (reply.indexOf("OK", reply.indexOf("AT+CPWD")) != -1)
+	// 							{
+	// 								timesRemaining = 3;
+	// 								pinLock = 1;
+	// 								saved = 1;
+	// 								break;
+	// 							}
+	// 							else if (reply.indexOf("ERROR", reply.indexOf("AT+CPWD")) != -1)
+	// 							{
 
-					oldPin = "";
-					pinBuffer = "";
-					if (saved)
-					{
-						display.setCursor(2, 111);
-						display.fillRect(2*2, 57*2, 78*2, 5*2, 0xED1F);
-						display.print("PIN saved!");
-						elapsedMillis = millis();
-						confirmMessage = 1;
-						errorMessage = 0;
-						pinLock = 1;
-						timesRemaining = 3;
-					}
-					else
-					{
-						confirmMessage = 0;
-						errorMessage = 0;
-						pinLock = 0;
-					}
-				}
+	// 								if(reply.indexOf("incorrect") != -1)
+	// 								{
+	// 									oldPin = "";
+	// 									timesRemaining--;
+	// 									display.printCenter("Wrong PIN :(");
+	// 								}
+	// 								else if (reply.indexOf("PUK") != -1)
+	// 								{
+	// 									timesRemaining = 0;
+	// 									break;
+	// 								}
+	// 								else
+	// 									display.printCenter("Invalid PIN");
+	// 								while (!update());
+	// 								delay(2000);
+	// 							}
+	// 						}
+	// 						else
+	// 						{
+	// 							Serial1.print(F("AT+CLCK=\"SC\", 1, \""));
+	// 							Serial1.print(oldPin);
+	// 							Serial1.println("\"");
+	// 							while (!Serial1.available());
+	// 							while (reply.indexOf("OK", reply.indexOf("AT+CLCK")) == -1 && reply.indexOf("ERROR", reply.indexOf("AT+CLCK")) == -1)
+	// 							{
+	// 								reply = Serial1.readString();
+	// 								Serial.println(reply);
+	// 								delay(5);
+	// 							}
+	// 							if (reply.indexOf("OK", reply.indexOf("AT+CLCK")) != -1)
+	// 							{
+	// 								reply = "";
+	// 								Serial1.print(F("AT+CPWD=\"SC\", \""));
+	// 								Serial1.print(oldPin);
+	// 								Serial1.print("\", \"");
+	// 								Serial1.print(pinBuffer);
+	// 								Serial1.println("\"");
+	// 								while (!Serial1.available());
+	// 								while (reply.indexOf("OK", reply.indexOf("AT+CPWD")) == -1 && reply.indexOf("ERROR", reply.indexOf("AT+CPWD")) == -1)
+	// 								{
+	// 									reply = Serial1.readString();
+	// 									Serial.println(reply);
+	// 									delay(5);
+	// 								}
+	// 								display.fillScreen(TFT_BLACK);
+	// 								display.setCursor(0, display.height()/2 - 16);
+	// 								display.setTextFont(2);
+	// 								if (reply.indexOf("OK", reply.indexOf("AT+CPWD")) != -1)
+	// 								{
+	// 									timesRemaining = 3;
+	// 									pinLock = 1;
+	// 									saved = 1;
+	// 									break;
+	// 								}
+	// 								else if (reply.indexOf("ERROR", reply.indexOf("AT+CPWD")) != -1)
+	// 								{
+	// 									oldPin = "";
+	// 									while (!update());
+	// 									timesRemaining--;
+	// 									saved = 0;
+	// 									if (timesRemaining == 0)
+	// 										break;
+	// 									saved = 0;
+	// 								}
+	// 							}
+	// 							else
+	// 							{
 
-				if (buttons.released(BTN_A) && pinBuffer.length() < 4 && errorMessage == 0)
-				{
-					gui.osc->note(75, 0.05);
-					gui.osc->play();
-					while (!update());
-					display.setCursor(2, 111);
-					display.print("Pin must have 4+ digits");
-					elapsedMillis = millis();
-					errorMessage = 1;
-					confirmMessage = 0;
-				}
-				if (millis() - elapsedMillis >= 2000 && errorMessage == 1)
-				{
-					display.fillRect(2*2, 57*2, 78*2, 5*2, 0xED1F);
-					errorMessage = 0;
-				}
-				else if (millis() - elapsedMillis < 2000 && errorMessage == 1)
-				{
-					display.fillRect(2*2, 57*2, 78*2, 5*2, 0xED1F);
-					display.setCursor(2, 111);
-					display.print("Pin must have 4+ digits");
-				}
-				if (millis() - elapsedMillis >= 2000 && confirmMessage == 1)
-				{
-					display.fillRect(2*2, 57*2, 78*2, 5*2, 0xED1F);
-					confirmMessage = 0;
-				}
-				else if (millis() - elapsedMillis < 2000 && confirmMessage == 1)
-				{
-					display.fillRect(2*2, 56*2, 78*2, 6*2, 0xED1F);
-					display.setCursor(2, 111);
-					display.print("PIN saved!");
-				}
-			}
+	// 								saved = 0;
 
-			if (buttons.released(BTN_UP))
-			{
-				gui.osc->note(75, 0.05);
-				gui.osc->play();
-				while (!update());
-				if (cursor == 0 && pinLockBuffer == 1)
-					cursor = 1;
-				else if (pinLockBuffer == 1 && cursor == 1)
-					cursor--;
-			}
-			if (buttons.released(BTN_DOWN))
-			{
-				gui.osc->note(75, 0.05);
-				gui.osc->play();
-				while (!update());
-				if (cursor == 1)
-					cursor = 0;
-				else if (pinLockBuffer == 1 && cursor == 0)
-					cursor++;
-			}
-			if (buttons.released(BTN_B)) //BUTTON BACK
-				break;
-			update();
-		}
+	// 								display.fillScreen(TFT_BLACK);
+	// 								display.setTextFont(2);
+	// 								display.setCursor(0, display.height()/2 - 16);
+	// 								if (reply.indexOf("incorrect") != -1)
+	// 								{
+	// 									timesRemaining--;
+	// 									display.printCenter("Wrong PIN :(");
+	// 								}
+	// 								else if (reply.indexOf("PUK") != -1)
+	// 								{
+	// 									timesRemaining = 0;
+	// 									break;
+	// 								}
+	// 								else
+	// 									display.printCenter("Invalid PIN");
+	// 								while (!update());
+	// 								delay(2000);
+	// 								Serial.println(timesRemaining);
+	// 								delay(5);
+	// 								if (timesRemaining == 0)
+	// 									break;
+	// 							}
 
-	}
+	// 						}
+	// 						oldPin = "";
+	// 					}
+	// 					if (buttons.released(BTN_B))
+	// 					{
+	// 						saved = 0;
+	// 						while (!update());
+	// 						break;
+	// 					}
+	// 					if (timesRemaining == 0)
+	// 						break;
+	// 					update();
+	// 				}
+
+	// 				oldPin = "";
+	// 				pinBuffer = "";
+	// 				if (saved)
+	// 				{
+	// 					display.setCursor(2, 111);
+	// 					display.fillRect(2*2, 57*2, 78*2, 5*2, 0xED1F);
+	// 					display.print("PIN saved!");
+	// 					elapsedMillis = millis();
+	// 					confirmMessage = 1;
+	// 					errorMessage = 0;
+	// 					pinLock = 1;
+	// 					timesRemaining = 3;
+	// 				}
+	// 				else
+	// 				{
+	// 					confirmMessage = 0;
+	// 					errorMessage = 0;
+	// 					pinLock = 0;
+	// 				}
+	// 			}
+
+	// 			if (buttons.released(BTN_A) && pinBuffer.length() < 4 && errorMessage == 0)
+	// 			{
+	// 				gui.osc->note(75, 0.05);
+	// 				gui.osc->play();
+	// 				while (!update());
+	// 				display.setCursor(2, 111);
+	// 				display.print("Pin must have 4+ digits");
+	// 				elapsedMillis = millis();
+	// 				errorMessage = 1;
+	// 				confirmMessage = 0;
+	// 			}
+	// 			if (millis() - elapsedMillis >= 2000 && errorMessage == 1)
+	// 			{
+	// 				display.fillRect(2*2, 57*2, 78*2, 5*2, 0xED1F);
+	// 				errorMessage = 0;
+	// 			}
+	// 			else if (millis() - elapsedMillis < 2000 && errorMessage == 1)
+	// 			{
+	// 				display.fillRect(2*2, 57*2, 78*2, 5*2, 0xED1F);
+	// 				display.setCursor(2, 111);
+	// 				display.print("Pin must have 4+ digits");
+	// 			}
+	// 			if (millis() - elapsedMillis >= 2000 && confirmMessage == 1)
+	// 			{
+	// 				display.fillRect(2*2, 57*2, 78*2, 5*2, 0xED1F);
+	// 				confirmMessage = 0;
+	// 			}
+	// 			else if (millis() - elapsedMillis < 2000 && confirmMessage == 1)
+	// 			{
+	// 				display.fillRect(2*2, 56*2, 78*2, 6*2, 0xED1F);
+	// 				display.setCursor(2, 111);
+	// 				display.print("PIN saved!");
+	// 			}
+	// 		}
+
+	// 		if (buttons.released(BTN_UP))
+	// 		{
+	// 			gui.osc->note(75, 0.05);
+	// 			gui.osc->play();
+	// 			while (!update());
+	// 			if (cursor == 0 && pinLockBuffer == 1)
+	// 				cursor = 1;
+	// 			else if (pinLockBuffer == 1 && cursor == 1)
+	// 				cursor--;
+	// 		}
+	// 		if (buttons.released(BTN_DOWN))
+	// 		{
+	// 			gui.osc->note(75, 0.05);
+	// 			gui.osc->play();
+	// 			while (!update());
+	// 			if (cursor == 1)
+	// 				cursor = 0;
+	// 			else if (pinLockBuffer == 1 && cursor == 0)
+	// 				cursor++;
+	// 		}
+	// 		if (buttons.released(BTN_B)) //BUTTON BACK
+	// 			break;
+	// 		update();
+	// 	}
+
+	// }
 }
 void MAKERphone::timeMenu()
 {
-	bool blinkState = 0;
-	uint32_t previousMillis = millis();
-	uint8_t cursor = 0;
-	uint8_t editCursor = 0;
-	String foo="";
-	char key;
-	display.setTextWrap(0);
-	while(1)
-	{
-		display.fillScreen(0xFFED);
-		display.setTextFont(2);
-		display.setTextColor(TFT_BLACK);
+	// bool blinkState = 0;
+	// uint32_t previousMillis = millis();
+	// uint8_t cursor = 0;
+	// uint8_t editCursor = 0;
+	// String foo="";
+	// char key;
+	// display.setTextWrap(0);
+	// while(1)
+	// {
+	// 	display.fillScreen(0xFFED);
+	// 	display.setTextFont(2);
+	// 	display.setTextColor(TFT_BLACK);
 
-		display.setCursor(52,10);
-		if (clockHour < 10)
-			display.print("0");
-		display.print(clockHour);
-		if(blinkState)
-			display.print(":");
-		else
-			display.setCursor(display.cursor_x + 3, 10);
-		if (clockMinute < 10)
-			display.print("0");
-		display.print(clockMinute);
-		if(blinkState)
-			display.print(":");
-		else
-			display.setCursor(display.cursor_x + 3, 10);
-		if (clockSecond < 10)
-			display.print("0");
-		display.print(clockSecond);
+	// 	display.setCursor(52,10);
+	// 	if (clockHour < 10)
+	// 		display.print("0");
+	// 	display.print(clockHour);
+	// 	if(blinkState)
+	// 		display.print(":");
+	// 	else
+	// 		display.setCursor(display.cursor_x + 3, 10);
+	// 	if (clockMinute < 10)
+	// 		display.print("0");
+	// 	display.print(clockMinute);
+	// 	if(blinkState)
+	// 		display.print(":");
+	// 	else
+	// 		display.setCursor(display.cursor_x + 3, 10);
+	// 	if (clockSecond < 10)
+	// 		display.print("0");
+	// 	display.print(clockSecond);
 
-		display.setCursor(40,30);
-		if (clockDay < 10)
-			display.print("0");
-		display.print(clockDay);
-		display.print("/");
+	// 	display.setCursor(40,30);
+	// 	if (clockDay < 10)
+	// 		display.print("0");
+	// 	display.print(clockDay);
+	// 	display.print("/");
 
-		if (clockMonth < 10)
-			display.print("0");
-		display.print(clockMonth);
-		display.print("/");
-		display.print(2000 + clockYear);
+	// 	if (clockMonth < 10)
+	// 		display.print("0");
+	// 	display.print(clockMonth);
+	// 	display.print("/");
+	// 	display.print(2000 + clockYear);
 
-		display.setCursor( 0, 65);
-		display.printCenter("Edit time");
-		display.drawRect(46,63, 68, 20, TFT_BLACK);
-		display.setCursor( 40, 95);
-		display.printCenter("Force time sync");
-		display.drawRect(23, 93, 110, 20, TFT_BLACK);
+	// 	display.setCursor( 0, 65);
+	// 	display.printCenter("Edit time");
+	// 	display.drawRect(46,63, 68, 20, TFT_BLACK);
+	// 	display.setCursor( 40, 95);
+	// 	display.printCenter("Force time sync");
+	// 	display.drawRect(23, 93, 110, 20, TFT_BLACK);
 
-		if(cursor == 0)
-		{
-			if(!blinkState)
-				display.drawRect(46,63, 68, 20, 0xFFED);
-			if(buttons.released(BTN_A))
-			{
-				gui.osc->note(75, 0.05);
-				gui.osc->play();
-				while(!update());
-				String inputBuffer;
-				if(clockHour == 0)
-					inputBuffer = "";
-				else
-					inputBuffer = String(clockHour);
+	// 	if(cursor == 0)
+	// 	{
+	// 		if(!blinkState)
+	// 			display.drawRect(46,63, 68, 20, 0xFFED);
+	// 		if(buttons.released(BTN_A))
+	// 		{
+	// 			gui.osc->note(75, 0.05);
+	// 			gui.osc->play();
+	// 			while(!update());
+	// 			String inputBuffer;
+	// 			if(clockHour == 0)
+	// 				inputBuffer = "";
+	// 			else
+	// 				inputBuffer = String(clockHour);
 
-				while(1)
-				{
-					display.fillScreen(0xFFED);
-					display.setCursor(2, 98);
-					display.print("Press A to save");
-					display.setCursor(2, 110);
-					display.print("Press B to cancel");
-					switch (editCursor)
-					{
-						case 0:
-							display.setCursor(52,10);
-							if(inputBuffer == "")
-								display.cursor_x+=16;
-							else if (inputBuffer.length() == 1)
-							{
-								display.print("0"); display.print(inputBuffer);
-							}
-							else
-								display.print(inputBuffer);
-							if(blinkState)
-								display.drawFastVLine(display.getCursorX() - 1, display.getCursorY() + 3, 11, TFT_BLACK);
+	// 			while(1)
+	// 			{
+	// 				display.fillScreen(0xFFED);
+	// 				display.setCursor(2, 98);
+	// 				display.print("Press A to save");
+	// 				display.setCursor(2, 110);
+	// 				display.print("Press B to cancel");
+	// 				switch (editCursor)
+	// 				{
+	// 					case 0:
+	// 						display.setCursor(52,10);
+	// 						if(inputBuffer == "")
+	// 							display.cursor_x+=16;
+	// 						else if (inputBuffer.length() == 1)
+	// 						{
+	// 							display.print("0"); display.print(inputBuffer);
+	// 						}
+	// 						else
+	// 							display.print(inputBuffer);
+	// 						if(blinkState)
+	// 							display.drawFastVLine(display.getCursorX() - 1, display.getCursorY() + 3, 11, TFT_BLACK);
 
-							display.print(":");
-							if (clockMinute < 10)
-								display.print("0");
-							display.print(clockMinute);
-							display.print(":");
-							if (clockSecond < 10)
-								display.print("0");
-							display.print(clockSecond);
+	// 						display.print(":");
+	// 						if (clockMinute < 10)
+	// 							display.print("0");
+	// 						display.print(clockMinute);
+	// 						display.print(":");
+	// 						if (clockSecond < 10)
+	// 							display.print("0");
+	// 						display.print(clockSecond);
 
-							display.setCursor(40,30);
-							if (clockDay < 10)
-								display.print("0");
-							display.print(clockDay);
-							display.print("/");
-							if (clockMonth < 10)
-								display.print("0");
-							display.print(clockMonth);
-							display.print("/");
-							display.print(2000 + clockYear);
-							break;
+	// 						display.setCursor(40,30);
+	// 						if (clockDay < 10)
+	// 							display.print("0");
+	// 						display.print(clockDay);
+	// 						display.print("/");
+	// 						if (clockMonth < 10)
+	// 							display.print("0");
+	// 						display.print(clockMonth);
+	// 						display.print("/");
+	// 						display.print(2000 + clockYear);
+	// 						break;
 
-						case 1:
-							display.setCursor(52,10);
-							if(clockHour < 10)
-								display.print("0");
-							display.print(clockHour);
-							display.print(":");
-							if(inputBuffer == "")
-								display.cursor_x+=16;
-							else if (inputBuffer.length() == 1)
-							{
-								display.print("0"); display.print(inputBuffer);
-							}
-							else
-								display.print(inputBuffer);
-							if(blinkState)
-								display.drawFastVLine(display.getCursorX() - 1, display.getCursorY() + 3, 11, TFT_BLACK);
-							display.print(":");
-							if (clockSecond < 10)
-								display.print("0");
-							display.print(clockSecond);
+	// 					case 1:
+	// 						display.setCursor(52,10);
+	// 						if(clockHour < 10)
+	// 							display.print("0");
+	// 						display.print(clockHour);
+	// 						display.print(":");
+	// 						if(inputBuffer == "")
+	// 							display.cursor_x+=16;
+	// 						else if (inputBuffer.length() == 1)
+	// 						{
+	// 							display.print("0"); display.print(inputBuffer);
+	// 						}
+	// 						else
+	// 							display.print(inputBuffer);
+	// 						if(blinkState)
+	// 							display.drawFastVLine(display.getCursorX() - 1, display.getCursorY() + 3, 11, TFT_BLACK);
+	// 						display.print(":");
+	// 						if (clockSecond < 10)
+	// 							display.print("0");
+	// 						display.print(clockSecond);
 
-							display.setCursor(40,30);
-							if (clockDay < 10)
-								display.print("0");
-							display.print(clockDay);
-							display.print("/");
-							if (clockMonth < 10)
-								display.print("0");
-							display.print(clockMonth);
-							display.print("/");
-							display.print(2000 + clockYear);
-							break;
+	// 						display.setCursor(40,30);
+	// 						if (clockDay < 10)
+	// 							display.print("0");
+	// 						display.print(clockDay);
+	// 						display.print("/");
+	// 						if (clockMonth < 10)
+	// 							display.print("0");
+	// 						display.print(clockMonth);
+	// 						display.print("/");
+	// 						display.print(2000 + clockYear);
+	// 						break;
 
-						case 2:
-							display.setCursor(52,10);
-							if(clockHour < 10)
-								display.print("0");
-							display.print(clockHour);
-							display.print(":");
-							if(clockMinute < 10)
-								display.print("0");
-							display.print(clockMinute);
-							display.print(":");
-							if(inputBuffer == "")
-								display.cursor_x+=16;
-							if (inputBuffer.length() == 1)
-							{
-								display.print("0"); display.print(inputBuffer);
-							}
-							else
-								display.print(inputBuffer);
-							if(blinkState)
-								display.drawFastVLine(display.getCursorX() - 1, display.getCursorY() + 3, 11, TFT_BLACK);
+	// 					case 2:
+	// 						display.setCursor(52,10);
+	// 						if(clockHour < 10)
+	// 							display.print("0");
+	// 						display.print(clockHour);
+	// 						display.print(":");
+	// 						if(clockMinute < 10)
+	// 							display.print("0");
+	// 						display.print(clockMinute);
+	// 						display.print(":");
+	// 						if(inputBuffer == "")
+	// 							display.cursor_x+=16;
+	// 						if (inputBuffer.length() == 1)
+	// 						{
+	// 							display.print("0"); display.print(inputBuffer);
+	// 						}
+	// 						else
+	// 							display.print(inputBuffer);
+	// 						if(blinkState)
+	// 							display.drawFastVLine(display.getCursorX() - 1, display.getCursorY() + 3, 11, TFT_BLACK);
 
-							display.setCursor(40,30);
-							if (clockDay < 10)
-								display.print("0");
-							display.print(clockDay);
-							display.print("/");
-							if (clockMonth < 10)
-								display.print("0");
-							display.print(clockMonth);
-							display.print("/");
-							display.print(2000 + clockYear);
-							break;
+	// 						display.setCursor(40,30);
+	// 						if (clockDay < 10)
+	// 							display.print("0");
+	// 						display.print(clockDay);
+	// 						display.print("/");
+	// 						if (clockMonth < 10)
+	// 							display.print("0");
+	// 						display.print(clockMonth);
+	// 						display.print("/");
+	// 						display.print(2000 + clockYear);
+	// 						break;
 
-						case 3:
-							display.setCursor(52,10);
-							if(clockHour < 10)
-								display.print("0");
-							display.print(clockHour);
-							display.print(":");
-							if(clockMinute < 10)
-								display.print("0");
-							display.print(clockMinute);
-							display.print(":");
-							if (clockSecond < 10)
-								display.print("0");
-							display.print(clockSecond);
+	// 					case 3:
+	// 						display.setCursor(52,10);
+	// 						if(clockHour < 10)
+	// 							display.print("0");
+	// 						display.print(clockHour);
+	// 						display.print(":");
+	// 						if(clockMinute < 10)
+	// 							display.print("0");
+	// 						display.print(clockMinute);
+	// 						display.print(":");
+	// 						if (clockSecond < 10)
+	// 							display.print("0");
+	// 						display.print(clockSecond);
 
-							display.setCursor(40,30);
-							if(inputBuffer == "")
-								display.cursor_x+=16;
-							else if (inputBuffer.length() == 1)
-							{
-								display.print("0"); display.print(inputBuffer);
-							}
-							else
-								display.print(inputBuffer);
-							if(blinkState)
-								display.drawFastVLine(display.getCursorX() - 1, display.getCursorY() + 3, 11, TFT_BLACK);
+	// 						display.setCursor(40,30);
+	// 						if(inputBuffer == "")
+	// 							display.cursor_x+=16;
+	// 						else if (inputBuffer.length() == 1)
+	// 						{
+	// 							display.print("0"); display.print(inputBuffer);
+	// 						}
+	// 						else
+	// 							display.print(inputBuffer);
+	// 						if(blinkState)
+	// 							display.drawFastVLine(display.getCursorX() - 1, display.getCursorY() + 3, 11, TFT_BLACK);
 
-							display.print("/");
-							if (clockMonth < 10)
-								display.print("0");
-							display.print(clockMonth);
-							display.print("/");
-							display.print(2000 + clockYear);
-							break;
+	// 						display.print("/");
+	// 						if (clockMonth < 10)
+	// 							display.print("0");
+	// 						display.print(clockMonth);
+	// 						display.print("/");
+	// 						display.print(2000 + clockYear);
+	// 						break;
 
-						case 4:
-							display.setCursor(52,10);
-							if(clockHour < 10)
-								display.print("0");
-							display.print(clockHour);
-							display.print(":");
-							if(clockMinute < 10)
-								display.print("0");
-							display.print(clockMinute);
-							display.print(":");
-							if (clockSecond < 10)
-								display.print("0");
-							display.print(clockSecond);
+	// 					case 4:
+	// 						display.setCursor(52,10);
+	// 						if(clockHour < 10)
+	// 							display.print("0");
+	// 						display.print(clockHour);
+	// 						display.print(":");
+	// 						if(clockMinute < 10)
+	// 							display.print("0");
+	// 						display.print(clockMinute);
+	// 						display.print(":");
+	// 						if (clockSecond < 10)
+	// 							display.print("0");
+	// 						display.print(clockSecond);
 
-							display.setCursor(40,30);
-							if (clockDay < 10)
-								display.print("0");
-							display.print(clockDay);
-							display.print("/");
-							if(inputBuffer == "")
-								display.cursor_x+=16;
-							else if (inputBuffer.length() == 1)
-							{
-								display.print("0"); display.print(inputBuffer);
-							}
-							else
-								display.print(inputBuffer);
-							if(blinkState)
-								display.drawFastVLine(display.getCursorX() - 1, display.getCursorY() + 3, 11, TFT_BLACK);
+	// 						display.setCursor(40,30);
+	// 						if (clockDay < 10)
+	// 							display.print("0");
+	// 						display.print(clockDay);
+	// 						display.print("/");
+	// 						if(inputBuffer == "")
+	// 							display.cursor_x+=16;
+	// 						else if (inputBuffer.length() == 1)
+	// 						{
+	// 							display.print("0"); display.print(inputBuffer);
+	// 						}
+	// 						else
+	// 							display.print(inputBuffer);
+	// 						if(blinkState)
+	// 							display.drawFastVLine(display.getCursorX() - 1, display.getCursorY() + 3, 11, TFT_BLACK);
 
-							display.print("/");
-							display.print(2000 + clockYear);
-							break;
+	// 						display.print("/");
+	// 						display.print(2000 + clockYear);
+	// 						break;
 
-						case 5:
-							display.setCursor(52,10);
-							if(clockHour < 10)
-								display.print("0");
-							display.print(clockHour);
-							display.print(":");
-							if(clockMinute < 10)
-								display.print("0");
-							display.print(clockMinute);
-							display.print(":");
-							if (clockSecond < 10)
-								display.print("0");
-							display.print(clockSecond);
+	// 					case 5:
+	// 						display.setCursor(52,10);
+	// 						if(clockHour < 10)
+	// 							display.print("0");
+	// 						display.print(clockHour);
+	// 						display.print(":");
+	// 						if(clockMinute < 10)
+	// 							display.print("0");
+	// 						display.print(clockMinute);
+	// 						display.print(":");
+	// 						if (clockSecond < 10)
+	// 							display.print("0");
+	// 						display.print(clockSecond);
 
-							display.setCursor(40,30);
-							if (clockDay < 10)
-								display.print("0");
-							display.print(clockDay);
-							display.print("/");
-							if (clockMonth < 10)
-								display.print("0");
-							display.print(clockMonth);
-							display.print("/");
-							if(inputBuffer == "")
-								display.print(2000);
-							else
-								display.print(2000 + inputBuffer.toInt());
-							if(blinkState)
-								display.drawFastVLine(display.getCursorX() - 1, display.getCursorY() + 3, 11, TFT_BLACK);
-							break;
+	// 						display.setCursor(40,30);
+	// 						if (clockDay < 10)
+	// 							display.print("0");
+	// 						display.print(clockDay);
+	// 						display.print("/");
+	// 						if (clockMonth < 10)
+	// 							display.print("0");
+	// 						display.print(clockMonth);
+	// 						display.print("/");
+	// 						if(inputBuffer == "")
+	// 							display.print(2000);
+	// 						else
+	// 							display.print(2000 + inputBuffer.toInt());
+	// 						if(blinkState)
+	// 							display.drawFastVLine(display.getCursorX() - 1, display.getCursorY() + 3, 11, TFT_BLACK);
+	// 						break;
 
-					}
-					key = buttons.kpdNum.getKey();
-					if (key == 'A') //clear number
-						inputBuffer = "";
-					else if (key == 'C')
-						inputBuffer.remove(inputBuffer.length() - 1);
-					if (key != NO_KEY && isdigit(key) && inputBuffer.length() < 2)
-						inputBuffer += key;
-					if(millis()-previousMillis >= 500)
-					{
-						previousMillis = millis();
-						blinkState = !blinkState;
-					}
-					update();
-					if(buttons.released(BTN_RIGHT) && editCursor < 5) //RIGHT
-					{
-						blinkState = 1;
-						previousMillis = millis();
-						while(!update());
-						if(inputBuffer == "")
-						{
-							switch (editCursor)
-							{
-								case 0:
-									clockHour = 0;
-									break;
-								case 1:
-									clockMinute = 0;
-									break;
-								case 2:
-									clockSecond = 0;
-									break;
-								case 3:
-									clockDay = 0;
-									break;
-								case 4:
-									clockMonth = 0;
-									break;
-								case 5:
-									clockYear = 0;
-									break;
-							}
-						}
-						else
-						{
-							switch (editCursor)
-							{
-								case 0:
-									clockHour = inputBuffer.toInt();
-									break;
-								case 1:
-									clockMinute = inputBuffer.toInt();
-									break;
-								case 2:
-									clockSecond = inputBuffer.toInt();
-									break;
-								case 3:
-									clockDay = inputBuffer.toInt();
-									break;
-								case 4:
-									clockMonth = inputBuffer.toInt();
-									break;
-								case 5:
-									clockYear = inputBuffer.toInt();
-									break;
-							}
-						}
-						switch (editCursor)
-						{
-							case 0:
-								if(clockMinute != 0)
-									inputBuffer = String(clockMinute);
-								else
-									inputBuffer = "";
-								break;
-							case 1:
-								if(clockSecond != 0)
-									inputBuffer = String(clockSecond);
-								else
-									inputBuffer = "";
-								break;
-							case 2:
-								if(clockDay != 0)
-									inputBuffer = String(clockDay);
-								else
-									inputBuffer = "";
-								break;
-							case 3:
-								if(clockMonth != 0)
-									inputBuffer = String(clockMonth);
-								else
-									inputBuffer = "";
-								break;
-							case 4:
-								if(clockYear != 0)
-									inputBuffer = String(clockYear);
-								else
-									inputBuffer = "";
-								break;
-						}
-						editCursor++;
+	// 				}
+	// 				key = buttons.kpdNum.getKey();
+	// 				if (key == 'A') //clear number
+	// 					inputBuffer = "";
+	// 				else if (key == 'C')
+	// 					inputBuffer.remove(inputBuffer.length() - 1);
+	// 				if (key != NO_KEY && isdigit(key) && inputBuffer.length() < 2)
+	// 					inputBuffer += key;
+	// 				if(millis()-previousMillis >= 500)
+	// 				{
+	// 					previousMillis = millis();
+	// 					blinkState = !blinkState;
+	// 				}
+	// 				update();
+	// 				if(buttons.released(BTN_RIGHT) && editCursor < 5) //RIGHT
+	// 				{
+	// 					blinkState = 1;
+	// 					previousMillis = millis();
+	// 					while(!update());
+	// 					if(inputBuffer == "")
+	// 					{
+	// 						switch (editCursor)
+	// 						{
+	// 							case 0:
+	// 								clockHour = 0;
+	// 								break;
+	// 							case 1:
+	// 								clockMinute = 0;
+	// 								break;
+	// 							case 2:
+	// 								clockSecond = 0;
+	// 								break;
+	// 							case 3:
+	// 								clockDay = 0;
+	// 								break;
+	// 							case 4:
+	// 								clockMonth = 0;
+	// 								break;
+	// 							case 5:
+	// 								clockYear = 0;
+	// 								break;
+	// 						}
+	// 					}
+	// 					else
+	// 					{
+	// 						switch (editCursor)
+	// 						{
+	// 							case 0:
+	// 								clockHour = inputBuffer.toInt();
+	// 								break;
+	// 							case 1:
+	// 								clockMinute = inputBuffer.toInt();
+	// 								break;
+	// 							case 2:
+	// 								clockSecond = inputBuffer.toInt();
+	// 								break;
+	// 							case 3:
+	// 								clockDay = inputBuffer.toInt();
+	// 								break;
+	// 							case 4:
+	// 								clockMonth = inputBuffer.toInt();
+	// 								break;
+	// 							case 5:
+	// 								clockYear = inputBuffer.toInt();
+	// 								break;
+	// 						}
+	// 					}
+	// 					switch (editCursor)
+	// 					{
+	// 						case 0:
+	// 							if(clockMinute != 0)
+	// 								inputBuffer = String(clockMinute);
+	// 							else
+	// 								inputBuffer = "";
+	// 							break;
+	// 						case 1:
+	// 							if(clockSecond != 0)
+	// 								inputBuffer = String(clockSecond);
+	// 							else
+	// 								inputBuffer = "";
+	// 							break;
+	// 						case 2:
+	// 							if(clockDay != 0)
+	// 								inputBuffer = String(clockDay);
+	// 							else
+	// 								inputBuffer = "";
+	// 							break;
+	// 						case 3:
+	// 							if(clockMonth != 0)
+	// 								inputBuffer = String(clockMonth);
+	// 							else
+	// 								inputBuffer = "";
+	// 							break;
+	// 						case 4:
+	// 							if(clockYear != 0)
+	// 								inputBuffer = String(clockYear);
+	// 							else
+	// 								inputBuffer = "";
+	// 							break;
+	// 					}
+	// 					editCursor++;
 
-					}
-					if(buttons.released(BTN_LEFT) && editCursor > 0) //LEFT
-					{
-						while(!update());
-						blinkState = 1;
-						previousMillis = millis();
-						if(inputBuffer == "")
-						{
-							switch (editCursor)
-							{
-								case 0:
-									clockHour = 0;
-									break;
-								case 1:
-									clockMinute = 0;
-									break;
-								case 2:
-									clockSecond = 0;
-									break;
-								case 3:
-									clockDay = 0;
-									break;
-								case 4:
-									clockMonth = 0;
-									break;
-								case 5:
-									clockYear = 0;
-									break;
-							}
-						}
-						else
-						{
-							switch (editCursor)
-							{
-								case 0:
-									clockHour = inputBuffer.toInt();
-									break;
-								case 1:
-									clockMinute = inputBuffer.toInt();
-									break;
-								case 2:
-									clockSecond = inputBuffer.toInt();
-									break;
-								case 3:
-									clockDay = inputBuffer.toInt();
-									break;
-								case 4:
-									clockMonth = inputBuffer.toInt();
-									break;
-								case 5:
-									clockYear = inputBuffer.toInt();
-									break;
-							}
-						}
-						switch (editCursor)
-						{
-							case 1:
-								if(clockHour != 0)
-									inputBuffer = String(clockHour);
-								else
-									inputBuffer = "";
-								break;
-							case 2:
-								if(clockMinute != 0)
-									inputBuffer = String(clockMinute);
-								else
-									inputBuffer = "";
-								break;
-							case 3:
-								if(clockSecond != 0)
-									inputBuffer = String(clockSecond);
-								else
-									inputBuffer = "";
-								break;
-							case 4:
-								if(clockDay != 0)
-									inputBuffer = String(clockDay);
-								else
-									inputBuffer = "";
-								break;
-							case 5:
-								if(clockMonth != 0)
-									inputBuffer = String(clockMonth);
-								else
-									inputBuffer = "";
-								break;
-						}
-						editCursor--;
+	// 				}
+	// 				if(buttons.released(BTN_LEFT) && editCursor > 0) //LEFT
+	// 				{
+	// 					while(!update());
+	// 					blinkState = 1;
+	// 					previousMillis = millis();
+	// 					if(inputBuffer == "")
+	// 					{
+	// 						switch (editCursor)
+	// 						{
+	// 							case 0:
+	// 								clockHour = 0;
+	// 								break;
+	// 							case 1:
+	// 								clockMinute = 0;
+	// 								break;
+	// 							case 2:
+	// 								clockSecond = 0;
+	// 								break;
+	// 							case 3:
+	// 								clockDay = 0;
+	// 								break;
+	// 							case 4:
+	// 								clockMonth = 0;
+	// 								break;
+	// 							case 5:
+	// 								clockYear = 0;
+	// 								break;
+	// 						}
+	// 					}
+	// 					else
+	// 					{
+	// 						switch (editCursor)
+	// 						{
+	// 							case 0:
+	// 								clockHour = inputBuffer.toInt();
+	// 								break;
+	// 							case 1:
+	// 								clockMinute = inputBuffer.toInt();
+	// 								break;
+	// 							case 2:
+	// 								clockSecond = inputBuffer.toInt();
+	// 								break;
+	// 							case 3:
+	// 								clockDay = inputBuffer.toInt();
+	// 								break;
+	// 							case 4:
+	// 								clockMonth = inputBuffer.toInt();
+	// 								break;
+	// 							case 5:
+	// 								clockYear = inputBuffer.toInt();
+	// 								break;
+	// 						}
+	// 					}
+	// 					switch (editCursor)
+	// 					{
+	// 						case 1:
+	// 							if(clockHour != 0)
+	// 								inputBuffer = String(clockHour);
+	// 							else
+	// 								inputBuffer = "";
+	// 							break;
+	// 						case 2:
+	// 							if(clockMinute != 0)
+	// 								inputBuffer = String(clockMinute);
+	// 							else
+	// 								inputBuffer = "";
+	// 							break;
+	// 						case 3:
+	// 							if(clockSecond != 0)
+	// 								inputBuffer = String(clockSecond);
+	// 							else
+	// 								inputBuffer = "";
+	// 							break;
+	// 						case 4:
+	// 							if(clockDay != 0)
+	// 								inputBuffer = String(clockDay);
+	// 							else
+	// 								inputBuffer = "";
+	// 							break;
+	// 						case 5:
+	// 							if(clockMonth != 0)
+	// 								inputBuffer = String(clockMonth);
+	// 							else
+	// 								inputBuffer = "";
+	// 							break;
+	// 					}
+	// 					editCursor--;
 
-					}
+	// 				}
 
-					if(buttons.released(BTN_UP) && editCursor > 2) //UP
-					{
-						while(!update());
-						blinkState = 1;
-						previousMillis = millis();
-						if(inputBuffer == "")
-						{
-							switch (editCursor)
-							{
-								case 0:
-									clockHour = 0;
-									break;
-								case 1:
-									clockMinute = 0;
-									break;
-								case 2:
-									clockSecond = 0;
-									break;
-								case 3:
-									clockDay = 0;
-									break;
-								case 4:
-									clockMonth = 0;
-									break;
-								case 5:
-									clockYear = 0;
-									break;
-							}
-						}
-						else
-						{
-							switch (editCursor)
-							{
-								case 0:
-									clockHour = inputBuffer.toInt();
-									break;
-								case 1:
-									clockMinute = inputBuffer.toInt();
-									break;
-								case 2:
-									clockSecond = inputBuffer.toInt();
-									break;
-								case 3:
-									clockDay = inputBuffer.toInt();
-									break;
-								case 4:
-									clockMonth = inputBuffer.toInt();
-									break;
-								case 5:
-									clockYear = inputBuffer.toInt();
-									break;
-							}
-						}
-						switch (editCursor)
-						{
-							case 3:
-								if(clockHour != 0)
-									inputBuffer = String(clockHour);
-								else
-									inputBuffer = "";
-								break;
-							case 4:
-								if(clockMinute != 0)
-									inputBuffer = String(clockMinute);
-								else
-									inputBuffer = "";
-								break;
-							case 5:
-								if(clockSecond != 0)
-									inputBuffer = String(clockSecond);
-								else
-									inputBuffer = "";
-								break;
-						}
-						editCursor-=3;
-					}
-					if(buttons.released(BTN_DOWN) && editCursor < 3) //DOWN
-					{
-						while(!update());
-						blinkState = 1;
-						previousMillis = millis();
-						if(inputBuffer == "")
-						{
-							switch (editCursor)
-							{
-								case 0:
-									clockHour = 0;
-									break;
-								case 1:
-									clockMinute = 0;
-									break;
-								case 2:
-									clockSecond = 0;
-									break;
-								case 3:
-									clockDay = 0;
-									break;
-								case 4:
-									clockMonth = 0;
-									break;
-								case 5:
-									clockYear = 0;
-									break;
-							}
-						}
-						else
-						{
-							switch (editCursor)
-							{
-								case 0:
-									clockHour = inputBuffer.toInt();
-									break;
-								case 1:
-									clockMinute = inputBuffer.toInt();
-									break;
-								case 2:
-									clockSecond = inputBuffer.toInt();
-									break;
-								case 3:
-									clockDay = inputBuffer.toInt();
-									break;
-								case 4:
-									clockMonth = inputBuffer.toInt();
-									break;
-								case 5:
-									clockYear = inputBuffer.toInt();
-									break;
-							}
-						}
-						switch (editCursor)
-						{
-							case 0:
-								if(clockDay != 0)
-									inputBuffer = String(clockDay);
-								else
-									inputBuffer = "";
-								break;
-							case 1:
-								if(clockMonth != 0)
-									inputBuffer = String(clockMonth);
-								else
-									inputBuffer = "";
-								break;
-							case 2:
-								if(clockYear != 0)
-									inputBuffer = String(clockYear);
-								else
-									inputBuffer = "";
-								break;
-						}
-						editCursor+=3;
-					}
+	// 				if(buttons.released(BTN_UP) && editCursor > 2) //UP
+	// 				{
+	// 					while(!update());
+	// 					blinkState = 1;
+	// 					previousMillis = millis();
+	// 					if(inputBuffer == "")
+	// 					{
+	// 						switch (editCursor)
+	// 						{
+	// 							case 0:
+	// 								clockHour = 0;
+	// 								break;
+	// 							case 1:
+	// 								clockMinute = 0;
+	// 								break;
+	// 							case 2:
+	// 								clockSecond = 0;
+	// 								break;
+	// 							case 3:
+	// 								clockDay = 0;
+	// 								break;
+	// 							case 4:
+	// 								clockMonth = 0;
+	// 								break;
+	// 							case 5:
+	// 								clockYear = 0;
+	// 								break;
+	// 						}
+	// 					}
+	// 					else
+	// 					{
+	// 						switch (editCursor)
+	// 						{
+	// 							case 0:
+	// 								clockHour = inputBuffer.toInt();
+	// 								break;
+	// 							case 1:
+	// 								clockMinute = inputBuffer.toInt();
+	// 								break;
+	// 							case 2:
+	// 								clockSecond = inputBuffer.toInt();
+	// 								break;
+	// 							case 3:
+	// 								clockDay = inputBuffer.toInt();
+	// 								break;
+	// 							case 4:
+	// 								clockMonth = inputBuffer.toInt();
+	// 								break;
+	// 							case 5:
+	// 								clockYear = inputBuffer.toInt();
+	// 								break;
+	// 						}
+	// 					}
+	// 					switch (editCursor)
+	// 					{
+	// 						case 3:
+	// 							if(clockHour != 0)
+	// 								inputBuffer = String(clockHour);
+	// 							else
+	// 								inputBuffer = "";
+	// 							break;
+	// 						case 4:
+	// 							if(clockMinute != 0)
+	// 								inputBuffer = String(clockMinute);
+	// 							else
+	// 								inputBuffer = "";
+	// 							break;
+	// 						case 5:
+	// 							if(clockSecond != 0)
+	// 								inputBuffer = String(clockSecond);
+	// 							else
+	// 								inputBuffer = "";
+	// 							break;
+	// 					}
+	// 					editCursor-=3;
+	// 				}
+	// 				if(buttons.released(BTN_DOWN) && editCursor < 3) //DOWN
+	// 				{
+	// 					while(!update());
+	// 					blinkState = 1;
+	// 					previousMillis = millis();
+	// 					if(inputBuffer == "")
+	// 					{
+	// 						switch (editCursor)
+	// 						{
+	// 							case 0:
+	// 								clockHour = 0;
+	// 								break;
+	// 							case 1:
+	// 								clockMinute = 0;
+	// 								break;
+	// 							case 2:
+	// 								clockSecond = 0;
+	// 								break;
+	// 							case 3:
+	// 								clockDay = 0;
+	// 								break;
+	// 							case 4:
+	// 								clockMonth = 0;
+	// 								break;
+	// 							case 5:
+	// 								clockYear = 0;
+	// 								break;
+	// 						}
+	// 					}
+	// 					else
+	// 					{
+	// 						switch (editCursor)
+	// 						{
+	// 							case 0:
+	// 								clockHour = inputBuffer.toInt();
+	// 								break;
+	// 							case 1:
+	// 								clockMinute = inputBuffer.toInt();
+	// 								break;
+	// 							case 2:
+	// 								clockSecond = inputBuffer.toInt();
+	// 								break;
+	// 							case 3:
+	// 								clockDay = inputBuffer.toInt();
+	// 								break;
+	// 							case 4:
+	// 								clockMonth = inputBuffer.toInt();
+	// 								break;
+	// 							case 5:
+	// 								clockYear = inputBuffer.toInt();
+	// 								break;
+	// 						}
+	// 					}
+	// 					switch (editCursor)
+	// 					{
+	// 						case 0:
+	// 							if(clockDay != 0)
+	// 								inputBuffer = String(clockDay);
+	// 							else
+	// 								inputBuffer = "";
+	// 							break;
+	// 						case 1:
+	// 							if(clockMonth != 0)
+	// 								inputBuffer = String(clockMonth);
+	// 							else
+	// 								inputBuffer = "";
+	// 							break;
+	// 						case 2:
+	// 							if(clockYear != 0)
+	// 								inputBuffer = String(clockYear);
+	// 							else
+	// 								inputBuffer = "";
+	// 							break;
+	// 					}
+	// 					editCursor+=3;
+	// 				}
 
-					if(buttons.released(BTN_A))
-					{
-						if(inputBuffer == "")
-						{
-							switch (editCursor)
-							{
-								case 0:
-									clockHour = 0;
-									break;
-								case 1:
-									clockMinute = 0;
-									break;
-								case 2:
-									clockSecond = 0;
-									break;
-								case 3:
-									clockDay = 0;
-									break;
-								case 4:
-									clockMonth = 0;
-									break;
-								case 5:
-									clockYear = 0;
-									break;
-							}
-						}
-						else
-						{
-							switch (editCursor)
-							{
-								case 0:
-									clockHour = inputBuffer.toInt();
-									break;
-								case 1:
-									clockMinute = inputBuffer.toInt();
-									break;
-								case 2:
-									clockSecond = inputBuffer.toInt();
-									break;
-								case 3:
-									clockDay = inputBuffer.toInt();
-									break;
-								case 4:
-									clockMonth = inputBuffer.toInt();
-									break;
-								case 5:
-									clockYear = inputBuffer.toInt();
-									break;
-							}
-						}
-						buttons.kpd.setHour(clockHour);
-						buttons.kpd.setMinute(clockMinute);
-						buttons.kpd.setSecond(clockSecond);
-						buttons.kpd.setDate(clockDay);
-						buttons.kpd.setMonth(clockMonth);
-						buttons.kpd.setYear(clockYear);
-						break;
-					}
-
-
-					if(buttons.released(BTN_B))
-						break;
-
-				}
-				while(!update());
-			}
-		}
-		else if(cursor == 1)
-		{
-			if(!blinkState)
-				display.drawRect(23, 93, 110, 20, 0xFFED);
-			if(buttons.released(BTN_A))
-			{
-				gui.osc->note(75, 0.05);
-				gui.osc->play();
-				clockYear = 0;
-				previousMillis = millis();
-				while(1)
-				{
-					display.fillScreen(0xFFED);
-					display.setCursor(0, display.height()/2 - 16);
-					display.printCenter("Fetching time...");
-					if(millis() - previousMillis >= 4000)
-					{
-						display.fillScreen(0xFFED);
-						display.setCursor(0, display.height()/2 - 20);
-						display.printCenter("Couldn't fetch time");
-						display.setCursor(0, display.height()/2);
-						display.printCenter("Set it manually");
-						while(!update());
-						delay(2000);
-						break;
-					}
-					updateTimeGSM();
-					if(clockYear < 80 && clockYear >= 19)
-					{
-						delay(200);
-						display.fillScreen(0xFFED);
-						display.setCursor(0, display.height()/2 - 16);
-						display.printCenter("Time fetched over GSM!");
-						while(!update());
-						delay(1500);
-						break;
-					}
-				}
+	// 				if(buttons.released(BTN_A))
+	// 				{
+	// 					if(inputBuffer == "")
+	// 					{
+	// 						switch (editCursor)
+	// 						{
+	// 							case 0:
+	// 								clockHour = 0;
+	// 								break;
+	// 							case 1:
+	// 								clockMinute = 0;
+	// 								break;
+	// 							case 2:
+	// 								clockSecond = 0;
+	// 								break;
+	// 							case 3:
+	// 								clockDay = 0;
+	// 								break;
+	// 							case 4:
+	// 								clockMonth = 0;
+	// 								break;
+	// 							case 5:
+	// 								clockYear = 0;
+	// 								break;
+	// 						}
+	// 					}
+	// 					else
+	// 					{
+	// 						switch (editCursor)
+	// 						{
+	// 							case 0:
+	// 								clockHour = inputBuffer.toInt();
+	// 								break;
+	// 							case 1:
+	// 								clockMinute = inputBuffer.toInt();
+	// 								break;
+	// 							case 2:
+	// 								clockSecond = inputBuffer.toInt();
+	// 								break;
+	// 							case 3:
+	// 								clockDay = inputBuffer.toInt();
+	// 								break;
+	// 							case 4:
+	// 								clockMonth = inputBuffer.toInt();
+	// 								break;
+	// 							case 5:
+	// 								clockYear = inputBuffer.toInt();
+	// 								break;
+	// 						}
+	// 					}
+	// 					buttons.kpd.setHour(clockHour);
+	// 					buttons.kpd.setMinute(clockMinute);
+	// 					buttons.kpd.setSecond(clockSecond);
+	// 					buttons.kpd.setDate(clockDay);
+	// 					buttons.kpd.setMonth(clockMonth);
+	// 					buttons.kpd.setYear(clockYear);
+	// 					break;
+	// 				}
 
 
-			}
-		}
+	// 				if(buttons.released(BTN_B))
+	// 					break;
+
+	// 			}
+	// 			while(!update());
+	// 		}
+	// 	}
+	// 	else if(cursor == 1)
+	// 	{
+	// 		if(!blinkState)
+	// 			display.drawRect(23, 93, 110, 20, 0xFFED);
+	// 		if(buttons.released(BTN_A))
+	// 		{
+	// 			gui.osc->note(75, 0.05);
+	// 			gui.osc->play();
+	// 			clockYear = 0;
+	// 			previousMillis = millis();
+	// 			while(1)
+	// 			{
+	// 				display.fillScreen(0xFFED);
+	// 				display.setCursor(0, display.height()/2 - 16);
+	// 				display.printCenter("Fetching time...");
+	// 				if(millis() - previousMillis >= 4000)
+	// 				{
+	// 					display.fillScreen(0xFFED);
+	// 					display.setCursor(0, display.height()/2 - 20);
+	// 					display.printCenter("Couldn't fetch time");
+	// 					display.setCursor(0, display.height()/2);
+	// 					display.printCenter("Set it manually");
+	// 					while(!update());
+	// 					delay(2000);
+	// 					break;
+	// 				}
+	// 				updateTimeGSM();
+	// 				if(clockYear < 80 && clockYear >= 19)
+	// 				{
+	// 					delay(200);
+	// 					display.fillScreen(0xFFED);
+	// 					display.setCursor(0, display.height()/2 - 16);
+	// 					display.printCenter("Time fetched over GSM!");
+	// 					while(!update());
+	// 					delay(1500);
+	// 					break;
+	// 				}
+	// 			}
 
 
-		if(millis()-previousMillis >= 500)
-		{
-			previousMillis = millis();
-			blinkState = !blinkState;
-			updateTimeRTC();
-		}
-		if (buttons.released(BTN_UP) && cursor > 0)
-		{
-			gui.osc->note(75, 0.05);
-			gui.osc->play();
-			blinkState = 1;
-			previousMillis = millis() + 400;
-			while (!update());
-			cursor--;
-		}
-		if (buttons.released(BTN_DOWN) && cursor < 1)
-		{
-			gui.osc->note(75, 0.05);
-			gui.osc->play();
-			blinkState = 1;
-			previousMillis = millis() + 400;
-			while (!update());
-			cursor++;
-		}
-		if (buttons.released(BTN_B)) //BUTTON BACK
-			break;
-		update();
-	}
+	// 		}
+	// 	}
+
+
+	// 	if(millis()-previousMillis >= 500)
+	// 	{
+	// 		previousMillis = millis();
+	// 		blinkState = !blinkState;
+	// 		updateTimeRTC();
+	// 	}
+	// 	if (buttons.released(BTN_UP) && cursor > 0)
+	// 	{
+	// 		gui.osc->note(75, 0.05);
+	// 		gui.osc->play();
+	// 		blinkState = 1;
+	// 		previousMillis = millis() + 400;
+	// 		while (!update());
+	// 		cursor--;
+	// 	}
+	// 	if (buttons.released(BTN_DOWN) && cursor < 1)
+	// 	{
+	// 		gui.osc->note(75, 0.05);
+	// 		gui.osc->play();
+	// 		blinkState = 1;
+	// 		previousMillis = millis() + 400;
+	// 		while (!update());
+	// 		cursor++;
+	// 	}
+	// 	if (buttons.released(BTN_B)) //BUTTON BACK
+	// 		break;
+	// 	update();
+	// }
 
 }
 bool MAKERphone::updateMenu()
 {
-	bool blinkState = 0;
-	uint32_t previousMillis = millis();
-	uint8_t cursor = 0;
-	String foo="";
-	display.setTextWrap(0);
-	display.setTextFont(2);
+	// bool blinkState = 0;
+	// uint32_t previousMillis = millis();
+	// uint8_t cursor = 0;
+	// String foo="";
+	// display.setTextWrap(0);
+	// display.setTextFont(2);
 
-	while(1)
-	{
-		display.fillScreen(0xFD29);
-		display.setTextColor(TFT_BLACK);
-		display.setCursor(10, 20);
-		display.printCenter("Check for update");
-		display.setCursor(40, 50);
-		display.printCenter("Factory reset");
-		display.setCursor(90, 100);
-		display.setTextColor(TFT_DARKGREY);
-		foo = "Version: " + (String)((int)firmware_version / 100) + "." + (String)((int)firmware_version / 10) + "." + (String)(firmware_version % 10);
-		display.printCenter(foo);
-		if(cursor == 0)
-		{
-			if(blinkState)
-				display.drawRect(20,18,117, 20, TFT_BLACK);
-			else
-				display.drawRect(20,18,117, 20, 0xFD29);
-			if(buttons.released(BTN_A))
-			{
+	// while(1)
+	// {
+	// 	display.fillScreen(0xFD29);
+	// 	display.setTextColor(TFT_BLACK);
+	// 	display.setCursor(10, 20);
+	// 	display.printCenter("Check for update");
+	// 	display.setCursor(40, 50);
+	// 	display.printCenter("Factory reset");
+	// 	display.setCursor(90, 100);
+	// 	display.setTextColor(TFT_DARKGREY);
+	// 	foo = "Version: " + (String)((int)firmware_version / 100) + "." + (String)((int)firmware_version / 10) + "." + (String)(firmware_version % 10);
+	// 	display.printCenter(foo);
+	// 	if(cursor == 0)
+	// 	{
+	// 		if(blinkState)
+	// 			display.drawRect(20,18,117, 20, TFT_BLACK);
+	// 		else
+	// 			display.drawRect(20,18,117, 20, 0xFD29);
+	// 		if(buttons.released(BTN_A))
+	// 		{
 
-			}
-		}
-		else if (cursor == 1)
-		{
-			if(blinkState)
-				display.drawRect(30, 48, 96, 20, TFT_BLACK);
-			else
-				display.drawRect(30, 48, 96, 20, 0xFD29);
-			if(buttons.released(BTN_A))
-			{
-				while(!update());
-				if(SDinsertedFlag)
-				{
-					display.fillScreen(0xFD29);
-					display.setTextColor(TFT_BLACK);
-					display.setCursor(10, 20);
-					display.printCenter("Erasing in progress...");
-					while(!update());
+	// 		}
+	// 	}
+	// 	else if (cursor == 1)
+	// 	{
+	// 		if(blinkState)
+	// 			display.drawRect(30, 48, 96, 20, TFT_BLACK);
+	// 		else
+	// 			display.drawRect(30, 48, 96, 20, 0xFD29);
+	// 		if(buttons.released(BTN_A))
+	// 		{
+	// 			while(!update());
+	// 			if(SDinsertedFlag)
+	// 			{
+	// 				display.fillScreen(0xFD29);
+	// 				display.setTextColor(TFT_BLACK);
+	// 				display.setCursor(10, 20);
+	// 				display.printCenter("Erasing in progress...");
+	// 				while(!update());
 
-					String contacts_default = "[{\"name\":\"Foobar\", \"number\":\"099123123\"}]";
-					String settings_default = "{ \"wifi\": 0, \"bluetooth\": 0, \"airplane_mode\": 0, \"brightness\": 5, \"sleep_time\": 0, \"background_color\": 0 }";
+	// 				String contacts_default = "[{\"name\":\"Foobar\", \"number\":\"099123123\"}]";
+	// 				String settings_default = "{ \"wifi\": 0, \"bluetooth\": 0, \"airplane_mode\": 0, \"brightness\": 5, \"sleep_time\": 0, \"background_color\": 0 }";
 
-					const char contacts_path[] = "/contacts.json";
-					const char settings_path[] = "/settings.json";
+	// 				const char contacts_path[] = "/contacts.json";
+	// 				const char settings_path[] = "/settings.json";
 
-					JsonArray& contacts = mp.jb.parseArray(contacts_default);
-					JsonObject& settings = mp.jb.parseObject(settings_default);
+	// 				JsonArray& contacts = mp.jb.parseArray(contacts_default);
+	// 				JsonObject& settings = mp.jb.parseObject(settings_default);
 
-					_SD.remove(contacts_path);
-					_SD.remove(settings_path);
+	// 				_SD.remove(contacts_path);
+	// 				_SD.remove(settings_path);
 
-					SDAudioFile contacts_file = _SD.open(contacts_path);
-					contacts.prettyPrintTo(contacts_file);
-					contacts_file.close();
+	// 				SDAudioFile contacts_file = _SD.open(contacts_path);
+	// 				contacts.prettyPrintTo(contacts_file);
+	// 				contacts_file.close();
 
-					SDAudioFile settings_file = _SD.open(settings_path);
-					settings.prettyPrintTo(settings_file);
-					settings_file.close();
+	// 				SDAudioFile settings_file = _SD.open(settings_path);
+	// 				settings.prettyPrintTo(settings_file);
+	// 				settings_file.close();
 
-					wifi = settings["wifi"];
-					bt = settings["bluetooth"];
-					airplaneMode = settings["airplane_mode"];
-					brightness = settings["brightness"];
-					sleepTime = settings["sleep_time"];
-					backgroundIndex = settings["background_color"];
+	// 				wifi = settings["wifi"];
+	// 				bt = settings["bluetooth"];
+	// 				airplaneMode = settings["airplane_mode"];
+	// 				brightness = settings["brightness"];
+	// 				sleepTime = settings["sleep_time"];
+	// 				backgroundIndex = settings["background_color"];
 
-					applySettings();
+	// 				applySettings();
 
-					return true;
-				}
-			}
-		}
-		if(millis()-previousMillis >= 250)
-		{
-			previousMillis = millis();
-			blinkState = !blinkState;
-		}
-		if (buttons.released(BTN_UP) && cursor > 0)
-		{
-			gui.osc->note(75, 0.05);
-			gui.osc->play();
-			blinkState = 1;
-			previousMillis = millis();
-			while (!update());
-			cursor--;
-		}
-		if (buttons.released(BTN_DOWN) && cursor < 1)
-		{
-			gui.osc->note(75, 0.05);
-			gui.osc->play();
-			blinkState = 1;
-			previousMillis = millis();
-			while (!update());
-			cursor++;
-		}
-		if (buttons.released(BTN_B)) //BUTTON BACK
-			break;
-		update();
-	}
-	while(!update());
-	return false;
+	// 				return true;
+	// 			}
+	// 		}
+	// 	}
+	// 	if(millis()-previousMillis >= 250)
+	// 	{
+	// 		previousMillis = millis();
+	// 		blinkState = !blinkState;
+	// 	}
+	// 	if (buttons.released(BTN_UP) && cursor > 0)
+	// 	{
+	// 		gui.osc->note(75, 0.05);
+	// 		gui.osc->play();
+	// 		blinkState = 1;
+	// 		previousMillis = millis();
+	// 		while (!update());
+	// 		cursor--;
+	// 	}
+	// 	if (buttons.released(BTN_DOWN) && cursor < 1)
+	// 	{
+	// 		gui.osc->note(75, 0.05);
+	// 		gui.osc->play();
+	// 		blinkState = 1;
+	// 		previousMillis = millis();
+	// 		while (!update());
+	// 		cursor++;
+	// 	}
+	// 	if (buttons.released(BTN_B)) //BUTTON BACK
+	// 		break;
+	// 	update();
+	// }
+	// while(!update());
+	// return false;
 }
+
 
 void MAKERphone::saveSettings(bool debug)
 {
@@ -8876,394 +8877,394 @@ void MAKERphone::loadAlarms()
 //Flashlight app
 void MAKERphone::flashlightApp()
 {
-	char key = NO_KEY;
-	bool state = 0;
-	uint8_t color = 4;
-	uint8_t localBrightness = 5;
-	while(1)
-	{
-		key = buttons.kpdNum.getKey();
-		for(int i = 0; i < 8; i++)
-		{
-			switch(color)
-			{
-				case 0:
-					leds[i] = CRGB::Cyan;
-					break;
-				case 1:
-					leds[i] = CRGB::Green;
-					break;
-				case 2:
-					leds[i] = CRGB::Red;
-					break;
-				case 3:
-					leds[i] = CRGB::Yellow;
-					break;
-				case 4:
-					leds[i] = CRGB::White;
-					break;
-				case 5:
-					leds[i] = CRGB::Orange;
-					break;
-				case 6:
-					leds[i] = CRGB::Fuchsia;
-					break;
-			}
-		}
-		pixelsBrightness = localBrightness;
-		display.fillScreen(TFT_BLACK);
-		display.setTextColor(TFT_WHITE);
-		display.setTextFont(2);
-		display.setTextSize(1);
-		display.setCursor(2, 110);
-		display.print("Color");
-		// display.setCursor(95, 110);
-		// display.print("Brightness");
-		if(!state)
-		{
-			pixelsBrightness = 0;
-			display.drawIcon(flashlightOff, 46, 10, 34, 50, 2, TFT_GREEN);
-		}
-		else
-			display.drawIcon(flashlightOn, 46, 10, 34, 50, 2, TFT_GREEN);
+	// char key = NO_KEY;
+	// bool state = 0;
+	// uint8_t color = 4;
+	// uint8_t localBrightness = 5;
+	// while(1)
+	// {
+	// 	key = buttons.kpdNum.getKey();
+	// 	for(int i = 0; i < 8; i++)
+	// 	{
+	// 		switch(color)
+	// 		{
+	// 			case 0:
+	// 				leds[i] = CRGB::Cyan;
+	// 				break;
+	// 			case 1:
+	// 				leds[i] = CRGB::Green;
+	// 				break;
+	// 			case 2:
+	// 				leds[i] = CRGB::Red;
+	// 				break;
+	// 			case 3:
+	// 				leds[i] = CRGB::Yellow;
+	// 				break;
+	// 			case 4:
+	// 				leds[i] = CRGB::White;
+	// 				break;
+	// 			case 5:
+	// 				leds[i] = CRGB::Orange;
+	// 				break;
+	// 			case 6:
+	// 				leds[i] = CRGB::Fuchsia;
+	// 				break;
+	// 		}
+	// 	}
+	// 	pixelsBrightness = localBrightness;
+	// 	display.fillScreen(TFT_BLACK);
+	// 	display.setTextColor(TFT_WHITE);
+	// 	display.setTextFont(2);
+	// 	display.setTextSize(1);
+	// 	display.setCursor(2, 110);
+	// 	display.print("Color");
+	// 	// display.setCursor(95, 110);
+	// 	// display.print("Brightness");
+	// 	if(!state)
+	// 	{
+	// 		pixelsBrightness = 0;
+	// 		display.drawIcon(flashlightOff, 46, 10, 34, 50, 2, TFT_GREEN);
+	// 	}
+	// 	else
+	// 		display.drawIcon(flashlightOn, 46, 10, 34, 50, 2, TFT_GREEN);
 
-		if(buttons.released(BTN_A))
-		{
-			state = !state;
-			Serial.println(state);
-			delay(5);
-			while(!update());
-		}
-		if(buttons.released(BTN_B))
-			break;
-		if(key == 'C')
-		{
-			while(!buttons.released(BTN_A) && !buttons.released(BTN_B))
-			{
-				display.fillRect(15, 51, 130, 24, backgroundColors[color]);
-				display.drawRect(14, 50, 132, 26, TFT_BLACK);
-				display.setTextColor(TFT_BLACK);
-				display.setCursor(0, display.height() / 2 - 10);
-				display.printCenter(backgroundColorsNames[color]);
-				display.drawBitmap(22, 57, arrowLeft, TFT_BLACK, 2);
-				display.drawBitmap(130, 57, arrowRight, TFT_BLACK, 2);
-				if (millis() % 1000 <= 500)
-				{
-					if (color == 0)
-					{
-						display.drawBitmap(130, 57, arrowRight, backgroundColors[color], 2);
-						display.drawBitmap(11*2, 57, arrowLeft, TFT_BLACK, 2);
-						display.drawBitmap(66*2, 57, arrowRight, TFT_BLACK, 2);
-					}
-					else if (color == 6)
-					{
-						display.drawBitmap(22, 57, arrowLeft, backgroundColors[color], 2);
-						display.drawBitmap(10*2, 57, arrowLeft, TFT_BLACK, 2);
-						display.drawBitmap(65*2, 57, arrowRight, TFT_BLACK, 2);
-					}
-					else
-					{
-						display.drawBitmap(130, 57, arrowRight, backgroundColors[color], 2);
-						display.drawBitmap(22, 57, arrowLeft, backgroundColors[color], 2);
-						display.drawBitmap(10*2, 57, arrowLeft, TFT_BLACK, 2);
-						display.drawBitmap(66*2, 57, arrowRight, TFT_BLACK, 2);
-					}
-				}
-				if (buttons.released(BTN_LEFT) && color > 0)
-				{
-					gui.osc->note(75, 0.05);
-					gui.osc->play();
-					color--;
-					while(!update());
-				}
-				if (buttons.released(BTN_RIGHT) && color < 6)
-				{
-					gui.osc->note(75, 0.05);
-					gui.osc->play();
-					color++;
-					while(!update());
-				}
-				update();
-			}
-			while(!update());
-		}
-		update();
-	}
+	// 	if(buttons.released(BTN_A))
+	// 	{
+	// 		state = !state;
+	// 		Serial.println(state);
+	// 		delay(5);
+	// 		while(!update());
+	// 	}
+	// 	if(buttons.released(BTN_B))
+	// 		break;
+	// 	if(key == 'C')
+	// 	{
+	// 		while(!buttons.released(BTN_A) && !buttons.released(BTN_B))
+	// 		{
+	// 			display.fillRect(15, 51, 130, 24, backgroundColors[color]);
+	// 			display.drawRect(14, 50, 132, 26, TFT_BLACK);
+	// 			display.setTextColor(TFT_BLACK);
+	// 			display.setCursor(0, display.height() / 2 - 10);
+	// 			display.printCenter(backgroundColorsNames[color]);
+	// 			display.drawBitmap(22, 57, arrowLeft, TFT_BLACK, 2);
+	// 			display.drawBitmap(130, 57, arrowRight, TFT_BLACK, 2);
+	// 			if (millis() % 1000 <= 500)
+	// 			{
+	// 				if (color == 0)
+	// 				{
+	// 					display.drawBitmap(130, 57, arrowRight, backgroundColors[color], 2);
+	// 					display.drawBitmap(11*2, 57, arrowLeft, TFT_BLACK, 2);
+	// 					display.drawBitmap(66*2, 57, arrowRight, TFT_BLACK, 2);
+	// 				}
+	// 				else if (color == 6)
+	// 				{
+	// 					display.drawBitmap(22, 57, arrowLeft, backgroundColors[color], 2);
+	// 					display.drawBitmap(10*2, 57, arrowLeft, TFT_BLACK, 2);
+	// 					display.drawBitmap(65*2, 57, arrowRight, TFT_BLACK, 2);
+	// 				}
+	// 				else
+	// 				{
+	// 					display.drawBitmap(130, 57, arrowRight, backgroundColors[color], 2);
+	// 					display.drawBitmap(22, 57, arrowLeft, backgroundColors[color], 2);
+	// 					display.drawBitmap(10*2, 57, arrowLeft, TFT_BLACK, 2);
+	// 					display.drawBitmap(66*2, 57, arrowRight, TFT_BLACK, 2);
+	// 				}
+	// 			}
+	// 			if (buttons.released(BTN_LEFT) && color > 0)
+	// 			{
+	// 				gui.osc->note(75, 0.05);
+	// 				gui.osc->play();
+	// 				color--;
+	// 				while(!update());
+	// 			}
+	// 			if (buttons.released(BTN_RIGHT) && color < 6)
+	// 			{
+	// 				gui.osc->note(75, 0.05);
+	// 				gui.osc->play();
+	// 				color++;
+	// 				while(!update());
+	// 			}
+	// 			update();
+	// 		}
+	// 		while(!update());
+	// 	}
+	// 	update();
+	// }
 }
 
 //Calculator app
 void MAKERphone::calculatorApp()
 {
-	String input = "0";
-	double result = 0;
-	double helper = 0;
-	char key;
-	uint8_t tempCursor;
-	uint8_t cursor = 0;
-	uint32_t blinkMillis = millis();
-	int8_t operation = -1;
-	bool blinkState = 0;
-	bool clear = 0;
-	bool set = 0;
-	display.fillScreen(0xA794);
-	display.drawRect(6,5, 149, 40, TFT_BLACK);
-	display.fillRect(7,6,147,38, TFT_LIGHTGREY);
-	for (int y = 0; y < 2; y++)
-	{
-		for (int x = 0; x < 4; x++)
-		{
-			display.drawRect(8 + 37 * x, 49 + 27 * y, 33, 23, TFT_BLACK);
-			display.fillRect(9 + 37 * x, 50 + 27 * y, 31, 21, TFT_LIGHTGREY);
-			switch (y*4 + x)
-			{
-				case 0:
-					display.drawBitmap(18, 54, calculatorPlus);
-					break;
-				case 1:
-					display.drawBitmap(55, 59, calculatorMinus);
-					break;
-				case 2:
-					display.drawBitmap(92, 54, calculatorMultiply);
-					break;
-				case 3:
-					display.drawBitmap(128, 54, calculatorDivide);
-					break;
-				case 4:
-					display.drawBitmap(15, 79, calculatorRoot);
-					break;
-				case 5:
-					display.drawBitmap(55, 80, calculatorPotency);
-					break;
-				case 6:
-					display.drawBitmap(87, 79, calculatorReciprocal);
-					break;
-				case 7:
-					display.drawBitmap(133, 91, calculatorDecimalPoint);
-					break;
-			}
-		}
-	}
-	display.drawRect(119, 103, 33, 23, TFT_BLACK);
-	display.fillRect(120, 104, 31, 21, 0x4D42);
-	display.drawBitmap(128, 110, calculatorEquals);
-	display.setCursor(5, 113);
-	display.setTextFont(2);
-	display.setTextSize(1);
-	display.setTextColor(TFT_BLACK);
-	display.print("Erase");
-	while(1)
-	{
-		key = buttons.kpdNum.getKey();
-		if(key != NO_KEY && key > 47 && key < 58 && input.length() < 8)
-		{
-			if(clear)
-			{
-				input = "0";
-				clear = 0;
-			}
-			if(input == "0")
-				input = "";
-			input.concat(key);
-		}
-		if(millis() - blinkMillis > 250)
-		{
-			blinkState = !blinkState;
-			blinkMillis = millis();
-		}
-		display.fillRect(7,6,147,38, TFT_LIGHTGREY);
-		display.setTextSize(2);
-		display.setTextFont(2);
-		display.setCursor(200, 200);
-		tempCursor = display.cursor_x;
-		display.print(input);
-		tempCursor = display.cursor_x - tempCursor;
-		display.setCursor(145-tempCursor, 7);
-		display.print(input);
+	// String input = "0";
+	// double result = 0;
+	// double helper = 0;
+	// char key;
+	// uint8_t tempCursor;
+	// uint8_t cursor = 0;
+	// uint32_t blinkMillis = millis();
+	// int8_t operation = -1;
+	// bool blinkState = 0;
+	// bool clear = 0;
+	// bool set = 0;
+	// display.fillScreen(0xA794);
+	// display.drawRect(6,5, 149, 40, TFT_BLACK);
+	// display.fillRect(7,6,147,38, TFT_LIGHTGREY);
+	// for (int y = 0; y < 2; y++)
+	// {
+	// 	for (int x = 0; x < 4; x++)
+	// 	{
+	// 		display.drawRect(8 + 37 * x, 49 + 27 * y, 33, 23, TFT_BLACK);
+	// 		display.fillRect(9 + 37 * x, 50 + 27 * y, 31, 21, TFT_LIGHTGREY);
+	// 		switch (y*4 + x)
+	// 		{
+	// 			case 0:
+	// 				display.drawBitmap(18, 54, calculatorPlus);
+	// 				break;
+	// 			case 1:
+	// 				display.drawBitmap(55, 59, calculatorMinus);
+	// 				break;
+	// 			case 2:
+	// 				display.drawBitmap(92, 54, calculatorMultiply);
+	// 				break;
+	// 			case 3:
+	// 				display.drawBitmap(128, 54, calculatorDivide);
+	// 				break;
+	// 			case 4:
+	// 				display.drawBitmap(15, 79, calculatorRoot);
+	// 				break;
+	// 			case 5:
+	// 				display.drawBitmap(55, 80, calculatorPotency);
+	// 				break;
+	// 			case 6:
+	// 				display.drawBitmap(87, 79, calculatorReciprocal);
+	// 				break;
+	// 			case 7:
+	// 				display.drawBitmap(133, 91, calculatorDecimalPoint);
+	// 				break;
+	// 		}
+	// 	}
+	// }
+	// display.drawRect(119, 103, 33, 23, TFT_BLACK);
+	// display.fillRect(120, 104, 31, 21, 0x4D42);
+	// display.drawBitmap(128, 110, calculatorEquals);
+	// display.setCursor(5, 113);
+	// display.setTextFont(2);
+	// display.setTextSize(1);
+	// display.setTextColor(TFT_BLACK);
+	// display.print("Erase");
+	// while(1)
+	// {
+	// 	key = buttons.kpdNum.getKey();
+	// 	if(key != NO_KEY && key > 47 && key < 58 && input.length() < 8)
+	// 	{
+	// 		if(clear)
+	// 		{
+	// 			input = "0";
+	// 			clear = 0;
+	// 		}
+	// 		if(input == "0")
+	// 			input = "";
+	// 		input.concat(key);
+	// 	}
+	// 	if(millis() - blinkMillis > 250)
+	// 	{
+	// 		blinkState = !blinkState;
+	// 		blinkMillis = millis();
+	// 	}
+	// 	display.fillRect(7,6,147,38, TFT_LIGHTGREY);
+	// 	display.setTextSize(2);
+	// 	display.setTextFont(2);
+	// 	display.setCursor(200, 200);
+	// 	tempCursor = display.cursor_x;
+	// 	display.print(input);
+	// 	tempCursor = display.cursor_x - tempCursor;
+	// 	display.setCursor(145-tempCursor, 7);
+	// 	display.print(input);
 
-		display.drawRect(7 + 37 * (cursor % 4), 48 + 27 * (int)(cursor / 4), 35, 25, blinkState ? TFT_RED : 0xA794);
-		display.drawRect(6 + 37 * (cursor % 4), 47 + 27 * (int)(cursor / 4), 37, 27, blinkState ? TFT_RED : 0xA794);
+	// 	display.drawRect(7 + 37 * (cursor % 4), 48 + 27 * (int)(cursor / 4), 35, 25, blinkState ? TFT_RED : 0xA794);
+	// 	display.drawRect(6 + 37 * (cursor % 4), 47 + 27 * (int)(cursor / 4), 37, 27, blinkState ? TFT_RED : 0xA794);
 
-		if(key == 'C')
-		{
-			result = 0;
-			operation = -1;
-			input = "0";
-			clear = 0;
-			helper = 0;
-		}
-		if(buttons.released(BTN_LEFT))
-		{
-			display.drawRect(7 + 37 * (cursor % 4), 48 + 27 * (int)(cursor / 4), 35, 25, 0xA794);
-			display.drawRect(6 + 37 * (cursor % 4), 47 + 27 * (int)(cursor / 4), 37, 27, 0xA794);
-			if(cursor%4 > 0)
-				cursor--;
-			else
-				cursor += 3;
-			blinkState = 1;
-			blinkMillis = millis();
-			while(!update());
-		}
-		if(buttons.released(BTN_RIGHT))
-		{
-			display.drawRect(7 + 37 * (cursor % 4), 48 + 27 * (int)(cursor / 4), 35, 25, 0xA794);
-			display.drawRect(6 + 37 * (cursor % 4), 47 + 27 * (int)(cursor / 4), 37, 27, 0xA794);
-			if(cursor%4 < 3)
-				cursor++;
-			else
-				cursor -= 3;
-			blinkState = 1;
-			blinkMillis = millis();
-			while(!update());
-		}
-		if(buttons.released(BTN_DOWN))
-		{
-			display.drawRect(7 + 37 * (cursor % 4), 48 + 27 * (int)(cursor / 4), 35, 25, 0xA794);
-			display.drawRect(6 + 37 * (cursor % 4), 47 + 27 * (int)(cursor / 4), 37, 27, 0xA794);
-			if((int)(cursor/4) < 1)
-				cursor += 4;
-			else
-				cursor -= 4;
-			blinkState = 1;
-			blinkMillis = millis();
-			while(!update());
-		}
-		if(buttons.released(BTN_UP))
-		{
-			display.drawRect(7 + 37 * (cursor % 4), 48 + 27 * (int)(cursor / 4), 35, 25, 0xA794);
-			display.drawRect(6 + 37 * (cursor % 4), 47 + 27 * (int)(cursor / 4), 37, 27, 0xA794);
-			if((int)(cursor/4) > 0)
-				cursor -= 4;
-			else
-				cursor += 4;
-			blinkState = 1;
-			blinkMillis = millis();
-			while(!update());
-		}
-		if(buttons.released(BTN_A))
-		{
-			if(cursor == 4)
-			{
-				result = input.toDouble();
-				Serial.println(sqrt((double)(result)));
-				result = sqrt(result);
-				if(result == int(result))
-					input = String((int)(round(result)));
-				else
-					input = String(result);
-			}
-			else if(cursor == 6)
-			{
-				result = input.toDouble();
-				result = 1/result;
-				if(result == int(result))
-					input = String((int)(round(result)));
-				else
-					input = String(result);
-			}
-			else if(cursor == 7 && input.indexOf('.') == -1 && input.length() < 8)
-			{
-				if(input == "" || clear)
-				{
-					input = "0";
-					clear = 0;
-				}
-				input.concat('.');
-			}
-			else if(operation == -1 && cursor != 4 && cursor != 6)
-			{
-				clear = 1;
-				result = input.toDouble();
-				set = 0;
-				operation = cursor;
-			}
-			else if(operation > -1 && cursor != 4 && cursor != 6)
-			{
-				if(!set)
-				{
-					helper = input.toDouble();
-					set = 1;
-				}
+	// 	if(key == 'C')
+	// 	{
+	// 		result = 0;
+	// 		operation = -1;
+	// 		input = "0";
+	// 		clear = 0;
+	// 		helper = 0;
+	// 	}
+	// 	if(buttons.released(BTN_LEFT))
+	// 	{
+	// 		display.drawRect(7 + 37 * (cursor % 4), 48 + 27 * (int)(cursor / 4), 35, 25, 0xA794);
+	// 		display.drawRect(6 + 37 * (cursor % 4), 47 + 27 * (int)(cursor / 4), 37, 27, 0xA794);
+	// 		if(cursor%4 > 0)
+	// 			cursor--;
+	// 		else
+	// 			cursor += 3;
+	// 		blinkState = 1;
+	// 		blinkMillis = millis();
+	// 		while(!update());
+	// 	}
+	// 	if(buttons.released(BTN_RIGHT))
+	// 	{
+	// 		display.drawRect(7 + 37 * (cursor % 4), 48 + 27 * (int)(cursor / 4), 35, 25, 0xA794);
+	// 		display.drawRect(6 + 37 * (cursor % 4), 47 + 27 * (int)(cursor / 4), 37, 27, 0xA794);
+	// 		if(cursor%4 < 3)
+	// 			cursor++;
+	// 		else
+	// 			cursor -= 3;
+	// 		blinkState = 1;
+	// 		blinkMillis = millis();
+	// 		while(!update());
+	// 	}
+	// 	if(buttons.released(BTN_DOWN))
+	// 	{
+	// 		display.drawRect(7 + 37 * (cursor % 4), 48 + 27 * (int)(cursor / 4), 35, 25, 0xA794);
+	// 		display.drawRect(6 + 37 * (cursor % 4), 47 + 27 * (int)(cursor / 4), 37, 27, 0xA794);
+	// 		if((int)(cursor/4) < 1)
+	// 			cursor += 4;
+	// 		else
+	// 			cursor -= 4;
+	// 		blinkState = 1;
+	// 		blinkMillis = millis();
+	// 		while(!update());
+	// 	}
+	// 	if(buttons.released(BTN_UP))
+	// 	{
+	// 		display.drawRect(7 + 37 * (cursor % 4), 48 + 27 * (int)(cursor / 4), 35, 25, 0xA794);
+	// 		display.drawRect(6 + 37 * (cursor % 4), 47 + 27 * (int)(cursor / 4), 37, 27, 0xA794);
+	// 		if((int)(cursor/4) > 0)
+	// 			cursor -= 4;
+	// 		else
+	// 			cursor += 4;
+	// 		blinkState = 1;
+	// 		blinkMillis = millis();
+	// 		while(!update());
+	// 	}
+	// 	if(buttons.released(BTN_A))
+	// 	{
+	// 		if(cursor == 4)
+	// 		{
+	// 			result = input.toDouble();
+	// 			Serial.println(sqrt((double)(result)));
+	// 			result = sqrt(result);
+	// 			if(result == int(result))
+	// 				input = String((int)(round(result)));
+	// 			else
+	// 				input = String(result);
+	// 		}
+	// 		else if(cursor == 6)
+	// 		{
+	// 			result = input.toDouble();
+	// 			result = 1/result;
+	// 			if(result == int(result))
+	// 				input = String((int)(round(result)));
+	// 			else
+	// 				input = String(result);
+	// 		}
+	// 		else if(cursor == 7 && input.indexOf('.') == -1 && input.length() < 8)
+	// 		{
+	// 			if(input == "" || clear)
+	// 			{
+	// 				input = "0";
+	// 				clear = 0;
+	// 			}
+	// 			input.concat('.');
+	// 		}
+	// 		else if(operation == -1 && cursor != 4 && cursor != 6)
+	// 		{
+	// 			clear = 1;
+	// 			result = input.toDouble();
+	// 			set = 0;
+	// 			operation = cursor;
+	// 		}
+	// 		else if(operation > -1 && cursor != 4 && cursor != 6)
+	// 		{
+	// 			if(!set)
+	// 			{
+	// 				helper = input.toDouble();
+	// 				set = 1;
+	// 			}
 
-				set = 0;
-				Serial.println(clear);
-				if(operation == cursor && !clear)
-				{
-					switch (operation)
-					{
-						case 0:
-							result += helper;
-							break;
-						case 1:
-							result -= helper;
-							break;
-						case 2:
-							result *= helper;
-							break;
-						case 3:
-							result /= helper;
-							break;
-						case 5:
-							result = pow(result, helper);
-							break;
-					}
-					if(result == int(result))
-						input = String((int)(round(result)));
-					else
-						input = String(result);
-					set = 1;
-					clear = 1;
-				}
-				else
-					operation = cursor;
+	// 			set = 0;
+	// 			Serial.println(clear);
+	// 			if(operation == cursor && !clear)
+	// 			{
+	// 				switch (operation)
+	// 				{
+	// 					case 0:
+	// 						result += helper;
+	// 						break;
+	// 					case 1:
+	// 						result -= helper;
+	// 						break;
+	// 					case 2:
+	// 						result *= helper;
+	// 						break;
+	// 					case 3:
+	// 						result /= helper;
+	// 						break;
+	// 					case 5:
+	// 						result = pow(result, helper);
+	// 						break;
+	// 				}
+	// 				if(result == int(result))
+	// 					input = String((int)(round(result)));
+	// 				else
+	// 					input = String(result);
+	// 				set = 1;
+	// 				clear = 1;
+	// 			}
+	// 			else
+	// 				operation = cursor;
 				
-			}
-			while(!update());
-		}
-		if(key == 'A')
-		{
-			if(operation != -1 && !clear)
-			{
-				if(!set)
-				{
-					helper = input.toDouble();
-					set = 1;
-				}
-				set = 0;
-				switch (operation)
-				{
-					case 0:
-						result += input.toDouble();
-						break;
-					case 1:
-						result -= input.toDouble();
-						break;
-					case 2:
-						result *= input.toDouble();
-						break;
-					case 3:
-						result /= input.toDouble();
-						break;
-					case 5:
-						result = pow(result, helper);
-						break;
-				}
-				if(result == int(result))
-					input = String((int)(round(result)));
-				else
-					input = String(result);
-				operation = -1;
-			}
-		}
-		if(input.length() > 8 || input == "inf")
-		{
-			input = "Error";
-			clear = 1;
-		}
-		if(buttons.released(BTN_B))
-			break;
-		update();
-	}
-	while(!update());
+	// 		}
+	// 		while(!update());
+	// 	}
+	// 	if(key == 'A')
+	// 	{
+	// 		if(operation != -1 && !clear)
+	// 		{
+	// 			if(!set)
+	// 			{
+	// 				helper = input.toDouble();
+	// 				set = 1;
+	// 			}
+	// 			set = 0;
+	// 			switch (operation)
+	// 			{
+	// 				case 0:
+	// 					result += input.toDouble();
+	// 					break;
+	// 				case 1:
+	// 					result -= input.toDouble();
+	// 					break;
+	// 				case 2:
+	// 					result *= input.toDouble();
+	// 					break;
+	// 				case 3:
+	// 					result /= input.toDouble();
+	// 					break;
+	// 				case 5:
+	// 					result = pow(result, helper);
+	// 					break;
+	// 			}
+	// 			if(result == int(result))
+	// 				input = String((int)(round(result)));
+	// 			else
+	// 				input = String(result);
+	// 			operation = -1;
+	// 		}
+	// 	}
+	// 	if(input.length() > 8 || input == "inf")
+	// 	{
+	// 		input = "Error";
+	// 		clear = 1;
+	// 	}
+	// 	if(buttons.released(BTN_B))
+	// 		break;
+	// 	update();
+	// }
+	// while(!update());
 }
 //save manipulation
 JsonArray& MAKERphone::getJSONfromSAV(const char *path)

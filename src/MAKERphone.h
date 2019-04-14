@@ -247,9 +247,9 @@ class MAKERphone:public Buttons, public GUI
 	CRGB leds[NUMPIXELS];
 
 	//Media app
-	uint8_t cursor = 0;
-	int32_t cameraY = 0;
-	int32_t cameraY_actual = 0;
+	// uint8_t cursor = 0;
+	// int32_t cameraY = 0;
+	// int32_t cameraY_actual = 0;
 	// String audioFiles[255];
 	// uint8_t audioCount = 0;
 	int16_t audioPlayerMenu(const char* title, String* items, uint16_t length, uint16_t index = 0);
@@ -320,41 +320,42 @@ class MAKERphone:public Buttons, public GUI
 	uint8_t sleepTime = 0;
 	String ringtone = "/ringtones/chiptune.mp3";
 	String notification = "/notifications/to-the-point.mp3";
-	uint8_t ringtoneCount=0;
-	uint8_t notificationCount=0;
+	uint16_t firmware_version = 1;
+
+	// uint8_t ringtoneCount=0;
+	// uint8_t notificationCount=0;
 	// String ringtoneFiles[255];
 	// String notificationFiles[255];
-	int backgroundColors[7] = {
-		TFT_CYAN,
-		TFT_GREEN,
-		TFT_RED,
-		TFT_YELLOW,
-		TFT_WHITE,
-		TFT_ORANGE,
-		TFT_PINK
-	};
-	String backgroundColorsNames[7] = {
-	"Cyan",
-	"Green",
-	"Red",
-	"Yellow",
-	"White",
-	"Orange",
-	"Pink"
-	};
-	uint16_t firmware_version = 1;
+	// int backgroundColors[7] = {
+	// 	TFT_CYAN,
+	// 	TFT_GREEN,
+	// 	TFT_RED,
+	// 	TFT_YELLOW,
+	// 	TFT_WHITE,
+	// 	TFT_ORANGE,
+	// 	TFT_PINK
+	// };
+	// String backgroundColorsNames[7] = {
+	// "Cyan",
+	// "Green",
+	// "Red",
+	// "Yellow",
+	// "White",
+	// "Orange",
+	// "Pink"
+	// };
 
 	bool settingsApp();
 	int8_t settingsMenu(String* title, uint8_t length);
 	void settingsMenuDrawBox(String title, uint8_t i, int32_t y);
 	void settingsMenuDrawCursor(uint8_t i, int32_t y,  bool pressed);
-	String settingsItems[6] = {
-	"Network",
-	"Display",
-	"Date & time",
-	"Sound",
-	"Security",
-	"About"};
+	// String settingsItems[6] = {
+	// "Network",
+	// "Display",
+	// "Date & time",
+	// "Sound",
+	// "Security",
+	// "About"};
 	void networkMenu();
 	void displayMenu();
 	void soundMenu();
@@ -394,18 +395,18 @@ class MAKERphone:public Buttons, public GUI
 	//Display display;
 
 	////////////////////////////////Main_menu.ino variables
-	String titles[10] = {
-	"Messages",
-	"Media",
-	"Contacts",
-	"Settings",
-	"Phone",
-	"Apps",
-	"Clock",
-	"Calculator",
-	"Flashlight",
-	"Calendar"
-	};
+	// String titles[10] = {
+	// "Messages",
+	// "Media",
+	// "Contacts",
+	// "Settings",
+	// "Phone",
+	// "Apps",
+	// "Clock",
+	// "Calculator",
+	// "Flashlight",
+	// "Calendar"
+	// };
 	// String BinaryFiles[255];
 	// uint8_t binaryCount = 0;//Number of binary files available for loading
 	// String directories[255];
