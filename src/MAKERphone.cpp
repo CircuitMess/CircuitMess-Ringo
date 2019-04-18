@@ -36,11 +36,11 @@ void MAKERphone::begin(bool splash) {
 	digitalWrite(SIM800_DTR, 0);
 	pinMode(INTERRUPT_PIN, INPUT_PULLUP);
 	esp_sleep_enable_ext0_wakeup(GPIO_NUM_35, 0); //1 = High, 0 = Low
-	
+
 	//Initialize and start with the NeoPixels
 	FastLED.addLeds<NEOPIXEL, 33>(leds, 8);
 	Serial1.begin(9600, SERIAL_8N1, 17, 16);
-	
+
 
 	//Serial1.println(F("AT+CFUN=1,1"));
 	//Serial1.println("AT+CMEE=2");
@@ -87,7 +87,7 @@ void MAKERphone::begin(bool splash) {
 			break;
 		}
 	}
-	
+
 	if(SDinsertedFlag)
 		loadSettings(1);
 
@@ -112,7 +112,7 @@ void MAKERphone::begin(bool splash) {
 		display.fillScreen(TFT_BLACK);
 		while (!update());
 	}
-	
+
 	ledcAnalogWrite(LEDC_CHANNEL, 255);
 	for (uint8_t i = 255; i > actualBrightness; i--) {
 		ledcAnalogWrite(LEDC_CHANNEL, i);
@@ -207,7 +207,7 @@ bool MAKERphone::update() {
 	// 	}
 	// }
 	//buf2.invertDisplay(1);
-	
+
 	if (digitalRead(35) && sleepTime)
 		{
 			if (millis() - sleepTimer >= sleepTimeActual * 1000)
@@ -321,7 +321,7 @@ bool MAKERphone::update() {
 	}
 	///////////////////////////////////////////////
 	if (millis() - lastFrameCount >= frameSpeed) {
-		
+
 		lastFrameCount = millis();
 		if(resolutionMode == 0) //native res mode
 			display.pushSprite(0, 0);
@@ -341,7 +341,7 @@ bool MAKERphone::update() {
 		FastLED.show();
 		delay(1);
 		FastLED.clear();
-		
+
 		return true;
 	}
 	else
@@ -1235,7 +1235,7 @@ void MAKERphone::jpegRender(int xpos, int ypos) {
 	Serial.println("Here");
 	delay(5);
 	uint32_t min_w = min(mcu_w, max_x % mcu_w);
-	
+
 	uint32_t min_h = min(mcu_h, max_y % mcu_h);
 
 	// save the current image block size
@@ -1249,7 +1249,7 @@ void MAKERphone::jpegRender(int xpos, int ypos) {
 	// to the screen size
 	max_x += xpos;
 	max_y += ypos;
-	
+
 	// read each MCU block until there are no more
 	while (JpegDec.readSwappedBytes())
 	{ // Swap byte order so the SPI buffer can be used
@@ -1375,11 +1375,11 @@ void MAKERphone::loadSettings(bool debug)
 	if(!_SD.exists("/Video"))
 		_SD.mkdir("Video");
 	const char * path = "/settings.json";
-	Serial.println(""); 
+	Serial.println("");
 	SDAudioFile file = _SD.open(path);
 	JsonObject& settings = mp.jb.parseObject(file);
 	file.close();
-	
+
 	if (settings.success()) {
 		if(debug){
 			Serial.print("wifi: ");
@@ -1406,7 +1406,7 @@ void MAKERphone::loadSettings(bool debug)
 		Serial.println("Error loading new settings");
 		saveSettings();
 	}
-	
+
 }
 void MAKERphone::applySettings()
 {
@@ -1475,7 +1475,7 @@ void MAKERphone::saveJSONtoSAV(const char *path, JsonArray& json)
 		json.prettyPrintTo(file);
 	else
 		Serial.println("SD ERROR");
-	
+
 	file.close();
 }
 
@@ -1581,7 +1581,7 @@ void MAKERphone::takeScreenshot()
 		Serial.println("SD file error!");
 		return;
 	}
-	
+
 	uint8_t w = 160;
 	uint8_t h = 128;
 	int px[] = {255, 0, 255, 0, 255, 0
@@ -1589,7 +1589,7 @@ void MAKERphone::takeScreenshot()
 	bool debugPrint = 1;
 	unsigned char *img = NULL;          // image data
 	//  int filesize = 54 + 3 * w * h;      //  w is image width, h is image height
-	int filesize = 54 + 4 * w * h;      //  w is image width, h is image height  
+	int filesize = 54 + 4 * w * h;      //  w is image width, h is image height
 	if (img) {
 		free(img);
 	}
@@ -1676,7 +1676,7 @@ void MAKERphone::takeScreenshot()
 			// uint8_t r = ((rgb >> 11) & 0x1F);
 			// uint8_t g = ((rgb >> 5) & 0x3F);
 			// uint8_t b = (rgb & 0x1F);
-			
+
 			uint8_t r = (rgb & 0xF800) >> 8;
 			uint8_t g = (rgb & 0x07E0) >> 3;
 			uint8_t b = (rgb & 0x1F) << 3;
@@ -1684,7 +1684,7 @@ void MAKERphone::takeScreenshot()
 			// r = (r * 255) / 31;
 			// g = (g * 255) / 63;
 			// b = (b * 255) / 31;
-			
+
 
 
 			//  r = rgb >> 16;
@@ -1748,7 +1748,7 @@ void MAKERphone::takeScreenshot()
 		}
 	}
 	while(!update());
-	
+
 }
 
 //Popups
@@ -1804,7 +1804,7 @@ void MAKERphone::homePopup(bool animation)
 	{
 		display.fillRect(0,0, 160,18, TFT_WHITE);
 		display.fillRect(0,114, 160,20, TFT_WHITE);
-		
+
 
 		//drawing the top icons
 
@@ -1874,10 +1874,10 @@ void MAKERphone::homePopup(bool animation)
 		display.printCenter(popupHomeItems[cursor]);
 		display.drawRect(12 + cursor % 3 * 48 - 1, 25 + 45 * (int)(cursor / 3) - 1, 42, 42, cursorState ? TFT_RED : TFT_WHITE);
 		display.drawRect(12 + cursor % 3 * 48 - 2, 25 + 45 * (int)(cursor / 3) - 2, 44, 44, cursorState ? TFT_RED : TFT_WHITE);
-		
+
 		// date and time
 		updateTimeRTC();
-		display.fillRect(60,70,40,40,0x963F); 
+		display.fillRect(60,70,40,40,0x963F);
 		display.setFreeFont(TT1);
 		display.setTextSize(2);
 		display.setCursor(63, 85);
@@ -1902,7 +1902,7 @@ void MAKERphone::homePopup(bool animation)
 		display.printCenter(temp);
 
 
-		
+
 		if(buttons.released(BTN_UP))
 		{
 			osc->note(75, 0.05);
@@ -1928,7 +1928,7 @@ void MAKERphone::homePopup(bool animation)
 			if(cursor > 2)
 				cursor -= 3;
 			else
-				cursor += 3;			
+				cursor += 3;
 			while(!update());
 		}
 		if(buttons.released(BTN_LEFT))
@@ -1942,7 +1942,7 @@ void MAKERphone::homePopup(bool animation)
 			if(cursor % 3 == 0)
 				cursor += 2;
 			else
-				cursor -= 1;			
+				cursor -= 1;
 			while(!update());
 		}
 		if(buttons.released(BTN_RIGHT))
@@ -1956,7 +1956,7 @@ void MAKERphone::homePopup(bool animation)
 			if(cursor % 3 == 2)
 				cursor -= 2;
 			else
-				cursor += 1;			
+				cursor += 1;
 			while(!update());
 		}
 		if(buttons.released(BTN_A))
@@ -1998,7 +1998,7 @@ void MAKERphone::homePopup(bool animation)
 				case 1: //exit
 					loader();
 				break;
-				
+
 				case 2: //screen brightness
 					while(!buttons.released(BTN_B) && !buttons.released(BTN_A))
 					{
@@ -2028,7 +2028,7 @@ void MAKERphone::homePopup(bool animation)
 							ledcAnalogWrite(LEDC_CHANNEL, 230);
 						else
 							ledcAnalogWrite(LEDC_CHANNEL, (5 - brightness) * 51);
-						
+
 						update();
 					}
 				break;
@@ -2065,7 +2065,7 @@ void MAKERphone::homePopup(bool animation)
 						if (clockSecond < 10)
 							temp.concat("0");
 						temp.concat(clockSecond);
-						
+
 						display.printCenter(temp);
 						display.setTextSize(1);
 						display.setCursor(63, 85);
@@ -2097,7 +2097,7 @@ void MAKERphone::homePopup(bool animation)
 							timer = millis();
 						}
 						update();
-						
+
 					}
 				}
 				break;
@@ -2143,7 +2143,7 @@ void MAKERphone::homePopup(bool animation)
 			display.drawIcon(popupScreenshot,12,70,20,20,2);
 			display.drawIcon(popupPixelBrightness,108,70,20,20,2);
 		}
-		update();		
+		update();
 	}
 }
 
@@ -2213,4 +2213,37 @@ uint16_t Buttons::timeHeld(uint8_t button) {
 	else {
 		return 0;
 	}
+}
+
+String MAKERphone::currentDateTime(){
+	mp.updateTimeRTC();
+	// 2019-04-18 12:00:00
+	String dateTime = "20" + String(mp.clockYear);
+	dateTime += "-";
+	if(mp.clockMonth < 10){
+		dateTime += "0";
+	}
+	dateTime += String(mp.clockMonth);
+	dateTime += "-";
+	if(mp.clockDay < 10){
+		dateTime += "0";
+	}
+	dateTime += String(mp.clockDay);
+	dateTime += " ";
+
+	if(mp.clockHour < 10){
+		dateTime += "0";
+	}
+	dateTime += String(mp.clockHour);
+	dateTime += ":";
+	if(mp.clockMinute < 10){
+		dateTime += "0";
+	}
+	dateTime += String(mp.clockMinute);
+	dateTime += ":";
+	if(mp.clockSecond < 10){
+		dateTime += "0";
+	}
+	dateTime += String(mp.clockSecond);
+	return dateTime;
 }
