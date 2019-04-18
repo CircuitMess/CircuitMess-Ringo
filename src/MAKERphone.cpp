@@ -101,8 +101,8 @@ void MAKERphone::begin(bool splash) {
 	display.setTextWrap(0);             //setRotation(1);
 	display.setTextSize(1); // landscape
 
-	buf.createSprite(BUF2WIDTH, BUF2HEIGHT); // Create the sprite and clear background to black
-	buf.setTextSize(1);
+	// buf.createSprite(BUF2WIDTH, BUF2HEIGHT); // Create the sprite and clear background to black
+	// buf.setTextSize(1);
 	if (splash == 1)
 	{
 		display.fillScreen(TFT_RED);
@@ -146,7 +146,7 @@ void MAKERphone::begin(bool splash) {
 	xTaskCreatePinnedToCore(
 				Task1code,				/* Task function. */
 				"Task1",				/* name of task. */
-				30000,					/* Stack size of task */
+				10000,					/* Stack size of task */
 				NULL,					/* parameter of the task */
 				1,						/* priority of the task */
 				&Task1,
@@ -198,14 +198,14 @@ bool MAKERphone::update() {
 		spriteCreated=1;
 	}
 	//halved resolution mode
-	if(resolutionMode == 1)
-	{
-		for (int y = 0; y < BUFHEIGHT; y++) {
-			for (int x = 0; x < BUFWIDTH; x++) {
-				buf.fillRect(x * 2, y * 2, 2, 2, display.readPixel(x, y));
-			}
-		}
-	}
+	// if(resolutionMode == 1)
+	// {
+	// 	for (int y = 0; y < BUFHEIGHT; y++) {
+	// 		for (int x = 0; x < BUFWIDTH; x++) {
+	// 			buf.fillRect(x * 2, y * 2, 2, 2, display.readPixel(x, y));
+	// 		}
+	// 	}
+	// }
 	//buf2.invertDisplay(1);
 	
 	if (digitalRead(35) && sleepTime)
@@ -326,8 +326,8 @@ bool MAKERphone::update() {
 		if(resolutionMode == 0) //native res mode
 			display.pushSprite(0, 0);
 
-		else//halved res mode
-			buf.pushSprite(0,0);
+		// else//halved res mode
+			// buf.pushSprite(0,0);
 
 		buttons.update();
 		// if(buttons.kpdNum.getKey() == 'B' && !inHomePopup)

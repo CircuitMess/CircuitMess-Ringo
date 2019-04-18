@@ -152,7 +152,7 @@ class MAKERphone:public Buttons
   	SDFileSystemClass SD = _SD;
 	TFT_eSPI tft = TFT_eSPI();  // Invoke library, pins defined in User_Setup.h
 	TFT_eSprite display = TFT_eSprite(&tft);
-	TFT_eSprite buf = TFT_eSprite(&tft);
+	// TFT_eSprite buf = TFT_eSprite(&tft);
 	Oscillator* osc = new Oscillator();
   
 	const esp_partition_t* partition;
