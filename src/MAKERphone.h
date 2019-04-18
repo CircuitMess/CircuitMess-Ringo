@@ -172,6 +172,7 @@ class MAKERphone:public Buttons
 	void incomingCall();
 	void checkSim();
 	void enterPin();
+	void enterPUK();
 	String textInput(String buffer, int16_t length);
 	int textPointer = 0;
 	void loader();
@@ -288,5 +289,14 @@ class MAKERphone:public Buttons
 		};
 		bool inHomePopup = 0;
 		void takeScreenshot();
+		int backgroundColors[7] PROGMEM = {
+			TFT_CYAN,
+			TFT_GREEN,
+			TFT_RED,
+			TFT_YELLOW,
+			TFT_WHITE,
+			TFT_ORANGE,
+			TFT_PINK
+		};
 };
 #endif
