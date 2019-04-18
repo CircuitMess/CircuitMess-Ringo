@@ -1,9 +1,13 @@
 
-# MAKERphone
+# The main repository for the MAKERphone library
 
-A DIY mobile phone project that recently launched on Kickstarter.
+This is the main Arduino code library containing all functions necessary for coding your own MAKERphone apps.
 
-Share and support our Kickstarter campaign and help us make MAKERphone a reality:
+A complete library reference is under construction.
+
+#
+
+MAKERphone is a DIY mobile phone project that was recently successfuly funded on Kickstarter:
 https://www.kickstarter.com/projects/albertgajsak/makerphone-an-educational-diy-mobile-phone
 
 <br/>
