@@ -794,51 +794,54 @@ void MAKERphone::checkSim()
 		if (input.indexOf("SIM PIN") != -1)
 			enterPin();
 		if(input.indexOf("SIM PUK") != -1)
-			simInserted = 0;
+			enterPUK();
 	}
-
 }
 void MAKERphone::enterPin()
 {
 	char key = NO_KEY;
 	String pinBuffer = "";
 	String reply = "";
-
+	uint32_t color = TFT_BLACK;
+	if(backgroundColors[backgroundIndex] == TFT_BLACK)
+		color = TFT_WHITE;
 	while (reply.indexOf("+SPIC:") == -1)
 	{
 		Serial1.println("AT+SPIC");
 		reply = Serial1.readString();
 	}
-	timesRemaining = reply.substring(reply.indexOf(" ", reply.indexOf("+SPIC:")), reply.indexOf(",", reply.indexOf(" ", reply.indexOf("+SPIC:")))).toInt();
+	uint8_t foo = reply.indexOf(" ", reply.indexOf("+SPIC:"));
+	timesRemaining = reply.substring(foo, reply.indexOf(",", foo)).toInt();
 
 	while (1)
 	{
-		display.setTextFont(1);
-		display.setTextColor(TFT_WHITE);
-		display.fillScreen(TFT_BLACK);
-		display.setCursor(5, 5);
-		display.printCenter("Enter pin:");
-
-		display.setCursor(1, 30);
+		display.setTextColor(color);
+		display.setTextSize(1);
+		display.setTextFont(2);
+		display.fillScreen(backgroundColors[backgroundIndex]);
+		display.setCursor(5, 7);
+		display.printCenter("Enter PIN:");
+		display.drawRect(14, 45, 134, 30, color);
+		display.drawRect(13, 44, 136, 32, color);
+		display.setCursor(47, 52);
 		display.printCenter(pinBuffer);
-		display.setCursor(1, 63);
-		display.setFreeFont(TT1);
-		display.print("Press A to confirm");
-		display.setCursor(5, 19);
+
+		display.setCursor(1, 112);
+		display.print("Erase");
+		display.setCursor(110, 112);
+		display.print("Confirm");
+		display.setCursor(5, 85);
 		String temp = "Remaining attempts: ";
 		temp+=timesRemaining;
 		display.printCenter(temp);
 
 		key = buttons.kpdNum.getKey();
-		if (key == 'A') //clear number
-			pinBuffer = "";
-		else if (key == 'C' && pinBuffer != "")
+		if (key == 'C' && pinBuffer != "")
 			pinBuffer.remove(pinBuffer.length() - 1);
-		if (key != NO_KEY && isDigit(key) && pinBuffer.length() != 4)
+		else if (key != NO_KEY && isDigit(key) && pinBuffer.length() != 4)
 			pinBuffer += key;
 
-
-		if (buttons.released(BTN_A))//enter PIN
+		if ((buttons.released(BTN_A) || key == 'A') && pinBuffer.length() == 4)//enter PIN
 		{
 			reply = "";
 			Serial1.print(F("AT+CPIN=\""));
@@ -847,9 +850,9 @@ void MAKERphone::enterPin()
 			while (!Serial1.available());
 			while (reply.indexOf("+CPIN: READY") == -1 && reply.indexOf("ERROR") == -1)
 				reply= Serial1.readString();
-			display.fillScreen(TFT_BLACK);
-			display.setCursor(28, 28);
-			display.setTextFont(1);
+			display.fillScreen(backgroundColors[backgroundIndex]);
+			display.setCursor(28, 52);
+			display.setTextFont(2);
 			if (reply.indexOf("+CPIN: READY") != -1)
 			{
 				display.printCenter("PIN OK :)");
@@ -864,9 +867,136 @@ void MAKERphone::enterPin()
 				display.printCenter("Wrong PIN :(");
 				while (!update());
 				delay(2000);
+				if(timesRemaining == 0)
+				{
+					enterPUK();
+					break;
+				}
 			}
 		}
-		if (buttons.released(BTN_B) == 1) //sleeps
+		if (buttons.released(BTN_B)) //sleeps
+			sleep();
+		update();
+	}
+}
+void MAKERphone::enterPUK()
+{
+	char key = NO_KEY;
+	String pukBuffer = "";
+	String reply = "";
+	uint32_t color = TFT_BLACK;
+	if(backgroundColors[backgroundIndex] == TFT_BLACK)
+		color = TFT_WHITE;
+	while (reply.indexOf("+SPIC:") == -1)
+	{
+		Serial1.println("AT+SPIC");
+		reply = Serial1.readString();
+	}
+	uint8_t foo = reply.indexOf(",", reply.indexOf("+SPIC:")) + 3;
+	timesRemaining = reply.substring(foo, reply.indexOf(",", foo + 1)).toInt();
+	Serial.println(reply);
+	Serial.println(reply.substring(foo));
+	delay(5);
+	while (1)
+	{
+		display.setTextColor(color);
+		display.setTextSize(1);
+		display.setTextFont(2);
+		display.fillScreen(backgroundColors[backgroundIndex]);
+		display.setCursor(5, 7);
+		display.printCenter("Enter PUK:");
+		display.drawRect(14, 45, 134, 30, color);
+		display.drawRect(13, 44, 136, 32, color);
+		display.setCursor(47, 52);
+		display.printCenter(pukBuffer);
+
+		display.setCursor(1, 112);
+		display.print("Erase");
+		display.setCursor(110, 112);
+		display.print("Confirm");
+		display.setCursor(5, 85);
+		String temp = "Remaining attempts: ";
+		temp+=timesRemaining;
+		display.printCenter(temp);
+
+		key = buttons.kpdNum.getKey();
+		if (key == 'C' && pukBuffer != "")
+			pukBuffer.remove(pukBuffer.length() - 1);
+		else if (key != NO_KEY && isDigit(key) && pukBuffer.length() != 8)
+			pukBuffer += key;
+
+		if ((buttons.released(BTN_A) || key == 'A') && pukBuffer.length() == 8)//enter PUK
+		{
+			reply = "";
+			Serial1.print(F("AT+CPIN=\""));
+			Serial1.print(pukBuffer);
+			Serial1.println("\", \"0000\"");
+			while (!Serial1.available());
+			while (reply.indexOf("+CPIN: READY") == -1 && reply.indexOf("ERROR") == -1)
+				reply= Serial1.readString();
+			Serial.println(reply);
+			delay(5);
+			display.fillScreen(backgroundColors[backgroundIndex]);
+			display.setCursor(28, 52);
+			display.setTextFont(2);
+			if (reply.indexOf("+CPIN: READY") != -1)
+			{
+				display.printCenter("PUK OK :)");
+				while (!update());
+				delay(1000);
+				String pinBuffer = "";
+				while (1)
+				{
+					display.setTextColor(color);
+					display.setTextSize(1);
+					display.setTextFont(2);
+					display.fillScreen(backgroundColors[backgroundIndex]);
+					display.setCursor(5, 7);
+					display.printCenter("Enter new PIN:");
+					display.drawRect(14, 45, 134, 30, color);
+					display.drawRect(13, 44, 136, 32, color);
+					display.setCursor(47, 52);
+					display.printCenter(pinBuffer);
+					display.setCursor(1, 112);
+					display.print("Erase");
+					display.setCursor(110, 112);
+					display.print("Confirm");
+
+
+					key = buttons.kpdNum.getKey();
+					if (key == 'C' && pinBuffer != "")
+						pinBuffer.remove(pinBuffer.length() - 1);
+					else if (key != NO_KEY && isDigit(key) && pinBuffer.length() != 4)
+						pinBuffer += key;
+
+					if ((buttons.released(BTN_A) || key == 'A') && pinBuffer.length() == 4)//enter PIN
+					{
+						reply = "";
+						Serial1.print(F("AT+CPWD= \"SC\",\"0000\", \""));
+						Serial1.print(pinBuffer);
+						Serial1.println("\"");
+						while (!Serial1.available());
+						while (reply.indexOf("OK", reply.indexOf("AT+CPWD")) == -1)
+							reply = Serial1.readString();
+						break;
+					}
+					if (buttons.released(BTN_B)) //sleeps
+						sleep();
+					update();
+				}
+
+				break;
+			}
+			else if (reply.indexOf("ERROR") != -1)
+			{
+				timesRemaining--;
+				pukBuffer = "";
+				display.printCenter("Wrong PUK :(");
+				while (!update());
+				delay(2000);
+			}
+		}
+		if (buttons.released(BTN_B)) //sleeps
 			sleep();
 		update();
 	}
