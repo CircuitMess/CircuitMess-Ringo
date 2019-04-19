@@ -154,7 +154,7 @@ class MAKERphone:public Buttons
 	TFT_eSprite display = TFT_eSprite(&tft);
 	// TFT_eSprite buf = TFT_eSprite(&tft);
 	Oscillator* osc = new Oscillator();
-  
+	MPTrack* ringtone;
 	const esp_partition_t* partition;
 	const esp_partition_t* partition2;
 	bool resolutionMode = 0; //0 is native, 1 is halved
@@ -185,6 +185,29 @@ class MAKERphone:public Buttons
 	uint8_t pixelState;
 	CRGB leds[NUMPIXELS];
 
+	//Notification sounds
+	void playNotification(uint8_t notification);
+	void updateNotification();
+	uint8_t notificationNotes[5][5] PROGMEM = {
+		{80, 80, 0, 0, 0},
+		{70, 70, 0, 0, 0},
+		{75, 75, 0, 0, 0},
+		{90, 90, 0, 90, 90},
+		{75, 80, 85, 0, 0}
+	};
+	float notificationNotesDuration[5][5] PROGMEM = {
+		{0.1, 0.1 , 0, 0, 0},
+		{0.1, 0.1 , 0, 0, 0},
+		{0.1, 0.1 , 0, 0, 0},
+		{0.1, 0.1 , 0.1, 0.1, 0.1},
+		{0.1, 0.1 , 0.1, 0, 0}
+	};
+	bool playingNotification = 0;
+	uint8_t notesIndex = 0;
+	uint32_t notificationMillis = millis();
+	
+
+
 	//JPEG operations
 	void drawJpeg(String filename, int xpos, int ypos);
 	void jpegRender(int xpos, int ypos);
@@ -211,12 +234,11 @@ class MAKERphone:public Buttons
 	uint16_t batteryVoltage;
 	uint16_t signalStrength;
 	String carrierName = "";
-
-	//Settings app
 	uint8_t sleepTime = 0;
-	String ringtone = "/ringtones/chiptune.mp3";
-	String notification = "/notifications/to-the-point.mp3";
+	String ringtone_path = "/Music/default_ringtone.wav";
+	uint8_t notification = 0;
 	uint16_t firmware_version = 1;
+	//Settings app
 
 	void applySettings();
 	void saveSettings(bool debug = false);
@@ -298,5 +320,7 @@ class MAKERphone:public Buttons
 			TFT_ORANGE,
 			TFT_PINK
 		};
+		float duration = 0;
+		uint8_t note = 0;
 };
 #endif

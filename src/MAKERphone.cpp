@@ -152,8 +152,11 @@ void MAKERphone::begin(bool splash) {
 				&Task1,
 				0);				/* Task handle to keep track of created task */
 	addOscillator(osc);
-
+	// osc->setADSR(10,20,0.8,10);
+	if(SDinsertedFlag)
+		ringtone = new MPTrack((char *)(ringtone_path.c_str()));
 	applySettings();
+	
 }
 bool MAKERphone::update() {
 	// bool pressed = 0;
@@ -209,23 +212,22 @@ bool MAKERphone::update() {
 	//buf2.invertDisplay(1);
 	
 	if (digitalRead(35) && sleepTime)
+	{
+		if (millis() - sleepTimer >= sleepTimeActual * 1000)
 		{
-			if (millis() - sleepTimer >= sleepTimeActual * 1000)
-			{
-				sleep();
-				sleepTimer = millis();
-			}
+			sleep();
+			sleepTimer = millis();
 		}
-		else if(!digitalRead(35) && sleepTime)
+	}
+	else if(!digitalRead(35) && sleepTime)
 			sleepTimer = millis();
 
 	if (millis() > 7000)
 		simReady = 1;
 	else
 		simReady = 0;
-	/////////////////////////////////////////////
-	//refreshing signal and battery info////////
-	///////////////////////////////////////////
+
+	//refreshing signal and battery info
 	if (dataRefreshFlag)
 	{
 		if (millis() - refreshMillis >= refreshInterval)
@@ -319,7 +321,7 @@ bool MAKERphone::update() {
 			}
 		}
 	}
-	///////////////////////////////////////////////
+	updateNotification();
 	if (millis() - lastFrameCount >= frameSpeed) {
 		
 		lastFrameCount = millis();
@@ -612,6 +614,40 @@ void MAKERphone::updateFromFS(String FilePath) {
 }
 void MAKERphone::incomingCall() //TODO
 {
+	if(!SDinsertedFlag)
+	{
+		bool state = 0;
+		uint8_t tempNotification = notification;
+		uint32_t callMillis = millis();
+		while(!buttons.released(BTN_B))
+		{
+			if(millis() - callMillis >= 1000)
+			{
+				state = 1;
+				callMillis = millis();
+			}
+			if(state)
+			{
+				playNotification(4);
+				state = 0;
+			}
+			update();
+		}
+		notification = tempNotification;
+	}
+	else
+	{
+		ringtone = new MPTrack((char *)ringtone_path.c_str());
+		addTrack(ringtone);
+		ringtone->setVolume(256 * volume / 14);
+		ringtone->setRepeat(1);
+		ringtone->play();
+		while(!buttons.released(BTN_B))
+			update();
+		ringtone->stop();
+	}
+	while(!update());
+	
 	//String localBuffer = "";
 	//Serial1.print(F("ATD"));
 	//Serial1.print(number);
@@ -2146,7 +2182,51 @@ void MAKERphone::homePopup(bool animation)
 		update();		
 	}
 }
+void MAKERphone::playNotification(uint8_t _notification)
+{
+	notification = _notification;
+	osc->stop();
+	osc->setADSR(10,20,0.8,10);
+	osc->setVolume(256 * volume / 14);
+	osc->setWaveform(SINE);
+	notificationMillis = 0;
+	playingNotification = 1;
+	notesIndex = 0;
 
+	duration = notificationNotesDuration[notification][notesIndex];
+
+}
+void MAKERphone::updateNotification()
+{
+	if(playingNotification && millis() - notificationMillis >= duration*1000 +  125)
+	{
+		duration = notificationNotesDuration[notification][notesIndex];
+		note = notificationNotes[notification][notesIndex];
+		if(duration == 0 || notesIndex == 5)
+		{
+			Serial.println("stopped\n");
+			playingNotification = 0;
+			// osc->stop();
+			return;
+		}
+		if(note == 0)
+		{
+			notesIndex++;
+			return;
+		}
+
+		Serial.println("play new note:");
+		Serial.print("notesindex");
+		Serial.println(notesIndex);
+		Serial.println(note);
+		Serial.println(duration);
+
+		notificationMillis = millis();
+		osc->note(note, duration);
+		
+		notesIndex++;
+	}
+}
 
 //Buttons class
 bool Buttons::pressed(uint8_t button) {
