@@ -156,7 +156,6 @@ void MAKERphone::begin(bool splash) {
 	if(SDinsertedFlag)
 		ringtone = new MPTrack((char *)(ringtone_path.c_str()));
 	applySettings();
-	
 }
 bool MAKERphone::update() {
 	// bool pressed = 0;
@@ -332,12 +331,16 @@ bool MAKERphone::update() {
 			// buf.pushSprite(0,0);
 
 		buttons.update();
-		// if(buttons.kpdNum.getKey() == 'B' && !inHomePopup)
-		// {
-		// 	inHomePopup = 1;
-		// 	homePopup();
-		// 	inHomePopup = 0;
-		// }
+
+		if(HOME_POPUP_ENABLE)
+		{
+			if(buttons.kpdNum.getKey() == 'B' && !inHomePopup)
+			{
+				inHomePopup = 1;
+				homePopup();
+				inHomePopup = 0;
+			}
+		}
 		updatePopup();
 		FastLED.setBrightness((float)(255/5*pixelsBrightness));
 		FastLED.show();
@@ -2181,6 +2184,10 @@ void MAKERphone::homePopup(bool animation)
 		}
 		update();		
 	}
+}
+void MAKERphone::homePopupEnable(bool enabled)
+{
+	HOME_POPUP_ENABLE = enabled;
 }
 void MAKERphone::playNotification(uint8_t _notification)
 {

@@ -103,6 +103,7 @@ extern HardwareSerial Serial1;
 #define capacity 5208
 #define number_of_contacts 100
 
+
 #define smsNumber 22
 class Buttons
 {
@@ -291,6 +292,7 @@ class MAKERphone:public Buttons
 		{0, 0, 0, 0, 0},
 		{0, 0, 0, 0, 0}
 	};
+	void homePopupEnable(bool enable);
 	private:
 		SdFat SDFAT;
 		int multi_tap(byte key);
@@ -298,6 +300,7 @@ class MAKERphone:public Buttons
 		void popup(String text, uint8_t duration);
 		void updatePopup();
 		void homePopup(bool animation = 1);
+		bool HOME_POPUP_ENABLE = 1;
 		String popupText;
 		uint8_t popupTimeLeft;
 		uint8_t popupTotalTime;
