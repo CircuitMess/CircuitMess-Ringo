@@ -50,8 +50,8 @@ extern HardwareSerial Serial1;
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "esp_system.h"
-#include "utility/soundLib/MPAudioDriver.h" 
-#include "utility/soundLib/MPWavLib.h" 
+#include "utility/soundLib/MPAudioDriver.h"
+#include "utility/soundLib/MPWavLib.h"
 
 //PCF8574 0x21 defines (keys)
 #define BTN_LEFT 0
@@ -156,6 +156,7 @@ class MAKERphone:public Buttons
 	// TFT_eSprite buf = TFT_eSprite(&tft);
 	Oscillator* osc = new Oscillator();
 	MPTrack* ringtone;
+
 	const esp_partition_t* partition;
 	const esp_partition_t* partition2;
 	bool resolutionMode = 0; //0 is native, 1 is halved
@@ -174,6 +175,7 @@ class MAKERphone:public Buttons
 	void checkSim();
 	void enterPin();
 	void enterPUK();
+	String currentDateTime();
 	String textInput(String buffer, int16_t length);
 	int textPointer = 0;
 	void loader();
@@ -258,14 +260,14 @@ class MAKERphone:public Buttons
 	//SAVE manipulation
 	JsonArray &getJSONfromSAV(const char *path);
 	void saveJSONtoSAV(const char *path, JsonArray &json);
-	
+
 	//COLLISION
 	bool collideRectRect(int16_t x1, int16_t y1, int16_t w1, int16_t h1, int16_t x2, int16_t y2, int16_t w2, int16_t h2);  // Returns TRUE if the 2 rects overlap
 	bool collidePointRect(int16_t pointX, int16_t pointY, uint16_t rectX, uint16_t rectY, uint16_t rectW, uint16_t rectH);  // Returns TRUE if the point overlaps the rect
 	bool collideCircleCircle(int16_t centerX1, int16_t centerY1, int16_t r1, int16_t centerX2, int16_t centerY2, int16_t r2);  // Returns TRUE if the 2 circles overlap
 	bool collidePointCircle(int16_t pointX, int16_t pointY, int16_t centerX, int16_t centerY, int16_t r);  // Returns TRUE if the point overlaps the circle
 
-	
+
 	//SD functions
 	String readFile(const char * path);
 	void writeFile(const char * path, const char * message);
