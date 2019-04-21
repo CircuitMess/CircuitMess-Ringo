@@ -239,7 +239,7 @@ class MAKERphone:public Buttons
 	uint16_t signalStrength;
 	String carrierName = "";
 	uint8_t sleepTime = 0;
-	String ringtone_path = "/Music/default_ringtone.wav";
+	String ringtone_path = "/Music/Default ringtone.wav";
 	uint8_t notification = 0;
 	uint16_t firmware_version = 1;
 	//Settings app
