@@ -178,6 +178,7 @@ class MAKERphone:public Buttons
 	String currentDateTime();
 	String textInput(String buffer, int16_t length);
 	int textPointer = 0;
+	bool textLimitFlag = 0;
 	void loader();
 
 	void updateFromFS(String FilePath);

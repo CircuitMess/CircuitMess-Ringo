@@ -1044,6 +1044,8 @@ String MAKERphone::textInput(String buffer, int16_t length = -1)
 {
 	int ret = 0;
 	byte key = mp.buttons.kpdNum.getKey(); // Get a key press from the keypad
+	
+	
 	if (key == 'C' && buffer != "")
 	{
 		if (textPointer == buffer.length())
@@ -1055,16 +1057,25 @@ String MAKERphone::textInput(String buffer, int16_t length = -1)
 		buffer = "";
 		textPointer = 0;
 	}
-
+	if(textLimitFlag && buffer.length() == length)
+		return buffer;
+	else
+		textLimitFlag = 0;
 	if(length == -1 || length >= buffer.length()){
-		if (key == '*') buffer += ' ';
+		if (key == '*')
+			buffer += ' ';
 		if (key != 'B' && key != 'D')
 		{
 			ret = multi_tap(key);// Feed the key press to the multi_tap function.
 			if ((ret & 256) != 0) // If this is non-zero, we got a key. Handle some special keys or just print the key on screen
 			{
-				textPointer++;
-
+				if(buffer.length() == length)
+				{
+					textLimitFlag = 1;
+					return buffer;
+				}
+				else
+					textPointer++;
 			}
 			else if (ret) // We don't have a key but the user is still cycling through characters on one key so we need to update the screen
 			{
