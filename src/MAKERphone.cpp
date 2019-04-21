@@ -2184,6 +2184,7 @@ void MAKERphone::homePopup(bool animation)
 		}
 		update();
 	}
+	while(!update());
 }
 void MAKERphone::homePopupEnable(bool enabled)
 {
