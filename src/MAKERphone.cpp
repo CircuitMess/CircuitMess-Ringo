@@ -1420,13 +1420,13 @@ void MAKERphone::loadSettings(bool debug)
 {
 	//create default folders if not present
 	if(!_SD.exists("/Music"))
-		_SD.mkdir("Music");
+		_SD.mkdir("/Music");
 	if(!_SD.exists("/Images"))
-		_SD.mkdir("Images");
+		_SD.mkdir("/Images");
 	if(!_SD.exists("/Video"))
-		_SD.mkdir("Video");
+		_SD.mkdir("/Video");
 	if(!_SD.exists("/Ringtones"))
-		_SD.mkdir("Ringtones");
+		_SD.mkdir("/Ringtones");
 	const char * path = "/settings.json";
 	Serial.println("");
 	SDAudioFile file = _SD.open(path);
