@@ -1592,14 +1592,14 @@ String MAKERphone::readFile(const char * path) {
 }
 void MAKERphone::takeScreenshot()
 {
-	display.setTextColor(TFT_BLACK);
-	display.setTextSize(1);
-	display.setTextFont(2);
-	display.drawRect(14, 45, 134, 38, TFT_BLACK);
-	display.drawRect(13, 44, 136, 40, TFT_BLACK);
-	display.fillRect(15, 46, 132, 36, 0xC59F);
-	display.setCursor(47, 55);
-	display.printCenter("Taking screenshot");
+	// display.setTextColor(TFT_BLACK);
+	// display.setTextSize(1);
+	// display.setTextFont(2);
+	// display.drawRect(14, 45, 134, 38, TFT_BLACK);
+	// display.drawRect(13, 44, 136, 40, TFT_BLACK);
+	// display.fillRect(15, 46, 132, 36, 0xC59F);
+	// display.setCursor(47, 55);
+	// display.printCenter("Taking screenshot");
 	while(!update());
 
 	char name[] = "/Images/screenshot_00.bmp";
