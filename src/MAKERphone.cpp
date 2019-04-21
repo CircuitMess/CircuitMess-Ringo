@@ -1407,7 +1407,8 @@ void MAKERphone::saveSettings(bool debug)
 		settings["brightness"] = brightness;
 		settings["sleep_time"] = sleepTime;
 		settings["background_color"] = backgroundIndex;
-
+		settings["notification"] = notification;
+		settings["ringtone"] = ringtone_path;
 		SDAudioFile file1 = _SD.open(path, "w");
 		settings.prettyPrintTo(file1);
 		file1.close();
@@ -1424,6 +1425,8 @@ void MAKERphone::loadSettings(bool debug)
 		_SD.mkdir("Images");
 	if(!_SD.exists("/Video"))
 		_SD.mkdir("Video");
+	if(!_SD.exists("/Ringtones"))
+		_SD.mkdir("Ringtones");
 	const char * path = "/settings.json";
 	Serial.println("");
 	SDAudioFile file = _SD.open(path);
@@ -1445,18 +1448,18 @@ void MAKERphone::loadSettings(bool debug)
 			Serial.print("background_color: ");
 			Serial.println(settings["background_color"].as<int>());
 		}
-
 		wifi = settings["wifi"];
 		bt = settings["bluetooth"];
 		airplaneMode = settings["airplane_mode"];
 		brightness = settings["brightness"];
 		sleepTime = settings["sleep_time"];
 		backgroundIndex = settings["background_color"];
+		notification = settings["notification"];
+		ringtone_path = String(settings["ringtone"].as<char*>());
 	} else {
 		Serial.println("Error loading new settings");
 		saveSettings();
 	}
-
 }
 void MAKERphone::applySettings()
 {
