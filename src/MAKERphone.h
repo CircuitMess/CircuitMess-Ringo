@@ -295,26 +295,32 @@ class MAKERphone:public Buttons
 		{0, 0, 0, 0, 0},
 		{0, 0, 0, 0, 0}
 	};
+
+	//on-screen popup
+	void popup(String text, uint16_t duration);
+	void updatePopup();
 	void homePopupEnable(bool enable);
+
 	private:
 		SdFat SDFAT;
 		int multi_tap(byte key);
 		uint8_t timesRemaining;
-		void popup(String text, uint8_t duration);
-		void updatePopup();
+
 		void homePopup(bool animation = 1);
 		bool HOME_POPUP_ENABLE = 1;
 		String popupText;
-		uint8_t popupTimeLeft;
-		uint8_t popupTotalTime;
+		uint16_t popupTimeLeft;
+		uint16_t popupTotalTime;
 		const char *popupHomeItems[6] PROGMEM = {
-		"Volume",
-		"Home",
-		"Screen brightness",
-		"Screenshot",
-		"Date & time",
-		"LED brightness"
+			"Volume",
+			"Home",
+			"Screen brightness",
+			"Screenshot",
+			"Date & time",
+			"LED brightness"
 		};
+
+		
 		bool inHomePopup = 0;
 		void takeScreenshot();
 		int backgroundColors[7] PROGMEM = {

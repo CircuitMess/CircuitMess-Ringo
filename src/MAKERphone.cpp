@@ -322,8 +322,9 @@ bool MAKERphone::update() {
 	}
 	updateNotification();
 	if (millis() - lastFrameCount >= frameSpeed) {
-
 		lastFrameCount = millis();
+		updatePopup();
+
 		if(resolutionMode == 0) //native res mode
 			display.pushSprite(0, 0);
 
@@ -341,7 +342,6 @@ bool MAKERphone::update() {
 				inHomePopup = 0;
 			}
 		}
-		updatePopup();
 		FastLED.setBrightness((float)(255/5*pixelsBrightness));
 		FastLED.show();
 		delay(1);
@@ -1805,26 +1805,28 @@ void MAKERphone::takeScreenshot()
 }
 
 //Popups
-void MAKERphone::popup(String text, uint8_t duration) {
+void MAKERphone::popup(String text, uint16_t duration) {
 	popupText = text;
 	popupTotalTime = popupTimeLeft = duration + 16;
 }
+
 void MAKERphone::updatePopup() {
 	if (!popupTimeLeft) {
 		return;
 	}
-	uint8_t scale = display.textsize;
 	uint8_t yOffset = 0;
-	if (popupTimeLeft >= popupTotalTime - 8) {
-		yOffset = (8 - (popupTotalTime - popupTimeLeft))*scale;
+	if (popupTimeLeft >= popupTotalTime - 18) {
+		yOffset = (18 - (popupTotalTime - popupTimeLeft));
 	}
-	if (popupTimeLeft < 8) {
-		yOffset = (8 - popupTimeLeft)*scale;
+	if (popupTimeLeft < 18) {
+		yOffset = (18 - popupTimeLeft);
 	}
-
-	display.fillRect(0, BUFHEIGHT - (7 * scale) + yOffset,BUFWIDTH, 7 * scale, TFT_DARKGREY);
-	display.fillRect(0, BUFHEIGHT - (8 * scale) + yOffset, BUFWIDTH, scale, TFT_BLACK);
-	display.setCursor(1, BUFHEIGHT - (6 * scale) + yOffset, TFT_WHITE);
+	display.setTextFont(2);
+	display.setTextSize(1);
+	display.setTextColor(TFT_BLACK);
+	display.fillRect(0, display.height() - 18 + yOffset, display.width(), 20, TFT_DARKGREY);
+	display.fillRect(0, display.height() - 20 + yOffset, display.width(), 2, TFT_BLACK);
+	display.setCursor(2, display.height() - 17 + yOffset);
 	display.print(popupText);
 	popupTimeLeft--;
 }
