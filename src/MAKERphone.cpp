@@ -1380,7 +1380,7 @@ void MAKERphone::jpegInfo() {
 //settings operations
 void MAKERphone::saveSettings(bool debug)
 {
-	const char * path = "/settings.json";
+	const char * path = "/.core/settings.json";
 	Serial.println("");
 	_SD.remove(path);
 	JsonObject& settings = mp.jb.createObject();
@@ -1427,7 +1427,9 @@ void MAKERphone::loadSettings(bool debug)
 		_SD.mkdir("/Video");
 	if(!_SD.exists("/Ringtones"))
 		_SD.mkdir("/Ringtones");
-	const char * path = "/settings.json";
+	if(!_SD.exists("/.core"))
+		_SD.mkdir("/.core");
+	const char * path = "/.core/settings.json";
 	Serial.println("");
 	SDAudioFile file = _SD.open(path);
 	JsonObject& settings = mp.jb.parseObject(file);
