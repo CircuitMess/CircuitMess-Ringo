@@ -320,7 +320,7 @@ bool MAKERphone::update() {
 			}
 		}
 	}
-	updateNotification();
+	updateNotificationSound();
 	if (millis() - lastFrameCount >= frameSpeed) {
 		lastFrameCount = millis();
 		updatePopup();
@@ -631,7 +631,7 @@ void MAKERphone::incomingCall() //TODO
 			}
 			if(state)
 			{
-				playNotification(4);
+				playNotificationSound(4);
 				state = 0;
 			}
 			update();
@@ -1809,7 +1809,7 @@ void MAKERphone::takeScreenshot()
 //Popups
 void MAKERphone::popup(String text, uint16_t duration) {
 	popupText = text;
-	popupTotalTime = popupTimeLeft = duration + 16;
+	popupTotalTime = popupTimeLeft = popupDuration + 16;
 }
 
 void MAKERphone::updatePopup() {
@@ -2208,7 +2208,7 @@ void MAKERphone::homePopupEnable(bool enabled)
 {
 	HOME_POPUP_ENABLE = enabled;
 }
-void MAKERphone::playNotification(uint8_t _notification)
+void MAKERphone::playNotificationSound(uint8_t _notification)
 {
 	notification = _notification;
 	osc->stop();
@@ -2219,41 +2219,45 @@ void MAKERphone::playNotification(uint8_t _notification)
 	playingNotification = 1;
 	notesIndex = 0;
 
-	duration = notificationNotesDuration[notification][notesIndex];
-
+	notificationSoundDuration = notificationNotesDuration[notification][notesIndex];
 }
-void MAKERphone::updateNotification()
+void MAKERphone::updateNotificationSound()
 {
-	if(playingNotification && millis() - notificationMillis >= duration*1000 +  125)
+	if(playingNotification && millis() - notificationMillis >= notificationSoundDuration*1000 +  125)
 	{
-		duration = notificationNotesDuration[notification][notesIndex];
-		note = notificationNotes[notification][notesIndex];
-		if(duration == 0 || notesIndex == 5)
+		notificationSoundDuration = notificationNotesDuration[notification][notesIndex];
+		notificationSoundNote = notificationNotes[notification][notesIndex];
+		if(notificationSoundDuration == 0 || notesIndex == 5)
 		{
 			Serial.println("stopped\n");
 			playingNotification = 0;
 			// osc->stop();
 			return;
 		}
-		if(note == 0)
+		if(notificationSoundNote == 0)
 		{
 			notesIndex++;
 			return;
 		}
-
-		Serial.println("play new note:");
-		Serial.print("notesindex");
-		Serial.println(notesIndex);
-		Serial.println(note);
-		Serial.println(duration);
-
 		notificationMillis = millis();
-		osc->note(note, duration);
+		osc->note(notificationSoundNote, notificationSoundDuration);
 		
 		notesIndex++;
 	}
 }
-
+void MAKERphone::addNotification(NotificationType _type, char* _description, DateTime _time)
+{
+	for(int i = 0; i < sizeof(notificationTypeList);i++)
+	{
+		if(notificationTypeList[i] == NotificationType::NONE)
+		{
+			notificationTypeList[i] = _type;
+			notificationDescriprionList[i] = _description;
+			notificationTimeList[i] = _time;
+			break;
+		}
+	}
+}
 //Buttons class
 bool Buttons::pressed(uint8_t button) {
 	return states[(uint8_t)button] == 1;

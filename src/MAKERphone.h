@@ -37,7 +37,7 @@ extern HardwareSerial Serial1;
 #include <Update.h>
 
 //Keypad setup
-#include "utility/Keypad_I2C.h"
+#include "utility/Keypad_I2C/Keypad_I2C.h"
 #include "utility/Keypad.h"
 //#include "utility/Wire2.h"
 
@@ -105,6 +105,7 @@ extern HardwareSerial Serial1;
 
 
 #define smsNumber 22
+enum class NotificationType : uint8_t {System, Phone, Messages, NONE};
 class Buttons
 {
 	private:
@@ -145,7 +146,7 @@ class Buttons
 
 };
 
-class MAKERphone:public Buttons
+class MAKERphone:public Buttons, public DateTime
 {
   public:
 	Buttons buttons;
@@ -190,8 +191,8 @@ class MAKERphone:public Buttons
 	CRGB leds[NUMPIXELS];
 
 	//Notification sounds
-	void playNotification(uint8_t notification);
-	void updateNotification();
+	void playNotificationSound(uint8_t notification);
+	void updateNotificationSound();
 	uint8_t notificationNotes[5][5] PROGMEM = {
 		{80, 80, 0, 0, 0},
 		{70, 70, 0, 0, 0},
@@ -209,7 +210,22 @@ class MAKERphone:public Buttons
 	bool playingNotification = 0;
 	uint8_t notesIndex = 0;
 	uint32_t notificationMillis = millis();
-	
+	void addNotification(NotificationType _type, char* _description, DateTime _time);
+	//notification system
+	NotificationType notificationTypeList[10] = {
+		NotificationType::NONE,
+		NotificationType::NONE,
+		NotificationType::NONE,
+		NotificationType::NONE,
+		NotificationType::NONE,
+		NotificationType::NONE,
+		NotificationType::NONE,
+		NotificationType::NONE,
+		NotificationType::NONE,
+		NotificationType::NONE
+	};
+	char *notificationDescriprionList[10] = {"", "", "","", "", "","", "", "", ""};
+	DateTime notificationTimeList[10];
 
 
 	//JPEG operations
@@ -309,6 +325,7 @@ class MAKERphone:public Buttons
 		void homePopup(bool animation = 1);
 		bool HOME_POPUP_ENABLE = 1;
 		String popupText;
+		float popupDuration = 0;
 		uint16_t popupTimeLeft;
 		uint16_t popupTotalTime;
 		const char *popupHomeItems[6] PROGMEM = {
@@ -320,7 +337,7 @@ class MAKERphone:public Buttons
 			"LED brightness"
 		};
 
-		
+	
 		bool inHomePopup = 0;
 		void takeScreenshot();
 		int backgroundColors[7] PROGMEM = {
@@ -332,7 +349,7 @@ class MAKERphone:public Buttons
 			TFT_ORANGE,
 			TFT_PINK
 		};
-		float duration = 0;
-		uint8_t note = 0;
+		float notificationSoundDuration = 0;
+		uint8_t notificationSoundNote = 0;
 };
 #endif

@@ -39,34 +39,49 @@
 
 #define	PCF8574	1	// PCF8574 I/O expander device is 1 byte wide
 #define PCF8575 2	// PCF8575 I/O expander device is 2 bytes wide
-
+// Simple general-purpose date/time class (no TZ / DST / leap second handling!)
 
 class DateTime {
 public:
-	DateTime(uint32_t t = 0);
-	DateTime(uint16_t year, uint8_t month, uint8_t day,
-		uint8_t hour = 0, uint8_t min = 0, uint8_t sec = 0);
-	DateTime(const char* date, const char* time);
-	uint16_t year() const { return 2000 + yOff; }
-	uint8_t month() const { return m; }
-	uint8_t day() const { return d; }
-	uint8_t hour() const { return hh; }
-	uint8_t minute() const { return mm; }
-	uint8_t second() const { return ss; }
-	uint8_t dayOfTheWeek() const;
-
+	char* format(char* ret);
+	DateTime (uint32_t t =0);
+	DateTime (uint16_t year, uint8_t month, uint8_t day,
+				uint8_t hour =0, uint8_t min =0, uint8_t sec =0);
+	DateTime (const char* date, const char* time);
+	DateTime (const __FlashStringHelper* date, const __FlashStringHelper* time);
+	DateTime (const char* sdate);
+	uint16_t year() const		{ return 2000 + yOff; }
+	uint8_t month() const		{ return m; }
+	uint8_t day() const		{ return d; }
+	uint8_t hour() const		{ return hh; }
+	uint8_t minute() const		{ return mm; }
+	uint8_t second() const		{ return ss; }
+	uint8_t dayOfWeek() const;
+	void setyear(uint16_t year) 	{ yOff = year - 2000; }
+	void setmonth(uint8_t month)	{ m = month; }
+	void setday(uint8_t day) 	{ d = day; }
+	void sethour(uint8_t hour) 	{ hh = hour%24; }
+	void setminute(uint8_t minute) 	{ mm = minute%60; }
+	void setsecond(uint8_t second) 	{ ss = second%60; }
 	// 32-bit times as seconds since 1/1/2000
 	long secondstime() const;
 	// 32-bit times as seconds since 1/1/1970
-	// THE ABOVE COMMENT IS CORRECT FOR LOCAL TIME; TO USE THIS COMMAND TO
-	// OBTAIN TRUE UNIX TIME SINCE EPOCH, YOU MUST CALL THIS COMMAND AFTER
-	// SETTING YOUR CLOCK TO UTC
 	uint32_t unixtime(void) const;
+	unsigned char equals(const char* sdate) const;//DD-MM-YYYY hh:mm:ss
+	unsigned char equals(const DateTime &date) const;
+	unsigned char operator == (const char *sdate) const {return equals(sdate);}
+	unsigned char operator == (const DateTime &date) const {return equals(date);}
+	unsigned char operator != (const char *sdate) const {return !equals(sdate);}
+	unsigned char operator != (const DateTime &date) const {return !equals(date);}
+	unsigned char operator < (const DateTime &date) const;
+	unsigned char operator > (const DateTime &date) const;
+	unsigned char operator <= (const DateTime &date) const;
+	unsigned char operator >= (const DateTime &date) const;
+
 
 protected:
 	uint8_t yOff, m, d, hh, mm, ss;
 };
-
 class Keypad_I2C : public Keypad, public TwoWire {
 public:
 	Keypad_I2C(char* userKeymap, byte* row, byte* col, byte numRows, byte numCols, byte address, byte width = 1) :
