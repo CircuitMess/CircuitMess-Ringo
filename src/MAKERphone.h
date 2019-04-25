@@ -105,7 +105,7 @@ extern HardwareSerial Serial1;
 
 
 #define smsNumber 22
-enum class NotificationType : uint8_t {System, Phone, Messages, NONE};
+// enum class NotificationType : uint8_t {System, Phone, Messages, NONE};
 class Buttons
 {
 	private:
@@ -210,20 +210,9 @@ class MAKERphone:public Buttons, public DateTime
 	bool playingNotification = 0;
 	uint8_t notesIndex = 0;
 	uint32_t notificationMillis = millis();
-	void addNotification(NotificationType _type, char* _description, DateTime _time);
+	void addNotification(uint8_t _type, char* _description, DateTime _time);
 	//notification system
-	NotificationType notificationTypeList[10] = {
-		NotificationType::NONE,
-		NotificationType::NONE,
-		NotificationType::NONE,
-		NotificationType::NONE,
-		NotificationType::NONE,
-		NotificationType::NONE,
-		NotificationType::NONE,
-		NotificationType::NONE,
-		NotificationType::NONE,
-		NotificationType::NONE
-	};
+	uint8_t notificationTypeList[10] = {0,0,0,0,0,0,0,0,0,0};
 	char *notificationDescriprionList[10] = {"", "", "","", "", "","", "", "", ""};
 	DateTime notificationTimeList[10];
 
@@ -323,6 +312,10 @@ class MAKERphone:public Buttons, public DateTime
 		uint8_t timesRemaining;
 
 		void homePopup(bool animation = 1);
+		void loadNotifications(bool debug = 0);
+		void saveNotifications(bool debug = 0);
+		void drawNotificationWindow(uint8_t y, uint8_t index);
+		void notificationView();
 		bool HOME_POPUP_ENABLE = 1;
 		String popupText;
 		float popupDuration = 0;
@@ -336,7 +329,7 @@ class MAKERphone:public Buttons, public DateTime
 			"Date & time",
 			"LED brightness"
 		};
-
+		String monthsList[12] PROGMEM = {"JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"};
 	
 		bool inHomePopup = 0;
 		void takeScreenshot();

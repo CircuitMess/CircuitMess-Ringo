@@ -89,7 +89,10 @@ void MAKERphone::begin(bool splash) {
 	}
 
 	if(SDinsertedFlag)
+	{
 		loadSettings(1);
+		loadNotifications();
+	}
 
 	// osc->setVolume(150);
 	//display initialization
@@ -333,9 +336,9 @@ bool MAKERphone::update() {
 
 		buttons.update();
 
-		if(HOME_POPUP_ENABLE)
+		if(HOME_POPUP_ENABLE && !inHomePopup)
 		{
-			if(buttons.kpdNum.getKey() == 'B' && !inHomePopup)
+			if(buttons.kpdNum.getKey() == 'B')
 			{
 				inHomePopup = 1;
 				homePopup();
@@ -1236,6 +1239,7 @@ int MAKERphone::multi_tap(byte key)
 	return 0;
 }
 
+
 //JPEG drawing
 void MAKERphone::drawJpeg(String filename, int xpos, int ypos) {
 
@@ -1376,6 +1380,7 @@ void MAKERphone::jpegInfo() {
   Serial.println(F("==============="));
   Serial.println();
 }
+
 
 //settings operations
 void MAKERphone::saveSettings(bool debug)
@@ -1844,7 +1849,6 @@ void MAKERphone::homePopup(bool animation)
 			delayMicroseconds(750);
 		}
 	}
-	else
 	display.fillScreen(TFT_WHITE);
 	display.drawIcon(popupVolume,12,25,20,20,2);
 	display.drawIcon(popupExit,60,25,20,20,2);
@@ -1854,17 +1858,23 @@ void MAKERphone::homePopup(bool animation)
 	uint8_t cursor = 1;
 	uint8_t scale = 2;
 	uint32_t blinkMillis = millis();
+	uint32_t notificationMillis = millis();
 	uint8_t cursorState = 0;
 	dataRefreshFlag = 1;
 	String temp;
 	while(!buttons.released(BTN_B))
 	{
+		display.fillScreen(TFT_WHITE);
+		display.drawIcon(popupVolume,12,25,20,20,2);
+		display.drawIcon(popupExit,60,25,20,20,2);
+		display.drawIcon(popupScreenBrightness,108,25,20,20,2);
+		display.drawIcon(popupScreenshot,12,70,20,20,2);
+		display.drawIcon(popupPixelBrightness,108,70,20,20,2);
 		display.fillRect(0,0, 160,18, TFT_WHITE);
 		display.fillRect(0,114, 160,20, TFT_WHITE);
 
 
 		//drawing the top icons
-
 		uint8_t helper = 11;
 		if (simInserted && !airplaneMode)
 		{
@@ -1928,7 +1938,16 @@ void MAKERphone::homePopup(bool animation)
 		display.setTextSize(1);
 		display.setCursor(0,112);
 		display.setTextColor(TFT_BLACK);
-		display.printCenter(popupHomeItems[cursor]);
+		if(millis() - notificationMillis >= 2000)
+			notificationMillis = millis();
+
+		if(millis() - notificationMillis > 1000 && millis() - notificationMillis < 2000)
+		{
+			display.printCenter("Notifications   ");
+			display.drawBitmap(display.cursor_x - 10, display.cursor_y, arrowDown, TFT_BLACK, 2);
+		}
+		else
+			display.printCenter(popupHomeItems[cursor]);
 		display.drawRect(12 + cursor % 3 * 48 - 1, 25 + 45 * (int)(cursor / 3) - 1, 42, 42, cursorState ? TFT_RED : TFT_WHITE);
 		display.drawRect(12 + cursor % 3 * 48 - 2, 25 + 45 * (int)(cursor / 3) - 2, 44, 44, cursorState ? TFT_RED : TFT_WHITE);
 
@@ -1972,6 +1991,7 @@ void MAKERphone::homePopup(bool animation)
 				cursor += 3;
 			else
 				cursor -= 3;
+			notificationMillis = millis();
 			while(!update());
 		}
 		if(buttons.released(BTN_DOWN))
@@ -1982,10 +2002,14 @@ void MAKERphone::homePopup(bool animation)
 			display.drawRect(12 + cursor % 3 * 48 - 1, 25 + 45 * (int)(cursor / 3) - 1, 42, 42,TFT_WHITE);
 			cursorState = 1;
 			blinkMillis = millis();
-			if(cursor > 2)
-				cursor -= 3;
-			else
+			if(cursor < 3)
 				cursor += 3;
+			else
+			{
+				notificationView();
+			}
+			notificationMillis = millis();
+			
 			while(!update());
 		}
 		if(buttons.released(BTN_LEFT))
@@ -2000,6 +2024,7 @@ void MAKERphone::homePopup(bool animation)
 				cursor += 2;
 			else
 				cursor -= 1;
+			notificationMillis = millis();
 			while(!update());
 		}
 		if(buttons.released(BTN_RIGHT))
@@ -2014,6 +2039,7 @@ void MAKERphone::homePopup(bool animation)
 				cursor -= 2;
 			else
 				cursor += 1;
+			notificationMillis = millis();
 			while(!update());
 		}
 		if(buttons.released(BTN_A))
@@ -2204,6 +2230,46 @@ void MAKERphone::homePopup(bool animation)
 	}
 	while(!update());
 }
+void MAKERphone::drawNotificationWindow(uint8_t y, uint8_t index) {
+	display.setTextFont(2);
+	display.setTextSize(1);
+	display.setCursor(30, y + 2);
+	display.fillRoundRect(2, y + 2, 154, 20, 2, TFT_DARKGREY);
+	display.fillRoundRect(4, y, 154, 20, 2, TFT_WHITE);
+	display.print(notificationDescriprionList[index]);
+	switch (notificationTypeList[index])
+	{
+		case 1:
+			display.drawBitmap(7, y + 2, missedCallIcon, TFT_RED, 2);
+			break;
+		case 2:
+			display.drawBitmap(7, y + 2, newMessageIcon, TFT_BLACK, 2);
+			break;
+		case 3:
+			display.drawBitmap(7, y + 2, systemNotification, TFT_RED, 2);
+			break;
+	}
+	display.setTextFont(1);
+	display.setCursor(120, y + 2);
+	String temp = "";
+	DateTime now = notificationTimeList[index];
+	if (now.hour() < 10)
+		temp.concat("0");
+	temp.concat(now.hour());
+	temp.concat(":");
+	if (now.minute() < 10)
+		temp.concat("0");
+	temp.concat(now.minute());
+	display.print(temp);
+	display.setCursor(119, y + 11);
+	temp = "";
+	temp.concat(monthsList[now.month() - 1]);
+	temp.concat(" ");
+	if (now.day() < 10)
+		temp.concat("0");
+	temp.concat(now.day());
+	display.print(temp);
+}
 void MAKERphone::homePopupEnable(bool enabled)
 {
 	HOME_POPUP_ENABLE = enabled;
@@ -2245,11 +2311,11 @@ void MAKERphone::updateNotificationSound()
 		notesIndex++;
 	}
 }
-void MAKERphone::addNotification(NotificationType _type, char* _description, DateTime _time)
+void MAKERphone::addNotification(uint8_t _type, char* _description, DateTime _time)
 {
 	for(int i = 0; i < sizeof(notificationTypeList);i++)
 	{
-		if(notificationTypeList[i] == NotificationType::NONE)
+		if(notificationTypeList[i] == 0)
 		{
 			notificationTypeList[i] = _type;
 			notificationDescriprionList[i] = _description;
@@ -2257,7 +2323,108 @@ void MAKERphone::addNotification(NotificationType _type, char* _description, Dat
 			break;
 		}
 	}
+	saveNotifications();
 }
+void MAKERphone::loadNotifications(bool debug)
+{
+	const char * path = "/.core/notifications.json";
+	Serial.println("");
+	_SD.remove(path);
+	SDAudioFile file = _SD.open(path);
+	JsonArray& notifications = mp.jb.parseArray(file);
+	file.close();
+	
+	if (notifications.success()) {
+		int i = 0;
+		for(JsonObject& tempNotification:notifications)
+		{
+			notificationTypeList[i] = tempNotification["Type"];
+			notificationDescriprionList[i] = (char*)tempNotification["Description"].as<char*>();
+			notificationTimeList[i] = DateTime(tempNotification["DateTime"].as<uint32_t>());	
+			i++;
+		}
+	}
+	else {
+		saveNotifications();
+		Serial.println("Error loading new notifications");
+	}
+	// notifications.prettyPrintTo(Serial);
+}
+void MAKERphone::saveNotifications(bool debug)
+{
+	const char * path = "/.core/notifications.json";
+	Serial.println("");
+	_SD.remove(path);
+	JsonArray& notifications = jb.createArray();
+
+	if (notifications.success()) {
+		for(int i = 0; i<sizeof(notificationTypeList);i++)
+		{
+			JsonObject& tempNotification = jb.createObject();
+			tempNotification["Type"] = notificationTypeList[i];
+			tempNotification["Description"] = notificationDescriprionList[i];
+			tempNotification["DateTime"] = notificationTimeList[i].unixtime();
+			notifications.add(tempNotification);	
+		}
+
+		SDAudioFile file1 = _SD.open(path, "w");
+		notifications.prettyPrintTo(file1);
+		// notifications.prettyPrintTo(Serial); 
+		file1.close();
+	} else {
+		Serial.println("Error saving notifications data");
+	}
+}
+void MAKERphone::notificationView()
+{
+	char key = NO_KEY;
+	while(!buttons.released(BTN_B) && !buttons.released(BTN_UP))
+	{
+		key = buttons.kpdNum.getKey();
+		display.fillScreen(TFT_WHITE);
+		display.setCursor(0, 2);
+		display.setTextFont(2);
+		display.setTextSize(1);
+		display.printCenter("Notifications");
+		display.setCursor(3, 114);
+		display.print("Clear all");
+
+		uint8_t temp = 0;
+		bool anyNotifications = 0;
+		for(int i = 0; i< sizeof(notificationTypeList);i++)
+		{
+			if(notificationTypeList[i] != 0)
+			{
+				temp++;
+				if(temp == 1)
+					drawNotificationWindow(20,i);
+				else if(temp == 2)
+					drawNotificationWindow(44,i);
+				else if(temp == 3)
+					drawNotificationWindow(68,i);
+				else if(temp == 4)
+					drawNotificationWindow(92,i);
+				anyNotifications = 1;
+			}
+		}
+		if(!anyNotifications)
+		{
+			display.setCursor(0, display.height() / 2 - 16);
+			display.printCenter("No notifications...");
+		}
+		if(key == 'C')
+		{
+			for(int i = 0; i< sizeof(notificationTypeList);i++)
+				notificationTypeList[i] = 0;
+			if(SDinsertedFlag)
+				saveNotifications();
+		}
+		update();
+	}
+	while(!update());
+}
+
+
 //Buttons class
 bool Buttons::pressed(uint8_t button) {
 	return states[(uint8_t)button] == 1;
