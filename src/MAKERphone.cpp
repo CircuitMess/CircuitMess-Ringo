@@ -63,7 +63,7 @@ void MAKERphone::begin(bool splash) {
 	}
 	FastLED.clear();
 	buttons.begin();
-
+	RTC.begin();
 	//Startup sounds
 	// tone2(soundPin, 2000, 10);
 	// buttons.kpd.writeMute(0);
@@ -98,7 +98,7 @@ void MAKERphone::begin(bool splash) {
 	//display initialization
 	tft.init();
 	tft.invertDisplay(0);
-	tft.setRotation(1);
+	tft.setRotation(3);
 	display.setColorDepth(8); // Set colour depth of Sprite to 8 (or 16) bits
 	display.createSprite(BUFWIDTH, BUFHEIGHT); // Create the sprite and clear background to black
 	display.setTextWrap(0);             //setRotation(1);
@@ -122,16 +122,18 @@ void MAKERphone::begin(bool splash) {
 		delay(2);
 	}
 
-	//ledcAnalogWrite(LEDC_CHANNEL, 0);
+	ledcAnalogWrite(LEDC_CHANNEL, 0);
+
 	if (splash == 1)
 		splashScreen(); //Show the main splash screen
 	else
 	{
-		delay(500);
-		checkSim();
+		// delay(500); //HOTFIX
+		// checkSim();
 	}
+  	while(1);
 
-	updateTimeGSM();
+	// updateTimeGSM(); //HOTFIX
 	Serial1.println(F("AT+CMEE=2"));
 	Serial1.println(F("AT+CLVL=100"));
 	Serial1.println(F("AT+CRSL=100"));
@@ -306,13 +308,9 @@ bool MAKERphone::update() {
 						Serial.println(clockSecond);
 
 						//TO-DO: UPDATE THE RTC HERE
-
-						buttons.kpd.setHour(clockHour);
-						buttons.kpd.setMinute(clockMinute);
-						buttons.kpd.setSecond(clockSecond);
-						buttons.kpd.setDate(clockDay);
-						buttons.kpd.setMonth(clockMonth);
-						buttons.kpd.setYear(clockYear);
+						DateTime now = DateTime(clockYear, clockMonth, clockDay, 
+							clockHour, clockMinute, clockSecond);
+						RTC.adjust(now);
 						Serial.println(F("\nRTC TIME UPDATE OVER GSM DONE!"));
 					}
 			}
@@ -338,7 +336,7 @@ bool MAKERphone::update() {
 
 		if(HOME_POPUP_ENABLE && !inHomePopup)
 		{
-			if(buttons.kpdNum.getKey() == 'B')
+			if(buttons.key == 'B') //BUTTONSREFRESH
 			{
 				inHomePopup = 1;
 				homePopup();
@@ -404,11 +402,6 @@ void MAKERphone::tone2(int pin, int freq, int duration) {
 	ledcWriteTone(0, freq);
 	delay(duration);
 	ledcWriteTone(0, 0);
-}
-void MAKERphone::vibration(int duration) {
-	kpd.pin_write(VIBRATION_MOTOR, 1);
-	//delay(duration);
-	kpd.pin_write(VIBRATION_MOTOR, 0);
 }
 void MAKERphone::ledcAnalogWrite(uint8_t channel, uint32_t value, uint32_t valueMax) {
 	// calculate duty, 8191 from 2 ^ 13 - 1
@@ -533,23 +526,19 @@ void MAKERphone::updateTimeGSM() {
 	Serial.println(F("CLOCK SECOND:"));
 	Serial.println(clockSecond);
 
-
-	buttons.kpd.setHour(clockHour);
-	buttons.kpd.setMinute(clockMinute);
-	buttons.kpd.setSecond(clockSecond);
-	buttons.kpd.setDate(clockDay);
-	buttons.kpd.setMonth(clockMonth);
-	buttons.kpd.setYear(clockYear);
+	DateTime now = DateTime(clockYear, clockMonth, clockDay, 
+		clockHour, clockMinute, clockSecond);
+	RTC.adjust(now);
 	Serial.println(F("\nRTC TIME UPDATE OVER GSM DONE!"));
 	delay(5);
 }
 void MAKERphone::updateTimeRTC() {
-	clockHour = buttons.kpd.getHour(h12, PM);
-	clockMinute = buttons.kpd.getMinute();
-	clockSecond = buttons.kpd.getSecond();
-	clockDay = buttons.kpd.getDate();
-	clockMonth = buttons.kpd.getMonth(Century);
-	clockYear = buttons.kpd.getYear();
+	clockHour = RTC.now().hour();
+	clockMinute = RTC.now().minute();
+	clockSecond = RTC.now().second();
+	clockDay = RTC.now().day();
+	clockMonth = RTC.now().month();
+	clockYear = RTC.now().year();
 
 	//Serial.println(F("CLOCK HOUR:"));
 	//Serial.println(clockHour);
@@ -877,8 +866,8 @@ void MAKERphone::enterPin()
 		temp+=timesRemaining;
 		display.printCenter(temp);
 
-		key = buttons.kpdNum.getKey();
-		if (key == 'C' && pinBuffer != "")
+		key = buttons.getKey(); //BUTTONSREFRESH
+		if (buttons.released(BTN_FUN_LEFT) && pinBuffer != "")
 			pinBuffer.remove(pinBuffer.length() - 1);
 		else if (key != NO_KEY && isDigit(key) && pinBuffer.length() != 4)
 			pinBuffer += key;
@@ -961,13 +950,13 @@ void MAKERphone::enterPUK()
 		temp+=timesRemaining;
 		display.printCenter(temp);
 
-		key = buttons.kpdNum.getKey();
-		if (key == 'C' && pukBuffer != "")
+		key = buttons.getKey(); //BUTTONSREFRESH
+		if (buttons.released(BTN_FUN_LEFT) && pukBuffer != "")
 			pukBuffer.remove(pukBuffer.length() - 1);
 		else if (key != NO_KEY && isDigit(key) && pukBuffer.length() != 8)
 			pukBuffer += key;
 
-		if ((buttons.released(BTN_A) || key == 'A') && pukBuffer.length() == 8)//enter PUK
+		if ((buttons.released(BTN_A) || buttons.released(BTN_FUN_RIGHT)) && pukBuffer.length() == 8)//enter PUK
 		{
 			reply = "";
 			Serial1.print(F("AT+CPIN=\""));
@@ -1005,13 +994,13 @@ void MAKERphone::enterPUK()
 					display.print("Confirm");
 
 
-					key = buttons.kpdNum.getKey();
-					if (key == 'C' && pinBuffer != "")
+					key = buttons.getKey(); //BUTTONSREFRESH
+					if (buttons.released(BTN_FUN_LEFT) && pinBuffer != "")
 						pinBuffer.remove(pinBuffer.length() - 1);
 					else if (key != NO_KEY && isDigit(key) && pinBuffer.length() != 4)
 						pinBuffer += key;
 
-					if ((buttons.released(BTN_A) || key == 'A') && pinBuffer.length() == 4)//enter PIN
+					if ((buttons.released(BTN_A) || buttons.released(BTN_FUN_RIGHT)) && pinBuffer.length() == 4)//enter PIN
 					{
 						reply = "";
 						Serial1.print(F("AT+CPWD= \"SC\",\"0000\", \""));
@@ -1046,16 +1035,16 @@ void MAKERphone::enterPUK()
 String MAKERphone::textInput(String buffer, int16_t length = -1)
 {
 	int ret = 0;
-	byte key = mp.buttons.kpdNum.getKey(); // Get a key press from the keypad
+	byte key = mp.buttons.getKey(); // Get a key press from the keypad  BUTTONSREFRESH
 	
 	
-	if (key == 'C' && buffer != "")
+	if (buttons.released(BTN_FUN_LEFT) && buffer != "")
 	{
 		if (textPointer == buffer.length())
 			textPointer = textPointer - 1;
 		buffer.remove(buffer.length() - 1);
 	}
-	else if (key == 'A') //clear number
+	else if (buttons.released(BTN_FUN_RIGHT)) //clear number
 	{
 		buffer = "";
 		textPointer = 0;
@@ -1065,28 +1054,25 @@ String MAKERphone::textInput(String buffer, int16_t length = -1)
 	else
 		textLimitFlag = 0;
 	if(length == -1 || length >= buffer.length()){
-		if (key == '*')
+		if (buttons.released(BTN_ASTERISK))
 			buffer += ' ';
-		if (key != 'B' && key != 'D')
+		ret = multi_tap(key);// Feed the key press to the multi_tap function.
+		if ((ret & 256) != 0) // If this is non-zero, we got a key. Handle some special keys or just print the key on screen
 		{
-			ret = multi_tap(key);// Feed the key press to the multi_tap function.
-			if ((ret & 256) != 0) // If this is non-zero, we got a key. Handle some special keys or just print the key on screen
+			if(buffer.length() == length)
 			{
-				if(buffer.length() == length)
-				{
-					textLimitFlag = 1;
-					return buffer;
-				}
-				else
-					textPointer++;
+				textLimitFlag = 1;
+				return buffer;
 			}
-			else if (ret) // We don't have a key but the user is still cycling through characters on one key so we need to update the screen
-			{
-				if (textPointer == buffer.length())
-					buffer += char(lowByte(ret));
-				else
-					buffer[buffer.length() - 1] = char(lowByte(ret));
-			}
+			else
+				textPointer++;
+		}
+		else if (ret) // We don't have a key but the user is still cycling through characters on one key so we need to update the screen
+		{
+			if (textPointer == buffer.length())
+				buffer += char(lowByte(ret));
+			else
+				buffer[buffer.length() - 1] = char(lowByte(ret));
 		}
 	}
 	if(buffer.length() > length)
@@ -2377,10 +2363,8 @@ void MAKERphone::saveNotifications(bool debug)
 }
 void MAKERphone::notificationView()
 {
-	char key = NO_KEY;
 	while(!buttons.released(BTN_B) && !buttons.released(BTN_UP))
 	{
-		key = buttons.kpdNum.getKey();
 		display.fillScreen(TFT_WHITE);
 		display.setCursor(0, 2);
 		display.setTextFont(2);
@@ -2412,7 +2396,7 @@ void MAKERphone::notificationView()
 			display.setCursor(0, display.height() / 2 - 16);
 			display.printCenter("No notifications...");
 		}
-		if(key == 'C')
+		if(buttons.released(BTN_FUN_LEFT))
 		{
 			for(int i = 0; i< sizeof(notificationTypeList);i++)
 				notificationTypeList[i] = 0;
@@ -2423,75 +2407,6 @@ void MAKERphone::notificationView()
 	}
 	while(!update());
 }
-
-
-//Buttons class
-bool Buttons::pressed(uint8_t button) {
-	return states[(uint8_t)button] == 1;
-}
-void Buttons::begin() {
-	kpd.begin(14, 27);
-	kpdNum.begin(14, 27);
-}
-void Buttons::update() {
-	byte buttonsData = 0b0000000;
-
-	for (uint8_t i = 0; i < 8; i++)
-		bitWrite(buttonsData, i, (bool)kpd.pin_read(i));
-	for (uint8_t thisButton = 0; thisButton < NUM_BTN; thisButton++) {
-		//extract the corresponding bit corresponding to the current button
-		//Inverted logic : button pressed = low state = 0
-		bool pressed = (buttonsData & (1 << thisButton)) == 0;
-
-		if (pressed) { //if button pressed
-			if (states[thisButton] < 0xFFFE) { // we want 0xFFFE to be max value for the counter
-				states[thisButton]++; //increase button hold time
-			}
-			else if (states[thisButton] == 0xFFFF) { // if we release / hold again too fast
-				states[thisButton] = 1;
-			}
-		}
-		else {
-			if (states[thisButton] == 0) {//button idle
-				continue;
-			}
-			if (states[thisButton] == 0xFFFF) {//if previously released
-				states[thisButton] = 0; //set to idle
-			}
-			else {
-				states[thisButton] = 0xFFFF; //button just released
-			}
-		}
-	}
-}
-bool Buttons::repeat(uint8_t button, uint16_t period) {
-	if (period <= 1) {
-		if ((states[(uint8_t)button] != 0xFFFF) && (states[(uint8_t)button])) {
-			return true;
-		}
-	}
-	else {
-		if ((states[(uint8_t)button] != 0xFFFF) && ((states[(uint8_t)button] % period) == 1)) {
-			return true;
-		}
-	}
-	return false;
-}
-bool Buttons::released(uint8_t button) {
-	return states[(uint8_t)button] == 0xFFFF;
-}
-bool Buttons::held(uint8_t button, uint16_t time) {
-	return states[(uint8_t)button] == (time + 1);
-}
-uint16_t Buttons::timeHeld(uint8_t button) {
-	if (states[(uint8_t)button] != 0xFFFF) {
-		return states[(uint8_t)button];
-	}
-	else {
-		return 0;
-	}
-}
-
 String MAKERphone::currentDateTime(){
 	mp.updateTimeRTC();
 	// 2019-04-18 12:00:00
@@ -2524,3 +2439,4 @@ String MAKERphone::currentDateTime(){
 	dateTime += String(mp.clockSecond);
 	return dateTime;
 }
+

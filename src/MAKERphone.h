@@ -31,20 +31,14 @@ extern HardwareSerial Serial1;
 #include "TFT_eSPI/TFT_eSPI.h" // Graphics and font library for ST7735 driver chip
 #include <SPI.h>
 #include "utility/ArduinoJson.h"
-
-//File file;
+#include "utility/RTCLib/RTClib.h"
+#include "utility/Buttons/Buttons.h"
 #include "utility/SdFat.h"
 #include <Update.h>
-
-//Keypad setup
-#include "utility/Keypad_I2C/Keypad_I2C.h"
-#include "utility/Keypad.h"
-//#include "utility/Wire2.h"
 
 //Fonts and sprites to use
 #include "utility/Free_Fonts.h"
 #include "utility/sprites.c"
-
 
 #include "utility/JPEGDecoder.h"
 #include "freertos/FreeRTOS.h"
@@ -53,27 +47,40 @@ extern HardwareSerial Serial1;
 #include "utility/soundLib/MPAudioDriver.h"
 #include "utility/soundLib/MPWavLib.h"
 
-//PCF8574 0x21 defines (keys)
-#define BTN_LEFT 0
-#define BTN_DOWN 1
-#define BTN_RIGHT 2
-#define BTN_UP 3
-#define JOYSTICK_CENTER 4
-#define BTN_A 5
-#define BTN_B 6
-#define VIBRATION_MOTOR 7
+//Buttons defines
+#define BTN_1 0 
+#define BTN_2 1
+#define BTN_3 2
+#define BTN_FUN_LEFT 3
+#define BTN_4 4
+#define BTN_5 5
+#define BTN_6 6
+#define BTN_7 8
+#define BTN_8 9
+#define BTN_9 10
+#define BTN_ASTERISK 12
+#define BTN_0 13
+#define BTN_HASHTAG 14
+#define BTN_FUN_RIGHT 15
+#define BTN_A 16
+#define BTN_B 17
+#define BTN_UP 18
+#define BTN_DOWN 19
+#define BTN_LEFT 20
+#define BTN_RIGHT 21
+
 
 #define SIM800_DTR 13
 #define INTERRUPT_PIN 35
 
-#define NUMPIXELS 8 //number of pixels connected to the MCU
-#define PIXELPIN 33  // make sure to set this to the correct pin, ignored for Esp8266
+#define NUMPIXELS 8 //number of pixels connected
+#define PIXELPIN 12 
 
 #define colorSaturation 128
 
 #define LCDWIDTH  160
 #define LCDHEIGHT 128
-#define LCD_BL_PIN 12
+#define LCD_BL_PIN 21
 #define BUFWIDTH  80
 #define BUFHEIGHT 64
 #define BUF2WIDTH  160
@@ -84,14 +91,7 @@ extern HardwareSerial Serial1;
 #define composeBoxHeight 12
 #define map_width 7
 #define RESET_MTP '~'
-#define buttons_per_column 4
-#define buttons_per_row 4
-#define multi_tap_threshold 500
 
-#define ROWS 4 //four rows
-#define COLS 4
-
-#define NUM_BTN 8
 #define soundPin 32
 
 #define LEDC_CHANNEL 1 // use second channel of 16 channels(started from zero)
@@ -105,53 +105,14 @@ extern HardwareSerial Serial1;
 
 
 #define smsNumber 22
-// enum class NotificationType : uint8_t {System, Phone, Messages, NONE};
-class Buttons
-{
-	private:
-		byte rowPins[ROWS] = { 0, 1, 2, 3 }; //connect to the row pinouts of the keypad
-		byte colPins[COLS] = { 4, 5, 6, 7 }; //connect to the column pinouts of the keypad
-		int i2caddress = 0x21;
-		int i2caddressNum = 0x20;
-		char keys[4][3] = {
-		{ '1','2','3' },
-		{ '4','5','6' },
-		{ '7','8','9' },
-		{ '*','0','#' }
-		};
-		char keysNum[4][4] = {
-		{ '1', '2', '3', 'A' },
-		{ '4', '5', '6', 'B' },
-		{ '7', '8', '9', 'C' },
-		{ '*', '0', '#', 'D' }
-		};
-
-	public:
-		///////////////////
-		//Keypad variables
-		//////////////////
-
-
-		Keypad_I2C kpd = Keypad_I2C(makeKeymap(keys), rowPins, colPins, ROWS, COLS, i2caddress);
-		Keypad_I2C kpdNum = Keypad_I2C(makeKeymap(keysNum), rowPins, colPins, ROWS, COLS, i2caddressNum);
-		bool pressed(uint8_t button);
-		void update();
-		bool repeat(uint8_t button, uint16_t period);
-		bool released(uint8_t button);
-		bool held(uint8_t button, uint16_t time);
-		uint16_t timeHeld(uint8_t button);
-		uint16_t states[NUM_BTN];
-		void begin();
-
-
-};
 
 class MAKERphone:public Buttons, public DateTime
 {
   public:
+	PCF8563 RTC;
 	Buttons buttons;
 
-  	SDFileSystemClass SD = _SD;
+	SDFileSystemClass SD = _SD;
 	TFT_eSPI tft = TFT_eSPI();  // Invoke library, pins defined in User_Setup.h
 	TFT_eSprite display = TFT_eSprite(&tft);
 	// TFT_eSprite buf = TFT_eSprite(&tft);
