@@ -38,8 +38,8 @@ void MAKERphone::begin(bool splash) {
 	esp_sleep_enable_ext0_wakeup(GPIO_NUM_35, 0); //1 = High, 0 = Low
 
 	//Initialize and start with the NeoPixels
-	FastLED.addLeds<NEOPIXEL, 33>(leds, 8);
-	Serial1.begin(9600, SERIAL_8N1, 17, 16);
+	FastLED.addLeds<NEOPIXEL, PIXELPIN>(leds, 8);
+	Serial1.begin(115200, SERIAL_8N1, 17, 16);
 
 
 	//Serial1.println(F("AT+CFUN=1,1"));
@@ -123,17 +123,15 @@ void MAKERphone::begin(bool splash) {
 	}
 
 	ledcAnalogWrite(LEDC_CHANNEL, 0);
-
 	if (splash == 1)
 		splashScreen(); //Show the main splash screen
 	else
 	{
-		// delay(500); //HOTFIX
+		// delay(500);
 		// checkSim();
 	}
-  	while(1);
 
-	// updateTimeGSM(); //HOTFIX
+	// updateTimeGSM();
 	Serial1.println(F("AT+CMEE=2"));
 	Serial1.println(F("AT+CLVL=100"));
 	Serial1.println(F("AT+CRSL=100"));
@@ -162,6 +160,7 @@ void MAKERphone::begin(bool splash) {
 		ringtone = new MPTrack((char *)(ringtone_path.c_str()));
 	applySettings();
 }
+
 bool MAKERphone::update() {
 	// bool pressed = 0;
 	//if (digitalRead(INTERRUPT_PIN) == 0) //message is received or incoming call
