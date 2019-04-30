@@ -7,7 +7,7 @@ void Buttons::begin() {
 	kpd.begin();
 }
 void Buttons::update() {
-	uint8_t buttonsData = 0;
+	uint32_t buttonsData = 0;
 	key = kpd.getKey();
 	for (int y = 0; y < ROWS;y++)
 	{
@@ -17,8 +17,8 @@ void Buttons::update() {
 				bitWrite(buttonsData, y * 4 + x, 1);
 		}
 	}
-	bitWrite(buttonsData, 16, (bool)kpd.pin_read(8));//BTN_A
-	bitWrite(buttonsData, 17, (bool)kpd.pin_read(9));//BTN_B
+	bitWrite(buttonsData, 16, !(bool)kpd.pin_read(5));//BTN_A
+	bitWrite(buttonsData, 17, !(bool)kpd.pin_read(4));//BTN_B
 
 	joystick_y = ads.readADC_SingleEnded(0);
   	joystick_x = ads.readADC_SingleEnded(1);

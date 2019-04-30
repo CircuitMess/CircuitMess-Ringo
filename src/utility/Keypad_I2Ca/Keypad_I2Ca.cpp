@@ -41,14 +41,14 @@
 // Let the user define a keymap - assume the same row/column count as defined in constructor
 void Keypad_I2Ca::begin(char *userKeymap) {
     Keypad::begin(userKeymap);
-	TwoWire::begin(27,14);
+	TwoWire::begin(27, 14);
 	_begin( );
 }
 
 
 // Initialize I2C
 void Keypad_I2Ca::begin(void) {
-	TwoWire::begin(27,14);
+	TwoWire::begin(27, 14);
 	_begin( );
 }
 

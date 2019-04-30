@@ -51,7 +51,7 @@ extern HardwareSerial Serial1;
 #define BTN_1 0 
 #define BTN_2 1
 #define BTN_3 2
-#define BTN_FUN_LEFT 3
+#define BTN_FUN_LEFT 15
 #define BTN_4 4
 #define BTN_5 5
 #define BTN_6 6
@@ -61,7 +61,7 @@ extern HardwareSerial Serial1;
 #define BTN_ASTERISK 12
 #define BTN_0 13
 #define BTN_HASHTAG 14
-#define BTN_FUN_RIGHT 15
+#define BTN_FUN_RIGHT 3
 #define BTN_A 16
 #define BTN_B 17
 #define BTN_UP 18

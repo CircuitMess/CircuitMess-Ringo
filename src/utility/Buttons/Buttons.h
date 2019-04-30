@@ -18,13 +18,13 @@
 class Buttons
 {
 	private:
-		byte rowPins[ROWS] = { 0, 1, 2, 3 }; //connect to the row pinouts of the keypad
-		byte colPins[COLS] = { 4, 5, 6, 7 }; //connect to the column pinouts of the keypad
+		byte rowPins[ROWS] = {6, 7, 8, 9}; //connect to the row pinouts of the keypad
+		byte colPins[COLS] = {10, 11, 12, 13}; //connect to the column pinouts of the keypad
 		char keys[4][4] = {
-		{ '1', '2', '3', 'A' },
-		{ '4', '5', '6', 'B' },
-		{ '7', '8', '9', 'C' },
-		{ '*', '0', '#', 'D' }
+			{ '1', '2', '3', 'D' },
+			{ '4', '5', '6', 'C' },
+			{ '7', '8', '9', 'B' },
+			{ '*', '0', '#', 'A' }
 		};
 		Adafruit_ADS1015 ads;     
 		int16_t joystick_x, joystick_y;
