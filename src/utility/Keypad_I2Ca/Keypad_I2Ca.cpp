@@ -31,6 +31,7 @@
 */
 
 #include "Keypad_I2Ca.h"
+#include <Wire.h>
 
 #define IREG 0x00	// input port location
 #define OREG 0x01	// output port
@@ -41,14 +42,14 @@
 // Let the user define a keymap - assume the same row/column count as defined in constructor
 void Keypad_I2Ca::begin(char *userKeymap) {
     Keypad::begin(userKeymap);
-	TwoWire::begin(27, 14);
+	Wire.begin(27, 14);
 	_begin( );
 }
 
 
 // Initialize I2C
 void Keypad_I2Ca::begin(void) {
-	TwoWire::begin(27, 14);
+	Wire.begin(27, 14);
 	_begin( );
 }
 
@@ -56,7 +57,7 @@ void Keypad_I2Ca::begin(void) {
 // Initialize I2C
 void Keypad_I2Ca::begin(byte address) {
 	i2caddr = address;
-	TwoWire::begin(address);
+	Wire.begin(address);
 	_begin( );
 }
 
@@ -64,7 +65,7 @@ void Keypad_I2Ca::begin(byte address) {
 // Initialize I2C
 void Keypad_I2Ca::begin(int address) {
 	i2caddr = address;
-	TwoWire::begin(address);
+	Wire.begin(address);
 	_begin( );
 }
 
@@ -103,13 +104,13 @@ void Keypad_I2Ca::pin_write(byte pinNum, boolean level) {
 
 int Keypad_I2Ca::pin_read(byte pinNum) {
 	word mask = 0x1<<pinNum;
-	TwoWire::beginTransmission( (int)i2caddr );
-	TwoWire::write( IREG );
-	TwoWire::endTransmission( );
-	TwoWire::requestFrom((int)i2caddr, (int)i2cwidth);
-	word pinVal = TwoWire::read( );
+	Wire.beginTransmission( (int)i2caddr );
+	Wire.write( IREG );
+	Wire.endTransmission( );
+	Wire.requestFrom((int)i2caddr, (int)i2cwidth);
+	word pinVal = Wire.read( );
 	if (i2cwidth > 1) {
-		pinVal |= TwoWire::read( ) << 8;
+		pinVal |= Wire.read( ) << 8;
 	} 
 	pinVal &= mask;
 	if( pinVal == mask ) {
@@ -125,36 +126,36 @@ void Keypad_I2Ca::port_write( word i2cportval ) {
 
 
 void Keypad_I2Ca::p_write( word i2cportval, byte reg ) {
-	TwoWire::beginTransmission((int)i2caddr);
-	TwoWire::write( reg<<(i2cwidth-1) );			//twice as many regs for 9555
-	TwoWire::write( i2cportval & 0x00FF );
+	Wire.beginTransmission((int)i2caddr);
+	Wire.write( reg<<(i2cwidth-1) );			//twice as many regs for 9555
+	Wire.write( i2cportval & 0x00FF );
 	if (i2cwidth > 1) {
-		TwoWire::write( i2cportval >> 8 );
+		Wire.write( i2cportval >> 8 );
 	}
-	TwoWire::endTransmission();
+	Wire.endTransmission();
 //	if( reg == OREG) pinState = i2cportval;		//not quite right - re-read i/p??
 	if( reg == OREG) pinState = pinState_set( );
 } // p_write( ) - private
 
 
 word Keypad_I2Ca::pinState_set( ) {
-	TwoWire::beginTransmission( (int)i2caddr );
-	TwoWire::write( IREG );
-	TwoWire::endTransmission( );
-	TwoWire::requestFrom( (int)i2caddr, (int)i2cwidth );
-	pinState = TwoWire::read( );
+	Wire.beginTransmission( (int)i2caddr );
+	Wire.write( IREG );
+	Wire.endTransmission( );
+	Wire.requestFrom( (int)i2caddr, (int)i2cwidth );
+	pinState = Wire.read( );
 	if (i2cwidth > 1) {
-		pinState |= TwoWire::read( ) << 8;
+		pinState |= Wire.read( ) << 8;
 	}
 	return pinState;
 } // set_pinState( )
 
 
 word Keypad_I2Ca::iodir_read( ) {
-//	TwoWire::requestFrom( (int)i2caddr, (int)i2cwidth );
-//	iodir_state = TwoWire::read( );
+//	Wire.requestFrom( (int)i2caddr, (int)i2cwidth );
+//	iodir_state = Wire.read( );
 //	if( i2cwidth > 1 ) {
-//		iodir_state |= TwoWire::read( ) << 8;
+//		iodir_state |= Wire.read( ) << 8;
 //	}
 	return iodir_state;
 } // iodir_read( )

@@ -6,7 +6,7 @@
 
 #define MAX_TRACKS 4
 
-#define PIN_I2S_BCLK 26
+#define PIN_I2S_BCLK 13
 #define PIN_I2S_LRC 25
 #define PIN_I2S_DOUT 22
 

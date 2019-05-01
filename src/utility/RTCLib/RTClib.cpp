@@ -1,9 +1,7 @@
 // Code by JeeLabs http://news.jeelabs.org/code/
 // Released to the public domain! Enjoy!
 
-// #include <Wire.h>
-#include "../Keypad_I2Ca/Wire2.h"
-TwoWire Wire;
+#include <Wire.h>
 #include "RTClib.h"
 #ifdef __AVR__
  #include <avr/pgmspace.h>

@@ -871,7 +871,7 @@ void MAKERphone::enterPin()
 		else if (key != NO_KEY && isDigit(key) && pinBuffer.length() != 4)
 			pinBuffer += key;
 
-		if ((buttons.released(BTN_A) || key == 'A') && pinBuffer.length() == 4)//enter PIN
+		if ((buttons.released(BTN_A) || mp.buttons.released(BTN_FUN_RIGHT)) && pinBuffer.length() == 4)//enter PIN
 		{
 			reply = "";
 			Serial1.print(F("AT+CPIN=\""));
@@ -1398,7 +1398,7 @@ void MAKERphone::saveSettings(bool debug)
 		settings["sleep_time"] = sleepTime;
 		settings["background_color"] = backgroundIndex;
 		settings["notification"] = notification;
-		settings["ringtone"] = ringtone_path;
+		settings["ringtone"] = ringtone_path.c_str();
 		SDAudioFile file1 = _SD.open(path, "w");
 		settings.prettyPrintTo(file1);
 		file1.close();
@@ -1408,7 +1408,7 @@ void MAKERphone::saveSettings(bool debug)
 }
 void MAKERphone::loadSettings(bool debug)
 {
-	//create default folders if not present
+	//create default system folders if not present
 	if(!_SD.exists("/Music"))
 		_SD.mkdir("/Music");
 	if(!_SD.exists("/Images"))
@@ -1439,6 +1439,10 @@ void MAKERphone::loadSettings(bool debug)
 			Serial.println(settings["sleep_time"].as<int>());
 			Serial.print("background_color: ");
 			Serial.println(settings["background_color"].as<int>());
+			Serial.print("notification: ");
+			Serial.println(settings["notification"].as<int>());
+			Serial.print("ringtone: ");
+			Serial.println(settings["ringtone"].as<char*>());
 		}
 		wifi = settings["wifi"];
 		bt = settings["bluetooth"];
