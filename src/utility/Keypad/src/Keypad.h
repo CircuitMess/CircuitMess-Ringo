@@ -98,6 +98,8 @@ public:
 	char waitForKey();
 	bool keyStateChanged();
 	byte numKeys();
+	uint debounceTime;
+	uint holdTime;
 
 private:
 	unsigned long startTime;
@@ -105,8 +107,6 @@ private:
     byte *rowPins;
     byte *columnPins;
 	KeypadSize sizeKpd;
-	uint debounceTime;
-	uint holdTime;
 	bool single_key;
 
 	void scanKeys();

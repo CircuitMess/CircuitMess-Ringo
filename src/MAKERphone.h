@@ -71,7 +71,7 @@ extern HardwareSerial Serial1;
 
 
 #define SIM800_DTR 13
-#define INTERRUPT_PIN 35
+#define INTERRUPT_PIN 36
 
 #define NUMPIXELS 8 //number of pixels connected
 #define PIXELPIN 12 
@@ -220,6 +220,7 @@ class MAKERphone:public Buttons, public DateTime
 	int lastFrameCount = 0;
 	String updateBuffer;
 	uint32_t refreshMillis = millis();
+	uint32_t buttonsRefreshMillis = millis();
 	bool dataRefreshFlag = 0;
 	bool receivedFlag = 0;
 	bool SDinsertedFlag = 0;

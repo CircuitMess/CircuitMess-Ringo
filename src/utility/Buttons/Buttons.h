@@ -42,7 +42,7 @@ class Buttons
 		bool held(uint8_t button, uint16_t time);
 		uint16_t timeHeld(uint8_t button);
 		uint16_t states[NUM_BTN];
-		char key = NO_KEY;
+		char currentKey = NO_KEY;
 		void begin();
 		char getKey();
 };

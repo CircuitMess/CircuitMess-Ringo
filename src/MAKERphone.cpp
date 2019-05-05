@@ -321,6 +321,11 @@ bool MAKERphone::update() {
 		}
 	}
 	updateNotificationSound();
+	if(millis() - buttonsRefreshMillis > 200)
+	{
+		buttons.currentKey = buttons.kpd.getKey();
+		buttonsRefreshMillis = millis();
+	}
 	if (millis() - lastFrameCount >= frameSpeed) {
 		lastFrameCount = millis();
 		updatePopup();
@@ -330,12 +335,11 @@ bool MAKERphone::update() {
 
 		// else//halved res mode
 			// buf.pushSprite(0,0);
-
 		buttons.update();
 
 		if(HOME_POPUP_ENABLE && !inHomePopup)
 		{
-			if(buttons.key == 'B') //BUTTONSREFRESH
+			if(buttons.currentKey == 'B') //BUTTONSREFRESH
 			{
 				inHomePopup = 1;
 				homePopup();
@@ -1828,16 +1832,16 @@ void MAKERphone::updatePopup() {
 }
 void MAKERphone::homePopup(bool animation)
 {
-	dataRefreshFlag = 1;
 	if(animation)
 	{
 		for (int i = 0; i < display.height(); i+=1)
 		{
 			display.drawFastHLine(0, i, display.width(), TFT_WHITE);
 			update();
-			delayMicroseconds(750);
+			// delayMicroseconds(750);
 		}
 	}
+	dataRefreshFlag = 1;
 	display.fillScreen(TFT_WHITE);
 	display.drawIcon(popupVolume,12,25,20,20,2);
 	display.drawIcon(popupExit,60,25,20,20,2);

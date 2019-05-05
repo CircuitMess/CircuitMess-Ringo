@@ -55,14 +55,29 @@ void Keypad::begin(char *userKeymap) {
 
 // Returns a single key only. Retained for backwards compatibility.
 char Keypad::getKey() {
-	single_key = true;
-
-	if (getKeys() && key[0].stateChanged && (key[0].kstate==PRESSED))
-		return key[0].kchar;
-	
-	single_key = false;
-
+	pin_write(rowPins[0],HIGH);
+	pin_write(rowPins[1],HIGH);
+	pin_write(rowPins[2],HIGH);
+	pin_write(rowPins[3],HIGH);
+	for(int i=0; i<4; i++)
+	{
+		pin_write(rowPins[i],LOW);
+		for(int j=0; j<4; j++)
+		{
+			if(pin_read(columnPins[j]) == LOW)
+				return keymap[i * 4 + j];
+		}
+		pin_write(rowPins[i],HIGH);
+	}
 	return NO_KEY;
+	// single_key = true;
+
+	// if (getKeys() && key[0].stateChanged && (key[0].kstate==PRESSED))
+	// 	return key[0].kchar;
+	
+	// single_key = false;
+
+	// return NO_KEY;
 }
 
 // Populate the key list.
@@ -82,9 +97,9 @@ bool Keypad::getKeys() {
 // Private : Hardware scan
 void Keypad::scanKeys() {
 	// Re-intialize the row pins. Allows sharing these pins with other hardware.
-	for (byte r=0; r<sizeKpd.rows; r++) {
-		pin_mode(rowPins[r],INPUT_PULLUP);
-	}
+	// for (byte r=0; r<sizeKpd.rows; r++) {
+	// 	pin_mode(rowPins[r],INPUT_PULLUP);
+	// }
 
 	// bitMap stores ALL the keys that are being pressed.
 	for (byte c=0; c<sizeKpd.columns; c++) {
@@ -233,7 +248,7 @@ byte Keypad::numKeys() {
 
 // Minimum debounceTime is 1 mS. Any lower *will* slow down the loop().
 void Keypad::setDebounceTime(uint debounce) {
-	debounce<1 ? debounceTime=1 : debounceTime=debounce;
+	debounce<1 ? debounceTime=0 : debounceTime=debounce;
 }
 
 void Keypad::setHoldTime(uint hold) {

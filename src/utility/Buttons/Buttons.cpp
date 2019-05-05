@@ -1,19 +1,26 @@
 #include "Buttons.h"
+
 bool Buttons::pressed(uint8_t button) {
 	return states[(uint8_t)button] == 1;
 }
 void Buttons::begin() {
   	ads.begin();
 	kpd.begin();
+	// kpd.setDebounceTime(20);
+	// kpd.setHoldTime(0);
+	for(int i = 0;i<4;i++)
+	{
+		kpd.pin_mode(rowPins[i],OUTPUT);
+		kpd.pin_mode(colPins[i],INPUT);
+	}
 }
 void Buttons::update() {
 	uint32_t buttonsData = 0;
-	key = kpd.getKey();
 	for (int y = 0; y < ROWS;y++)
 	{
 		for (int x = 0; x < COLS; x++)
 		{
-			if(key == keys[y][x] && key != 'B' && key != 'C')
+			if(currentKey == keys[y][x] && currentKey != 'B' && currentKey != 'C')
 				bitWrite(buttonsData, y * 4 + x, 0);
 			else
 				bitWrite(buttonsData, y * 4 + x, 1);
@@ -77,7 +84,7 @@ bool Buttons::held(uint8_t button, uint16_t time) {
 }
 char Buttons::getKey()
 {
-	return (key != 'B' && key != 'C') ? key : NO_KEY;
+	return (currentKey != 'B' && currentKey != 'C') ? currentKey : NO_KEY;
 }
 uint16_t Buttons::timeHeld(uint8_t button) {
 	if (states[(uint8_t)button] != 0xFFFF) {
