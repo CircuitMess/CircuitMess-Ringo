@@ -584,7 +584,8 @@ void MAKERphone::performUpdate(Stream &updateSource, size_t updateSize) {
 }
 void MAKERphone::updateFromFS(String FilePath) {
 	Serial.println(FilePath);
-	while(!SDFAT.begin(5, SD_SCK_MHZ(8)))
+	_SD.end();
+	while(!SDFAT.begin(5, SD_SCK_MHZ(9)))
 		Serial.println("SdFat error");
 	File updateBin = SDFAT.open(FilePath);
 	if (updateBin) {
@@ -1035,7 +1036,7 @@ void MAKERphone::enterPUK()
 		update();
 	}
 }
-String MAKERphone::textInput(String buffer, int16_t length = -1)
+String MAKERphone::textInput(String buffer, int16_t length)
 {
 	int ret = 0;
 	byte key = mp.buttons.getKey(); // Get a key press from the keypad  BUTTONSREFRESH
@@ -1465,13 +1466,14 @@ void MAKERphone::applySettings()
 {
 	if(wifi)
 	{
-		// WiFi.begin();
-		// delay(1);
+		delay(50);
+		WiFi.begin();
+		delay(50);
 	}
 	else
 	{
-		// WiFi.disconnect(true); delay(1); // disable WIFI altogether
-		// WiFi.mode(WIFI_MODE_NULL); delay(1);
+		WiFi.disconnect(true); delay(1); // disable WIFI altogether
+		WiFi.mode(WIFI_MODE_NULL); delay(1);
 	}
 
 	if(bt)

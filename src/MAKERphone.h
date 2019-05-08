@@ -35,6 +35,7 @@ extern HardwareSerial Serial1;
 #include "utility/Buttons/Buttons.h"
 #include "utility/SdFat.h"
 #include <Update.h>
+#include <HTTPClient.h>
 
 //Fonts and sprites to use
 #include "utility/Free_Fonts.h"
@@ -138,7 +139,7 @@ class MAKERphone:public Buttons, public DateTime
 	void enterPin();
 	void enterPUK();
 	String currentDateTime();
-	String textInput(String buffer, int16_t length);
+	String textInput(String buffer, int16_t length = -1);
 	int textPointer = 0;
 	bool textLimitFlag = 0;
 	void loader();
