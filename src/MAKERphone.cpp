@@ -19,7 +19,6 @@ Authors:
 
 #include "MAKERphone.h"
 extern MAKERphone mp;
-
 //audio refresh task
 TaskHandle_t Task1;
 void Task1code( void * pvParameters ){
@@ -64,11 +63,14 @@ void MAKERphone::begin(bool splash) {
 	FastLED.clear();
 	buttons.begin();
 	RTC.begin();
-	//Startup sounds
-	// tone2(soundPin, 2000, 10);
-	// buttons.kpd.writeMute(0);
-	// buttons.kpd.writeVolume(0);
-	//kpd.writeVolumeRight(78);
+	//EEPROM setup for firmware_version
+	EEPROM.begin(64);
+	if(EEPROM.readUInt(FIRMWARE_VERSION_ADDRESS) > 999)
+	{
+		EEPROM.writeUInt(FIRMWARE_VERSION_ADDRESS, firmware_version);
+		EEPROM.commit();
+	}
+	firmware_version = EEPROM.readUInt(FIRMWARE_VERSION_ADDRESS);
 
 	//PWM SETUP FOR ESP32
 	ledcSetup(0, 2000, 8);

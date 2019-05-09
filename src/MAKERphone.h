@@ -36,6 +36,7 @@ extern HardwareSerial Serial1;
 #include "utility/SdFat.h"
 #include <Update.h>
 #include <HTTPClient.h>
+#include <EEPROM.h>
 
 //Fonts and sprites to use
 #include "utility/Free_Fonts.h"
@@ -104,7 +105,7 @@ extern HardwareSerial Serial1;
 #define capacity 5208
 #define number_of_contacts 100
 
-
+#define FIRMWARE_VERSION_ADDRESS 0
 #define smsNumber 22
 
 class MAKERphone:public Buttons, public DateTime
