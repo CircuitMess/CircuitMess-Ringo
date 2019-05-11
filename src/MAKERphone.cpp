@@ -2459,58 +2459,55 @@ String MAKERphone::currentDateTime(){
 
 void MAKERphone::shutdownPopup(bool animation)
 {
+
 	if(animation)
 	{
 		for (int i = 2; i < 70; i++)
 		{
-			display.fillRect(display.width()/2 - i, 34, i * 2 + 2, 60, TFT_BLACK);
-			display.fillRect(display.width()/2 - i + 2, 36, i * 2 - 2, 56, TFT_WHITE);
-			update();
-			delayMicroseconds(2000);
+			// tft.fillRect(tft.width()/2 - i, 34, i * 2 + 2, 60, TFT_BLACK);
+			tft.drawRect(tft.width()/2 - i, 34, i*2+2, 60, TFT_BLACK);
+			tft.drawRect(tft.width()/2 - i + 1, 35, i*2+1, 58, TFT_BLACK);
+			tft.fillRect(tft.width()/2 - i + 2, 36, i * 2 - 2, 56, TFT_WHITE);
+			// update();
+			// delayMicroseconds(2000);
 		}
 	}
 	dataRefreshFlag = 1;
-	display.fillRect(10, 34, 142, 60, TFT_BLACK);
-	display.fillRect(12, 36, 138, 56, TFT_WHITE);
+	// tft.fillRect(10, 34, 142, 60, TFT_BLACK);
+	// tft.fillRect(12, 36, 138, 56, TFT_WHITE);
 	
 	uint8_t cursor = 1;
 	uint32_t blinkMillis = millis();
 	bool blinkState = 0;
 	dataRefreshFlag = 1;
+	tft.fillRect(12, 36, 138, 56, TFT_WHITE);
+	tft.setTextColor(TFT_BLACK);
+	tft.drawBitmap(25, 42, powerButton, TFT_RED);
+	tft.setTextFont(2);
+	tft.setTextSize(1);
+	tft.setCursor(55, 44);
+	tft.print("Turn off?");
+	// mp.tft.print("YES");
+	// mp.tft.setCursor(98, 61);
+	// mp.tft.print("NO");
+	tft.setCursor(42, 68);
+	tft.print("YES      NO");
 	while(!buttons.released(BTN_B))
 	{
-		display.fillRect(12, 36, 138, 56, TFT_WHITE);
-		display.setTextColor(TFT_BLACK);
-		display.setCursor(34, 44);
-		display.drawBitmap(25, 42, powerButton, TFT_RED);
-		display.setTextFont(2);
-		display.setTextSize(1);
-		display.printCenter("Turn off?");
 		if(millis() - blinkMillis > 350)
 		{
 			blinkMillis = millis();
 			blinkState = !blinkState;
 		}
-		mp.display.setCursor(49, 68);
-		// mp.display.print("YES");
-		// mp.display.setCursor(98, 61);
-		// mp.display.print("NO");
-		mp.display.printCenter("YES      NO");
 		switch (cursor)
 		{
 			case 0:
-				if(blinkState)
-				{
-					display.drawRect(37, 65, 33, 22, TFT_RED);
-					display.drawRect(38, 66, 31, 20, TFT_RED);
-				}
+				tft.drawRect(37, 65, 33, 22, blinkState ? TFT_RED: TFT_WHITE);
+				tft.drawRect(38, 66, 31, 20, blinkState ? TFT_RED: TFT_WHITE);
 			break;
 			case 1:
-				if(blinkState)
-				{
-					display.drawRect(96, 65, 27, 22, TFT_RED);
-					display.drawRect(97, 66, 25, 20, TFT_RED);
-				}
+				tft.drawRect(96, 65, 27, 22, blinkState ? TFT_RED: TFT_WHITE);
+				tft.drawRect(97, 66, 25, 20, blinkState ? TFT_RED: TFT_WHITE);
 			break;
 		}
 		if(buttons.released(BTN_LEFT) && cursor == 1)
@@ -2518,12 +2515,16 @@ void MAKERphone::shutdownPopup(bool animation)
 			cursor = 0;
 			blinkMillis = millis();
 			blinkState = 1;
+			tft.drawRect(96, 65, 27, 22, TFT_WHITE);
+			tft.drawRect(97, 66, 25, 20, TFT_WHITE);
 		}
 		if(buttons.released(BTN_RIGHT) && cursor == 0)
 		{
 			cursor = 1;
 			blinkMillis = millis();
 			blinkState = 1;
+			tft.drawRect(37, 65, 33, 22, TFT_WHITE);
+			tft.drawRect(38, 66, 31, 20, TFT_WHITE);
 		}
 		if(buttons.released(BTN_A))
 		{
@@ -2531,12 +2532,17 @@ void MAKERphone::shutdownPopup(bool animation)
 				break;
 			else
 			{
+				tft.fillRect(12, 36, 138, 56, TFT_WHITE);
+				tft.setCursor(40, 51);
+				tft.print("Turning off...");
+				delay(750);
 				Serial.println("TURN OFF");
 				buttons.kpd.pin_mode(2, OUTPUT);
   				buttons.kpd.pin_write(2, 1);
 			}
 		}
-		update();
+		// update();
+		buttons.update();
 	}
 	while(!update());
 }
