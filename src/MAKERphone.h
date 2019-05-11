@@ -296,6 +296,8 @@ class MAKERphone:public Buttons, public DateTime
 		String monthsList[12] PROGMEM = {"JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"};
 	
 		bool inHomePopup = 0;
+		bool inShutdownPopup = 0;
+		void shutdownPopup(bool animation = 1);
 		void takeScreenshot();
 		int backgroundColors[7] PROGMEM = {
 			TFT_CYAN,

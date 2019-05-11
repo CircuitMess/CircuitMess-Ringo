@@ -339,7 +339,7 @@ bool MAKERphone::update() {
 			// buf.pushSprite(0,0);
 		buttons.update();
 
-		if(HOME_POPUP_ENABLE && !inHomePopup)
+		if(HOME_POPUP_ENABLE && !inHomePopup && !inShutdownPopup)
 		{
 			if(buttons.currentKey == 'B') //BUTTONSREFRESH
 			{
@@ -347,6 +347,12 @@ bool MAKERphone::update() {
 				homePopup();
 				inHomePopup = 0;
 			}
+		}
+		if(buttons.currentKey == 'C' && !inShutdownPopup)
+		{
+			inShutdownPopup = 1;
+			shutdownPopup();
+			inShutdownPopup = 0;
 		}
 		FastLED.setBrightness((float)(255/5*pixelsBrightness));
 		FastLED.show();
@@ -1842,7 +1848,7 @@ void MAKERphone::homePopup(bool animation)
 		{
 			display.drawFastHLine(0, i, display.width(), TFT_WHITE);
 			update();
-			// delayMicroseconds(750);
+			delayMicroseconds(750);
 		}
 	}
 	dataRefreshFlag = 1;
@@ -2451,3 +2457,86 @@ String MAKERphone::currentDateTime(){
 	return dateTime;
 }
 
+void MAKERphone::shutdownPopup(bool animation)
+{
+	if(animation)
+	{
+		for (int i = 2; i < 70; i++)
+		{
+			display.fillRect(display.width()/2 - i, 34, i * 2 + 2, 60, TFT_BLACK);
+			display.fillRect(display.width()/2 - i + 2, 36, i * 2 - 2, 56, TFT_WHITE);
+			update();
+			delayMicroseconds(2000);
+		}
+	}
+	dataRefreshFlag = 1;
+	display.fillRect(10, 34, 142, 60, TFT_BLACK);
+	display.fillRect(12, 36, 138, 56, TFT_WHITE);
+	
+	uint8_t cursor = 1;
+	uint32_t blinkMillis = millis();
+	bool blinkState = 0;
+	dataRefreshFlag = 1;
+	while(!buttons.released(BTN_B))
+	{
+		display.fillRect(12, 36, 138, 56, TFT_WHITE);
+		display.setTextColor(TFT_BLACK);
+		display.setCursor(34, 44);
+		display.drawBitmap(25, 42, powerButton, TFT_RED);
+		display.setTextFont(2);
+		display.setTextSize(1);
+		display.printCenter("Turn off?");
+		if(millis() - blinkMillis > 350)
+		{
+			blinkMillis = millis();
+			blinkState = !blinkState;
+		}
+		mp.display.setCursor(49, 68);
+		// mp.display.print("YES");
+		// mp.display.setCursor(98, 61);
+		// mp.display.print("NO");
+		mp.display.printCenter("YES      NO");
+		switch (cursor)
+		{
+			case 0:
+				if(blinkState)
+				{
+					display.drawRect(37, 65, 33, 22, TFT_RED);
+					display.drawRect(38, 66, 31, 20, TFT_RED);
+				}
+			break;
+			case 1:
+				if(blinkState)
+				{
+					display.drawRect(96, 65, 27, 22, TFT_RED);
+					display.drawRect(97, 66, 25, 20, TFT_RED);
+				}
+			break;
+		}
+		if(buttons.released(BTN_LEFT) && cursor == 1)
+		{
+			cursor = 0;
+			blinkMillis = millis();
+			blinkState = 1;
+		}
+		if(buttons.released(BTN_RIGHT) && cursor == 0)
+		{
+			cursor = 1;
+			blinkMillis = millis();
+			blinkState = 1;
+		}
+		if(buttons.released(BTN_A))
+		{
+			if(cursor == 1)
+				break;
+			else
+			{
+				Serial.println("TURN OFF");
+				buttons.kpd.pin_mode(2, OUTPUT);
+  				buttons.kpd.pin_write(2, 1);
+			}
+		}
+		update();
+	}
+	while(!update());
+}
