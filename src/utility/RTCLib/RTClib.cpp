@@ -619,7 +619,8 @@ PCF8563::PCF8563() {
 // initialization
 uint8_t PCF8563::begin()
 {
-  Wire.begin();
+  // Wire.begin(14, 27);
+	Wire.begin();
   Wire.beginTransmission(address);
   Wire.write(0x00);			// Start address
   Wire.write(0);			   // Control and status 1

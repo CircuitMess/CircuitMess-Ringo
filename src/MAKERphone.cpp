@@ -33,9 +33,9 @@ void MAKERphone::begin(bool splash) {
 	String input="";
 	pinMode(SIM800_DTR, OUTPUT);
 	digitalWrite(SIM800_DTR, 0);
-	pinMode(INTERRUPT_PIN, INPUT_PULLUP);
-	esp_sleep_enable_ext0_wakeup(GPIO_NUM_35, 0); //1 = High, 0 = Low
-
+	pinMode(BTN_INT, INPUT_PULLUP);
+	pinMode(RTC_INT, INPUT_PULLUP);
+	esp_sleep_enable_ext0_wakeup(GPIO_NUM_39, 0);
 	//Initialize and start with the NeoPixels
 	FastLED.addLeds<NEOPIXEL, PIXELPIN>(leds, 8);
 	Serial1.begin(115200, SERIAL_8N1, 17, 16);
@@ -78,25 +78,7 @@ void MAKERphone::begin(bool splash) {
 	ledcSetup(LEDC_CHANNEL, LEDC_BASE_FREQ, LEDC_TIMER);
 	ledcAttachPin(LCD_BL_PIN, LEDC_CHANNEL);
 	ledcAnalogWrite(LEDC_CHANNEL, 255);
-	uint32_t tempMillis = millis();
-	SDinsertedFlag = 1;
-	while (!_SD.begin(5, SPI, 8000000))
-	{
-		Serial.println("SD ERROR");
-		if(millis()-tempMillis > 5)
-		{
-			SDinsertedFlag = 0;
-			break;
-		}
-	}
 
-	if(SDinsertedFlag)
-	{
-		loadSettings(1);
-		loadNotifications();
-	}
-
-	// osc->setVolume(150);
 	//display initialization
 	tft.init();
 	tft.invertDisplay(0);
@@ -134,6 +116,9 @@ void MAKERphone::begin(bool splash) {
 	}
 
 	// updateTimeGSM();
+	DateTime now = DateTime(2017, 4, 2, 23, 59, 57);
+	mp.RTC.adjust(now);
+
 	Serial1.println(F("AT+CMEE=2"));
 	Serial1.println(F("AT+CLVL=100"));
 	Serial1.println(F("AT+CRSL=100"));
@@ -146,6 +131,26 @@ void MAKERphone::begin(bool splash) {
 	Serial1.println(F("AT&W"));
 	Serial.println("Serial1 up and running...");
 
+	//SD startup
+	uint32_t tempMillis = millis();
+	SDinsertedFlag = 1;
+	while (!_SD.begin(5, SPI, 8000000))
+	{
+		Serial.println("SD ERROR");
+		if(millis()-tempMillis > 5)
+		{
+			SDinsertedFlag = 0;
+			break;
+		}
+	}
+	
+	if(SDinsertedFlag)
+	{
+		loadSettings(1);
+		loadNotifications();
+		loadAlarms();
+	}
+	checkAlarms();
 	//Audio
 	initWavLib();
 	xTaskCreatePinnedToCore(
@@ -321,6 +326,13 @@ bool MAKERphone::update() {
 				batteryVoltage = updateBuffer.substring(updateBuffer.indexOf(",", updateBuffer.indexOf(",", updateBuffer.indexOf("+CBC:")) + 1) + 1, updateBuffer.indexOf("\n", updateBuffer.indexOf("+CBC:"))).toInt();
 			}
 		}
+	}
+	if(!digitalRead(RTC_INT) && !inAlarmPopup)
+	{
+		inAlarmPopup = 1;
+		alarmPopup();
+		inAlarmPopup = 0;
+		checkAlarms();
 	}
 	updateNotificationSound();
 	if(millis() - buttonsRefreshMillis > 200)
@@ -544,12 +556,13 @@ void MAKERphone::updateTimeGSM() {
 	delay(5);
 }
 void MAKERphone::updateTimeRTC() {
-	clockHour = RTC.now().hour();
-	clockMinute = RTC.now().minute();
-	clockSecond = RTC.now().second();
-	clockDay = RTC.now().day();
-	clockMonth = RTC.now().month();
-	clockYear = RTC.now().year();
+	currentTime = RTC.now();
+	clockHour = currentTime.hour();
+	clockMinute = currentTime.minute();
+	clockSecond = currentTime.second();
+	clockDay = currentTime.day();
+	clockMonth = currentTime.month();
+	clockYear = currentTime.year();
 
 	//Serial.println(F("CLOCK HOUR:"));
 	//Serial.println(clockHour);
@@ -2298,7 +2311,6 @@ void MAKERphone::updateNotificationSound()
 		notificationSoundNote = notificationNotes[notification][notesIndex];
 		if(notificationSoundDuration == 0 || notesIndex == 5)
 		{
-			Serial.println("stopped\n");
 			playingNotification = 0;
 			// osc->stop();
 			return;
@@ -2545,4 +2557,341 @@ void MAKERphone::shutdownPopup(bool animation)
 		buttons.update();
 	}
 	while(!update());
+}
+void MAKERphone::alarmPopup(bool animation)
+{
+	if(animation)
+	{
+		for (int i = 0; i < display.height(); i+=1)
+		{
+			display.drawFastHLine(0, i, display.width(), TFT_WHITE);
+			update();
+			delayMicroseconds(750);
+		}
+	}
+	DateTime now = RTC.now();
+	char buf[100];
+	strncpy(buf, "hh:mm\0", 100);
+	display.setCursor(4, 12);
+	display.setTextFont(1);
+	display.setTextSize(3);
+	display.setTextColor(TFT_BLACK);
+	display.printCenter(now.format(buf));
+	display.setTextFont(2);
+	display.setTextSize(2);
+	display.setCursor(50,50);
+	display.printCenter("Alarm");
+	bool blinkState = 0;
+	uint32_t blinkMillis = millis();
+	if(!SDinsertedFlag)
+	{
+		
+		bool state = 0;
+		uint8_t tempNotification = notification;
+		uint32_t callMillis = millis();
+		while(1)
+		{
+			if(millis() - callMillis >= 1000)
+			{
+				state = 1;
+				callMillis = millis();
+			}
+			if(state)
+			{
+			
+				playNotificationSound(4);
+				state = 0;
+			}
+			if(millis()- blinkMillis >= 350)
+			{
+				blinkMillis = millis();
+				blinkState = !blinkState;
+			}
+			display.setTextFont(2);
+			display.setTextSize(2);
+			display.setCursor(50,50);
+			display.setTextColor(blinkState ? TFT_BLACK : TFT_WHITE);
+			display.printCenter("Alarm");
+			display.setTextSize(1);
+			display.setCursor(2, 111);
+			display.setTextFont(2);
+			display.setTextColor(TFT_BLACK);
+			display.fillRect(0, 114, display.width(), 14, TFT_WHITE);
+
+			display.print("Hold A to turn off alarm");
+			if (buttons.pressed(BTN_A)) {
+				display.setTextSize(1);
+
+				display.fillRect(0, 112, display.width(), 14, TFT_WHITE);
+				display.setCursor(2, 111);
+				display.setTextFont(2);
+				display.print("Turning off");
+				while (!buttons.released(BTN_A))
+				{
+
+					if (buttons.timeHeld(BTN_A) > 5 && buttons.timeHeld(BTN_A) < 12) {
+						display.fillRect(0, 114, display.width(), 14, TFT_WHITE);
+						display.setCursor(2, 111);
+						display.setTextFont(2);
+						display.print("Turning off *");
+
+					}
+					else if (buttons.timeHeld(BTN_A) >= 12 && buttons.timeHeld(BTN_A) < 18)
+					{
+						display.fillRect(0, 114, display.width(), 14, TFT_WHITE);
+						display.setCursor(2, 111);
+						display.setTextFont(2);
+						display.print("Turning off * *");
+					}
+					else if (buttons.timeHeld(BTN_A) >= 18 && buttons.timeHeld(BTN_A) < 24)
+					{
+						display.fillRect(0, 114, display.width(), 14, TFT_WHITE);
+						display.setCursor(2, 111);
+						display.setTextFont(2);
+						display.print("Turning off * * *");
+					}
+					else if (buttons.timeHeld(BTN_A) >= 24)
+					{
+						display.fillRect(0, 114, display.width(), 14, TFT_WHITE);
+						display.setCursor(2, 111);
+						display.setTextFont(2);
+						display.print("Turning off * * * *");
+						
+						while(!buttons.released(BTN_A))
+							update();
+						FastLED.clear();
+						delay(10);
+						return;
+					}
+					update();
+				}
+			}
+			update();
+		}
+		notification = tempNotification;
+	}
+	else
+	{
+		Serial.println(ringtone_path);
+		ringtone = new MPTrack((char *)ringtone_path.c_str());
+		addTrack(ringtone);
+		ringtone->setVolume(256 * volume / 14);
+		ringtone->setRepeat(1);
+		ringtone->play();
+
+		while(1)
+		{
+			if(millis()- blinkMillis >= 350)
+			{
+				blinkMillis = millis();
+				blinkState = !blinkState;
+			}
+
+			display.setTextFont(2);
+			display.setTextSize(2);
+			display.setCursor(50,50);
+			display.setTextColor(blinkState ? TFT_BLACK : TFT_WHITE);
+			display.printCenter("Alarm");
+			display.setTextSize(1);
+			display.setCursor(2, 111);
+			display.setTextFont(2);
+			display.setTextColor(TFT_BLACK);
+			display.fillRect(0, 114, display.width(), 14, TFT_WHITE);
+
+			display.print("Hold A to turn off alarm");
+			if (buttons.pressed(BTN_A)) {
+				display.setTextSize(1);
+
+				display.fillRect(0, 112, display.width(), 14, TFT_WHITE);
+				display.setCursor(2, 111);
+				display.setTextFont(2);
+				display.print("Turning off");
+				while (!buttons.released(BTN_A))
+				{
+
+					if (buttons.timeHeld(BTN_A) > 5 && buttons.timeHeld(BTN_A) < 12) {
+						display.fillRect(0, 114, display.width(), 14, TFT_WHITE);
+						display.setCursor(2, 111);
+						display.setTextFont(2);
+						display.print("Turning off *");
+
+					}
+					else if (buttons.timeHeld(BTN_A) >= 12 && buttons.timeHeld(BTN_A) < 18)
+					{
+						display.fillRect(0, 114, display.width(), 14, TFT_WHITE);
+						display.setCursor(2, 111);
+						display.setTextFont(2);
+						display.print("Turning off * *");
+					}
+					else if (buttons.timeHeld(BTN_A) >= 18 && buttons.timeHeld(BTN_A) < 24)
+					{
+						display.fillRect(0, 114, display.width(), 14, TFT_WHITE);
+						display.setCursor(2, 111);
+						display.setTextFont(2);
+						display.print("Turning off * * *");
+					}
+					else if (buttons.timeHeld(BTN_A) >= 24)
+					{
+						display.fillRect(0, 114, display.width(), 14, TFT_WHITE);
+						display.setCursor(2, 111);
+						display.setTextFont(2);
+						display.print("Turning off * * * *");
+						
+						while(!buttons.released(BTN_A))
+							update();
+						FastLED.clear();
+						delay(10);
+						return;
+					}
+					update();
+				}
+			}
+			update();
+		}
+		ringtone->stop();
+	}
+}
+void MAKERphone::loadAlarms()
+{
+	const char * path = "/.core/alarms.json";
+	Serial.println("HERE"); 
+	SDAudioFile file = _SD.open(path);
+	JsonArray& alarms = jb.parseArray(file);
+	file.close();
+	
+	if (alarms.success()) {
+		int i = 0;
+		for(JsonObject& tempAlarm:alarms)
+		{
+			alarmHours[i] = tempAlarm["hours"];
+			alarmMins[i] = tempAlarm["mins"];
+			alarmEnabled[i] = tempAlarm["enabled"];
+			alarmRepeat[i] = tempAlarm["repeat"];
+			JsonArray& days = tempAlarm["days"];
+			for(int x = 0; x<7;x++)
+			{
+				alarmRepeatDays[i][x] = days[x];
+			}
+			alarmTrack[i] = String(tempAlarm["track"].as<char*>());	
+			i++;
+		}
+	}
+	else {
+		saveAlarms();  
+		Serial.println("Error loading new alarms");
+	}
+	alarms.prettyPrintTo(Serial);
+}
+void MAKERphone::saveAlarms()
+{
+	const char * path = "/.core/alarms.json";
+	Serial.println("");
+	_SD.remove(path);
+	JsonArray& alarms = jb.createArray();
+
+	if (alarms.success()) {
+		for(int i = 0; i<5;i++)
+		{
+			JsonObject& tempAlarm = jb.createObject();
+			tempAlarm["hours"] = alarmHours[i];
+			tempAlarm["mins"] = alarmMins[i];
+			tempAlarm["enabled"] = alarmEnabled[i];
+			tempAlarm["repeat"] = alarmRepeat[i];
+			JsonArray& days = jb.createArray();
+			for(int x = 0; x<7;x++)
+			{
+				days.add(alarmRepeatDays[i][x]);
+			}
+			tempAlarm["days"] = days;
+			tempAlarm["track"] = alarmTrack[i];		
+			alarms.add(tempAlarm);	
+		}
+
+		SDAudioFile file1 = mp.SD.open(path, "w");
+		alarms.prettyPrintTo(file1);
+		alarms.prettyPrintTo(Serial);
+		file1.close();
+	} else {
+		Serial.println("Error saving alarm data");
+	}
+}
+void MAKERphone::checkAlarms()
+{
+	updateTimeRTC();
+
+	uint8_t next_alarm = 99;
+	int i = currentTime.dayOfWeek();
+	Serial.print("day of week ");
+	Serial.println(i);
+	for(int x = 0; x < 7; x++)
+	{
+		for(int y = 0; y < 5 ;y++)
+		{
+			// if(y == 1)
+			// {
+			// 	Serial.println(i);
+			// 	Serial.println(alarmEnabled[y]);
+			// 	Serial.println(alarmRepeat[y]);
+			// 	Serial.println(alarmRepeatDays[y][i]);
+			// 	Serial.println();
+			// }
+			if(alarmEnabled[y] == 1 && alarmRepeat[y] && alarmRepeatDays[y][i] && 
+			((DateTime(clockYear, clockMonth, clockDay, alarmHours[y], alarmMins[y], 0) > currentTime &&
+			 i == currentTime.dayOfWeek()) || i != currentTime.dayOfWeek()))
+			{
+				if(next_alarm == 99)
+					next_alarm = y;
+				else if(DateTime(clockYear, clockMonth, clockDay, alarmHours[y], alarmMins[y], 0) < 
+				DateTime(clockYear, clockMonth, clockDay, alarmHours[next_alarm], alarmMins[next_alarm]))
+					next_alarm = y;
+			}
+		}
+		i++;
+		if(i > 6)
+			i = 0;
+	}
+	for(int x = 0; x < 5; x++)
+	{
+		DateTime tempAlarm = DateTime(clockYear, clockMonth, clockDay, alarmHours[x], alarmMins[x], 0);
+		if(alarmEnabled[x] == 1 && !alarmRepeat[x])
+		{
+			if(next_alarm == 99)
+				next_alarm = x;
+			if(((!alarmRepeat[next_alarm] || (alarmRepeat[next_alarm] &&
+			alarmRepeatDays[next_alarm][currentTime.dayOfWeek()])) &&
+			tempAlarm < DateTime(clockYear, clockMonth, clockDay, alarmHours[next_alarm], alarmMins[next_alarm], 0))
+			|| (alarmRepeat[next_alarm] && !alarmRepeatDays[next_alarm][currentTime.dayOfWeek()])) 
+				next_alarm = x;
+		}
+	}
+	Serial.print("next alarm: ");
+	Serial.println(next_alarm);
+	if(next_alarm == 99)
+		RTC.off_alarm();
+	else
+	{
+		uint8_t z = 0;
+		if(alarmRepeat[next_alarm])
+		{
+			uint8_t x = currentTime.dayOfWeek();
+			
+			for(z = 0; z < 7;z++)
+			{
+				if(alarmRepeatDays[next_alarm][x])
+					break;
+				x++;
+				if(x > 6)
+					x=0;
+			}
+		}
+		DateTime alarm = DateTime(clockYear, clockMonth, clockDay, alarmHours[next_alarm], alarmMins[next_alarm, 0]);
+		alarm = DateTime(alarm.unixtime() + z*3600*24);
+		alarm_flags flags;
+		flags.hour = 1;
+		flags.minute = 1;
+		flags.day = alarmRepeat[next_alarm];
+		flags.wday = 0;
+		RTC.set_alarm(alarm, flags);
+		RTC.on_alarm();
+	}
 }

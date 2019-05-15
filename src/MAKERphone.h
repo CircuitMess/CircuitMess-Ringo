@@ -73,7 +73,8 @@ extern HardwareSerial Serial1;
 
 
 #define SIM800_DTR 13
-#define INTERRUPT_PIN 36
+#define BTN_INT 36
+#define RTC_INT 39
 
 #define NUMPIXELS 8 //number of pixels connected
 #define PIXELPIN 12 
@@ -208,6 +209,7 @@ class MAKERphone:public Buttons, public DateTime
 	String carrierName = "";
 	uint8_t sleepTime = 0;
 	String ringtone_path = "/Ringtones/Default ringtone.wav";
+	String alarm_path = "/Ringtones/Default ringtone.wav";
 	uint8_t notification = 0;
 	uint16_t firmware_version = 1;
 	//Settings app
@@ -250,26 +252,36 @@ class MAKERphone:public Buttons, public DateTime
 	uint8_t clockMonth, clockDay, clockHour, clockMinute, clockSecond;
 	uint16_t clockYear;
 	bool clockDy, clock12h, clockpm;
+	DateTime currentTime;
 	void updateTimeGSM();
 	void updateTimeRTC();
 	bool screenshotFlag = 0;
-	uint8_t alarmHours[5];
-	uint8_t alarmMins[5];
-	uint8_t alarmEnabled[5] = {2, 2, 2, 2, 2};
-	bool alarmRepeat[5] = {0,0,0,0,0};
-	bool alarmRepeatDays[5][7] = {
-		{0, 0, 0, 0, 0},
-		{0, 0, 0, 0, 0},
-		{0, 0, 0, 0, 0},
-		{0, 0, 0, 0, 0},
-		{0, 0, 0, 0, 0}
-	};
+
 
 	//on-screen popup
 	void popup(String text, uint16_t duration);
 	void updatePopup();
 	void homePopupEnable(bool enable);
-
+	void alarmPopup(bool animation = 1);
+	bool inAlarmPopup = 0;
+	uint8_t alarmHours[5] = {0, 0, 0, 0, 0};
+	uint8_t alarmMins[5] = {0, 0, 0, 0, 0};
+	uint8_t alarmEnabled[5] = {2, 2, 2, 2, 2};
+	bool alarmRepeat[5] = {0, 0, 0, 0, 0};
+	bool alarmRepeatDays[5][7] = {
+		{0, 0, 0, 0, 0, 0, 0},
+		{0, 0, 0, 0, 0, 0, 0},
+		{0, 0, 0, 0, 0, 0, 0},
+		{0, 0, 0, 0, 0, 0, 0},
+		{0, 0, 0, 0, 0, 0, 0}
+	};
+	String alarmTrack[5] = {
+		"/Ringtones/Default ringtone.wav",
+		"/Ringtones/Default ringtone.wav",
+		"/Ringtones/Default ringtone.wav",
+		"/Ringtones/Default ringtone.wav",
+		"/Ringtones/Default ringtone.wav"
+	};
 	private:
 		SdFat SDFAT;
 		int multi_tap(byte key);
@@ -280,6 +292,11 @@ class MAKERphone:public Buttons, public DateTime
 		void saveNotifications(bool debug = 0);
 		void drawNotificationWindow(uint8_t y, uint8_t index);
 		void notificationView();
+
+		void loadAlarms();
+		void saveAlarms();
+		void checkAlarms();
+		
 		bool HOME_POPUP_ENABLE = 1;
 		String popupText;
 		float popupDuration = 0;
