@@ -35,6 +35,7 @@ void MAKERphone::begin(bool splash) {
 	pinMode(SIM800_DTR, OUTPUT);
 	digitalWrite(SIM800_DTR, 0);
 	pinMode(INTERRUPT_PIN, INPUT_PULLUP);
+	pinMode(VOLTAGE_PIN, INPUT);
 	esp_sleep_enable_ext0_wakeup(GPIO_NUM_35, 0); //1 = High, 0 = Low
 
 	//Initialize and start with the NeoPixels

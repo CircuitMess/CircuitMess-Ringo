@@ -73,6 +73,7 @@ extern HardwareSerial Serial1;
 
 #define SIM800_DTR 13
 #define INTERRUPT_PIN 36
+#define VOLTAGE_PIN 35
 
 #define NUMPIXELS 8 //number of pixels connected
 #define PIXELPIN 12 
