@@ -22,10 +22,11 @@ Authors:
 
 #include <WiFi.h>
 #include <esp32-hal-bt.h>
+#include <driver/rtc_io.h>
 #include <stdint.h>
 #include <EEPROM.h>
 #include "esp_ota_ops.h"
-//#include <Arduino.h>
+
 #include "FastLED/FastLED.h"
 extern HardwareSerial Serial1;
 #include "TFT_eSPI/TFT_eSPI.h" // Graphics and font library for ST7735 driver chip
@@ -74,7 +75,8 @@ extern HardwareSerial Serial1;
 #define SIM800_DTR 13
 #define INTERRUPT_PIN 36
 #define VOLTAGE_PIN 35
-
+#define VOLTAGE_OFFSET 300 //offset for the adc reading (mV)
+#define SLEEP_WAKEUP_TIME 900
 #define NUMPIXELS 8 //number of pixels connected
 #define PIXELPIN 12 
 
@@ -223,6 +225,9 @@ class MAKERphone:public Buttons, public DateTime
 	String updateBuffer;
 	uint32_t refreshMillis = millis();
 	uint32_t buttonsRefreshMillis = millis();
+	uint32_t voltageMillis = millis();
+	uint32_t voltageSum = 0;
+	uint16_t voltageSample = 0;
 	bool dataRefreshFlag = 0;
 	bool receivedFlag = 0;
 	bool SDinsertedFlag = 0;
