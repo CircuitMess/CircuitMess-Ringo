@@ -18,6 +18,7 @@ Authors:
 */
 
 #include "MAKERphone.h"
+
 extern MAKERphone mp;
 //audio refresh task
 TaskHandle_t Task1;
@@ -74,7 +75,6 @@ void MAKERphone::begin(bool splash) {
 
 	//PWM SETUP FOR ESP32
 	ledcSetup(0, 2000, 8);
-	ledcAttachPin(soundPin, 0);
 	ledcSetup(LEDC_CHANNEL, LEDC_BASE_FREQ, LEDC_TIMER);
 	ledcAttachPin(LCD_BL_PIN, LEDC_CHANNEL);
 	ledcAnalogWrite(LEDC_CHANNEL, 255);
@@ -244,7 +244,6 @@ bool MAKERphone::update() {
 		{
 			receivedFlag = 0;
 			updateBuffer = "";
-			Serial1.println("AT+CBC");
 			if (simInserted && !airplaneMode)
 			{
 				Serial1.println("AT+CSQ");
@@ -319,13 +318,38 @@ bool MAKERphone::update() {
 						RTC.adjust(now);
 						Serial.println(F("\nRTC TIME UPDATE OVER GSM DONE!"));
 					}
-			}
-
-			if (updateBuffer.indexOf("\n", updateBuffer.indexOf("+CBC:")) != -1)
-			{
-				batteryVoltage = updateBuffer.substring(updateBuffer.indexOf(",", updateBuffer.indexOf(",", updateBuffer.indexOf("+CBC:")) + 1) + 1, updateBuffer.indexOf("\n", updateBuffer.indexOf("+CBC:"))).toInt();
+				
 			}
 		}
+	}
+	updateNotificationSound();
+
+	if(voltageMillis - millis() > 50)
+	{
+		if(voltageSample > 1000)
+		{
+			batteryVoltage = (voltageSum / 1000 * 3.3) * 2000 / 4096 + VOLTAGE_OFFSET;
+			if(batteryVoltage <= 3000)
+			{
+				tft.setTextColor(TFT_BLACK);
+				tft.setTextSize(1);
+				tft.setTextFont(2);
+				tft.fillRect(12, 36, 138, 56, TFT_WHITE);
+				tft.setCursor(37, 45);
+				tft.print("Battery critical!");
+				tft.setCursor(40, 61);
+				tft.print("Turning off...");
+				delay(1500);
+				Serial.println("TURN OFF");
+				buttons.kpd.pin_mode(2, OUTPUT);
+				buttons.kpd.pin_write(2, 1);
+			}
+			voltageSample = 0;
+			voltageSum = 0;
+		}
+		voltageMillis = millis();
+		voltageSum += analogRead(VOLTAGE_PIN);
+		voltageSample++;
 	}
 	if(!digitalRead(RTC_INT) && !inAlarmPopup)
 	{
@@ -356,7 +380,6 @@ bool MAKERphone::update() {
 			if(buttons.currentKey == 'B') //BUTTONSREFRESH
 			{
 				inHomePopup = 1;
-				homePopup();
 				inHomePopup = 0;
 			}
 		}
@@ -365,9 +388,6 @@ bool MAKERphone::update() {
 			inShutdownPopup = 1;
 			shutdownPopup();
 			inShutdownPopup = 0;
-		}
-		FastLED.setBrightness((float)(255/5*pixelsBrightness));
-		FastLED.show();
 		delay(1);
 		FastLED.clear();
 
@@ -444,12 +464,52 @@ void MAKERphone::sleep() {
 		delay(1);
 	}
 
-	ledcAnalogWrite(LEDC_CHANNEL, 255);
+	ledcDetachPin(LCD_BL_PIN);
+	pinMode(LCD_BL_PIN, OUTPUT);
+	digitalWrite(LCD_BL_PIN, 1);
 	tft.writecommand(16);//send 16 for sleep in, 17 for sleep out
+	esp_sleep_enable_timer_wakeup(SLEEP_WAKEUP_TIME * 1000000);
 
 	esp_light_sleep_start();
-
+	while(esp_sleep_get_wakeup_cause() == 4)
+	{
+		Serial.println("Timer wakeup");
+		voltageSample = 0;
+		voltageMillis = 0;
+		voltageSum = 0;
+		while(voltageSample < 100)
+		{
+			if(voltageMillis - millis() > 500)
+			{
+				
+				voltageMillis = millis();
+				voltageSum += analogRead(VOLTAGE_PIN);
+				voltageSample++;
+			}
+		}
+		batteryVoltage = (voltageSum / 100 * 3.3) * 2000 / 4096 + VOLTAGE_OFFSET;
+		voltageSample = 0;
+		voltageSum = 0;
+		Serial.println(batteryVoltage);
+		delay(5);
+		if(batteryVoltage <= 3000)
+		{
+			buttons.kpd.pin_mode(2, OUTPUT);
+			buttons.kpd.pin_write(2, 1);
+		}
+		ledcAnalogWrite(LEDC_CHANNEL, 255);
+		esp_light_sleep_start();
+	}
+	Serial.println("Buttons wakeup");
+	delay(5);
 	tft.writecommand(17);
+	while(!mp.update());
+	ledcAttachPin(LCD_BL_PIN, LEDC_CHANNEL);
+	ledcAnalogWrite(LEDC_CHANNEL, 255);
+	for (uint8_t i = 255; i > actualBrightness; i--) {
+		ledcAnalogWrite(LEDC_CHANNEL, i);
+		delay(1);
+	}
 	ledcAnalogWrite(LEDC_CHANNEL, actualBrightness);
 
 	digitalWrite(SIM800_DTR, 0);
@@ -1936,13 +1996,13 @@ void MAKERphone::homePopup(bool animation)
 			display.drawBitmap(74*scale, 1*scale, batteryCharging, TFT_BLACK, scale);
 		else if (batteryVoltage <= 4000 && batteryVoltage >= 3800)
 			display.drawBitmap(74*scale, 1*scale, batteryFull, TFT_BLACK, scale);
-		else if (batteryVoltage < 3800 && batteryVoltage >= 3700)
+		else if (batteryVoltage < 3800 && batteryVoltage >= 3600)
 			display.drawBitmap(74*scale, 1*scale, batteryMid, TFT_BLACK, scale);
-		else if (batteryVoltage < 3700 && batteryVoltage >= 3600)
+		else if (batteryVoltage < 3600 && batteryVoltage >= 3400)
 			display.drawBitmap(74*scale, 1*scale, batteryMidLow, TFT_BLACK, scale);
-		else if (batteryVoltage < 3600 && batteryVoltage >= 3500)
+		else if (batteryVoltage < 3400 && batteryVoltage >= 3200)
 			display.drawBitmap(74*scale, 1*scale, batteryLow, TFT_BLACK, scale);
-		else if (batteryVoltage < 3500)
+		else if (batteryVoltage < 3200)
 			display.drawBitmap(74*scale, 1*scale, batteryEmpty, TFT_BLACK, scale);
 
 
