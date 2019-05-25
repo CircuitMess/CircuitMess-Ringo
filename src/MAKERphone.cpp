@@ -383,11 +383,12 @@ bool MAKERphone::update() {
 				inHomePopup = 0;
 			}
 		}
-		if(buttons.currentKey == 'C' && !inShutdownPopup)
+		if(buttons.currentKey == 'C' && !inShutdownPopup && SHUTDOWN_POPUP_ENABLE)
 		{
 			inShutdownPopup = 1;
 			shutdownPopup();
 			inShutdownPopup = 0;
+		}
 		delay(1);
 		FastLED.clear();
 
@@ -2617,6 +2618,10 @@ void MAKERphone::shutdownPopup(bool animation)
 		buttons.update();
 	}
 	while(!update());
+}
+void MAKERphone::shutdownPopupEnable(bool enabled)
+{
+	SHUTDOWN_POPUP_ENABLE = enabled;
 }
 void MAKERphone::alarmPopup(bool animation)
 {

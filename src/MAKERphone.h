@@ -272,6 +272,7 @@ class MAKERphone:public Buttons, public DateTime
 	void popup(String text, uint16_t duration);
 	void updatePopup();
 	void homePopupEnable(bool enable);
+	void shutdownPopupEnable(bool enable);
 	void alarmPopup(bool animation = 1);
 	bool inAlarmPopup = 0;
 	uint8_t alarmHours[5] = {0, 0, 0, 0, 0};
@@ -308,6 +309,7 @@ class MAKERphone:public Buttons, public DateTime
 		void checkAlarms();
 		
 		bool HOME_POPUP_ENABLE = 1;
+		bool SHUTDOWN_POPUP_ENABLE = 1;
 		String popupText;
 		float popupDuration = 0;
 		uint16_t popupTimeLeft;

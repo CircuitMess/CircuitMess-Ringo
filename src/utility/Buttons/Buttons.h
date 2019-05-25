@@ -45,5 +45,8 @@ class Buttons
 		char currentKey = NO_KEY;
 		void begin();
 		char getKey();
+		uint16_t getJoystickX(){return joystick_x;}
+		uint16_t getJoystickY(){return joystick_y;}
+
 };
 #endif
