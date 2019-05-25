@@ -4,7 +4,7 @@
 #include <Arduino.h>
 #include "../Keypad_I2Ca/Keypad_I2Ca.h"
 #include "../Keypad/src/Keypad.h"
-#include "../Adafruit ADS1X15/Adafruit_ADS1015.h"
+#include "../Adafruit_ADS1X15/Adafruit_ADS1015.h"
 
 
 #define buttons_per_column 4
