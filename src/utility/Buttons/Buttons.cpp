@@ -28,8 +28,8 @@ void Buttons::update() {
 	}
 	bitWrite(buttonsData, 16, (bool)kpd.pin_read(5));//BTN_A
 	bitWrite(buttonsData, 17, (bool)kpd.pin_read(4));//BTN_B
-	joystick_x = ads.readADC_SingleEnded(0);
-  	joystick_y = ads.readADC_SingleEnded(1);
+	joystick_x = ads.readADC_SingleEnded(1);
+  	joystick_y = ads.readADC_SingleEnded(0);
 
 	bitWrite(buttonsData, 18, !(joystick_y < 100 && joystick_x > 300 && joystick_x < 800)); //BTN_UP
 	bitWrite(buttonsData, 19, !(joystick_y > 1000 && joystick_x > 300 && joystick_x < 800)); //BTN_DOWN
