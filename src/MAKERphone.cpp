@@ -111,8 +111,8 @@ void MAKERphone::begin(bool splash) {
 		splashScreen(); //Show the main splash screen
 	else
 	{
-		// delay(500);
-		// checkSim();
+		delay(500);
+		checkSim();
 	}
 
 	// updateTimeGSM();
@@ -364,6 +364,11 @@ bool MAKERphone::update() {
 		buttons.currentKey = buttons.kpd.getKey();
 		buttonsRefreshMillis = millis();
 	}
+	// if(millis()- joystickMillis > 160)
+	// {
+	// 	joystickMillis = millis();
+	// 	buttons.updateJoystick();
+	// }
 	if (millis() - lastFrameCount >= frameSpeed) {
 		lastFrameCount = millis();
 		updatePopup();
@@ -389,6 +394,8 @@ bool MAKERphone::update() {
 			shutdownPopup();
 			inShutdownPopup = 0;
 		}
+		FastLED.setBrightness(255/5 * pixelsBrightness);
+		FastLED.show();
 		delay(1);
 		FastLED.clear();
 
@@ -893,12 +900,17 @@ void MAKERphone::incomingCall() //TODO
 void MAKERphone::checkSim()
 {
 	String input = "";
-
+	uint32_t timeoutMillis = millis();
 	while (input.indexOf("+CPIN:") == -1 && input.indexOf("ERROR", input.indexOf("+CPIN")) == -1) {
 		Serial1.println(F("AT+CPIN?"));
 		input = Serial1.readString();
 		Serial.println(input);
 		delay(10);
+		if(millis() - timeoutMillis >= 500)
+		{
+			simInserted = 0;
+			return;
+		}
 	}
 	if (input.indexOf("NOT READY", input.indexOf("+CPIN:")) != -1 || (input.indexOf("ERROR") != -1 && input.indexOf("+CPIN:") == -1)
 		|| input.indexOf("NOT INSERTED") != -1)

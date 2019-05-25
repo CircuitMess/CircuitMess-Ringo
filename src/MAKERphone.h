@@ -232,6 +232,7 @@ class MAKERphone:public Buttons, public DateTime
 	String updateBuffer;
 	uint32_t refreshMillis = millis();
 	uint32_t buttonsRefreshMillis = millis();
+	uint32_t joystickMillis = millis();
 	uint32_t voltageMillis = millis();
 	uint32_t voltageSum = 0;
 	uint16_t voltageSample = 0;

@@ -18,6 +18,7 @@
 class Buttons
 {
 	private:
+		uint32_t buttonsData = 0;
 		byte rowPins[ROWS] = {6, 7, 8, 9}; //connect to the row pinouts of the keypad
 		byte colPins[COLS] = {10, 11, 12, 13}; //connect to the column pinouts of the keypad
 		char keys[4][4] = {
@@ -33,7 +34,6 @@ class Buttons
 		///////////////////
 		//Keypad variables
 		//////////////////
-
 		Keypad_I2Ca kpd = Keypad_I2Ca(makeKeymap(keys), rowPins, colPins, ROWS, COLS, I2CADDRESS, PCA9539);
 		bool pressed(uint8_t button);
 		void update();
@@ -47,6 +47,6 @@ class Buttons
 		char getKey();
 		uint16_t getJoystickX(){return joystick_x;}
 		uint16_t getJoystickY(){return joystick_y;}
-
+		void updateJoystick();
 };
 #endif

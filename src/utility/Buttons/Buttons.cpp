@@ -15,7 +15,7 @@ void Buttons::begin() {
 	}
 }
 void Buttons::update() {
-	uint32_t buttonsData = 0;
+	buttonsData = 0;
 	for (int y = 0; y < ROWS;y++)
 	{
 		for (int x = 0; x < COLS; x++)
@@ -28,14 +28,22 @@ void Buttons::update() {
 	}
 	bitWrite(buttonsData, 16, (bool)kpd.pin_read(5));//BTN_A
 	bitWrite(buttonsData, 17, (bool)kpd.pin_read(4));//BTN_B
-
 	joystick_x = ads.readADC_SingleEnded(0);
   	joystick_y = ads.readADC_SingleEnded(1);
 
-	bitWrite(buttonsData, 18, !(joystick_y < 100 && joystick_x > 100 && joystick_x < 1000)); //BTN_UP
-	bitWrite(buttonsData, 19, !(joystick_y > 1000 && joystick_x > 100 && joystick_x < 1000)); //BTN_DOWN
-	bitWrite(buttonsData, 20, !(joystick_x > 1000 && joystick_y > 100 && joystick_y < 1000)); //BTN_LEFT
-	bitWrite(buttonsData, 21, !(joystick_x < 100 && joystick_y > 100 && joystick_y < 1000)); //BTN_RIGHT
+	bitWrite(buttonsData, 18, !(joystick_y < 100 && joystick_x > 300 && joystick_x < 800)); //BTN_UP
+	bitWrite(buttonsData, 19, !(joystick_y > 1000 && joystick_x > 300 && joystick_x < 800)); //BTN_DOWN
+	bitWrite(buttonsData, 20, !(joystick_x > 1000 && joystick_y > 300 && joystick_y < 800)); //BTN_LEFT
+	bitWrite(buttonsData, 21, !(joystick_x < 100 && joystick_y > 300 && joystick_y < 800)); //BTN_RIGHT
+
+	bool counter = 0;
+	// for(uint8_t i = 0; i< 4;i++)
+	// {
+	// 	if(counter)
+	// 		bitWrite(buttonsData, i+18, 0);
+	// 	if(bitRead(buttonsData, i+18))
+	// 		counter=1;
+	// }
 
 	for (uint8_t thisButton = 0; thisButton < NUM_BTN; thisButton++) {
 		//extract the corresponding bit corresponding to the current button
@@ -75,6 +83,42 @@ bool Buttons::repeat(uint8_t button, uint16_t period) {
 		}
 	}
 	return false;
+}
+void Buttons::updateJoystick()
+{
+
+	joystick_x = ads.readADC_SingleEnded(0);
+  	joystick_y = ads.readADC_SingleEnded(1);
+
+	bitWrite(buttonsData, 18, !(joystick_y < 100 && joystick_x > 300 && joystick_x < 800)); //BTN_UP
+	bitWrite(buttonsData, 19, !(joystick_y > 1000 && joystick_x > 300 && joystick_x < 800)); //BTN_DOWN
+	bitWrite(buttonsData, 20, !(joystick_x > 1000 && joystick_y > 300 && joystick_y < 800)); //BTN_LEFT
+	bitWrite(buttonsData, 21, !(joystick_x < 100 && joystick_y > 300 && joystick_y < 800)); //BTN_RIGHT
+	for (uint8_t thisButton = 18; thisButton < NUM_BTN; thisButton++) {
+		//extract the corresponding bit corresponding to the current button
+		//Inverted logic : button pressed = low state = 0
+		bool pressed = (buttonsData & (1 << thisButton)) == 0;
+
+		if (pressed) { //if button pressed
+			if (states[thisButton] < 0xFFFE) { // we want 0xFFFE to be max value for the counter
+				states[thisButton]++; //increase button hold time
+			}
+			else if (states[thisButton] == 0xFFFF) { // if we release / hold again too fast
+				states[thisButton] = 1;
+			}
+		}
+		else {
+			if (states[thisButton] == 0) {//button idle
+				continue;
+			}
+			if (states[thisButton] == 0xFFFF) {//if previously released
+				states[thisButton] = 0; //set to idle
+			}
+			else {
+				states[thisButton] = 0xFFFF; //button just released
+			}
+		}
+	}
 }
 bool Buttons::released(uint8_t button) {
 	return states[(uint8_t)button] == 0xFFFF;
