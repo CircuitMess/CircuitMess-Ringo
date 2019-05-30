@@ -324,7 +324,7 @@ class MAKERphone:public Buttons, public DateTime
 			"LED brightness"
 		};
 		String monthsList[12] PROGMEM = {"JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"};
-	
+		bool inCall = 0;
 		bool inHomePopup = 0;
 		bool inShutdownPopup = 0;
 		void shutdownPopup(bool animation = 1);
