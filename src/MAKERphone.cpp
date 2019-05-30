@@ -729,7 +729,7 @@ void MAKERphone::incomingCall() //TODO
 	{
 		ringtone = new MPTrack((char *)ringtone_path.c_str());
 		addTrack(ringtone);
-		ringtone->setVolume(256 * volume / 14);
+		ringtone->setVolume(256);
 		ringtone->setRepeat(1);
 		ringtone->play();
 		while(!buttons.released(BTN_B))
