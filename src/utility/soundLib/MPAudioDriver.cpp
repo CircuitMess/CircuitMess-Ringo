@@ -37,7 +37,7 @@ void I2S_Init() {
     .bck_io_num = PIN_I2S_BCLK,
     .ws_io_num = PIN_I2S_LRC,
     .data_out_num = PIN_I2S_DOUT,
-    //.data_in_num = 32
+    .data_in_num = 33
   };
   i2s_driver_install((i2s_port_t)0, &i2s_config, 0, NULL);
   //i2s_set_adc_mode(ADC_UNIT_1, ADC1_CHANNEL_5);
