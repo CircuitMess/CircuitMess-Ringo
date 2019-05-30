@@ -37,7 +37,7 @@ void I2S_Init() {
     .bck_io_num = PIN_I2S_BCLK,
     .ws_io_num = PIN_I2S_LRC,
     .data_out_num = PIN_I2S_DOUT,
-    .data_in_num = 32
+    //.data_in_num = 32
   };
   i2s_driver_install((i2s_port_t)0, &i2s_config, 0, NULL);
   //i2s_set_adc_mode(ADC_UNIT_1, ADC1_CHANNEL_5);
@@ -64,7 +64,7 @@ void adc_read_task(void* arg)
 
 void initWavLib()
 {
-    masterVolume=64;
+    masterVolume=512;
     trackCount=0;
     for(unsigned char i=0;i<MAX_TRACKS;i++)
         tracks[i]=nullptr;
@@ -86,7 +86,7 @@ void updateWav()
     for(unsigned short i=0;i<sizeof(dout)/2;i+=2)
     {
         (*((int*)(&dout[i*2])))=0;
-        (*((int*)(&dout[i*2])))=((*((int*)(&i2s_read_buff[i*2])))*2)/3;
+        //(*((int*)(&dout[i*2])))=((*((int*)(&i2s_read_buff[i*2])))*2)/3;
         for(unsigned char tr=0;tr<MAX_TRACKS;tr++)
         {    
             if(tracks[tr] != nullptr)

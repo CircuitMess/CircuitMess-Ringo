@@ -32,8 +32,10 @@ void MAKERphone::begin(bool splash) {
 	SDFileSystemClass SD = _SD;
 
 	String input="";
+	pinMode(soundSwitchPin, OUTPUT);
+	digitalWrite(soundSwitchPin, LOW);
 	pinMode(SIM800_DTR, OUTPUT);
-	digitalWrite(SIM800_DTR, 0);
+	digitalWrite(SIM800_DTR, 1);
 	pinMode(BTN_INT, INPUT_PULLUP);
 	pinMode(RTC_INT, INPUT_PULLUP);
 	esp_sleep_enable_ext0_wakeup(GPIO_NUM_39, 0);

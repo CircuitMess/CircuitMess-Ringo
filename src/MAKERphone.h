@@ -102,7 +102,7 @@ extern HardwareSerial Serial1;
 #define map_width 7
 #define RESET_MTP '~'
 
-#define soundPin 32
+#define soundSwitchPin 32
 
 #define LEDC_CHANNEL 1 // use second channel of 16 channels(started from zero)
 #define LEDC_TIMER  13 // use 13 bit precission for LEDC timer
