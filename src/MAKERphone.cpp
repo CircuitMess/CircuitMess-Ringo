@@ -522,7 +522,7 @@ void MAKERphone::sleep() {
 	Serial.println("Buttons wakeup");
 	delay(5);
 	tft.writecommand(17);
-	while(!mp.update());
+	mp.update();
 	ledcAttachPin(LCD_BL_PIN, LEDC_CHANNEL);
 	ledcAnalogWrite(LEDC_CHANNEL, 255);
 	for (uint8_t i = 255; i > actualBrightness; i--) {
@@ -555,7 +555,7 @@ void MAKERphone::loader()
 	display.setTextFont(2);
 	display.setTextSize(1);
 	display.printCenter("LOADING...");
-	while(!mp.update());
+	mp.update();
 	const esp_partition_t* partition;
 	partition = esp_ota_get_running_partition();
 	const esp_partition_t* partition2;

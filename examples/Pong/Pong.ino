@@ -120,15 +120,15 @@ void loop()
       mp.display.setCursor(4, 110);
 			mp.display.setTextSize(1);
       mp.display.printCenter("A: resume         B: quit");
-      while(!mp.update());
+      mp.update();
 			while (!mp.buttons.released(BTN_A)) {
 				if (mp.buttons.released(BTN_B))
         {
           gameState = 0;
-          while (!mp.update());
+          mp.update();
           break;
         }
-        while (!mp.update());
+        mp.update();
       }
 				
 			mp.display.setTextFont(1);
