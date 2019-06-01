@@ -375,8 +375,12 @@ bool MAKERphone::update() {
 	// if(millis()- joystickMillis > 160)
 	// {
 	// 	joystickMillis = millis();
-	// 	buttons.updateJoystick();
+	// 	// buttons.updateJoystick();
+	// 	// buttons.update(); //TODO
 	// }
+
+	buttons.update();
+
 	if (millis() - lastFrameCount >= frameSpeed) {
 		lastFrameCount = millis();
 		updatePopup();
@@ -386,7 +390,6 @@ bool MAKERphone::update() {
 
 		// else//halved res mode
 			// buf.pushSprite(0,0);
-		buttons.update();
 
 		if(HOME_POPUP_ENABLE && !inHomePopup && !inShutdownPopup)
 		{
@@ -743,7 +746,7 @@ void MAKERphone::incomingCall() //TODO
         ringtone->stop();
     }
     while(!update());
-    
+
     //String localBuffer = "";
     //Serial1.print(F("ATD"));
     //Serial1.print(number);
@@ -1140,7 +1143,6 @@ String MAKERphone::textInput(String buffer, int16_t length)
 	int ret = 0;
 	byte key = mp.buttons.getKey(); // Get a key press from the keypad  BUTTONSREFRESH
 
-
 	if (buttons.released(BTN_FUN_LEFT) && buffer != "")
 	{
 		if (textPointer == buffer.length())
@@ -1271,7 +1273,6 @@ int MAKERphone::multi_tap(byte key)
 					}
 				}
 			}
-
 		}
 		if (prevKeyPress != NO_KEY)
 		{

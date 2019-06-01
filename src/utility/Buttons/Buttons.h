@@ -27,26 +27,29 @@ class Buttons
 			{ '7', '8', '9', 'B' },
 			{ '*', '0', '#', 'A' }
 		};
-		Adafruit_ADS1015 ads;     
-		int16_t joystick_x, joystick_y;
+		Adafruit_ADS1015 ads;
+		int16_t joystick_x, joystick_y, button_a, button_b;
 
 	public:
 		///////////////////
 		//Keypad variables
 		//////////////////
 		Keypad_I2Ca kpd = Keypad_I2Ca(makeKeymap(keys), rowPins, colPins, ROWS, COLS, I2CADDRESS, PCA9539);
-		bool pressed(uint8_t button);
+		void begin();
 		void update();
+
+		bool pressed(uint8_t button);
 		bool repeat(uint8_t button, uint16_t period);
 		bool released(uint8_t button);
 		bool held(uint8_t button, uint16_t time);
+
 		uint16_t timeHeld(uint8_t button);
 		uint16_t states[NUM_BTN];
+
 		char currentKey = NO_KEY;
-		void begin();
-		char getKey();
-		uint16_t getJoystickX(){return joystick_x;}
-		uint16_t getJoystickY(){return joystick_y;}
-		void updateJoystick();
+		char getKey(); //deprecated
+
+		uint16_t getJoystickX(){ return joystick_x; }
+		uint16_t getJoystickY(){ return joystick_y; }
 };
 #endif

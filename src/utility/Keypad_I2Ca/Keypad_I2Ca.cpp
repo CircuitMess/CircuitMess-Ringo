@@ -42,14 +42,14 @@
 // Let the user define a keymap - assume the same row/column count as defined in constructor
 void Keypad_I2Ca::begin(char *userKeymap) {
     Keypad::begin(userKeymap);
-	Wire.begin(27, 14);
+	Wire.begin(14, 27);
 	_begin( );
 }
 
 
 // Initialize I2C
 void Keypad_I2Ca::begin(void) {
-	Wire.begin(27, 14);
+	Wire.begin(14, 27);
 	_begin( );
 }
 
@@ -108,7 +108,7 @@ int Keypad_I2Ca::pin_read(byte pinNum) {
 	Wire.write( IREG );
 	Wire.endTransmission( );
 	Wire.requestFrom((int)i2caddr, (int)i2cwidth);
-	word pinVal = Wire.read( );
+	word pinVal = Wire.read();
 	if (i2cwidth > 1) {
 		pinVal |= Wire.read( ) << 8;
 	} 
@@ -119,6 +119,18 @@ int Keypad_I2Ca::pin_read(byte pinNum) {
 		return 0;
 	}
 } // pin_read( )
+
+word Keypad_I2Ca::port_read() {
+	Wire.beginTransmission( (int)i2caddr );
+	Wire.write( IREG );
+	Wire.endTransmission( );
+	Wire.requestFrom((int)i2caddr, (int)i2cwidth);
+	word pinVal = Wire.read();
+	if (i2cwidth > 1) {
+		pinVal |= Wire.read() << 8;
+	} 
+	return pinVal;
+}
 
 void Keypad_I2Ca::port_write( word i2cportval ) {
 	p_write( i2cportval, OREG );

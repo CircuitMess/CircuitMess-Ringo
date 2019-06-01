@@ -51,20 +51,21 @@ extern HardwareSerial Serial1;
 #include "utility/soundLib/MPWavLib.h"
 
 //Buttons defines
-#define BTN_1 0 
+// 14, 13
+#define BTN_1 0
 #define BTN_2 1
 #define BTN_3 2
+#define BTN_4 3
+#define BTN_5 4
+#define BTN_6 5
+#define BTN_7 6
+#define BTN_8 7
+#define BTN_9 8
+#define BTN_ASTERISK 9
+#define BTN_0 10
+#define BTN_HASHTAG 11
+#define BTN_FUN_RIGHT 12
 #define BTN_FUN_LEFT 15
-#define BTN_4 4
-#define BTN_5 5
-#define BTN_6 6
-#define BTN_7 8
-#define BTN_8 9
-#define BTN_9 10
-#define BTN_ASTERISK 12
-#define BTN_0 13
-#define BTN_HASHTAG 14
-#define BTN_FUN_RIGHT 3
 #define BTN_A 16
 #define BTN_B 17
 #define BTN_UP 18
@@ -84,7 +85,7 @@ extern HardwareSerial Serial1;
 #define VOLTAGE_OFFSET 300 //offset for the adc reading (mV)
 #define SLEEP_WAKEUP_TIME 900
 #define NUMPIXELS 8 //number of pixels connected
-#define PIXELPIN 12 
+#define PIXELPIN 12
 
 #define colorSaturation 128
 
@@ -308,7 +309,7 @@ class MAKERphone:public Buttons, public DateTime
 		void loadAlarms();
 		void saveAlarms();
 		void checkAlarms();
-		
+
 		bool HOME_POPUP_ENABLE = 1;
 		bool SHUTDOWN_POPUP_ENABLE = 1;
 		String popupText;

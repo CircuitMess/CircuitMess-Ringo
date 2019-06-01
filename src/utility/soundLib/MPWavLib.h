@@ -6,7 +6,7 @@
 // #include <SD.h>
 // #include <FS.h>
 
-#include "notes.h"
+#include "Notes.h"
 
 # define PI 3.14159265358979323846
 

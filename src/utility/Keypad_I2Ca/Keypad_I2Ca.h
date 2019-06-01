@@ -71,6 +71,8 @@ public:
 	word iodir_read( );
 	void iodir_write( word iodir );
 
+	word port_read();
+
 private:
     // I2C device address
     byte i2caddr;

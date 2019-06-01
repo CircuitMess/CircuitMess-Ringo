@@ -79,7 +79,7 @@
     #define ADS1015_REG_CONFIG_MODE_CONTIN  (0x0000)  // Continuous conversion mode
     #define ADS1015_REG_CONFIG_MODE_SINGLE  (0x0100)  // Power-down single-shot mode (default)
 
-    #define ADS1015_REG_CONFIG_DR_MASK      (0x00E0)  
+    #define ADS1015_REG_CONFIG_DR_MASK      (0x00E0)
     #define ADS1015_REG_CONFIG_DR_128SPS    (0x0000)  // 128 samples per second
     #define ADS1015_REG_CONFIG_DR_250SPS    (0x0020)  // 250 samples per second
     #define ADS1015_REG_CONFIG_DR_490SPS    (0x0040)  // 490 samples per second
