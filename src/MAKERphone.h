@@ -74,7 +74,7 @@ extern HardwareSerial Serial1;
 #define BTN_RIGHT 21
 
 
-#define SIM800_DTR 13
+#define SIM800_DTR 26
 #define BTN_INT 36
 #define RTC_INT 34
 #define SIM_INT 39

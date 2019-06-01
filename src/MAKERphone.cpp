@@ -42,7 +42,7 @@ void MAKERphone::begin(bool splash) {
 	esp_sleep_enable_ext0_wakeup(GPIO_NUM_39, 0);
 	//Initialize and start with the NeoPixels
 	FastLED.addLeds<NEOPIXEL, PIXELPIN>(leds, 8);
-	Serial1.begin(115200, SERIAL_8N1, 17, 16);
+	Serial1.begin(9600, SERIAL_8N1, 17, 16);
 
 
 	//Serial1.println(F("AT+CFUN=1,1"));
@@ -118,9 +118,9 @@ void MAKERphone::begin(bool splash) {
 		checkSim();
 	}
 
-	// updateTimeGSM();
-	DateTime now = DateTime(2017, 4, 2, 23, 59, 57);
-	mp.RTC.adjust(now);
+	updateTimeGSM();
+	// DateTime now = DateTime(2017, 4, 2, 23, 59, 57);
+	// mp.RTC.adjust(now);
 
 	Serial1.println(F("AT+CMEE=2"));
 	Serial1.println(F("AT+CLVL=100"));
@@ -393,13 +393,13 @@ bool MAKERphone::update() {
 
 		if(HOME_POPUP_ENABLE && !inHomePopup && !inShutdownPopup)
 		{
-			if(buttons.currentKey == 'B') //BUTTONSREFRESH
+			if(buttons.released(13)) //BUTTONSREFRESH
 			{
 				inHomePopup = 1;
 				inHomePopup = 0;
 			}
 		}
-		if(buttons.currentKey == 'C' && !inShutdownPopup && SHUTDOWN_POPUP_ENABLE)
+		if(buttons.released(14) && !inShutdownPopup && SHUTDOWN_POPUP_ENABLE)
 		{
 			inShutdownPopup = 1;
 			shutdownPopup();
@@ -909,14 +909,16 @@ void MAKERphone::checkSim()
 {
 	String input = "";
 	uint32_t timeoutMillis = millis();
+	Serial1.println(F("AT+CPIN?"));
+
 	while (input.indexOf("+CPIN:") == -1 && input.indexOf("ERROR", input.indexOf("+CPIN")) == -1) {
 		if(millis() - timeoutMillis >= 500)
 		{
 			simInserted = 0;
 			return;
 		}
-		Serial1.println(F("AT+CPIN?"));
 		input = Serial1.readString();
+		Serial1.println(F("AT+CPIN?"));
 		Serial.println(input);
 		delay(10);
 	}
@@ -1141,12 +1143,12 @@ void MAKERphone::enterPUK()
 String MAKERphone::textInput(String buffer, int16_t length)
 {
 	int ret = 0;
-	byte key = mp.buttons.getKey(); // Get a key press from the keypad  BUTTONSREFRESH
+	byte key = buttons.getKey(); // Get a key press from the keypad
 
 	if (buttons.released(BTN_FUN_LEFT) && buffer != "")
 	{
 		if (textPointer == buffer.length())
-			textPointer = textPointer - 1;
+			textPointer--;
 		buffer.remove(buffer.length() - 1);
 	}
 	else if (buttons.released(BTN_FUN_RIGHT)) //clear number
@@ -1154,13 +1156,22 @@ String MAKERphone::textInput(String buffer, int16_t length)
 		buffer = "";
 		textPointer = 0;
 	}
+	else if(key == '*')
+	{
+		Serial.println("PRESSED");
+		if (textPointer != buffer.length())
+			textPointer++;
+		textPointer++;
+		buffer+=' ';
+	}
+
 	if(textLimitFlag && buffer.length() == length)
 		return buffer;
 	else
 		textLimitFlag = 0;
+
 	if(length == -1 || length >= buffer.length()){
-		if (buttons.released(BTN_ASTERISK))
-			buffer += ' ';
+		
 		ret = multi_tap(key);// Feed the key press to the multi_tap function.
 		if ((ret & 256) != 0) // If this is non-zero, we got a key. Handle some special keys or just print the key on screen
 		{
@@ -1192,7 +1203,18 @@ int MAKERphone::multi_tap(byte key)
 	static boolean upperCase = true;
 	static byte prevKeyPress = NO_KEY, cyclicPtr = 0;
 	static unsigned long prevKeyMillis = 0;
-	static const char multi_tap_mapping[10][map_width] = { {'0','#','$','.','?','"','&'},{'1','+','-','*','/','\'',':'},{'A','B','C','2','!',';','<'},{'D','E','F','3','%','[','='},{'G','H','I','4','(','\\','>'},{'J','K','L','5',')',']','^'},{'M','N','O','6','@','_','`'},{'P','Q','R','S','7','{','|'},{'T','U','V','8',',','}','~'},{'W','X','Y','Z','9',' ',0} };
+	static const char multi_tap_mapping[10][map_width] = {
+		{'0','#','$','.','?','"','&'},
+		{'1','+','-','*','/','\'',':'},
+		{'A','B','C','2','!',';','<'},
+		{'D','E','F','3','%','[','='},
+		{'G','H','I','4','(','\\','>'},
+		{'J','K','L','5',')',']','^'},
+		{'M','N','O','6','@','_','`'},
+		{'P','Q','R','S','7','{','|'},
+		{'T','U','V','8',',','}','~'},
+		{'W','X','Y','Z','9',' ',0}
+	};
 	if (key == RESET_MTP) // Received reset command. Flush everything and get ready for restart.
 	{
 		upperCase = true;
@@ -1200,9 +1222,11 @@ int MAKERphone::multi_tap(byte key)
 		cyclicPtr = 0;
 		return 0;
 	}
+
 	if (key != NO_KEY) // A key is pressed at this iteration.
 	{
-		if (key == 'C' || key == 'A')
+		
+		if (key == 'D' || key == 'A')
 		{
 			prevKeyPress = NO_KEY;
 			cyclicPtr = 0;
@@ -1211,8 +1235,9 @@ int MAKERphone::multi_tap(byte key)
 		if (key == '*')
 		{
 			prevKeyPress = NO_KEY;
+			prevKeyMillis = 0;
 			cyclicPtr = 0;
-			return (256 + (unsigned int)(' '));
+			return 0;
 		}
 		if ((key > '9') || (key < '0')) // Function keys
 		{

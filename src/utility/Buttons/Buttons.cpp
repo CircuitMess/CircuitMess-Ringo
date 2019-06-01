@@ -51,8 +51,6 @@ void Buttons::update() {
 				continue;
 			}
 			if (states[i] == 0xFFFF) { //if previously released
-				Serial.print("Button pressed ");
-				Serial.println(i);
 				states[i] = 0; //set to idle
 			}
 			else {
@@ -93,7 +91,9 @@ char Buttons::getKey() {
 		if(Buttons::released(i)) {
 			if(i == 9) {
 				return '*';
-			} else if(i == 11) {
+			}else if(i == 10)
+				return '0';
+			else if(i == 11) {
 				return '#';
 			} else if(i < 11) {
 				return '1' + i;
