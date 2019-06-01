@@ -13,22 +13,27 @@ void Buttons::begin() {
 }
 
 void Buttons::update() {
-	int tmp_value = kpd.port_read();
 	buttonsData = 0;
-
 	delay(1);
 
-	joystick_x = ads.readADC_SingleEnded(1);
-	joystick_y = ads.readADC_SingleEnded(0);
-	button_a = ads.readADC_SingleEnded(2);
 	button_b = ads.readADC_SingleEnded(3);
+
+	delay(1);
+	joystick_x = ads.readADC_SingleEnded(1);
+	delay(1);
+	joystick_y = ads.readADC_SingleEnded(0);
+	delay(1);
+	button_a = ads.readADC_SingleEnded(2);
+	
 
 	bitWrite(buttonsData, 18, !(joystick_y < 100 && joystick_x > 300 && joystick_x < 800)); //BTN_UP
 	bitWrite(buttonsData, 19, !(joystick_y > 1000 && joystick_x > 300 && joystick_x < 800)); //BTN_DOWN
 	bitWrite(buttonsData, 20, !(joystick_x > 1000 && joystick_y > 300 && joystick_y < 800)); //BTN_LEFT
 	bitWrite(buttonsData, 21, !(joystick_x < 100 && joystick_y > 300 && joystick_y < 800)); //BTN_RIGHT
-	bitWrite(buttonsData, 17, !(button_a < 800)); //BTN_UP
-	bitWrite(buttonsData, 16, !(button_b < 800)); //BTN_DOWN
+	bitWrite(buttonsData, 17, !(button_a < 800));
+	bitWrite(buttonsData, 16, !(button_b < 800));
+
+	int tmp_value = kpd.port_read();
 
 	for (uint8_t i = 0; i < NUM_BTN; i++) {
 		bool pressed;

@@ -39,7 +39,9 @@ void MAKERphone::begin(bool splash) {
 	pinMode(BTN_INT, INPUT_PULLUP);
 	pinMode(SIM_INT, INPUT_PULLUP);
 	pinMode(RTC_INT, INPUT_PULLUP);
-	esp_sleep_enable_ext0_wakeup(GPIO_NUM_39, 0);
+	pinMode(OFF_PIN, OUTPUT);
+	digitalWrite(OFF_PIN, 0);
+	esp_sleep_enable_ext0_wakeup(GPIO_NUM_36, 0);
 	//Initialize and start with the NeoPixels
 	FastLED.addLeds<NEOPIXEL, PIXELPIN>(leds, 8);
 	Serial1.begin(9600, SERIAL_8N1, 17, 16);
@@ -110,6 +112,7 @@ void MAKERphone::begin(bool splash) {
 	}
 
 	ledcAnalogWrite(LEDC_CHANNEL, 0);
+	
 	if (splash == 1)
 		splashScreen(); //Show the main splash screen
 	else
@@ -117,22 +120,23 @@ void MAKERphone::begin(bool splash) {
 		delay(500);
 		checkSim();
 	}
-
-	updateTimeGSM();
-	// DateTime now = DateTime(2017, 4, 2, 23, 59, 57);
-	// mp.RTC.adjust(now);
-
-	Serial1.println(F("AT+CMEE=2"));
-	Serial1.println(F("AT+CLVL=100"));
-	Serial1.println(F("AT+CRSL=100"));
-	Serial1.println(F("AT+CMIC=0,6"));
-	Serial1.println(F("AT+CMGF=1"));
-	Serial1.println(F("AT+CNMI=1,1,0,0,0"));
-	Serial1.println(F("AT+CLTS=1")); //Enable local Timestamp mode (used for syncrhonising RTC with GSM time
-	Serial1.println(F("AT+CPMS=\"SM\",\"SM\",\"SM\""));
-	Serial1.println(F("AT+CLCC=1"));
-	Serial1.println(F("AT&W"));
-	Serial.println("Serial1 up and running...");
+	Serial.println("HERE");
+	delay(5);
+	if(simInserted)
+	{
+		updateTimeGSM();
+		Serial1.println(F("AT+CMEE=2"));
+		Serial1.println(F("AT+CLVL=100"));
+		Serial1.println(F("AT+CRSL=100"));
+		Serial1.println(F("AT+CMIC=0,2"));
+		Serial1.println(F("AT+CMGF=1"));
+		Serial1.println(F("AT+CNMI=1,1,0,0,0"));
+		Serial1.println(F("AT+CLTS=1")); //Enable local Timestamp mode (used for syncrhonising RTC with GSM time
+		Serial1.println(F("AT+CPMS=\"SM\",\"SM\",\"SM\""));
+		Serial1.println(F("AT+CLCC=1"));
+		Serial1.println(F("AT&W"));
+		Serial.println("Serial1 up and running...");
+	}
 
 	//SD startup
 	uint32_t tempMillis = millis();
@@ -169,34 +173,12 @@ void MAKERphone::begin(bool splash) {
 	if(SDinsertedFlag)
 		ringtone = new MPTrack((char *)(ringtone_path.c_str()));
 	applySettings();
+	sleepTimer = millis();
 }
 
 bool MAKERphone::update() {
-	// bool pressed = 0;
-	//if (digitalRead(INTERRUPT_PIN) == 0) //message is received or incoming call
-	//{
-	//	Serial.println("INTERRUPTED");
-	//	Serial.println(readSerial());
-	//	if (readSerial().indexOf("CMT") != -1 || readSerial().indexOf("CMTI") != -1)//it's a message!
-	//	{
-
-	//		gui.popup("Sample text", 50);
-	//		Serial.println("SMS received");
-
-	//		display.setCursor(18, 35);
-	//		display.println("MESSAGE RECEIVED");
-	//		Serial.println("received");
-	//		delay(5000);
-	//	}
-	//	else if (readSerial().indexOf("RING") != -1)//it's a call!
-	//	{
-	//		Serial.println("CALL");
-	//		//handleCall();
-	//	}
-	//}
-	 //DacAudio.FillBuffer(); // Fill the sound buffer with data
 	char c;
-	uint16_t refreshInterval = 3000;
+	uint16_t refreshInterval = 4000;
 	if(screenshotFlag)
 	{
 		screenshotFlag = 0;
@@ -344,8 +326,7 @@ bool MAKERphone::update() {
 				tft.print("Turning off...");
 				delay(1500);
 				Serial.println("TURN OFF");
-				buttons.kpd.pin_mode(2, OUTPUT);
-				buttons.kpd.pin_write(2, 1);
+				digitalWrite(OFF_PIN, 1);
 			}
 			voltageSample = 0;
 			voltageSum = 0;
@@ -365,6 +346,7 @@ bool MAKERphone::update() {
 	{
 		inCall = 1;
 		incomingCall();
+		inCall = 0;
 	}
 	updateNotificationSound();
 	if(millis() - buttonsRefreshMillis > 200)
@@ -372,15 +354,22 @@ bool MAKERphone::update() {
 		buttons.currentKey = buttons.kpd.getKey();
 		buttonsRefreshMillis = millis();
 	}
-	// if(millis()- joystickMillis > 160)
-	// {
-	// 	joystickMillis = millis();
-	// 	// buttons.updateJoystick();
-	// 	// buttons.update(); //TODO
-	// }
 
 	buttons.update();
-
+	if(HOME_POPUP_ENABLE && !inHomePopup && !inShutdownPopup)
+	{
+		if(buttons.released(13)) //BUTTONSREFRESH
+		{
+			inHomePopup = 1;
+			inHomePopup = 0;
+		}
+	}
+	if(buttons.released(14) && !inShutdownPopup && SHUTDOWN_POPUP_ENABLE)
+	{
+		inShutdownPopup = 1;
+		shutdownPopup();
+		inShutdownPopup = 0;
+	}
 	if (millis() - lastFrameCount >= frameSpeed) {
 		lastFrameCount = millis();
 		updatePopup();
@@ -391,20 +380,7 @@ bool MAKERphone::update() {
 		// else//halved res mode
 			// buf.pushSprite(0,0);
 
-		if(HOME_POPUP_ENABLE && !inHomePopup && !inShutdownPopup)
-		{
-			if(buttons.released(13)) //BUTTONSREFRESH
-			{
-				inHomePopup = 1;
-				inHomePopup = 0;
-			}
-		}
-		if(buttons.released(14) && !inShutdownPopup && SHUTDOWN_POPUP_ENABLE)
-		{
-			inShutdownPopup = 1;
-			shutdownPopup();
-			inShutdownPopup = 0;
-		}
+		
 		FastLED.setBrightness(255/5 * pixelsBrightness);
 		FastLED.show();
 		delay(1);
@@ -513,8 +489,7 @@ void MAKERphone::sleep() {
 		delay(5);
 		if(batteryVoltage <= 3000)
 		{
-			buttons.kpd.pin_mode(2, OUTPUT);
-			buttons.kpd.pin_write(2, 1);
+			digitalWrite(OFF_PIN, 1);
 		}
 		ledcAnalogWrite(LEDC_CHANNEL, 255);
 		esp_light_sleep_start();
@@ -522,7 +497,6 @@ void MAKERphone::sleep() {
 	Serial.println("Buttons wakeup");
 	delay(5);
 	tft.writecommand(17);
-	mp.update();
 	ledcAttachPin(LCD_BL_PIN, LEDC_CHANNEL);
 	ledcAnalogWrite(LEDC_CHANNEL, 255);
 	for (uint8_t i = 255; i > actualBrightness; i--) {
@@ -538,13 +512,6 @@ void MAKERphone::sleep() {
 	delay(2);
 	FastLED.clear();
 
-	while (!update());
-	if (buttons.pressed(BTN_A))
-		while (!buttons.released(BTN_A))
-			update();
-	else if (buttons.pressed(BTN_B))
-		while (!buttons.released(BTN_B))
-			update();
 	while (!update());
 }
 void MAKERphone::loader()
@@ -596,7 +563,6 @@ void MAKERphone::updateTimeGSM() {
 	clockYear = 2000 + ((c1 - '0') * 10) + (c2 - '0');
 	Serial.println(F("CLOCK YEAR:"));
 	Serial.println(clockYear);
-	clockYear = ((c1 - '0') * 10) + (c2 - '0');
 
 	c1 = reply.charAt(index + 11);
 	c2 = reply.charAt(index + 12);
@@ -684,10 +650,11 @@ void MAKERphone::performUpdate(Stream &updateSource, size_t updateSize) {
 }
 void MAKERphone::updateFromFS(String FilePath) {
 	Serial.println(FilePath);
-	_SD.end();
-	while(!SDFAT.begin(5, SD_SCK_MHZ(9)))
-		Serial.println("SdFat error");
-	File updateBin = SDFAT.open(FilePath);
+	// _SD.end();
+	// SD.end();
+	// while(!SDFAT.begin(5, SD_SCK_MHZ(8)))
+		// Serial.println("SdFat error");
+	SDAudioFile updateBin = _SD.open(FilePath);
 	if (updateBin) {
 		if (updateBin.isDirectory()) {
 			Serial.println("Error, update.bin is not a file");
@@ -713,198 +680,458 @@ void MAKERphone::updateFromFS(String FilePath) {
 }
 void MAKERphone::incomingCall() //TODO
 {
-    if(!SDinsertedFlag)
-    {
-        bool state = 0;
-        uint8_t tempNotification = notification;
-        uint32_t callMillis = millis();
-        while(!buttons.released(BTN_B))
-        {
-            if(millis() - callMillis >= 1000)
-            {
-                state = 1;
-                callMillis = millis();
-            }
-            if(state)
-            {
-                playNotificationSound(4);
-                state = 0;
-            }
-            update();
-        }
-        notification = tempNotification;
-    }
-    else
-    {
-        ringtone = new MPTrack((char *)ringtone_path.c_str());
-        addTrack(ringtone);
-        ringtone->setVolume(256 * volume / 14);
-        ringtone->setRepeat(1);
-        ringtone->play();
-        while(!buttons.released(BTN_B))
-            update();
-        ringtone->stop();
-    }
-    while(!update());
+  	bool state = 0;
+	String number = "";
+	uint8_t tempNotification = notification;
+	uint32_t callMillis = millis();
+	uint16_t tmp_time = 0;
+	String localBuffer = "";
+	bool played = 0;
+	display.setTextFont(2);
+	display.setTextColor(TFT_BLACK);
+	display.setTextSize(1);
+	Serial.print("SD inserted:");
+	Serial.println(SDinsertedFlag);
+	Serial.print("Ringtone exists:");
+	Serial.println(_SD.exists(ringtone_path));
+	while(1)
+	{
+		if(!mp.playingNotification)
+		{
+			if (Serial1.available())
+			{
+				String buffer = Serial1.readString();
+				if(buffer.indexOf("CLCC:") != -1)
+					localBuffer = buffer;
+			}
+		}
+		uint16_t foo = localBuffer.indexOf("\"+", localBuffer.indexOf("CLCC:")) + 1;
+		number = localBuffer.substring(foo, localBuffer.indexOf("\"", foo));
+		display.fillScreen(TFT_WHITE);
+		display.setCursor(25, 9);
+		Serial.println("ringing");
+		display.printCenter("Incoming call");
+		display.drawBitmap(29*2, 24*2, call_icon, TFT_DARKGREY, 2);
+		display.setCursor(11, 28);
+		display.printCenter(number);
+		display.fillRect(90, 51*2, 70, 13*2, TFT_RED);
+		display.setCursor(100, 109);
+		display.print("Hang up");
+		display.fillRect(0, 51*2, 70, 13*2, TFT_GREEN);
+		display.setCursor(4, 109);
+		display.print("Answer");
 
-    //String localBuffer = "";
-    //Serial1.print(F("ATD"));
-    //Serial1.print(number);
-    //Serial1.print(";\r\n");
-    //display.setFreeFont(TT1);
-    //display.setTextColor(TFT_BLACK);
-    //bool firstPass = 1;
-    //uint32_t timeOffset = 0;
-    //display.setTextSize(1);
-    //while (1)
-    //{
-    //  display.fillScreen(TFT_WHITE);
-    //  if (Serial1.available())
-    //      localBuffer = Serial1.readString();
-    //  if (localBuffer.indexOf("CLCC:") != -1)
-    //  {
-    //      if (localBuffer.indexOf(",0,0,0,0") != -1)
-    //      {
-    //          if (firstPass == 1)
-    //          {
-    //              timeOffset = millis();
-    //              firstPass = 0;
-    //          }
-    //          display.setCursor(32, 9);
-    //          if ((int((millis() - timeOffset) / 1000) / 60) > 9)
-    //              display.print(int((millis() - timeOffset) / 1000) / 60);
-    //          else
-    //          {
-    //              display.print("0");
-    //              display.print(int((millis() - timeOffset) / 1000) / 60);
-    //          }
-    //          display.print(":");
-    //          if (int((millis() - timeOffset) / 1000) % 60 > 9)
-    //              display.print(int((millis() - timeOffset) / 1000) % 60);
-    //          else
-    //          {
-    //              display.print("0");
-    //              display.print(int((millis() - timeOffset) / 1000) % 60);
-    //          }
-    //          Serial.println("CALL ACTIVE");
-    //          display.drawBitmap(29, 24, call_icon, TFT_GREEN);
-    //      }
-    //      else if (localBuffer.indexOf(",0,3,") != -1)
-    //      {
-    //          display.setCursor(25, 9);
-    //          Serial.println("ringing");
-    //          display.println("Ringing...");
-    //          display.drawBitmap(29, 24, call_icon, TFT_DARKGREY);
-    //      }
-    //      else if (localBuffer.indexOf(",0,2,") != -1)
-    //      {
-    //          display.setCursor(25, 9);
-    //          display.println("Calling...");
-    //          display.drawBitmap(29, 24, call_icon, TFT_DARKGREY);
-    //      }
-    //      else if (localBuffer.indexOf(",0,6,") != -1)
-    //      {
-    //          display.fillScreen(TFT_WHITE);
-    //          display.setCursor(32, 9);
-    //          if (timeOffset == 0)
-    //              display.print("00:00");
-    //          else
-    //          {
-    //              if ((int((millis() - timeOffset) / 1000) / 60) > 9)
-    //                  display.print(int((millis() - timeOffset) / 1000) / 60);
-    //              else
-    //              {
-    //                  display.print("0");
-    //                  display.print(int((millis() - timeOffset) / 1000) / 60);
-    //              }
-    //              display.print(":");
-    //              if ((int((millis() - timeOffset) / 1000) % 60) > 9)
-    //                  display.print(int((millis() - timeOffset) / 1000) % 60);
-    //              else
-    //              {
-    //                  display.print("0");
-    //                  display.print(int((millis() - timeOffset) / 1000) % 60);
-    //              }
-    //          }
-    //          display.drawBitmap(29, 24, call_icon, TFT_RED);
-    //          display.setCursor(11, 20);
-    //          display.println(number);
-    //          display.fillRect(0, 51, 80, 13, TFT_RED);
-    //          display.setCursor(2, 62);
-    //          display.print("Call ended");
-    //          Serial.println("ENDED");
-    //          while (!update());
-    //          delay(1000);
-    //          break;
-    //      }
-    //      display.setCursor(11, 20);
-    //      display.println(number);
-    //      display.fillRect(0, 51, 80, 13, TFT_RED);
-    //      display.setCursor(2, 62);
-    //      display.print("press");
-    //      display.drawBitmap(24, 52, letterB, TFT_BLACK);
-    //      display.setCursor(35, 62);
-    //      display.print("to hang up");
-    //  }
-    //  else if (localBuffer.indexOf("CLCC:") == -1)
-    //  {
-    //      display.setCursor(25, 9);
-    //      display.println("Calling...");
-    //      display.drawBitmap(29, 24, call_icon, TFT_DARKGREY);
-    //      display.setCursor(11, 20);
-    //      display.println(number);
-    //      display.fillRect(0, 51, 80, 13, TFT_RED);
-    //      display.setCursor(2, 62);
-    //      display.print("press");
-    //      display.drawBitmap(24, 52, letterB, TFT_BLACK);
-    //      display.setCursor(35, 62);
-    //      display.print("to hang up");
-    //  }
-    //  if (buttons.pressed(BTN_B)) // hanging up
-    //  {
-    //      Serial.println("B PRESSED");
-    //      Serial1.println("ATH");
-    //      while (readSerial().indexOf(",0,6,") == -1)
-    //      {
-    //          Serial1.println("ATH");
-    //      }
-    //      Serial.println("EXITED");
-    //      display.fillScreen(TFT_WHITE);
-    //      display.setCursor(32, 9);
-    //      if (timeOffset == 0)
-    //          display.print("00:00");
-    //      else
-    //      {
-    //          if ((int((millis() - timeOffset) / 1000) / 60) > 9)
-    //              display.print(int((millis() - timeOffset) / 1000) / 60);
-    //          else
-    //          {
-    //              display.print("0");
-    //              display.print(int((millis() - timeOffset) / 1000) / 60);
-    //          }
-    //          display.print(":");
-    //          if ((int((millis() - timeOffset) / 1000) % 60) > 9)
-    //              display.print(int((millis() - timeOffset) / 1000) % 60);
-    //          else
-    //          {
-    //              display.print("0");
-    //              display.print(int((millis() - timeOffset) / 1000) % 60);
-    //          }
-    //      }
-    //      display.drawBitmap(29, 24, call_icon, TFT_RED);
-    //      display.setCursor(11, 20);
-    //      display.println(number);
-    //      display.fillRect(0, 51, 80, 13, TFT_RED);
-    //      display.setCursor(2, 62);
-    //      display.print("Call ended");
-    //      Serial.println("ENDED");
-    //      while (!update());
-    //      delay(1000);
-    //      break;
-    //  }
-    //  update();
-    //}
+		if(buttons.released(BTN_FUN_LEFT))
+			break;
+		if(buttons.released(BTN_FUN_RIGHT) || localBuffer.indexOf(",1,6,") != -1)
+		{
+			ringtone->stop();
+			Serial1.println("ATH");
+			long long curr_millis = millis();
+			while (Serial1.readString().indexOf(",0,6,") == -1 && millis() - curr_millis < 2000){
+				Serial1.println("ATH");
+			}
+			display.fillScreen(TFT_WHITE);
+			display.setCursor(32, 9);
+			display.printCenter("00:00");
+			
+			display.drawBitmap(29*2, 24*2, call_icon, TFT_RED, 2);
+			if(resolutionMode)
+					display.setCursor(11, 20);
+			else
+				display.setCursor(11, 28);
+			display.printCenter(number);
+			display.fillRect(0, 51*2, 80*2, 13*2, TFT_RED);
+			display.setCursor(2, 112);
+			display.print("Call ended");
+			Serial.println("ENDED");
+			update();
+			updateTimeRTC();
+			// 2019-04-18 12:00:00
+			String dateTime = String(clockYear);
+			dateTime += "-";
+			if(clockMonth < 10){
+				dateTime += "0";
+			}
+			dateTime += String(clockMonth);
+			dateTime += "-";
+			if(clockDay < 10){
+				dateTime += "0";
+			}
+			dateTime += String(clockDay);
+			dateTime += " ";
+
+			if(clockHour < 10){
+				dateTime += "0";
+			}
+			dateTime += String(clockHour);
+			dateTime += ":";
+			if(clockMinute < 10){
+				dateTime += "0";
+			}
+			dateTime += String(clockMinute);
+			dateTime += ":";
+			if(clockSecond < 10){
+				dateTime += "0";
+			}
+			dateTime += String(clockSecond);
+
+			addCall(number, dateTime, tmp_time);
+			delay(1000);
+			return;
+		}
+
+		if(!SDinsertedFlag || (SDinsertedFlag && !_SD.exists(ringtone_path)))
+		{
+			if(millis() - callMillis >= 1000)
+			{
+				state = 1;
+				callMillis = millis();
+			}
+			if(state)
+			{
+				playNotificationSound(4);
+				state = 0;
+			}
+			notification = tempNotification;
+		}
+		
+		else if(!played)
+		{
+			ringtone = new MPTrack((char *)ringtone_path.c_str());
+			addTrack(ringtone);
+			ringtone->setVolume(256 * volume / 14);
+			ringtone->setRepeat(1);
+			ringtone->play();
+			played = 1;
+		}
+		update();
+	}
+	ringtone->stop();
+	while(!update());
+	
+
+	Serial1.println("ATA");
+	long long curr_millis = millis();
+	while (localBuffer.indexOf(",1,0,0,0") == -1 && millis() - curr_millis < 2000){
+		Serial1.println("ATA");
+		localBuffer = Serial1.readString();
+	}
+	display.setTextColor(TFT_BLACK);
+	bool firstPass = 1;
+	uint32_t timeOffset = 0;
+	uint16_t textLength;
+	uint8_t scale;
+	tmp_time = 0;
+	uint8_t micGain = 4;
+	String temp;
+	if(resolutionMode)
+	{
+		scale = 1;
+		display.setFreeFont(TT1);
+	}
+	else
+	{
+		scale = 2;
+		display.setTextFont(2);
+	}
+	display.setTextSize(1);
+
+	display.printCenter(number);
+	textLength = display.cursor_x - textLength;
+	while (1)
+	{
+		display.fillScreen(TFT_WHITE);
+		if (Serial1.available())
+		{
+			String buffer = Serial1.readString();
+			if(buffer.indexOf("CLCC:") != -1)
+				localBuffer = buffer;
+		}
+		Serial.println(localBuffer);
+		delay(5);
+
+
+		if (localBuffer.indexOf("CLCC:") != -1 || localBuffer.indexOf("AT+CMIC") != -1)
+		{
+			if (localBuffer.indexOf(",1,0,0,0") != -1 || localBuffer.indexOf("AT+CMIC") != -1)
+			{
+				digitalWrite(soundSwitchPin, 1);
+				if (firstPass == 1)
+				{
+					timeOffset = millis();
+					firstPass = 0;
+				}
+
+				temp = "";
+				if ((int((millis() - timeOffset) / 1000) / 60) > 9)
+					temp += (int((millis() - timeOffset) / 1000) / 60) ;
+				else
+				{
+					temp += "0";
+					temp += (int((millis() - timeOffset) / 1000) / 60);
+				}
+				temp += ":";
+				if (int((millis() - timeOffset) / 1000) % 60 > 9)
+					temp += (int((millis() - timeOffset) / 1000) % 60);
+				else
+				{
+					temp += "0";
+					temp += (int((millis() - timeOffset) / 1000) % 60);
+				}
+				display.setCursor(9, 9);
+				display.printCenter(temp);
+				display.drawBitmap(29*scale, 24*scale, call_icon, TFT_GREEN, scale);
+				display.setCursor(3, 3);
+				display.print(micGain);
+			}
+
+			else if (localBuffer.indexOf(",1,6,") != -1)
+			{
+				digitalWrite(soundSwitchPin, 0);
+				display.fillScreen(TFT_WHITE);
+				display.setCursor(32, 9);
+				if (timeOffset == 0)
+					display.printCenter("00:00");
+				else
+				{
+					temp = "";
+					if ((int((millis() - timeOffset) / 1000) / 60) > 9)
+						temp += (int((millis() - timeOffset) / 1000) / 60) ;
+					else
+					{
+						temp += "0";
+						temp += (int((millis() - timeOffset) / 1000) / 60);
+					}
+					temp += ":";
+					if (int((millis() - timeOffset) / 1000) % 60 > 9)
+						temp += (int((millis() - timeOffset) / 1000) % 60);
+					else
+					{
+						temp += "0";
+						temp += (int((millis() - timeOffset) / 1000) % 60);
+					}
+					display.setCursor(9, 9);
+					display.printCenter(temp);
+				}
+				display.drawBitmap(29*scale, 24*scale, call_icon, TFT_RED, scale);
+				if(resolutionMode)
+					display.setCursor(11, 20);
+				else
+					display.setCursor(11, 28);
+				display.printCenter(number);
+				display.fillRect(0, 51*scale, 80*scale, 13*scale, TFT_RED);
+				if(resolutionMode)
+					display.setCursor(2, 62);
+				else
+					display.setCursor(2, 112);
+				display.print("Call ended");
+				Serial.println("ENDED");
+				update();
+
+				updateTimeRTC();
+				// 2019-04-18 12:00:00
+				String dateTime = String(clockYear);
+				dateTime += "-";
+				if(clockMonth < 10){
+					dateTime += "0";
+				}
+				dateTime += String(clockMonth);
+				dateTime += "-";
+				if(clockDay < 10){
+					dateTime += "0";
+				}
+				dateTime += String(clockDay);
+				dateTime += " ";
+
+				if(clockHour < 10){
+					dateTime += "0";
+				}
+				dateTime += String(clockHour);
+				dateTime += ":";
+				if(clockMinute < 10){
+					dateTime += "0";
+				}
+				dateTime += String(clockMinute);
+				dateTime += ":";
+				if(clockSecond < 10){
+					dateTime += "0";
+				}
+				dateTime += String(clockSecond);
+
+				addCall(number, dateTime, tmp_time);
+
+				delay(1000);
+				break;
+			}
+			if(resolutionMode)
+					display.setCursor(11, 20);
+			else
+				display.setCursor(11, 28);
+			display.printCenter(number);
+			display.fillRect(0, 51*scale, 80*scale, 13*scale, TFT_RED);
+			display.setCursor(100, 109);
+			display.print("Hang up");
+
+		}
+
+
+		else if (localBuffer.indexOf("CLCC:") == -1)
+		{
+			if (localBuffer.indexOf("ERROR") != -1)
+			{
+
+				display.setCursor(3, 9);
+				display.printCenter("Couldn't dial number!");
+				display.drawBitmap(29*scale, 24*scale, call_icon, TFT_RED, scale);
+				if(resolutionMode)
+					display.setCursor(11, 20);
+				else
+					display.setCursor(11, 28);
+				display.printCenter(number);
+				display.fillRect(0, 51*scale, 80*scale, 13*scale, TFT_RED);
+				if(resolutionMode)
+				{
+					display.setCursor(2, 57);
+					display.print("Invalid number or");
+					display.setCursor(2, 63);
+					display.print("SIM card missing!");
+				}
+				else
+				{
+					display.setCursor(2, 100);
+					display.print("Invalid number or");
+					display.setCursor(2, 112);
+					display.print("SIM card missing!");
+				}
+				while (!buttons.released(BTN_B))
+					update();
+				break;
+			}
+		}
+		if (buttons.pressed(BTN_FUN_RIGHT)) // hanging up
+		{
+			Serial.println("B PRESSED");
+			Serial1.println("ATH");
+			long long curr_millis = millis();
+			while (Serial1.readString().indexOf(",1,6,") == -1 && millis() - curr_millis < 2000){
+				Serial1.println("ATH");
+			}
+			digitalWrite(soundSwitchPin, 0);
+			display.fillScreen(TFT_WHITE);
+			display.setCursor(32, 9);
+			if (timeOffset == 0)
+				display.printCenter("00:00");
+			else
+			{
+				temp = "";
+				if ((int((millis() - timeOffset) / 1000) / 60) > 9)
+					temp += (int((millis() - timeOffset) / 1000) / 60) ;
+				else
+				{
+					temp += "0";
+					temp += (int((millis() - timeOffset) / 1000) / 60);
+				}
+				temp += ":";
+				if (int((millis() - timeOffset) / 1000) % 60 > 9)
+					temp += (int((millis() - timeOffset) / 1000) % 60);
+				else
+				{
+					temp += "0";
+					temp += (int((millis() - timeOffset) / 1000) % 60);
+				}
+				display.setCursor(9, 9);
+				display.printCenter(temp);
+			}
+			display.drawBitmap(29*scale, 24*scale, call_icon, TFT_RED, scale);
+			if(resolutionMode)
+					display.setCursor(11, 20);
+			else
+				display.setCursor(11, 28);
+			display.printCenter(number);
+			display.fillRect(0, 51*scale, 80*scale, 13*scale, TFT_RED);
+			display.setCursor(2, 112);
+			display.print("Call ended");
+			Serial.println("ENDED");
+			update();
+			updateTimeRTC();
+			// 2019-04-18 12:00:00
+			String dateTime = String(clockYear);
+			dateTime += "-";
+			if(clockMonth < 10){
+				dateTime += "0";
+			}
+			dateTime += String(clockMonth);
+			dateTime += "-";
+			if(clockDay < 10){
+				dateTime += "0";
+			}
+			dateTime += String(clockDay);
+			dateTime += " ";
+
+			if(clockHour < 10){
+				dateTime += "0";
+			}
+			dateTime += String(clockHour);
+			dateTime += ":";
+			if(clockMinute < 10){
+				dateTime += "0";
+			}
+			dateTime += String(clockMinute);
+			dateTime += ":";
+			if(clockSecond < 10){
+				dateTime += "0";
+			}
+			dateTime += String(clockSecond);
+
+			addCall(number, dateTime, tmp_time);
+			delay(1000);
+			break;
+		}
+		if(buttons.released(BTN_UP) && micGain < 15 && (localBuffer.indexOf(",0,0,0,0") != -1 || localBuffer.indexOf("AT+CMIC") != -1))
+		{
+			micGain++;
+			Serial1.printf("AT+CMIC=0,%d", micGain);
+		}
+		if(buttons.released(BTN_DOWN) && micGain > 0 && (localBuffer.indexOf(",0,0,0,0") != -1 || localBuffer.indexOf("AT+CMIC") != -1))
+		{
+			micGain--;
+			Serial1.printf("AT+CMIC=0,%d", micGain);
+		}
+
+		tmp_time = int((millis() - timeOffset) / 1000);
+		update();
+	}
 }
+void MAKERphone::addCall(String number, String dateTime, int duration){
+	SDAudioFile file = _SD.open("/call_log.json", "r");
+	if(file.size() < 2){
+		Serial.println("Override");
+		file.close();
+		JsonArray& jarr = jb.parseArray("[]");
+		delay(10);
+		SDAudioFile file1 = _SD.open("/call_log.json", "w");
+		jarr.prettyPrintTo(file1);
+		file1.close();
+		file = _SD.open("/call_log.json", "r");
+		while(!file)
+			Serial.println("CONTACTS ERROR");
+	}
+
+	JsonArray& jarr = jb.parseArray(file);
+	file.close();
+
+	JsonObject& new_item = jb.createObject();
+	new_item["number"] = number;
+	new_item["dateTime"] = dateTime;
+	new_item["duration"] = duration;
+	jarr.add(new_item);
+
+	SDAudioFile file1 = _SD.open("/call_log.json", "w");
+	jarr.prettyPrintTo(file1);
+	file1.close();
+}
+
 void MAKERphone::checkSim()
 {
 	String input = "";
@@ -912,7 +1139,7 @@ void MAKERphone::checkSim()
 	Serial1.println(F("AT+CPIN?"));
 
 	while (input.indexOf("+CPIN:") == -1 && input.indexOf("ERROR", input.indexOf("+CPIN")) == -1) {
-		if(millis() - timeoutMillis >= 500)
+		if(millis() - timeoutMillis >= 2500)
 		{
 			simInserted = 0;
 			return;
@@ -1151,14 +1378,8 @@ String MAKERphone::textInput(String buffer, int16_t length)
 			textPointer--;
 		buffer.remove(buffer.length() - 1);
 	}
-	else if (buttons.released(BTN_FUN_RIGHT)) //clear number
-	{
-		buffer = "";
-		textPointer = 0;
-	}
 	else if(key == '*')
 	{
-		Serial.println("PRESSED");
 		if (textPointer != buffer.length())
 			textPointer++;
 		textPointer++;
@@ -1171,7 +1392,6 @@ String MAKERphone::textInput(String buffer, int16_t length)
 		textLimitFlag = 0;
 
 	if(length == -1 || length >= buffer.length()){
-		
 		ret = multi_tap(key);// Feed the key press to the multi_tap function.
 		if ((ret & 256) != 0) // If this is non-zero, we got a key. Handle some special keys or just print the key on screen
 		{
@@ -1591,14 +1811,14 @@ void MAKERphone::applySettings()
 {
 	if(wifi)
 	{
-		delay(50);
+		delay(200);
 		WiFi.begin();
-		delay(50);
+		delay(200);
 	}
 	else
 	{
-		WiFi.disconnect(true); delay(1); // disable WIFI altogether
-		WiFi.mode(WIFI_MODE_NULL); delay(1);
+		WiFi.disconnect(true); delay(10); // disable WIFI altogether
+		WiFi.mode(WIFI_MODE_NULL); delay(10);
 	}
 
 	if(bt)
@@ -1648,7 +1868,7 @@ JsonArray& MAKERphone::getJSONfromSAV(const char *path)
 }
 void MAKERphone::saveJSONtoSAV(const char *path, JsonArray& json)
 {
-	while(!_SD.begin(5, SPI, 9000000))
+	while(!_SD.begin(5, SPI, 8000000))
         Serial.println("SD ERROR");
 	SDAudioFile file = _SD.open(path, "w");
 	if(file)
@@ -1713,7 +1933,7 @@ void MAKERphone::appendFile(const char * path, const char * message) {
 	file.close();
 }
 String MAKERphone::readFile(const char * path) {
-	while (!_SD.begin(5, SPI, 9000000));
+	while (!_SD.begin(5, SPI, 8000000));
 	Serial.printf("Reading file: %s\n", path);
 	String helper="";
 	SDAudioFile file = _SD.open(path);
@@ -1744,7 +1964,7 @@ void MAKERphone::takeScreenshot()
 	while(!update());
 
 	char name[] = "/Images/screenshot_00.bmp";
-	while (!_SD.begin(5, SPI, 9000000))
+	while (!_SD.begin(5, SPI, 8000000))
 		Serial.println("SD ERROR");
 	for (int i = 0; i < 100;i++)
 	{
@@ -2653,8 +2873,9 @@ void MAKERphone::shutdownPopup(bool animation)
 				tft.print("Turning off...");
 				delay(750);
 				Serial.println("TURN OFF");
-				buttons.kpd.pin_mode(2, OUTPUT);
-  				buttons.kpd.pin_write(2, 1);
+				Serial1.println("AT+CFUN=1,1"); //only for this revision
+				delay(10);
+				digitalWrite(OFF_PIN, 1);
 			}
 		}
 		// update();

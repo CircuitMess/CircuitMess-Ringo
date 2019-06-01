@@ -80,6 +80,7 @@ extern HardwareSerial Serial1;
 #define SIM_INT 39
 #define SD_INT 33
 
+#define OFF_PIN 25
 #define INTERRUPT_PIN 36
 #define VOLTAGE_PIN 35
 #define VOLTAGE_OFFSET 300 //offset for the adc reading (mV)
@@ -145,6 +146,7 @@ class MAKERphone:public Buttons, public DateTime
 	void splashScreen();
 	void sleep();
 	void incomingCall();
+	void addCall(String number, String dateTime, int duration);
 	void checkSim();
 	void enterPin();
 	void enterPUK();

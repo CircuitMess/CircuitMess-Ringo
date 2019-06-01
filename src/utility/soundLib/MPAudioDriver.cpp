@@ -64,7 +64,7 @@ void adc_read_task(void* arg)
 
 void initWavLib()
 {
-    masterVolume=512;
+    masterVolume=256;
     trackCount=0;
     for(unsigned char i=0;i<MAX_TRACKS;i++)
         tracks[i]=nullptr;
