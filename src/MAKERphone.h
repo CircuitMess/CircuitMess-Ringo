@@ -207,7 +207,7 @@ class MAKERphone:public Buttons, public DateTime
 	uint8_t actualBrightness = 0; //value from 0 (brightest) to 255 (backlight off)
 	uint16_t sleepTimeActual = 0; //in seconds
 	uint8_t backgroundIndex = 0;
-	uint8_t volume = 10; //volume 0-14
+	uint8_t volume = 3; //volume 0-14
 	uint8_t pixelsBrightness = 5; //0-5
 	bool pinLock;
 	uint16_t pinNumber = 1234;

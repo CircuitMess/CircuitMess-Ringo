@@ -178,7 +178,7 @@ void MAKERphone::begin(bool splash) {
 
 bool MAKERphone::update() {
 	char c;
-	uint16_t refreshInterval = 4000;
+	uint16_t refreshInterval = 5000;
 	if(screenshotFlag)
 	{
 		screenshotFlag = 0;
@@ -232,9 +232,9 @@ bool MAKERphone::update() {
 			if (simInserted && !airplaneMode)
 			{
 				Serial1.println("AT+CSQ");
-				if (carrierName == "")
-					Serial1.println("AT+CSPN?");
-				if (clockYear == 4 || clockYear == 80 || clockMonth == 0 || clockMonth > 12 || clockHour > 24 || clockMinute >= 60)
+				// if (carrierName == "")
+				// 	Serial1.println("AT+CSPN?");
+				if (clockYear%100 == 4 || clockYear%100 == 80 || clockMonth == 0 || clockMonth > 12 || clockHour > 24 || clockMinute >= 60)
 					Serial1.println("AT+CCLK?");
 			}
 			refreshMillis = millis();
@@ -245,16 +245,16 @@ bool MAKERphone::update() {
 			updateBuffer += c;
 			if (simInserted && !airplaneMode)
 			{
-				if (carrierName == "")
-				{
-					if (updateBuffer.indexOf("\n", updateBuffer.indexOf("+CSPN:")) != -1)
-					{
-						carrierName = updateBuffer.substring(updateBuffer.indexOf("\"", updateBuffer.indexOf("+CSPN:")) + 1, updateBuffer.indexOf("\"", updateBuffer.indexOf("\"", updateBuffer.indexOf("+CSPN:")) + 1));
-					}
-				}
+				// if (carrierName == "")
+				// {
+				// 	if (updateBuffer.indexOf("\n", updateBuffer.indexOf("+CSPN:")) != -1)
+				// 	{
+				// 		carrierName = updateBuffer.substring(updateBuffer.indexOf("\"", updateBuffer.indexOf("+CSPN:")) + 1, updateBuffer.indexOf("\"", updateBuffer.indexOf("\"", updateBuffer.indexOf("+CSPN:")) + 1));
+				// 	}
+				// }
 				if (updateBuffer.indexOf("\n", updateBuffer.indexOf("+CSQ:")) != -1)
 					signalStrength = updateBuffer.substring(updateBuffer.indexOf(" ", updateBuffer.indexOf("+CSQ:")) + 1, updateBuffer.indexOf(",", updateBuffer.indexOf(" ", updateBuffer.indexOf("+CSQ:")))).toInt();
-				if (clockYear == 4 || clockYear == 80 || clockMonth == 0 || clockMonth > 12 || clockHour > 24 || clockMinute >= 60)
+				if (clockYear % 100 == 4 || clockYear % 100 == 80 || clockMonth == 0 || clockMonth > 12 || clockHour > 24 || clockMinute >= 60)
 					if (updateBuffer.indexOf("\n", updateBuffer.indexOf("+CCLK:")) != -1)
 					{
 						uint16_t index = updateBuffer.indexOf(F("+CCLK: \""));
@@ -265,7 +265,7 @@ bool MAKERphone::update() {
 						Serial.println(F("CLOCK YEAR:"));
 						Serial.println(clockYear);
 						delay(5);
-						clockYear = ((c1 - '0') * 10) + (c2 - '0');
+						// clockYear = ((c1 - '0') * 10) + (c2 - '0');
 
 						c1 = updateBuffer.charAt(index + 11);
 						c2 = updateBuffer.charAt(index + 12);
@@ -299,7 +299,7 @@ bool MAKERphone::update() {
 
 						//TO-DO: UPDATE THE RTC HERE
 						DateTime now = DateTime(clockYear, clockMonth, clockDay,
-							clockHour, clockMinute, clockSecond);
+						clockHour, clockMinute, clockSecond);
 						RTC.adjust(now);
 						Serial.println(F("\nRTC TIME UPDATE OVER GSM DONE!"));
 					}
@@ -595,7 +595,7 @@ void MAKERphone::updateTimeGSM() {
 	Serial.println(clockSecond);
 
 	DateTime now = DateTime(clockYear, clockMonth, clockDay,
-		clockHour, clockMinute, clockSecond);
+	clockHour, clockMinute, clockSecond);
 	RTC.adjust(now);
 	Serial.println(F("\nRTC TIME UPDATE OVER GSM DONE!"));
 	delay(5);
@@ -959,7 +959,8 @@ void MAKERphone::incomingCall() //TODO
 				}
 				dateTime += String(clockSecond);
 
-				addCall(number, dateTime, tmp_time);
+				if(SDinsertedFlag)
+					addCall(number, dateTime, tmp_time);
 
 				delay(1000);
 				break;
@@ -1084,7 +1085,8 @@ void MAKERphone::incomingCall() //TODO
 			}
 			dateTime += String(clockSecond);
 
-			addCall(number, dateTime, tmp_time);
+			if(SDinsertedFlag)
+					addCall(number, dateTime, tmp_time);
 			delay(1000);
 			break;
 		}
@@ -2511,7 +2513,7 @@ void MAKERphone::homePopup(bool animation)
 
 						display.printCenter(temp);
 						display.setCursor(0,100);
-						display.printCenter(2000 + clockYear);
+						display.printCenter(clockYear);
 
 
 						if(millis()-timer >= 1000)
@@ -2763,7 +2765,7 @@ void MAKERphone::notificationView()
 String MAKERphone::currentDateTime(){
 	mp.updateTimeRTC();
 	// 2019-04-18 12:00:00
-	String dateTime = "20" + String(mp.clockYear);
+	String dateTime = String(mp.clockYear);
 	dateTime += "-";
 	if(mp.clockMonth < 10){
 		dateTime += "0";

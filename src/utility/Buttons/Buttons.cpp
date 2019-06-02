@@ -14,10 +14,9 @@ void Buttons::begin() {
 
 void Buttons::update() {
 	buttonsData = 0;
+	
 	delay(1);
-
 	button_b = ads.readADC_SingleEnded(3);
-
 	delay(1);
 	joystick_x = ads.readADC_SingleEnded(1);
 	delay(1);
