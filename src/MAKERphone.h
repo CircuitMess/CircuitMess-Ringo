@@ -145,8 +145,10 @@ class MAKERphone:public Buttons, public DateTime
 	bool update();
 	void splashScreen();
 	void sleep();
-	void incomingCall();
+	void incomingCall(String _serialData);
 	void addCall(String number, String dateTime, int duration);
+	void incomingMessage(String _serialData);
+	void saveMessage(String text, String number, JsonArray *messages);
 	void checkSim();
 	void enterPin();
 	void enterPUK();
@@ -315,9 +317,8 @@ class MAKERphone:public Buttons, public DateTime
 		bool HOME_POPUP_ENABLE = 1;
 		bool SHUTDOWN_POPUP_ENABLE = 1;
 		String popupText;
-		float popupDuration = 0;
-		uint16_t popupTimeLeft;
-		uint16_t popupTotalTime;
+		uint16_t popupTimeLeft = 0;
+		uint16_t popupTotalTime = 0;
 		const char *popupHomeItems[6] PROGMEM = {
 			"Volume",
 			"Home",
