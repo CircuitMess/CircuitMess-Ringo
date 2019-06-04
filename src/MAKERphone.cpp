@@ -124,11 +124,11 @@ void MAKERphone::begin(bool splash) {
 	delay(5);
 	if(simInserted)
 	{
+		Serial1.println(F("AT+CMIC=0,14"));
 		updateTimeGSM();
 		Serial1.println(F("AT+CMEE=2"));
 		Serial1.println(F("AT+CLVL=100"));
 		Serial1.println(F("AT+CRSL=100"));
-		Serial1.println(F("AT+CMIC=0,10"));
 		Serial1.println(F("AT+CMGF=1"));
 		Serial1.println(F("AT+CNMI=1,2,0,0,0"));
 		Serial1.println(F("AT+CLTS=1")); //Enable local Timestamp mode (used for syncrhonising RTC with GSM time
