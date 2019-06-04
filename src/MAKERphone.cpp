@@ -112,7 +112,7 @@ void MAKERphone::begin(bool splash) {
 	}
 
 	ledcAnalogWrite(LEDC_CHANNEL, 0);
-	
+
 	if (splash == 1)
 		splashScreen(); //Show the main splash screen
 	else
@@ -347,7 +347,7 @@ bool MAKERphone::update() {
 		String localBuffer = "";
 		long long curr_millis = millis();
 
-		while ((localBuffer.indexOf("+CLCC:") == -1 || localBuffer.indexOf("+CMT:") == -1) 
+		while ((localBuffer.indexOf("+CLCC:") == -1 || localBuffer.indexOf("+CMT:") == -1)
 		&& millis() - curr_millis < 500)
 			localBuffer = Serial1.readString();
 		if(localBuffer.indexOf("+CLCC:") != -1)
@@ -394,7 +394,7 @@ bool MAKERphone::update() {
 		// else//halved res mode
 			// buf.pushSprite(0,0);
 
-		
+
 		FastLED.setBrightness(255/5 * pixelsBrightness);
 		FastLED.show();
 		delay(1);
@@ -710,7 +710,7 @@ void MAKERphone::incomingCall(String _serialData) //TODO
 	Serial.println(_SD.exists(ringtone_path));
 	while(1)
 	{
-		
+
 		uint16_t foo = localBuffer.indexOf("\"+", localBuffer.indexOf("CLCC:")) + 1;
 		number = localBuffer.substring(foo, localBuffer.indexOf("\"", foo));
 		display.fillScreen(TFT_WHITE);
@@ -748,7 +748,7 @@ void MAKERphone::incomingCall(String _serialData) //TODO
 			display.fillScreen(TFT_WHITE);
 			display.setCursor(32, 9);
 			display.printCenter("00:00");
-			
+
 			display.drawBitmap(29*2, 24*2, call_icon, TFT_RED, 2);
 			if(resolutionMode)
 					display.setCursor(11, 20);
@@ -809,7 +809,7 @@ void MAKERphone::incomingCall(String _serialData) //TODO
 			}
 			notification = tempNotification;
 		}
-		
+
 		else if(!played)
 		{
 			ringtone = new MPTrack((char *)ringtone_path.c_str());
@@ -823,7 +823,7 @@ void MAKERphone::incomingCall(String _serialData) //TODO
 	}
 	ringtone->stop();
 	while(!update());
-	
+
 
 	Serial1.println("ATA");
 	long long curr_millis = millis();
@@ -1144,6 +1144,7 @@ void MAKERphone::incomingMessage(String _serialData)
 	if(file.size() < 2){ // empty -> FILL
 		Serial.println("Override");
 		file.close();
+		jb.clear();
 		// JsonArray& jarr = jb.parseArray("[{\"number\":\"123123\", \"dateTime\":\"2018-12-12 12:12:12\", \"text\":\"asd asd asd asd\"}]");
 		// JsonArray& jarr = jb.parseArray("[{\"number\":\"123123\", \"dateTime\":\"2018-12-12 12:12:12\", \"text\":\"asd asd asd asd\"}, {\"number\":\"09123\", \"dateTime\":\"2018-12-12 12:12:12\", \"text\":\"Some other text\"}, {\"number\":\"911\", \"dateTime\":\"2018-03-12 12:12:12\", \"text\":\"Help\"}]");
 		JsonArray& jarr = jb.createArray();
@@ -1156,7 +1157,9 @@ void MAKERphone::incomingMessage(String _serialData)
 			Serial.println("Messages ERROR");
 	}
 
+	jb.clear();
 	JsonArray& jarr = jb.parseArray(file);
+	file.close();
 
 	if(!jarr.success())
 		Serial.println("Error");
@@ -1172,6 +1175,7 @@ void MAKERphone::addCall(String number, String dateTime, int duration){
 	if(file.size() < 2){
 		Serial.println("Override");
 		file.close();
+		jb.clear();
 		JsonArray& jarr = jb.parseArray("[]");
 		delay(10);
 		SDAudioFile file1 = _SD.open("/call_log.json", "w");
@@ -1182,6 +1186,7 @@ void MAKERphone::addCall(String number, String dateTime, int duration){
 			Serial.println("CONTACTS ERROR");
 	}
 
+	jb.clear();
 	JsonArray& jarr = jb.parseArray(file);
 	file.close();
 
@@ -1520,7 +1525,7 @@ int MAKERphone::multi_tap(byte key)
 
 	if (key != NO_KEY) // A key is pressed at this iteration.
 	{
-		
+
 		if (key == 'D' || key == 'A')
 		{
 			prevKeyPress = NO_KEY;
@@ -1847,6 +1852,7 @@ void MAKERphone::loadSettings(bool debug)
 	const char * path = "/.core/settings.json";
 	Serial.println("");
 	SDAudioFile file = _SD.open(path);
+	mp.jb.clear();
 	JsonObject& settings = mp.jb.parseObject(file);
 	file.close();
 
@@ -1938,6 +1944,7 @@ void MAKERphone::applySettings()
 JsonArray& MAKERphone::getJSONfromSAV(const char *path)
 {
 	String temp = readFile(path);
+	mp.jb.clear();
 	JsonArray& json = mp.jb.parseArray(temp);
 	return json;
 }
@@ -2745,6 +2752,7 @@ void MAKERphone::loadNotifications(bool debug)
 	Serial.println("");
 	_SD.remove(path);
 	SDAudioFile file = _SD.open(path);
+	mp.jb.clear();
 	JsonArray& notifications = mp.jb.parseArray(file);
 	file.close();
 
@@ -3160,7 +3168,8 @@ void MAKERphone::loadAlarms()
 	const char * path = "/.core/alarms.json";
 	Serial.println("HERE");
 	SDAudioFile file = _SD.open(path);
-	JsonArray& alarms = jb.parseArray(file);
+	mp.jb.clear();
+	JsonArray& alarms = mp.jb.parseArray(file);
 	file.close();
 
 	if (alarms.success()) {
