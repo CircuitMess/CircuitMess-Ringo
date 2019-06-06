@@ -120,12 +120,11 @@ void MAKERphone::begin(bool splash) {
 		delay(500);
 		checkSim();
 	}
-	Serial.println("HERE");
-	delay(5);
+	updateTimeRTC();
 	if(simInserted)
 	{
 		Serial1.println(F("AT+CMIC=0,14"));
-		updateTimeGSM();
+		// updateTimeGSM();
 		Serial1.println(F("AT+CMEE=2"));
 		Serial1.println(F("AT+CLVL=100"));
 		Serial1.println(F("AT+CRSL=100"));
@@ -154,8 +153,8 @@ void MAKERphone::begin(bool splash) {
 	if(SDinsertedFlag)
 	{
 		loadSettings(1);
-		loadNotifications();
 		loadAlarms();
+		loadNotifications();
 	}
 	checkAlarms();
 	//Audio
@@ -205,7 +204,6 @@ bool MAKERphone::update() {
 	// 	}
 	// }
 	//buf2.invertDisplay(1);
-
 	if (digitalRead(35) && sleepTime)
 	{
 		if (millis() - sleepTimer >= sleepTimeActual * 1000)
@@ -225,13 +223,19 @@ bool MAKERphone::update() {
 	//refreshing signal and battery info
 	if (dataRefreshFlag)
 	{
+		// Serial.println(updateBuffer);
+		
 		if (millis() - refreshMillis >= refreshInterval)
 		{
-			receivedFlag = 0;
+			if(receivedFlag && simInserted && !airplaneMode)
+			{
+				Serial1.println("AT+CSQ");
+				receivedFlag = 0;
+			}
+			// receivedFlag = 0;
 			updateBuffer = "";
 			if (simInserted && !airplaneMode)
 			{
-				Serial1.println("AT+CSQ");
 				// if (carrierName == "")
 				// 	Serial1.println("AT+CSPN?");
 				if (clockYear%100 == 4 || clockYear%100 == 80 || clockMonth == 0 || clockMonth > 12 || clockHour > 24 || clockMinute >= 60)
@@ -253,7 +257,10 @@ bool MAKERphone::update() {
 				// 	}
 				// }
 				if (updateBuffer.indexOf("\n", updateBuffer.indexOf("+CSQ:")) != -1)
+				{
+					receivedFlag = 1;
 					signalStrength = updateBuffer.substring(updateBuffer.indexOf(" ", updateBuffer.indexOf("+CSQ:")) + 1, updateBuffer.indexOf(",", updateBuffer.indexOf(" ", updateBuffer.indexOf("+CSQ:")))).toInt();
+				}
 				if (clockYear % 100 == 4 || clockYear % 100 == 80 || clockMonth == 0 || clockMonth > 12 || clockHour > 24 || clockMinute >= 60)
 					if (updateBuffer.indexOf("\n", updateBuffer.indexOf("+CCLK:")) != -1)
 					{
@@ -1122,22 +1129,12 @@ void MAKERphone::incomingCall(String _serialData) //TODO
 void MAKERphone::incomingMessage(String _serialData)
 {
 	Serial.println("incoming message");
-	Serial.println(_serialData);
 	uint16_t helper = 0;
 	helper = _serialData.indexOf("\"");
-	Serial.println(helper);
-	Serial.println(_serialData.indexOf("\"", helper+1));
 	String number = _serialData.substring(helper + 1, _serialData.indexOf("\"", helper+1));
 	helper+=number.length() + 1;
-	Serial.println(_serialData.indexOf("\"\r"));
 	helper = _serialData.indexOf("\"\r", helper);
-	Serial.println(helper);
 	String text = _serialData.substring(helper + 3, _serialData.indexOf("\r", helper + 2));
-	Serial.print("Number: ");
-	Serial.println(number);
-	Serial.print("Text: ");
-	Serial.println(text);
-	delay(5);
 	popup(String(number + ": " + text), 50);
 	SDAudioFile file = _SD.open("/messages.json", "r");
 
@@ -1165,6 +1162,9 @@ void MAKERphone::incomingMessage(String _serialData)
 		Serial.println("Error");
 	else
 		saveMessage(text, number, &jarr);
+	updateTimeRTC();
+	Serial.println((char *)number.c_str());
+	addNotification(2, (char *)number.c_str(), RTC.now());
 	// +CMT: "+385921488476","","19/06/03,20:14:58+08"
 	// Wjd
 
@@ -1201,6 +1201,7 @@ void MAKERphone::addCall(String number, String dateTime, int duration){
 	file1.close();
 }
 void MAKERphone::saveMessage(String text, String number, JsonArray *messages){
+	jb.clear();
 	JsonObject& new_item = jb.createObject();
 	updateTimeRTC();
 	new_item["number"] = number;
@@ -1803,7 +1804,7 @@ void MAKERphone::saveSettings(bool debug)
 	const char * path = "/.core/settings.json";
 	Serial.println("");
 	_SD.remove(path);
-	JsonObject& settings = mp.jb.createObject();
+	JsonObject& settings = jb.createObject();
 
 	if (settings.success()) {
 		if(debug){
@@ -1852,8 +1853,8 @@ void MAKERphone::loadSettings(bool debug)
 	const char * path = "/.core/settings.json";
 	Serial.println("");
 	SDAudioFile file = _SD.open(path);
-	mp.jb.clear();
-	JsonObject& settings = mp.jb.parseObject(file);
+	jb.clear();
+	JsonObject& settings = jb.parseObject(file);
 	file.close();
 
 	if (settings.success()) {
@@ -1944,8 +1945,8 @@ void MAKERphone::applySettings()
 JsonArray& MAKERphone::getJSONfromSAV(const char *path)
 {
 	String temp = readFile(path);
-	mp.jb.clear();
-	JsonArray& json = mp.jb.parseArray(temp);
+	jb.clear();
+	JsonArray& json = jb.parseArray(temp);
 	return json;
 }
 void MAKERphone::saveJSONtoSAV(const char *path, JsonArray& json)
@@ -2103,8 +2104,6 @@ void MAKERphone::takeScreenshot()
 	// 		img[(y*w + x)*3+0] = (unsigned char)(blue);
 	// 	}
 	// }
-	Serial.println("HERE");
-	delay(5);
 	// print px and img data for debugging
 	// if (debugPrint) {
 	// Serial.print("Writing \"");
@@ -2655,10 +2654,10 @@ void MAKERphone::homePopup(bool animation)
 void MAKERphone::drawNotificationWindow(uint8_t y, uint8_t index) {
 	display.setTextFont(2);
 	display.setTextSize(1);
-	display.setCursor(30, y + 2);
+	display.setCursor(27, y + 2);
 	display.fillRoundRect(2, y + 2, 154, 20, 2, TFT_DARKGREY);
 	display.fillRoundRect(4, y, 154, 20, 2, TFT_WHITE);
-	display.print(notificationDescriprionList[index]);
+	display.print(notificationDescriptionList[index]);
 	switch (notificationTypeList[index])
 	{
 		case 1:
@@ -2738,22 +2737,22 @@ void MAKERphone::addNotification(uint8_t _type, char* _description, DateTime _ti
 	{
 		if(notificationTypeList[i] == 0)
 		{
+			Serial.println(i);
 			notificationTypeList[i] = _type;
-			notificationDescriprionList[i] = _description;
+			notificationDescriptionList[i] = _description;
 			notificationTimeList[i] = _time;
 			break;
 		}
 	}
+	Serial.println(notificationDescriptionList[0]);
 	saveNotifications();
 }
 void MAKERphone::loadNotifications(bool debug)
 {
 	const char * path = "/.core/notifications.json";
-	Serial.println("");
-	_SD.remove(path);
 	SDAudioFile file = _SD.open(path);
-	mp.jb.clear();
-	JsonArray& notifications = mp.jb.parseArray(file);
+	jb.clear();
+	JsonArray& notifications = jb.parseArray(file);
 	file.close();
 
 	if (notifications.success()) {
@@ -2761,7 +2760,7 @@ void MAKERphone::loadNotifications(bool debug)
 		for(JsonObject& tempNotification:notifications)
 		{
 			notificationTypeList[i] = tempNotification["Type"];
-			notificationDescriprionList[i] = (char*)tempNotification["Description"].as<char*>();
+			notificationDescriptionList[i] = (char*)tempNotification["Description"].as<char*>();
 			notificationTimeList[i] = DateTime(tempNotification["DateTime"].as<uint32_t>());
 			i++;
 		}
@@ -2777,6 +2776,7 @@ void MAKERphone::saveNotifications(bool debug)
 	const char * path = "/.core/notifications.json";
 	Serial.println("");
 	_SD.remove(path);
+	jb.clear();
 	JsonArray& notifications = jb.createArray();
 
 	if (notifications.success()) {
@@ -2784,14 +2784,14 @@ void MAKERphone::saveNotifications(bool debug)
 		{
 			JsonObject& tempNotification = jb.createObject();
 			tempNotification["Type"] = notificationTypeList[i];
-			tempNotification["Description"] = notificationDescriprionList[i];
+			tempNotification["Description"] = notificationDescriptionList[i];
 			tempNotification["DateTime"] = notificationTimeList[i].unixtime();
 			notifications.add(tempNotification);
 		}
 
 		SDAudioFile file1 = _SD.open(path, "w");
 		notifications.prettyPrintTo(file1);
-		// notifications.prettyPrintTo(Serial);
+		notifications.prettyPrintTo(Serial);
 		file1.close();
 	} else {
 		Serial.println("Error saving notifications data");
@@ -2956,8 +2956,6 @@ void MAKERphone::shutdownPopup(bool animation)
 				tft.print("Turning off...");
 				delay(750);
 				Serial.println("TURN OFF");
-				Serial1.println("AT+CFUN=1,1"); //only for this revision
-				delay(10);
 				digitalWrite(OFF_PIN, 1);
 			}
 		}
@@ -3166,10 +3164,9 @@ void MAKERphone::alarmPopup(bool animation)
 void MAKERphone::loadAlarms()
 {
 	const char * path = "/.core/alarms.json";
-	Serial.println("HERE");
 	SDAudioFile file = _SD.open(path);
-	mp.jb.clear();
-	JsonArray& alarms = mp.jb.parseArray(file);
+	jb.clear();
+	JsonArray& alarms = jb.parseArray(file);
 	file.close();
 
 	if (alarms.success()) {
@@ -3193,13 +3190,13 @@ void MAKERphone::loadAlarms()
 		saveAlarms();
 		Serial.println("Error loading new alarms");
 	}
-	alarms.prettyPrintTo(Serial);
 }
 void MAKERphone::saveAlarms()
 {
 	const char * path = "/.core/alarms.json";
 	Serial.println("");
 	_SD.remove(path);
+	jb.clear();
 	JsonArray& alarms = jb.createArray();
 
 	if (alarms.success()) {
@@ -3220,9 +3217,9 @@ void MAKERphone::saveAlarms()
 			alarms.add(tempAlarm);
 		}
 
-		SDAudioFile file1 = mp.SD.open(path, "w");
+		SDAudioFile file1 = _SD.open(path, "w");
 		alarms.prettyPrintTo(file1);
-		alarms.prettyPrintTo(Serial);
+		// alarms.prettyPrintTo(Serial);
 		file1.close();
 	} else {
 		Serial.println("Error saving alarm data");

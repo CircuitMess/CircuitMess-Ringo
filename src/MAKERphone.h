@@ -188,8 +188,8 @@ class MAKERphone:public Buttons, public DateTime
 	uint32_t notificationMillis = millis();
 	void addNotification(uint8_t _type, char* _description, DateTime _time);
 	//notification system
-	uint8_t notificationTypeList[10] = {0,0,0,0,0,0,0,0,0,0};
-	char *notificationDescriprionList[10] = {"", "", "","", "", "","", "", "", ""};
+	uint8_t notificationTypeList[10] = {0,0,0,0,0,0,0,0,0,0}; //1-missed call, 2-message, 3-system notification
+	char *notificationDescriptionList[10] = {"", "", "","", "", "","", "", "", ""};
 	DateTime notificationTimeList[10];
 
 
@@ -242,7 +242,7 @@ class MAKERphone:public Buttons, public DateTime
 	uint32_t voltageSum = 0;
 	uint16_t voltageSample = 0;
 	bool dataRefreshFlag = 0;
-	bool receivedFlag = 0;
+	bool receivedFlag = 1;
 	bool SDinsertedFlag = 0;
 
 	//SAVE manipulation
