@@ -321,7 +321,7 @@ bool MAKERphone::update() {
 		if(voltageSample > 1000)
 		{
 			batteryVoltage = (voltageSum / 1000 * 3.3) * 2000 / 4096 + VOLTAGE_OFFSET;
-			if(batteryVoltage <= 3000)
+			if(batteryVoltage <= 3200)
 			{
 				tft.setTextColor(TFT_BLACK);
 				tft.setTextSize(1);
@@ -511,7 +511,7 @@ void MAKERphone::sleep() {
 		voltageSum = 0;
 		Serial.println(batteryVoltage);
 		delay(5);
-		if(batteryVoltage <= 3000)
+		if(batteryVoltage <= 3200)
 		{
 			digitalWrite(OFF_PIN, 1);
 		}
