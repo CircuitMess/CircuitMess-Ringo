@@ -204,7 +204,7 @@ bool MAKERphone::update() {
 	// 	}
 	// }
 	//buf2.invertDisplay(1);
-	if (digitalRead(35) && sleepTime)
+	if (digitalRead(BTN_INT) && sleepTime != 0)
 	{
 		if (millis() - sleepTimer >= sleepTimeActual * 1000)
 		{
@@ -212,7 +212,7 @@ bool MAKERphone::update() {
 			sleepTimer = millis();
 		}
 	}
-	else if(!digitalRead(35) && sleepTime)
+	else if(!digitalRead(BTN_INT) && sleepTime)
 			sleepTimer = millis();
 
 	if (millis() > 7000)
@@ -469,8 +469,11 @@ void MAKERphone::ledcAnalogWrite(uint8_t channel, uint32_t value, uint32_t value
 	ledcWrite(channel, duty);
 }
 void MAKERphone::sleep() {
-	digitalWrite(SIM800_DTR, 1);
-	Serial1.println(F("AT+CSCLK=1"));
+	if(simInserted)
+	{
+		digitalWrite(SIM800_DTR, 1);
+		Serial1.println(F("AT+CSCLK=1"));
+	}
 
 	FastLED.clear();
 
@@ -525,15 +528,17 @@ void MAKERphone::sleep() {
 		delay(1);
 	}
 	ledcAnalogWrite(LEDC_CHANNEL, actualBrightness);
-
-	digitalWrite(SIM800_DTR, 0);
-	Serial1.println(F("AT"));
-	Serial1.println(F("AT+CSCLK=0"));
+	if(simInserted)
+	{
+		digitalWrite(SIM800_DTR, 0);
+		Serial1.println(F("AT"));
+		Serial1.println(F("AT+CSCLK=0"));
+	}
 
 	delay(2);
 	FastLED.clear();
 
-	while (!update());
+	// while (!update());
 }
 void MAKERphone::loader()
 {
@@ -2783,9 +2788,6 @@ void MAKERphone::saveNotifications(bool debug)
 	JsonArray& notifications = jb.createArray();
 	
 	if (notifications.success()) {
-		Serial.print("save notifications: ");
-		Serial.println(notificationDescriptionList[0]);
-		delay(5);
 		for(int i = 0; i<sizeof(notificationTypeList);i++)
 		{
 			JsonObject& tempNotification = jb.createObject();
@@ -2802,9 +2804,6 @@ void MAKERphone::saveNotifications(bool debug)
 	} else {
 		Serial.println("Error saving notifications data");
 	}
-	Serial.print("after save notifications: ");
-	Serial.println(notificationDescriptionList[0]);
-	delay(5);
 }
 void MAKERphone::notificationView()
 {
