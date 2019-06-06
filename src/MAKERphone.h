@@ -146,7 +146,7 @@ class MAKERphone:public Buttons, public DateTime
 	void splashScreen();
 	void sleep();
 	void incomingCall();
-	void addCall(String number, String dateTime, int duration);
+	void addCall(String number, String dateTime, int duration, uint8_t direction);
 	void checkSim();
 	void enterPin();
 	void enterPUK();

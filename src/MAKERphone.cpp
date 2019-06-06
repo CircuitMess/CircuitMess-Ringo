@@ -770,13 +770,8 @@ void MAKERphone::incomingCall() //TODO
 				dateTime += "0";
 			}
 			dateTime += String(clockMinute);
-			dateTime += ":";
-			if(clockSecond < 10){
-				dateTime += "0";
-			}
-			dateTime += String(clockSecond);
 
-			addCall(number, dateTime, tmp_time);
+			addCall(number, dateTime, tmp_time, 0);
 			delay(1000);
 			return;
 		}
@@ -953,14 +948,9 @@ void MAKERphone::incomingCall() //TODO
 					dateTime += "0";
 				}
 				dateTime += String(clockMinute);
-				dateTime += ":";
-				if(clockSecond < 10){
-					dateTime += "0";
-				}
-				dateTime += String(clockSecond);
 
 				if(SDinsertedFlag)
-					addCall(number, dateTime, tmp_time);
+					addCall(number, dateTime, tmp_time, 2);
 
 				delay(1000);
 				break;
@@ -1079,14 +1069,9 @@ void MAKERphone::incomingCall() //TODO
 				dateTime += "0";
 			}
 			dateTime += String(clockMinute);
-			dateTime += ":";
-			if(clockSecond < 10){
-				dateTime += "0";
-			}
-			dateTime += String(clockSecond);
 
 			if(SDinsertedFlag)
-					addCall(number, dateTime, tmp_time);
+					addCall(number, dateTime, tmp_time, 2);
 			delay(1000);
 			break;
 		}
@@ -1105,17 +1090,17 @@ void MAKERphone::incomingCall() //TODO
 		update();
 	}
 }
-void MAKERphone::addCall(String number, String dateTime, int duration){
-	SDAudioFile file = _SD.open("/call_log.json", "r");
+void MAKERphone::addCall(String number, String dateTime, int duration, uint8_t direction){
+	SDAudioFile file = _SD.open("/.core/call_log.json", "r");
 	if(file.size() < 2){
 		Serial.println("Override");
 		file.close();
 		JsonArray& jarr = jb.parseArray("[]");
 		delay(10);
-		SDAudioFile file1 = _SD.open("/call_log.json", "w");
+		SDAudioFile file1 = _SD.open("/.core/call_log.json", "w");
 		jarr.prettyPrintTo(file1);
 		file1.close();
-		file = _SD.open("/call_log.json", "r");
+		file = _SD.open("/.core/call_log.json", "r");
 		while(!file)
 			Serial.println("CONTACTS ERROR");
 	}
@@ -1124,12 +1109,13 @@ void MAKERphone::addCall(String number, String dateTime, int duration){
 	file.close();
 
 	JsonObject& new_item = jb.createObject();
-	new_item["number"] = number;
-	new_item["dateTime"] = dateTime;
+	new_item["number"] = number.c_str();
+	new_item["dateTime"] = dateTime.c_str();
 	new_item["duration"] = duration;
+	new_item["direction"] = direction; //0 - missed, 1 - outgoing, 2 - incoming
 	jarr.add(new_item);
 
-	SDAudioFile file1 = _SD.open("/call_log.json", "w");
+	SDAudioFile file1 = _SD.open("/.core/call_log.json", "w");
 	jarr.prettyPrintTo(file1);
 	file1.close();
 }
