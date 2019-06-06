@@ -747,10 +747,13 @@ void MAKERphone::incomingCall(String _serialData) //TODO
 		if(buttons.released(BTN_FUN_RIGHT) || localBuffer.indexOf(",1,6,") != -1)
 		{
 			ringtone->stop();
-			Serial1.println("ATH");
-			long long curr_millis = millis();
-			while (Serial1.readString().indexOf(",0,6,") == -1 && millis() - curr_millis < 2000){
+			if(localBuffer.indexOf(",1,6,") == -1)
+			{
 				Serial1.println("ATH");
+				long long curr_millis = millis();
+				while (Serial1.readString().indexOf(",0,6,") == -1 && millis() - curr_millis < 2000){
+					Serial1.println("ATH");
+				}
 			}
 			display.fillScreen(TFT_WHITE);
 			display.setCursor(32, 9);
@@ -798,6 +801,8 @@ void MAKERphone::incomingCall(String _serialData) //TODO
 			dateTime += String(clockSecond);
 
 			addCall(number, dateTime, tmp_time);
+			if(localBuffer.indexOf(",1,6,") != -1)
+				addNotification(1, number, RTC.now());
 			delay(1000);
 			return;
 		}
@@ -1135,36 +1140,35 @@ void MAKERphone::incomingMessage(String _serialData)
 	helper+=number.length() + 1;
 	helper = _serialData.indexOf("\"\r", helper);
 	String text = _serialData.substring(helper + 3, _serialData.indexOf("\r", helper + 2));
-	popup(String(number + ": " + text), 50);
-	SDAudioFile file = _SD.open("/messages.json", "r");
+	SDAudioFile file = _SD.open("/.core/messages.json", "r");
 
 	if(file.size() < 2){ // empty -> FILL
 		Serial.println("Override");
 		file.close();
-		jb.clear();
 		// JsonArray& jarr = jb.parseArray("[{\"number\":\"123123\", \"dateTime\":\"2018-12-12 12:12:12\", \"text\":\"asd asd asd asd\"}]");
 		// JsonArray& jarr = jb.parseArray("[{\"number\":\"123123\", \"dateTime\":\"2018-12-12 12:12:12\", \"text\":\"asd asd asd asd\"}, {\"number\":\"09123\", \"dateTime\":\"2018-12-12 12:12:12\", \"text\":\"Some other text\"}, {\"number\":\"911\", \"dateTime\":\"2018-03-12 12:12:12\", \"text\":\"Help\"}]");
-		JsonArray& jarr = jb.createArray();
+		JsonArray& jarr = jb.parseArray("[]");
 		delay(10);
-		SDAudioFile file1 = _SD.open("/messages.json", "w");
+		SDAudioFile file1 = _SD.open("/.core/messages.json", "w");
 		jarr.prettyPrintTo(file1);
 		file1.close();
-		file = _SD.open("/messages.json", "r");
+		file = _SD.open("/.core/messages.json", "r");
 		while(!file)
 			Serial.println("Messages ERROR");
 	}
-
-	jb.clear();
+	
 	JsonArray& jarr = jb.parseArray(file);
 	file.close();
-
 	if(!jarr.success())
 		Serial.println("Error");
 	else
 		saveMessage(text, number, &jarr);
+	Serial.println("Closed");
+	delay(3);
 	updateTimeRTC();
 	Serial.println((char *)number.c_str());
-	addNotification(2, (char *)number.c_str(), RTC.now());
+	addNotification(2, number, RTC.now());
+	popup(String(number + ": " + text), 50);
 	// +CMT: "+385921488476","","19/06/03,20:14:58+08"
 	// Wjd
 
@@ -1173,7 +1177,6 @@ void MAKERphone::incomingMessage(String _serialData)
 void MAKERphone::addCall(String number, String dateTime, int duration){
 	SDAudioFile file = _SD.open("/call_log.json", "r");
 	if(file.size() < 2){
-		Serial.println("Override");
 		file.close();
 		jb.clear();
 		JsonArray& jarr = jb.parseArray("[]");
@@ -1201,7 +1204,6 @@ void MAKERphone::addCall(String number, String dateTime, int duration){
 	file1.close();
 }
 void MAKERphone::saveMessage(String text, String number, JsonArray *messages){
-	jb.clear();
 	JsonObject& new_item = jb.createObject();
 	updateTimeRTC();
 	new_item["number"] = number;
@@ -1209,7 +1211,7 @@ void MAKERphone::saveMessage(String text, String number, JsonArray *messages){
 	new_item["dateTime"] = currentDateTime();
 
 	messages->add(new_item);
-	SDAudioFile file1 = _SD.open("/messages.json", "w");
+	SDAudioFile file1 = _SD.open("/.core/messages.json", "w");
 	messages->prettyPrintTo(file1);
 	file1.close();
 }
@@ -2731,13 +2733,12 @@ void MAKERphone::updateNotificationSound()
 		notesIndex++;
 	}
 }
-void MAKERphone::addNotification(uint8_t _type, char* _description, DateTime _time)
+void MAKERphone::addNotification(uint8_t _type, String _description, DateTime _time)
 {
 	for(int i = 0; i < sizeof(notificationTypeList);i++)
 	{
 		if(notificationTypeList[i] == 0)
 		{
-			Serial.println(i);
 			notificationTypeList[i] = _type;
 			notificationDescriptionList[i] = _description;
 			notificationTimeList[i] = _time;
@@ -2760,16 +2761,18 @@ void MAKERphone::loadNotifications(bool debug)
 		for(JsonObject& tempNotification:notifications)
 		{
 			notificationTypeList[i] = tempNotification["Type"];
-			notificationDescriptionList[i] = (char*)tempNotification["Description"].as<char*>();
+			notificationDescriptionList[i] = tempNotification["Description"].as<String>();
 			notificationTimeList[i] = DateTime(tempNotification["DateTime"].as<uint32_t>());
 			i++;
 		}
 	}
+
 	else {
 		saveNotifications();
 		Serial.println("Error loading new notifications");
 	}
-	// notifications.prettyPrintTo(Serial);
+
+	notifications.prettyPrintTo(Serial);
 }
 void MAKERphone::saveNotifications(bool debug)
 {
@@ -2778,13 +2781,16 @@ void MAKERphone::saveNotifications(bool debug)
 	_SD.remove(path);
 	jb.clear();
 	JsonArray& notifications = jb.createArray();
-
+	
 	if (notifications.success()) {
+		Serial.print("save notifications: ");
+		Serial.println(notificationDescriptionList[0]);
+		delay(5);
 		for(int i = 0; i<sizeof(notificationTypeList);i++)
 		{
 			JsonObject& tempNotification = jb.createObject();
 			tempNotification["Type"] = notificationTypeList[i];
-			tempNotification["Description"] = notificationDescriptionList[i];
+			tempNotification["Description"] = notificationDescriptionList[i].c_str();
 			tempNotification["DateTime"] = notificationTimeList[i].unixtime();
 			notifications.add(tempNotification);
 		}
@@ -2796,6 +2802,9 @@ void MAKERphone::saveNotifications(bool debug)
 	} else {
 		Serial.println("Error saving notifications data");
 	}
+	Serial.print("after save notifications: ");
+	Serial.println(notificationDescriptionList[0]);
+	delay(5);
 }
 void MAKERphone::notificationView()
 {

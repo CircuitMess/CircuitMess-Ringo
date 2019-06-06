@@ -186,10 +186,10 @@ class MAKERphone:public Buttons, public DateTime
 	bool playingNotification = 0;
 	uint8_t notesIndex = 0;
 	uint32_t notificationMillis = millis();
-	void addNotification(uint8_t _type, char* _description, DateTime _time);
+	void addNotification(uint8_t _type, String _description, DateTime _time);
 	//notification system
 	uint8_t notificationTypeList[10] = {0,0,0,0,0,0,0,0,0,0}; //1-missed call, 2-message, 3-system notification
-	char *notificationDescriptionList[10] = {"", "", "","", "", "","", "", "", ""};
+	String notificationDescriptionList[10] = {"", "", "","", "", "","", "", "", ""};
 	DateTime notificationTimeList[10];
 
 
@@ -299,6 +299,8 @@ class MAKERphone:public Buttons, public DateTime
 		"/Ringtones/Default ringtone.wav",
 		"/Ringtones/Default ringtone.wav"
 	};
+	void saveNotifications(bool debug = 0);
+
 	private:
 		SdFat SDFAT;
 		int multi_tap(byte key);
@@ -306,7 +308,6 @@ class MAKERphone:public Buttons, public DateTime
 
 		void homePopup(bool animation = 1);
 		void loadNotifications(bool debug = 0);
-		void saveNotifications(bool debug = 0);
 		void drawNotificationWindow(uint8_t y, uint8_t index);
 		void notificationView();
 
