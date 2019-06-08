@@ -145,8 +145,10 @@ class MAKERphone:public Buttons, public DateTime
 	bool update();
 	void splashScreen();
 	void sleep();
-	void incomingCall();
+	void incomingCall(String _serialData);
 	void addCall(String number, String dateTime, int duration);
+	void incomingMessage(String _serialData);
+	void saveMessage(String text, String number, JsonArray *messages);
 	void checkSim();
 	void enterPin();
 	void enterPUK();
@@ -184,10 +186,11 @@ class MAKERphone:public Buttons, public DateTime
 	bool playingNotification = 0;
 	uint8_t notesIndex = 0;
 	uint32_t notificationMillis = millis();
-	void addNotification(uint8_t _type, char* _description, DateTime _time);
+	void addNotification(uint8_t _type, String _description, DateTime _time);
+	void removeNotification(uint8_t index);
 	//notification system
-	uint8_t notificationTypeList[10] = {0,0,0,0,0,0,0,0,0,0};
-	char *notificationDescriprionList[10] = {"", "", "","", "", "","", "", "", ""};
+	uint8_t notificationTypeList[10] = {0,0,0,0,0,0,0,0,0,0}; //1-missed call, 2-message, 3-system notification, 0-empty
+	String notificationDescriptionList[10] = {"", "", "","", "", "","", "", "", ""};
 	DateTime notificationTimeList[10];
 
 
@@ -240,7 +243,7 @@ class MAKERphone:public Buttons, public DateTime
 	uint32_t voltageSum = 0;
 	uint16_t voltageSample = 0;
 	bool dataRefreshFlag = 0;
-	bool receivedFlag = 0;
+	bool receivedFlag = 1;
 	bool SDinsertedFlag = 0;
 
 	//SAVE manipulation
@@ -297,6 +300,9 @@ class MAKERphone:public Buttons, public DateTime
 		"/Ringtones/Default ringtone.wav",
 		"/Ringtones/Default ringtone.wav"
 	};
+	void saveNotifications(bool debug = 0);
+
+
 	private:
 		SdFat SDFAT;
 		int multi_tap(byte key);
@@ -304,7 +310,6 @@ class MAKERphone:public Buttons, public DateTime
 
 		void homePopup(bool animation = 1);
 		void loadNotifications(bool debug = 0);
-		void saveNotifications(bool debug = 0);
 		void drawNotificationWindow(uint8_t y, uint8_t index);
 		void notificationView();
 
@@ -315,9 +320,8 @@ class MAKERphone:public Buttons, public DateTime
 		bool HOME_POPUP_ENABLE = 1;
 		bool SHUTDOWN_POPUP_ENABLE = 1;
 		String popupText;
-		float popupDuration = 0;
-		uint16_t popupTimeLeft;
-		uint16_t popupTotalTime;
+		uint16_t popupTimeLeft = 0;
+		uint16_t popupTotalTime = 0;
 		const char *popupHomeItems[6] PROGMEM = {
 			"Volume",
 			"Home",
