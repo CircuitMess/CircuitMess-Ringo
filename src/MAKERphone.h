@@ -187,8 +187,9 @@ class MAKERphone:public Buttons, public DateTime
 	uint8_t notesIndex = 0;
 	uint32_t notificationMillis = millis();
 	void addNotification(uint8_t _type, String _description, DateTime _time);
+	void removeNotification(uint8_t index);
 	//notification system
-	uint8_t notificationTypeList[10] = {0,0,0,0,0,0,0,0,0,0}; //1-missed call, 2-message, 3-system notification
+	uint8_t notificationTypeList[10] = {0,0,0,0,0,0,0,0,0,0}; //1-missed call, 2-message, 3-system notification, 0-empty
 	String notificationDescriptionList[10] = {"", "", "","", "", "","", "", "", ""};
 	DateTime notificationTimeList[10];
 
@@ -300,6 +301,7 @@ class MAKERphone:public Buttons, public DateTime
 		"/Ringtones/Default ringtone.wav"
 	};
 	void saveNotifications(bool debug = 0);
+
 
 	private:
 		SdFat SDFAT;
