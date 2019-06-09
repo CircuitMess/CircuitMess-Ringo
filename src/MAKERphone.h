@@ -131,7 +131,6 @@ class MAKERphone:public Buttons, public DateTime
 	TFT_eSprite display = TFT_eSprite(&tft);
 	// TFT_eSprite buf = TFT_eSprite(&tft);
 	Oscillator* osc = new Oscillator();
-	MPTrack* ringtone;
 
 	const esp_partition_t* partition;
 	const esp_partition_t* partition2;
@@ -306,6 +305,7 @@ class MAKERphone:public Buttons, public DateTime
 	void deallocateAudio();
 	void reallocateAudio();
 	private:
+		MPTrack* ringtone;
 		SdFat SDFAT;
 		int multi_tap(byte key);
 		uint8_t timesRemaining;

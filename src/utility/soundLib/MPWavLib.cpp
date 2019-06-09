@@ -5,6 +5,10 @@ MPTrack::MPTrack(char path[])
 {
     strcpy(trackPath,path);
 }
+MPTrack::MPTrack(const char path[])
+{
+    strcpy(trackPath,path);
+}
 
 MPTrack::~MPTrack()
 {

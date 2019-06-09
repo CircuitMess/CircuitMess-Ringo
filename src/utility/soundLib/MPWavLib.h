@@ -21,6 +21,7 @@ class MPTrack
 {
 public:   
     MPTrack(char path[]);
+    MPTrack(const char path[]);
     ~MPTrack();
     void setVolume(float vol);
     void play();
