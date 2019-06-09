@@ -22,6 +22,7 @@ Authors:
 extern MAKERphone mp;
 //audio refresh task
 TaskHandle_t Task1;
+
 void Task1code( void * pvParameters ){
 	while (true)
 		updateWav();
@@ -35,7 +36,7 @@ void MAKERphone::begin(bool splash) {
 	pinMode(soundSwitchPin, OUTPUT);
 	digitalWrite(soundSwitchPin, LOW);
 	pinMode(SIM800_DTR, OUTPUT);
-	digitalWrite(SIM800_DTR, 1);
+	digitalWrite(SIM800_DTR, 0);
 	pinMode(BTN_INT, INPUT_PULLUP);
 	pinMode(SIM_INT, INPUT_PULLUP);
 	pinMode(RTC_INT, INPUT_PULLUP);
@@ -70,7 +71,7 @@ void MAKERphone::begin(bool splash) {
 	buttons.begin();
 	RTC.begin();
 	//EEPROM setup for firmware_version
-	EEPROM.begin(64);
+	// EEPROM.begin(64);
 	if(EEPROM.readUInt(FIRMWARE_VERSION_ADDRESS) > 999)
 	{
 		EEPROM.writeUInt(FIRMWARE_VERSION_ADDRESS, firmware_version);
@@ -846,7 +847,6 @@ void MAKERphone::incomingCall(String _serialData) //TODO
 	display.setTextColor(TFT_BLACK);
 	bool firstPass = 1;
 	uint32_t timeOffset = 0;
-	uint16_t textLength;
 	uint8_t scale;
 	tmp_time = 0;
 	uint8_t micGain = 4;
@@ -864,7 +864,7 @@ void MAKERphone::incomingCall(String _serialData) //TODO
 	display.setTextSize(1);
 
 	display.printCenter(number);
-	textLength = display.cursor_x - textLength;
+	digitalWrite(soundSwitchPin, 1);
 	while (1)
 	{
 		display.fillScreen(TFT_WHITE);
@@ -882,7 +882,6 @@ void MAKERphone::incomingCall(String _serialData) //TODO
 		{
 			if (localBuffer.indexOf(",1,0,0,0") != -1 || localBuffer.indexOf("AT+CMIC") != -1)
 			{
-				digitalWrite(soundSwitchPin, 1);
 				if (firstPass == 1)
 				{
 					timeOffset = millis();
@@ -1888,6 +1887,8 @@ void MAKERphone::applySettings()
 	{
 		delay(200);
 		WiFi.begin();
+		WiFi.mode(WIFI_STA);
+		WiFi.disconnect();
 		delay(200);
 	}
 	else
@@ -3229,7 +3230,6 @@ void MAKERphone::saveAlarms()
 void MAKERphone::checkAlarms()
 {
 	updateTimeRTC();
-
 	uint8_t next_alarm = 99;
 	int i = currentTime.dayOfWeek();
 	Serial.print("day of week ");
@@ -3305,4 +3305,21 @@ void MAKERphone::checkAlarms()
 		RTC.set_alarm(alarm, flags);
 		RTC.on_alarm();
 	}
+}
+
+//Misc
+void MAKERphone::deallocateAudio()
+{
+	vTaskDelete(Task1);
+}
+void MAKERphone::reallocateAudio()
+{
+	xTaskCreatePinnedToCore(
+			Task1code,				/* Task function. */
+			"Task1",				/* name of task. */
+			10000,					/* Stack size of task */
+			NULL,					/* parameter of the task */
+			1,						/* priority of the task */
+			&Task1,
+			0);				/* Task handle to keep track of created task */
 }

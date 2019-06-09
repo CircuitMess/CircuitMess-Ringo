@@ -37,6 +37,7 @@ extern HardwareSerial Serial1;
 #include "utility/SdFat.h"
 #include <Update.h>
 #include <HTTPClient.h>
+#include <WiFiClientSecure.h>
 #include <EEPROM.h>
 
 //Fonts and sprites to use
@@ -117,6 +118,7 @@ extern HardwareSerial Serial1;
 
 #define FIRMWARE_VERSION_ADDRESS 0
 #define smsNumber 22
+
 
 class MAKERphone:public Buttons, public DateTime
 {
@@ -301,8 +303,8 @@ class MAKERphone:public Buttons, public DateTime
 		"/Ringtones/Default ringtone.wav"
 	};
 	void saveNotifications(bool debug = 0);
-
-
+	void deallocateAudio();
+	void reallocateAudio();
 	private:
 		SdFat SDFAT;
 		int multi_tap(byte key);
