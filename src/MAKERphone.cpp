@@ -30,7 +30,6 @@ void Task1code( void * pvParameters ){
 
 //core
 void MAKERphone::begin(bool splash) {
-	SDFileSystemClass SD = _SD;
 
 	String input="";
 	pinMode(soundSwitchPin, OUTPUT);
@@ -141,7 +140,7 @@ void MAKERphone::begin(bool splash) {
 	//SD startup
 	uint32_t tempMillis = millis();
 	SDinsertedFlag = 1;
-	while (!_SD.begin(5, SPI, 8000000))
+	while (!SD.begin(5, SPI, 8000000))
 	{
 		Serial.println("SD ERROR");
 		if(millis()-tempMillis > 5)
@@ -745,11 +744,11 @@ void MAKERphone::performUpdate(Stream &updateSource, size_t updateSize) {
 }
 void MAKERphone::updateFromFS(String FilePath) {
 	Serial.println(FilePath);
-	// _SD.end();
+	// SD.end();
 	// SD.end();
 	// while(!SDFAT.begin(5, SD_SCK_MHZ(8)))
 		// Serial.println("SdFat error");
-	SDAudioFile updateBin = _SD.open(FilePath);
+	File updateBin = SD.open(FilePath);
 	if (updateBin) {
 		if (updateBin.isDirectory()) {
 			Serial.println("Error, update.bin is not a file");
@@ -788,7 +787,7 @@ void MAKERphone::incomingCall(String _serialData) //TODO
 	Serial.print("SD inserted:");
 	Serial.println(SDinsertedFlag);
 	Serial.print("Ringtone exists:");
-	Serial.println(_SD.exists(ringtone_path));
+	Serial.println(SD.exists(ringtone_path));
 	while(1)
 	{
 
@@ -876,7 +875,7 @@ void MAKERphone::incomingCall(String _serialData) //TODO
 			return;
 		}
 
-		if(!SDinsertedFlag || (SDinsertedFlag && !_SD.exists(ringtone_path)))
+		if(!SDinsertedFlag || (SDinsertedFlag && !SD.exists(ringtone_path)))
 		{
 			if(millis() - callMillis >= 1000)
 			{
@@ -1195,7 +1194,7 @@ void MAKERphone::incomingMessage(String _serialData)
 	helper+=number.length() + 1;
 	helper = _serialData.indexOf("\"\r", helper);
 	String text = _serialData.substring(helper + 3, _serialData.indexOf("\r", helper + 2));
-	SDAudioFile file = _SD.open("/.core/messages.json", "r");
+	File file = SD.open("/.core/messages.json", "r");
 
 	if(file.size() < 2){ // empty -> FILL
 		Serial.println("Override");
@@ -1204,10 +1203,10 @@ void MAKERphone::incomingMessage(String _serialData)
 		// JsonArray& jarr = jb.parseArray("[{\"number\":\"123123\", \"dateTime\":\"2018-12-12 12:12:12\", \"text\":\"asd asd asd asd\"}, {\"number\":\"09123\", \"dateTime\":\"2018-12-12 12:12:12\", \"text\":\"Some other text\"}, {\"number\":\"911\", \"dateTime\":\"2018-03-12 12:12:12\", \"text\":\"Help\"}]");
 		JsonArray& jarr = jb.createArray();
 		delay(10);
-		SDAudioFile file1 = _SD.open("/.core/messages.json", "w");
+		File file1 = SD.open("/.core/messages.json", "w");
 		jarr.prettyPrintTo(file1);
 		file1.close();
-		file = _SD.open("/.core/messages.json", "r");
+		file = SD.open("/.core/messages.json", "r");
 		while(!file)
 			Serial.println("Messages ERROR");
 	}
@@ -1227,17 +1226,17 @@ void MAKERphone::incomingMessage(String _serialData)
 
 }
 void MAKERphone::addCall(String number, String dateTime, int duration, uint8_t direction){
-	SDAudioFile file = _SD.open("/.core/call_log.json", "r");
+	File file = SD.open("/.core/call_log.json", "r");
 	Serial.print("Direction of call: "); Serial.println(direction);
 	if(file.size() < 2){
 		file.close();
 		jb.clear();
 		JsonArray& jarr = jb.createArray();
 		delay(10);
-		SDAudioFile file1 = _SD.open("/.core/call_log.json", "w");
+		File file1 = SD.open("/.core/call_log.json", "w");
 		jarr.prettyPrintTo(file1);
 		file1.close();
-		file = _SD.open("/.core/call_log.json", "r");
+		file = SD.open("/.core/call_log.json", "r");
 		while(!file)
 			Serial.println("CONTACTS ERROR");
 	}
@@ -1253,7 +1252,7 @@ void MAKERphone::addCall(String number, String dateTime, int duration, uint8_t d
 	new_item["direction"] = direction; //0 - missed, 1 - outgoing, 2 - incoming
 	jarr.add(new_item);
 
-	SDAudioFile file1 = _SD.open("/.core/call_log.json", "w");
+	File file1 = SD.open("/.core/call_log.json", "w");
 	jarr.prettyPrintTo(file1);
 	jarr.prettyPrintTo(Serial);
 	file1.close();
@@ -1266,7 +1265,7 @@ void MAKERphone::saveMessage(String text, String number, JsonArray *messages){
 	new_item["dateTime"] = RTC.now().unixtime();
 
 	messages->add(new_item);
-	SDAudioFile file1 = _SD.open("/.core/messages.json", "w");
+	File file1 = SD.open("/.core/messages.json", "w");
 	messages->prettyPrintTo(file1);
 	file1.close();
 }
@@ -1721,11 +1720,11 @@ void MAKERphone::drawJpeg(String filename, int xpos, int ypos) {
   Serial.println(F("==========================="));
 
   // Open the named file (the Jpeg decoder library will close it after rendering image)
-  SDAudioFile jpegFile = _SD.open( filename);    // SDAudioFile handle reference for SPIFFS
-  //  SDAudioFile jpegSDAudioFile = _SD.open( filename, FILE_READ);  // or, file handle reference for SD library
+  File jpegFile = SD.open( filename);    // File handle reference for SPIFFS
+  //  File jpegFile = SD.open( filename, FILE_READ);  // or, file handle reference for SD library
 
   if ( !jpegFile ) {
-    Serial.print(F("ERROR: SDAudioFile \"")); Serial.print(filename); Serial.println ("\" not found!");
+    Serial.print(F("ERROR: File \"")); Serial.print(filename); Serial.println ("\" not found!");
     return;
   }
 
@@ -1860,7 +1859,7 @@ void MAKERphone::saveSettings(bool debug)
 {
 	const char * path = "/.core/settings.json";
 	Serial.println("");
-	_SD.remove(path);
+	SD.remove(path);
 	JsonObject& settings = jb.createObject();
 
 	if (settings.success()) {
@@ -1887,7 +1886,7 @@ void MAKERphone::saveSettings(bool debug)
 		settings["background_color"] = backgroundIndex;
 		settings["notification"] = notification;
 		settings["ringtone"] = ringtone_path.c_str();
-		SDAudioFile file1 = _SD.open(path, "w");
+		File file1 = SD.open(path, "w");
 		settings.prettyPrintTo(file1);
 		file1.close();
 	} else {
@@ -1897,19 +1896,19 @@ void MAKERphone::saveSettings(bool debug)
 void MAKERphone::loadSettings(bool debug)
 {
 	//create default system folders if not present
-	if(!_SD.exists("/Music"))
-		_SD.mkdir("/Music");
-	if(!_SD.exists("/Images"))
-		_SD.mkdir("/Images");
-	if(!_SD.exists("/Video"))
-		_SD.mkdir("/Video");
-	if(!_SD.exists("/Ringtones"))
-		_SD.mkdir("/Ringtones");
-	if(!_SD.exists("/.core"))
-		_SD.mkdir("/.core");
+	if(!SD.exists("/Music"))
+		SD.mkdir("/Music");
+	if(!SD.exists("/Images"))
+		SD.mkdir("/Images");
+	if(!SD.exists("/Video"))
+		SD.mkdir("/Video");
+	if(!SD.exists("/Ringtones"))
+		SD.mkdir("/Ringtones");
+	if(!SD.exists("/.core"))
+		SD.mkdir("/.core");
 	const char * path = "/.core/settings.json";
 	Serial.println("");
-	SDAudioFile file = _SD.open(path);
+	File file = SD.open(path);
 	jb.clear();
 	JsonObject& settings = jb.parseObject(file);
 	file.close();
@@ -2012,9 +2011,9 @@ JsonArray& MAKERphone::getJSONfromSAV(const char *path)
 }
 void MAKERphone::saveJSONtoSAV(const char *path, JsonArray& json)
 {
-	while(!_SD.begin(5, SPI, 8000000))
+	while(!SD.begin(5, SPI, 8000000))
         Serial.println("SD ERROR");
-	SDAudioFile file = _SD.open(path, "w");
+	File file = SD.open(path, "w");
 	if(file)
 		json.prettyPrintTo(file);
 	else
@@ -2042,16 +2041,16 @@ bool MAKERphone::collidePointCircle(int16_t pointX, int16_t pointY, int16_t cent
 //SD operations
 void MAKERphone::writeFile(const char * path, const char * message)
 {
-	while (!_SD.begin(5, SPI, 8000000));
+	while (!SD.begin(5, SPI, 8000000));
 	Serial.printf("Writing file: %s\n", path);
 
-	SDAudioFile file = _SD.open(path);
+	File file = SD.open(path);
 	if (!file) {
 		Serial.println("Failed to open file for writing");
 		return;
 	}
 	if (file.print(message)) {
-		Serial.println("SDAudioFile written");
+		Serial.println("File written");
 	}
 	else {
 		Serial.println("Write failed");
@@ -2061,7 +2060,7 @@ void MAKERphone::writeFile(const char * path, const char * message)
 void MAKERphone::appendFile(const char * path, const char * message) {
 	Serial.printf("Appending to file: %s\n", path);
 
-	SDAudioFile file = _SD.open(path);
+	File file = SD.open(path);
 	if (!file) {
 		Serial.println("Failed to open file for appending");
 		return;
@@ -2077,10 +2076,10 @@ void MAKERphone::appendFile(const char * path, const char * message) {
 	file.close();
 }
 String MAKERphone::readFile(const char * path) {
-	while (!_SD.begin(5, SPI, 8000000));
+	while (!SD.begin(5, SPI, 8000000));
 	Serial.printf("Reading file: %s\n", path);
 	String helper="";
-	SDAudioFile file = _SD.open(path);
+	File file = SD.open(path);
 	if (!file) {
 		Serial.println("Failed to open file for reading");
 		return "";
@@ -2108,18 +2107,18 @@ void MAKERphone::takeScreenshot()
 	while(!update());
 
 	char name[] = "/Images/screenshot_00.bmp";
-	while (!_SD.begin(5, SPI, 8000000))
+	while (!SD.begin(5, SPI, 8000000))
 		Serial.println("SD ERROR");
 	for (int i = 0; i < 100;i++)
 	{
 		name[20] = i % 10 + '0';
 		name[19] = i / 10 + '0';
-		if(!_SD.exists(name))
+		if(!SD.exists(name))
 			break;
 	}
 	Serial.println(name);
 	delay(5);
-	SDAudioFile file = _SD.open(name, "w");
+	File file = SD.open(name, "w");
 	if(!file)
 	{
 		Serial.println("SD file error!");
@@ -2817,7 +2816,7 @@ void MAKERphone::removeNotification(uint8_t index)
 void MAKERphone::loadNotifications(bool debug)
 {
 	const char * path = "/.core/notifications.json";
-	SDAudioFile file = _SD.open(path);
+	File file = SD.open(path);
 	jb.clear();
 	JsonArray& notifications = jb.parseArray(file);
 	file.close();
@@ -2844,7 +2843,7 @@ void MAKERphone::saveNotifications(bool debug)
 {
 	const char * path = "/.core/notifications.json";
 	Serial.println("");
-	_SD.remove(path);
+	SD.remove(path);
 	jb.clear();
 	JsonArray& notifications = jb.createArray();
 	
@@ -2858,7 +2857,7 @@ void MAKERphone::saveNotifications(bool debug)
 			notifications.add(tempNotification);
 		}
 
-		SDAudioFile file1 = _SD.open(path, "w");
+		File file1 = SD.open(path, "w");
 		notifications.prettyPrintTo(file1);
 		notifications.prettyPrintTo(Serial);
 		file1.close();
@@ -3065,7 +3064,7 @@ void MAKERphone::alarmPopup(bool animation)
 	uint32_t blinkMillis = millis();
 	Serial.println(currentAlarm);
 
-	if(!SDinsertedFlag || (SDinsertedFlag && !_SD.exists(ringtone_path)))
+	if(!SDinsertedFlag || (SDinsertedFlag && !SD.exists(ringtone_path)))
 	{
 
 		bool state = 0;
@@ -3236,7 +3235,7 @@ void MAKERphone::alarmPopup(bool animation)
 void MAKERphone::loadAlarms()
 {
 	const char * path = "/.core/alarms.json";
-	SDAudioFile file = _SD.open(path);
+	File file = SD.open(path);
 	jb.clear();
 	JsonArray& alarms = jb.parseArray(file);
 	file.close();
@@ -3267,7 +3266,7 @@ void MAKERphone::saveAlarms()
 {
 	const char * path = "/.core/alarms.json";
 	Serial.println("");
-	_SD.remove(path);
+	SD.remove(path);
 	jb.clear();
 	JsonArray& alarms = jb.createArray();
 
@@ -3289,7 +3288,7 @@ void MAKERphone::saveAlarms()
 			alarms.add(tempAlarm);
 		}
 
-		SDAudioFile file1 = _SD.open(path, "w");
+		File file1 = SD.open(path, "w");
 		alarms.prettyPrintTo(file1);
 		// alarms.prettyPrintTo(Serial);
 		file1.close();

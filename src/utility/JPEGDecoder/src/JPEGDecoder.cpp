@@ -305,7 +305,7 @@ int JPEGDecoder::decodeFile(const String& pFilename){
 // Call specific to SD filing system in case leading / is used
 int JPEGDecoder::decodeSdFile(const char *pFilename) {
 
-	SDAudioFile pInFile = _SD.open( pFilename);
+	File pInFile = SD.open( pFilename);
 
 	return decodeSdFile(pInFile);
 }
@@ -313,7 +313,7 @@ int JPEGDecoder::decodeSdFile(const char *pFilename) {
 
 int JPEGDecoder::decodeSdFile(const String& pFilename) {
 #if !defined (ARDUINO_ARCH_SAM)
-	SDAudioFile pInFile = _SD.open( pFilename);
+	File pInFile = SD.open( pFilename);
 
 	return decodeSdFile(pInFile);
 #else
@@ -322,7 +322,7 @@ int JPEGDecoder::decodeSdFile(const String& pFilename) {
 }
 
 
-int JPEGDecoder::decodeSdFile(SDAudioFile jpgFile) { // This is for the SD library
+int JPEGDecoder::decodeSdFile(File jpgFile) { // This is for the SD library
 
 	g_pInFileSd = jpgFile;
 

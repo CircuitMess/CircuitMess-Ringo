@@ -19,7 +19,8 @@ Authors:
 
 #ifndef MAKERphone_h
 #define MAKERphone_h
-
+#include <SD.h>
+#include <FS.h>
 #include <WiFi.h>
 #include <esp32-hal-bt.h>
 #include <driver/rtc_io.h>
@@ -34,7 +35,6 @@ extern HardwareSerial Serial1;
 #include "utility/ArduinoJson.h"
 #include "utility/RTCLib/RTClib.h"
 #include "utility/Buttons/Buttons.h"
-#include "utility/SdFat.h"
 #include <Update.h>
 #include <HTTPClient.h>
 #include <WiFiClientSecure.h>
@@ -126,7 +126,6 @@ class MAKERphone:public Buttons, public DateTime
 	PCF8563 RTC;
 	Buttons buttons;
 
-	SDFileSystemClass SD = _SD;
 	TFT_eSPI tft = TFT_eSPI();  // Invoke library, pins defined in User_Setup.h
 	TFT_eSprite display = TFT_eSprite(&tft);
 	// TFT_eSprite buf = TFT_eSprite(&tft);
@@ -246,7 +245,6 @@ class MAKERphone:public Buttons, public DateTime
 	bool dataRefreshFlag = 0;
 	bool receivedFlag = 1;
 	bool SDinsertedFlag = 0;
-
 	//SAVE manipulation
 	JsonArray &getJSONfromSAV(const char *path);
 	void saveJSONtoSAV(const char *path, JsonArray &json);
@@ -311,7 +309,6 @@ class MAKERphone:public Buttons, public DateTime
 	void reallocateAudio();
 	private:
 		MPTrack* ringtone;
-		SdFat SDFAT;
 		int multi_tap(byte key);
 		uint8_t timesRemaining;
 
