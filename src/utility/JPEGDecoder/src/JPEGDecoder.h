@@ -50,7 +50,7 @@ https://github.com/Bodmer/JPEGDecoder
 		#endif
 	#endif
 
-#include "../../SD/SD/src/SD.h" // Alternative where we might need to bit bash the SPI
+#include <SD.h> // Alternative where we might need to bit bash the SPI
 
 	
 #include "picojpeg.h"
@@ -81,7 +81,7 @@ class JPEGDecoder {
 
 private:
 //   SdFat SD;
-  SDAudioFile g_pInFileSd;
+  File g_pInFileSd;
   pjpeg_scan_type_t scan_type;
   pjpeg_image_info_t image_info;
 
@@ -130,13 +130,13 @@ public:
 #if defined (LOAD_SD_LIBRARY) || defined (LOAD_SDFAT_LIBRARY)
 	int decodeSdFile (const char *pFilename);
 	int decodeSdFile (const String& pFilename);
-	int decodeSdFile (SDAudioFile g_pInFile);
+	int decodeSdFile (File g_pInFile);
 #endif
 
 #ifdef LOAD_SPIFFS
 	int decodeFsFile (const char *pFilename);
 	int decodeFsFile (const String& pFilename);
-	int decodeFsFile (SDAudioFile g_pInFile);
+	int decodeFsFile (File g_pInFile);
 #endif
 
 	int decodeArray(const uint8_t array[], uint32_t  array_size);

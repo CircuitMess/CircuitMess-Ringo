@@ -373,8 +373,8 @@ swap_coord(T& a, T& b) { T t = a; a = b; b = t; }
 #ifndef min
   #define min(a,b) (((a) < (b)) ? (a) : (b))
 #endif
-#include "../utility/SD/FS/src/FS.h"
-#include "../utility/SD/SD/src/SD.h"
+#include <FS.h>
+#include <SD.h>
 // This structure allows sketches to retrieve the user setup parameters at runtime
 // by calling getSetup(), zero impact on code size unless used, mainly for diagnostics
 typedef struct
@@ -820,18 +820,18 @@ public:
 	int16_t  printToSprite(int16_t x, int16_t y, uint16_t index);
 
 
-    void drawBmp(SDAudioFile bmpFS, int16_t x, int16_t y, uint8_t scale = 1);
+    void drawBmp(File bmpFS, int16_t x, int16_t y, uint8_t scale = 1);
     void drawBmp(const char * path, int16_t x, int16_t y, uint8_t scale = 1);
     void drawBmp(String path, int16_t x, int16_t y, uint8_t scale = 1);
     
 private:
-  uint16_t read16(SDAudioFile &f) {
+  uint16_t read16(File &f) {
     uint16_t result;
     ((uint8_t *)&result)[0] = f.read(); // LSB
     ((uint8_t *)&result)[1] = f.read(); // MSB
     return result;
   }
-  uint32_t read32(SDAudioFile &f) {
+  uint32_t read32(File &f) {
     uint32_t result;
     ((uint8_t *)&result)[0] = f.read(); // LSB
     ((uint8_t *)&result)[1] = f.read();

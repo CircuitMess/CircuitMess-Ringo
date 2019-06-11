@@ -1,10 +1,8 @@
 #ifndef wavLibDef
 #define wavLibDef
 
-#include "../SD/SD/src/SD.h"
-#include "../SD/FS/src/FS.h"
-// #include <SD.h>
-// #include <FS.h>
+#include <SD.h>
+#include <FS.h>
 
 #include "Notes.h"
 
@@ -21,6 +19,7 @@ class MPTrack
 {
 public:   
     MPTrack(char path[]);
+    MPTrack(const char path[]);
     ~MPTrack();
     void setVolume(float vol);
     void play();
@@ -43,7 +42,7 @@ public:
     void closeFile();
 
 private:
-    SDAudioFile trackFile;
+    File trackFile;
     char trackPath[32];
     float volume=2;
     bool playing=false;

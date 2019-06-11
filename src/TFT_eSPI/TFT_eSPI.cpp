@@ -4879,7 +4879,7 @@ void TFT_eSPI::printCenter(char text)
 	setCursor(int((width() - textLength) / 2), cursorBuffer); //TO-DO: change this to the sprite width value
 	print(text);
 }
-void TFT_eSprite::drawBmp(SDAudioFile bmpFS, int16_t x, int16_t y, uint8_t scale) {
+void TFT_eSprite::drawBmp(File bmpFS, int16_t x, int16_t y, uint8_t scale) {
   if ((x >= width()) || (y >= height())) return;
 
   // Open requested file on SD card
@@ -4948,10 +4948,10 @@ void TFT_eSprite::drawBmp(SDAudioFile bmpFS, int16_t x, int16_t y, uint8_t scale
 }
 void TFT_eSprite::drawBmp(const char * path, int16_t x, int16_t y, uint8_t scale) {
   if ((x >= width()) || (y >= height())) return;
-  while(!_SD.begin(5,SPI, 8000000))
+  while(!SD.begin(5,SPI, 8000000))
     Serial.println("SD error");
 
-  SDAudioFile bmpFS = _SD.open(path);
+  File bmpFS = SD.open(path);
   // Open requested file on SD card
   // File bmpFS = file;
   if (!bmpFS)
@@ -5018,10 +5018,10 @@ void TFT_eSprite::drawBmp(const char * path, int16_t x, int16_t y, uint8_t scale
 }
 void TFT_eSprite::drawBmp(String path, int16_t x, int16_t y, uint8_t scale) {
   if ((x >= width()) || (y >= height())) return;
-  while(!_SD.begin(5,SPI, 8000000))
+  while(!SD.begin(5,SPI, 8000000))
     Serial.println("SD error");
 
-  SDAudioFile bmpFS = _SD.open(path);
+  File bmpFS = SD.open(path);
   // Open requested file on SD card
   // File bmpFS = file;
   if (!bmpFS)

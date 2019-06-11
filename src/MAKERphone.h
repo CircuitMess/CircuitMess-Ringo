@@ -19,7 +19,8 @@ Authors:
 
 #ifndef MAKERphone_h
 #define MAKERphone_h
-
+#include <SD.h>
+#include <FS.h>
 #include <WiFi.h>
 #include <esp32-hal-bt.h>
 #include <driver/rtc_io.h>
@@ -34,9 +35,9 @@ extern HardwareSerial Serial1;
 #include "utility/ArduinoJson.h"
 #include "utility/RTCLib/RTClib.h"
 #include "utility/Buttons/Buttons.h"
-#include "utility/SdFat.h"
 #include <Update.h>
 #include <HTTPClient.h>
+#include <WiFiClientSecure.h>
 #include <EEPROM.h>
 
 //Fonts and sprites to use
@@ -118,18 +119,17 @@ extern HardwareSerial Serial1;
 #define FIRMWARE_VERSION_ADDRESS 0
 #define smsNumber 22
 
+
 class MAKERphone:public Buttons, public DateTime
 {
   public:
 	PCF8563 RTC;
 	Buttons buttons;
 
-	SDFileSystemClass SD = _SD;
 	TFT_eSPI tft = TFT_eSPI();  // Invoke library, pins defined in User_Setup.h
 	TFT_eSprite display = TFT_eSprite(&tft);
 	// TFT_eSprite buf = TFT_eSprite(&tft);
 	Oscillator* osc = new Oscillator();
-	MPTrack* ringtone;
 
 	const esp_partition_t* partition;
 	const esp_partition_t* partition2;
@@ -154,7 +154,7 @@ class MAKERphone:public Buttons, public DateTime
 	void enterPUK();
 	String currentDateTime();
 	String textInput(String buffer, int16_t length = -1);
-	int textPointer = 0;
+	uint32_t textPointer = 0;
 	bool textLimitFlag = 0;
 	void loader();
 
@@ -245,7 +245,6 @@ class MAKERphone:public Buttons, public DateTime
 	bool dataRefreshFlag = 0;
 	bool receivedFlag = 1;
 	bool SDinsertedFlag = 0;
-
 	//SAVE manipulation
 	JsonArray &getJSONfromSAV(const char *path);
 	void saveJSONtoSAV(const char *path, JsonArray &json);
@@ -281,7 +280,12 @@ class MAKERphone:public Buttons, public DateTime
 	void homePopupEnable(bool enable);
 	void shutdownPopupEnable(bool enable);
 	void alarmPopup(bool animation = 1);
+	void loadAlarms();
+	void saveAlarms();
 	bool inAlarmPopup = 0;
+	bool alarmCleared = 0;
+	uint8_t currentAlarm = 99;
+	uint32_t alarmMillis = millis();
 	uint8_t alarmHours[5] = {0, 0, 0, 0, 0};
 	uint8_t alarmMins[5] = {0, 0, 0, 0, 0};
 	uint8_t alarmEnabled[5] = {2, 2, 2, 2, 2};
@@ -301,10 +305,10 @@ class MAKERphone:public Buttons, public DateTime
 		"/Ringtones/Default ringtone.wav"
 	};
 	void saveNotifications(bool debug = 0);
-
-
+	void deallocateAudio();
+	void reallocateAudio();
 	private:
-		SdFat SDFAT;
+		MPTrack* ringtone;
 		int multi_tap(byte key);
 		uint8_t timesRemaining;
 
@@ -313,8 +317,7 @@ class MAKERphone:public Buttons, public DateTime
 		void drawNotificationWindow(uint8_t y, uint8_t index);
 		void notificationView();
 
-		void loadAlarms();
-		void saveAlarms();
+	
 		void checkAlarms();
 
 		bool HOME_POPUP_ENABLE = 1;

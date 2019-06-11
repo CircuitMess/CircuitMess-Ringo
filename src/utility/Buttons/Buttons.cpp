@@ -29,8 +29,8 @@ void Buttons::update() {
 	bitWrite(buttonsData, 19, !(joystick_y > 1000 && joystick_x > 300 && joystick_x < 800)); //BTN_DOWN
 	bitWrite(buttonsData, 20, !(joystick_x > 1000 && joystick_y > 300 && joystick_y < 800)); //BTN_LEFT
 	bitWrite(buttonsData, 21, !(joystick_x < 100 && joystick_y > 300 && joystick_y < 800)); //BTN_RIGHT
-	bitWrite(buttonsData, 17, !(button_a < 800));
-	bitWrite(buttonsData, 16, !(button_b < 800));
+	bitWrite(buttonsData, 17, !(button_a < 1));
+	bitWrite(buttonsData, 16, !(button_b < 1));
 
 	int tmp_value = kpd.port_read();
 

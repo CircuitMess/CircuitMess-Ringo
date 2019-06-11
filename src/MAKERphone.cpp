@@ -22,6 +22,7 @@ Authors:
 extern MAKERphone mp;
 //audio refresh task
 TaskHandle_t Task1;
+
 void Task1code( void * pvParameters ){
 	while (true)
 		updateWav();
@@ -29,13 +30,12 @@ void Task1code( void * pvParameters ){
 
 //core
 void MAKERphone::begin(bool splash) {
-	SDFileSystemClass SD = _SD;
 
 	String input="";
 	pinMode(soundSwitchPin, OUTPUT);
 	digitalWrite(soundSwitchPin, LOW);
 	pinMode(SIM800_DTR, OUTPUT);
-	digitalWrite(SIM800_DTR, 1);
+	digitalWrite(SIM800_DTR, 0);
 	pinMode(BTN_INT, INPUT_PULLUP);
 	pinMode(SIM_INT, INPUT_PULLUP);
 	pinMode(RTC_INT, INPUT_PULLUP);
@@ -70,7 +70,7 @@ void MAKERphone::begin(bool splash) {
 	buttons.begin();
 	RTC.begin();
 	//EEPROM setup for firmware_version
-	EEPROM.begin(64);
+	// EEPROM.begin(64);
 	if(EEPROM.readUInt(FIRMWARE_VERSION_ADDRESS) > 999)
 	{
 		EEPROM.writeUInt(FIRMWARE_VERSION_ADDRESS, firmware_version);
@@ -140,7 +140,7 @@ void MAKERphone::begin(bool splash) {
 	//SD startup
 	uint32_t tempMillis = millis();
 	SDinsertedFlag = 1;
-	while (!_SD.begin(5, SPI, 8000000))
+	while (!SD.begin(5, SPI, 8000000))
 	{
 		Serial.println("SD ERROR");
 		if(millis()-tempMillis > 5)
@@ -155,8 +155,11 @@ void MAKERphone::begin(bool splash) {
 		loadSettings(1);
 		loadAlarms();
 		loadNotifications();
+
 	}
+	applySettings();
 	checkAlarms();
+
 	//Audio
 	initWavLib();
 	xTaskCreatePinnedToCore(
@@ -170,8 +173,10 @@ void MAKERphone::begin(bool splash) {
 	addOscillator(osc);
 	// osc->setADSR(10,20,0.8,10);
 	if(SDinsertedFlag)
+	{
 		ringtone = new MPTrack((char *)(ringtone_path.c_str()));
-	applySettings();
+		addTrack(ringtone);
+	}
 	sleepTimer = millis();
 }
 
@@ -342,13 +347,23 @@ bool MAKERphone::update() {
 		voltageSum += analogRead(VOLTAGE_PIN);
 		voltageSample++;
 	}
-	if(!digitalRead(RTC_INT) && !inAlarmPopup)
+	if(!digitalRead(RTC_INT) && !inAlarmPopup && !alarmCleared)
 	{
 		inAlarmPopup = 1;
 		alarmPopup();
+		if(alarmRepeat[currentAlarm] == 0)
+			alarmEnabled[currentAlarm] = 0;
+		saveAlarms();
+		if(ringtone->isPlaying())
+			ringtone->stop();
+
+		alarmCleared = 1;
+		alarmMillis = millis();
 		inAlarmPopup = 0;
-		checkAlarms();
 	}
+	if(alarmCleared && millis() - alarmMillis > 60000)
+		alarmCleared = 0;
+
 	if(!digitalRead(SIM_INT) && !inCall)
 	{
 		String localBuffer = "";
@@ -363,7 +378,7 @@ bool MAKERphone::update() {
 			incomingCall(localBuffer);
 			inCall = 0;
 		}
-		else
+		else if(localBuffer.indexOf("+CMT:") != -1)
 		{
 			incomingMessage(localBuffer);
 		}
@@ -489,6 +504,58 @@ void MAKERphone::sleep() {
 	tft.writecommand(16);//send 16 for sleep in, 17 for sleep out
 	esp_sleep_enable_timer_wakeup(SLEEP_WAKEUP_TIME * 1000000);
 
+	//Pinmodes to prevent current leakage
+	{
+		// pinMode(GPIO_NUM_33, INPUT);
+		// pinMode(GPIO_NUM_35, INPUT);
+		// pinMode(GPIO_NUM_5, INPUT);
+		// pinMode(GPIO_NUM_32, INPUT);
+		// pinMode(GPIO_NUM_27, INPUT);
+		// pinMode(GPIO_NUM_26, INPUT);
+		// pinMode(GPIO_NUM_0, INPUT);
+		// pinMode(GPIO_NUM_2, INPUT);
+		// pinMode(GPIO_NUM_4, INPUT);
+		// pinMode(GPIO_NUM_12, INPUT);
+		// pinMode(GPIO_NUM_13, INPUT);
+		// pinMode(GPIO_NUM_14, INPUT);
+		// pinMode(GPIO_NUM_15, INPUT);
+		// pinMode(GPIO_NUM_16, INPUT);
+		// pinMode(GPIO_NUM_17, INPUT);
+		// pinMode(GPIO_NUM_18, INPUT);
+		// pinMode(GPIO_NUM_19, INPUT);
+		// pinMode(GPIO_NUM_21, INPUT);
+		// pinMode(GPIO_NUM_22, INPUT);
+		// pinMode(GPIO_NUM_23, INPUT);
+		// pinMode(GPIO_NUM_36, INPUT);
+		// pinMode(GPIO_NUM_39, INPUT);
+		// pinMode(GPIO_NUM_34, INPUT);
+		// pinMode(GPIO_NUM_25, INPUT);
+		// rtc_gpio_isolate(GPIO_NUM_33);
+		// rtc_gpio_isolate(GPIO_NUM_35);
+		// rtc_gpio_isolate(GPIO_NUM_5);
+		// rtc_gpio_isolate(GPIO_NUM_32);
+		// rtc_gpio_isolate(GPIO_NUM_27);
+		// rtc_gpio_isolate(GPIO_NUM_26);
+		// rtc_gpio_isolate(GPIO_NUM_0);
+		// rtc_gpio_isolate(GPIO_NUM_2);
+		// rtc_gpio_isolate(GPIO_NUM_4);
+		// rtc_gpio_isolate(GPIO_NUM_12);
+		// rtc_gpio_isolate(GPIO_NUM_13);
+		// rtc_gpio_isolate(GPIO_NUM_14);
+		// rtc_gpio_isolate(GPIO_NUM_15);
+		// rtc_gpio_isolate(GPIO_NUM_16);
+		// rtc_gpio_isolate(GPIO_NUM_17);
+		// rtc_gpio_isolate(GPIO_NUM_18);
+		// rtc_gpio_isolate(GPIO_NUM_19);
+		// rtc_gpio_isolate(GPIO_NUM_21);
+		// rtc_gpio_isolate(GPIO_NUM_22);
+		// rtc_gpio_isolate(GPIO_NUM_23);
+		// rtc_gpio_isolate(GPIO_NUM_36);
+		// rtc_gpio_isolate(GPIO_NUM_39);
+		// rtc_gpio_isolate(GPIO_NUM_34);
+		// rtc_gpio_isolate(GPIO_NUM_25);
+	}
+
 	esp_light_sleep_start();
 	while(esp_sleep_get_wakeup_cause() == 4)
 	{
@@ -520,6 +587,7 @@ void MAKERphone::sleep() {
 	}
 	Serial.println("Buttons wakeup");
 	delay(5);
+	initWavLib();
 	tft.writecommand(17);
 	ledcAttachPin(LCD_BL_PIN, LEDC_CHANNEL);
 	ledcAnalogWrite(LEDC_CHANNEL, 255);
@@ -676,11 +744,11 @@ void MAKERphone::performUpdate(Stream &updateSource, size_t updateSize) {
 }
 void MAKERphone::updateFromFS(String FilePath) {
 	Serial.println(FilePath);
-	// _SD.end();
+	// SD.end();
 	// SD.end();
 	// while(!SDFAT.begin(5, SD_SCK_MHZ(8)))
 		// Serial.println("SdFat error");
-	SDAudioFile updateBin = _SD.open(FilePath);
+	File updateBin = SD.open(FilePath);
 	if (updateBin) {
 		if (updateBin.isDirectory()) {
 			Serial.println("Error, update.bin is not a file");
@@ -719,7 +787,7 @@ void MAKERphone::incomingCall(String _serialData) //TODO
 	Serial.print("SD inserted:");
 	Serial.println(SDinsertedFlag);
 	Serial.print("Ringtone exists:");
-	Serial.println(_SD.exists(ringtone_path));
+	Serial.println(SD.exists(ringtone_path));
 	while(1)
 	{
 
@@ -807,7 +875,7 @@ void MAKERphone::incomingCall(String _serialData) //TODO
 			return;
 		}
 
-		if(!SDinsertedFlag || (SDinsertedFlag && !_SD.exists(ringtone_path)))
+		if(!SDinsertedFlag || (SDinsertedFlag && !SD.exists(ringtone_path)))
 		{
 			if(millis() - callMillis >= 1000)
 			{
@@ -824,8 +892,6 @@ void MAKERphone::incomingCall(String _serialData) //TODO
 
 		else if(!played)
 		{
-			ringtone = new MPTrack((char *)ringtone_path.c_str());
-			addTrack(ringtone);
 			ringtone->setVolume(256 * volume / 14);
 			ringtone->setRepeat(1);
 			ringtone->play();
@@ -846,7 +912,6 @@ void MAKERphone::incomingCall(String _serialData) //TODO
 	display.setTextColor(TFT_BLACK);
 	bool firstPass = 1;
 	uint32_t timeOffset = 0;
-	uint16_t textLength;
 	uint8_t scale;
 	tmp_time = 0;
 	uint8_t micGain = 4;
@@ -864,7 +929,7 @@ void MAKERphone::incomingCall(String _serialData) //TODO
 	display.setTextSize(1);
 
 	display.printCenter(number);
-	textLength = display.cursor_x - textLength;
+	digitalWrite(soundSwitchPin, 1);
 	while (1)
 	{
 		display.fillScreen(TFT_WHITE);
@@ -882,7 +947,6 @@ void MAKERphone::incomingCall(String _serialData) //TODO
 		{
 			if (localBuffer.indexOf(",1,0,0,0") != -1 || localBuffer.indexOf("AT+CMIC") != -1)
 			{
-				digitalWrite(soundSwitchPin, 1);
 				if (firstPass == 1)
 				{
 					timeOffset = millis();
@@ -914,7 +978,6 @@ void MAKERphone::incomingCall(String _serialData) //TODO
 
 			else if (localBuffer.indexOf(",1,6,") != -1)
 			{
-				digitalWrite(soundSwitchPin, 0);
 				display.fillScreen(TFT_WHITE);
 				display.setCursor(32, 9);
 				if (timeOffset == 0)
@@ -1039,7 +1102,6 @@ void MAKERphone::incomingCall(String _serialData) //TODO
 			while (Serial1.readString().indexOf(",1,6,") == -1 && millis() - curr_millis < 2000){
 				Serial1.println("ATH");
 			}
-			digitalWrite(soundSwitchPin, 0);
 			display.fillScreen(TFT_WHITE);
 			display.setCursor(32, 9);
 			if (timeOffset == 0)
@@ -1120,6 +1182,7 @@ void MAKERphone::incomingCall(String _serialData) //TODO
 		tmp_time = int((millis() - timeOffset) / 1000);
 		update();
 	}
+	digitalWrite(soundSwitchPin, 0);
 }
 void MAKERphone::incomingMessage(String _serialData)
 {
@@ -1131,7 +1194,7 @@ void MAKERphone::incomingMessage(String _serialData)
 	helper+=number.length() + 1;
 	helper = _serialData.indexOf("\"\r", helper);
 	String text = _serialData.substring(helper + 3, _serialData.indexOf("\r", helper + 2));
-	SDAudioFile file = _SD.open("/.core/messages.json", "r");
+	File file = SD.open("/.core/messages.json", "r");
 
 	if(file.size() < 2){ // empty -> FILL
 		Serial.println("Override");
@@ -1140,10 +1203,10 @@ void MAKERphone::incomingMessage(String _serialData)
 		// JsonArray& jarr = jb.parseArray("[{\"number\":\"123123\", \"dateTime\":\"2018-12-12 12:12:12\", \"text\":\"asd asd asd asd\"}, {\"number\":\"09123\", \"dateTime\":\"2018-12-12 12:12:12\", \"text\":\"Some other text\"}, {\"number\":\"911\", \"dateTime\":\"2018-03-12 12:12:12\", \"text\":\"Help\"}]");
 		JsonArray& jarr = jb.createArray();
 		delay(10);
-		SDAudioFile file1 = _SD.open("/.core/messages.json", "w");
+		File file1 = SD.open("/.core/messages.json", "w");
 		jarr.prettyPrintTo(file1);
 		file1.close();
-		file = _SD.open("/.core/messages.json", "r");
+		file = SD.open("/.core/messages.json", "r");
 		while(!file)
 			Serial.println("Messages ERROR");
 	}
@@ -1163,17 +1226,17 @@ void MAKERphone::incomingMessage(String _serialData)
 
 }
 void MAKERphone::addCall(String number, String dateTime, int duration, uint8_t direction){
-	SDAudioFile file = _SD.open("/.core/call_log.json", "r");
+	File file = SD.open("/.core/call_log.json", "r");
 	Serial.print("Direction of call: "); Serial.println(direction);
 	if(file.size() < 2){
 		file.close();
 		jb.clear();
 		JsonArray& jarr = jb.createArray();
 		delay(10);
-		SDAudioFile file1 = _SD.open("/.core/call_log.json", "w");
+		File file1 = SD.open("/.core/call_log.json", "w");
 		jarr.prettyPrintTo(file1);
 		file1.close();
-		file = _SD.open("/.core/call_log.json", "r");
+		file = SD.open("/.core/call_log.json", "r");
 		while(!file)
 			Serial.println("CONTACTS ERROR");
 	}
@@ -1189,7 +1252,7 @@ void MAKERphone::addCall(String number, String dateTime, int duration, uint8_t d
 	new_item["direction"] = direction; //0 - missed, 1 - outgoing, 2 - incoming
 	jarr.add(new_item);
 
-	SDAudioFile file1 = _SD.open("/.core/call_log.json", "w");
+	File file1 = SD.open("/.core/call_log.json", "w");
 	jarr.prettyPrintTo(file1);
 	jarr.prettyPrintTo(Serial);
 	file1.close();
@@ -1202,7 +1265,7 @@ void MAKERphone::saveMessage(String text, String number, JsonArray *messages){
 	new_item["dateTime"] = RTC.now().unixtime();
 
 	messages->add(new_item);
-	SDAudioFile file1 = _SD.open("/.core/messages.json", "w");
+	File file1 = SD.open("/.core/messages.json", "w");
 	messages->prettyPrintTo(file1);
 	file1.close();
 }
@@ -1657,11 +1720,11 @@ void MAKERphone::drawJpeg(String filename, int xpos, int ypos) {
   Serial.println(F("==========================="));
 
   // Open the named file (the Jpeg decoder library will close it after rendering image)
-  SDAudioFile jpegFile = _SD.open( filename);    // SDAudioFile handle reference for SPIFFS
-  //  SDAudioFile jpegSDAudioFile = _SD.open( filename, FILE_READ);  // or, file handle reference for SD library
+  File jpegFile = SD.open( filename);    // File handle reference for SPIFFS
+  //  File jpegFile = SD.open( filename, FILE_READ);  // or, file handle reference for SD library
 
   if ( !jpegFile ) {
-    Serial.print(F("ERROR: SDAudioFile \"")); Serial.print(filename); Serial.println ("\" not found!");
+    Serial.print(F("ERROR: File \"")); Serial.print(filename); Serial.println ("\" not found!");
     return;
   }
 
@@ -1796,7 +1859,7 @@ void MAKERphone::saveSettings(bool debug)
 {
 	const char * path = "/.core/settings.json";
 	Serial.println("");
-	_SD.remove(path);
+	SD.remove(path);
 	JsonObject& settings = jb.createObject();
 
 	if (settings.success()) {
@@ -1823,7 +1886,7 @@ void MAKERphone::saveSettings(bool debug)
 		settings["background_color"] = backgroundIndex;
 		settings["notification"] = notification;
 		settings["ringtone"] = ringtone_path.c_str();
-		SDAudioFile file1 = _SD.open(path, "w");
+		File file1 = SD.open(path, "w");
 		settings.prettyPrintTo(file1);
 		file1.close();
 	} else {
@@ -1833,19 +1896,19 @@ void MAKERphone::saveSettings(bool debug)
 void MAKERphone::loadSettings(bool debug)
 {
 	//create default system folders if not present
-	if(!_SD.exists("/Music"))
-		_SD.mkdir("/Music");
-	if(!_SD.exists("/Images"))
-		_SD.mkdir("/Images");
-	if(!_SD.exists("/Video"))
-		_SD.mkdir("/Video");
-	if(!_SD.exists("/Ringtones"))
-		_SD.mkdir("/Ringtones");
-	if(!_SD.exists("/.core"))
-		_SD.mkdir("/.core");
+	if(!SD.exists("/Music"))
+		SD.mkdir("/Music");
+	if(!SD.exists("/Images"))
+		SD.mkdir("/Images");
+	if(!SD.exists("/Video"))
+		SD.mkdir("/Video");
+	if(!SD.exists("/Ringtones"))
+		SD.mkdir("/Ringtones");
+	if(!SD.exists("/.core"))
+		SD.mkdir("/.core");
 	const char * path = "/.core/settings.json";
 	Serial.println("");
-	SDAudioFile file = _SD.open(path);
+	File file = SD.open(path);
 	jb.clear();
 	JsonObject& settings = jb.parseObject(file);
 	file.close();
@@ -1877,6 +1940,8 @@ void MAKERphone::loadSettings(bool debug)
 		backgroundIndex = settings["background_color"];
 		notification = settings["notification"];
 		ringtone_path = String(settings["ringtone"].as<char*>());
+		ringtone = new MPTrack(settings["ringtone"].as<char*>());
+		         
 	} else {
 		Serial.println("Error loading new settings");
 		saveSettings();
@@ -1888,6 +1953,8 @@ void MAKERphone::applySettings()
 	{
 		delay(200);
 		WiFi.begin();
+		WiFi.mode(WIFI_STA);
+		WiFi.disconnect();
 		delay(200);
 	}
 	else
@@ -1931,7 +1998,7 @@ void MAKERphone::applySettings()
 		break;
 	}
 	osc->setVolume(256 * volume / 14);
-
+	ringtone = new MPTrack((char*)ringtone_path.c_str());
 }
 
 //save manipulation
@@ -1944,9 +2011,9 @@ JsonArray& MAKERphone::getJSONfromSAV(const char *path)
 }
 void MAKERphone::saveJSONtoSAV(const char *path, JsonArray& json)
 {
-	while(!_SD.begin(5, SPI, 8000000))
+	while(!SD.begin(5, SPI, 8000000))
         Serial.println("SD ERROR");
-	SDAudioFile file = _SD.open(path, "w");
+	File file = SD.open(path, "w");
 	if(file)
 		json.prettyPrintTo(file);
 	else
@@ -1974,16 +2041,16 @@ bool MAKERphone::collidePointCircle(int16_t pointX, int16_t pointY, int16_t cent
 //SD operations
 void MAKERphone::writeFile(const char * path, const char * message)
 {
-	while (!_SD.begin(5, SPI, 8000000));
+	while (!SD.begin(5, SPI, 8000000));
 	Serial.printf("Writing file: %s\n", path);
 
-	SDAudioFile file = _SD.open(path);
+	File file = SD.open(path);
 	if (!file) {
 		Serial.println("Failed to open file for writing");
 		return;
 	}
 	if (file.print(message)) {
-		Serial.println("SDAudioFile written");
+		Serial.println("File written");
 	}
 	else {
 		Serial.println("Write failed");
@@ -1993,7 +2060,7 @@ void MAKERphone::writeFile(const char * path, const char * message)
 void MAKERphone::appendFile(const char * path, const char * message) {
 	Serial.printf("Appending to file: %s\n", path);
 
-	SDAudioFile file = _SD.open(path);
+	File file = SD.open(path);
 	if (!file) {
 		Serial.println("Failed to open file for appending");
 		return;
@@ -2009,10 +2076,10 @@ void MAKERphone::appendFile(const char * path, const char * message) {
 	file.close();
 }
 String MAKERphone::readFile(const char * path) {
-	while (!_SD.begin(5, SPI, 8000000));
+	while (!SD.begin(5, SPI, 8000000));
 	Serial.printf("Reading file: %s\n", path);
 	String helper="";
-	SDAudioFile file = _SD.open(path);
+	File file = SD.open(path);
 	if (!file) {
 		Serial.println("Failed to open file for reading");
 		return "";
@@ -2040,18 +2107,18 @@ void MAKERphone::takeScreenshot()
 	while(!update());
 
 	char name[] = "/Images/screenshot_00.bmp";
-	while (!_SD.begin(5, SPI, 8000000))
+	while (!SD.begin(5, SPI, 8000000))
 		Serial.println("SD ERROR");
 	for (int i = 0; i < 100;i++)
 	{
 		name[20] = i % 10 + '0';
 		name[19] = i / 10 + '0';
-		if(!_SD.exists(name))
+		if(!SD.exists(name))
 			break;
 	}
 	Serial.println(name);
 	delay(5);
-	SDAudioFile file = _SD.open(name, "w");
+	File file = SD.open(name, "w");
 	if(!file)
 	{
 		Serial.println("SD file error!");
@@ -2749,7 +2816,7 @@ void MAKERphone::removeNotification(uint8_t index)
 void MAKERphone::loadNotifications(bool debug)
 {
 	const char * path = "/.core/notifications.json";
-	SDAudioFile file = _SD.open(path);
+	File file = SD.open(path);
 	jb.clear();
 	JsonArray& notifications = jb.parseArray(file);
 	file.close();
@@ -2776,7 +2843,7 @@ void MAKERphone::saveNotifications(bool debug)
 {
 	const char * path = "/.core/notifications.json";
 	Serial.println("");
-	_SD.remove(path);
+	SD.remove(path);
 	jb.clear();
 	JsonArray& notifications = jb.createArray();
 	
@@ -2790,7 +2857,7 @@ void MAKERphone::saveNotifications(bool debug)
 			notifications.add(tempNotification);
 		}
 
-		SDAudioFile file1 = _SD.open(path, "w");
+		File file1 = SD.open(path, "w");
 		notifications.prettyPrintTo(file1);
 		notifications.prettyPrintTo(Serial);
 		file1.close();
@@ -2976,10 +3043,11 @@ void MAKERphone::alarmPopup(bool animation)
 		for (int i = 0; i < display.height(); i+=1)
 		{
 			display.drawFastHLine(0, i, display.width(), TFT_WHITE);
-			update();
-			delayMicroseconds(750);
+			if(i%5 == 0)update();
+			// delayMicroseconds(750);
 		}
 	}
+	updateTimeRTC();
 	DateTime now = RTC.now();
 	char buf[100];
 	strncpy(buf, "hh:mm\0", 100);
@@ -2994,7 +3062,9 @@ void MAKERphone::alarmPopup(bool animation)
 	display.printCenter("Alarm");
 	bool blinkState = 0;
 	uint32_t blinkMillis = millis();
-	if(!SDinsertedFlag)
+	Serial.println(currentAlarm);
+
+	if(!SDinsertedFlag || (SDinsertedFlag && !SD.exists(ringtone_path)))
 	{
 
 		bool state = 0;
@@ -3084,8 +3154,6 @@ void MAKERphone::alarmPopup(bool animation)
 	else
 	{
 		Serial.println(ringtone_path);
-		ringtone = new MPTrack((char *)ringtone_path.c_str());
-		addTrack(ringtone);
 		ringtone->setVolume(256 * volume / 14);
 		ringtone->setRepeat(1);
 		ringtone->play();
@@ -3160,12 +3228,14 @@ void MAKERphone::alarmPopup(bool animation)
 			update();
 		}
 		ringtone->stop();
+
 	}
+
 }
 void MAKERphone::loadAlarms()
 {
 	const char * path = "/.core/alarms.json";
-	SDAudioFile file = _SD.open(path);
+	File file = SD.open(path);
 	jb.clear();
 	JsonArray& alarms = jb.parseArray(file);
 	file.close();
@@ -3196,7 +3266,7 @@ void MAKERphone::saveAlarms()
 {
 	const char * path = "/.core/alarms.json";
 	Serial.println("");
-	_SD.remove(path);
+	SD.remove(path);
 	jb.clear();
 	JsonArray& alarms = jb.createArray();
 
@@ -3218,22 +3288,20 @@ void MAKERphone::saveAlarms()
 			alarms.add(tempAlarm);
 		}
 
-		SDAudioFile file1 = _SD.open(path, "w");
+		File file1 = SD.open(path, "w");
 		alarms.prettyPrintTo(file1);
 		// alarms.prettyPrintTo(Serial);
 		file1.close();
 	} else {
 		Serial.println("Error saving alarm data");
 	}
+	checkAlarms();
 }
 void MAKERphone::checkAlarms()
 {
 	updateTimeRTC();
-
 	uint8_t next_alarm = 99;
 	int i = currentTime.dayOfWeek();
-	Serial.print("day of week ");
-	Serial.println(i);
 	for(int x = 0; x < 7; x++)
 	{
 		for(int y = 0; y < 5 ;y++)
@@ -3277,6 +3345,7 @@ void MAKERphone::checkAlarms()
 	}
 	Serial.print("next alarm: ");
 	Serial.println(next_alarm);
+	currentAlarm = next_alarm;
 	if(next_alarm == 99)
 		RTC.off_alarm();
 	else
@@ -3305,4 +3374,21 @@ void MAKERphone::checkAlarms()
 		RTC.set_alarm(alarm, flags);
 		RTC.on_alarm();
 	}
+}
+
+//Misc
+void MAKERphone::deallocateAudio()
+{
+	vTaskDelete(Task1);
+}
+void MAKERphone::reallocateAudio()
+{
+	xTaskCreatePinnedToCore(
+			Task1code,				/* Task function. */
+			"Task1",				/* name of task. */
+			10000,					/* Stack size of task */
+			NULL,					/* parameter of the task */
+			1,						/* priority of the task */
+			&Task1,
+			0);				/* Task handle to keep track of created task */
 }
