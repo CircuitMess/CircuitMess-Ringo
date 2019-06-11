@@ -156,8 +156,11 @@ void MAKERphone::begin(bool splash) {
 		loadSettings(1);
 		loadAlarms();
 		loadNotifications();
+
 	}
+	applySettings();
 	checkAlarms();
+
 	//Audio
 	initWavLib();
 	xTaskCreatePinnedToCore(
@@ -171,8 +174,10 @@ void MAKERphone::begin(bool splash) {
 	addOscillator(osc);
 	// osc->setADSR(10,20,0.8,10);
 	if(SDinsertedFlag)
+	{
 		ringtone = new MPTrack((char *)(ringtone_path.c_str()));
-	applySettings();
+		addTrack(ringtone);
+	}
 	sleepTimer = millis();
 }
 
@@ -343,13 +348,23 @@ bool MAKERphone::update() {
 		voltageSum += analogRead(VOLTAGE_PIN);
 		voltageSample++;
 	}
-	if(!digitalRead(RTC_INT) && !inAlarmPopup)
+	if(!digitalRead(RTC_INT) && !inAlarmPopup && !alarmCleared)
 	{
 		inAlarmPopup = 1;
 		alarmPopup();
+		if(alarmRepeat[currentAlarm] == 0)
+			alarmEnabled[currentAlarm] = 0;
+		saveAlarms();
+		if(ringtone->isPlaying())
+			ringtone->stop();
+
+		alarmCleared = 1;
+		alarmMillis = millis();
 		inAlarmPopup = 0;
-		checkAlarms();
 	}
+	if(alarmCleared && millis() - alarmMillis > 60000)
+		alarmCleared = 0;
+
 	if(!digitalRead(SIM_INT) && !inCall)
 	{
 		String localBuffer = "";
@@ -489,31 +504,58 @@ void MAKERphone::sleep() {
 	digitalWrite(LCD_BL_PIN, 1);
 	tft.writecommand(16);//send 16 for sleep in, 17 for sleep out
 	esp_sleep_enable_timer_wakeup(SLEEP_WAKEUP_TIME * 1000000);
-	
-	// rtc_gpio_isolate(GPIO_NUM_33);
-	// rtc_gpio_isolate(GPIO_NUM_35);
-	// rtc_gpio_isolate(GPIO_NUM_5);
-	// rtc_gpio_isolate(GPIO_NUM_32);
-	// rtc_gpio_isolate(GPIO_NUM_27);
-	// rtc_gpio_isolate(GPIO_NUM_26);
-	// rtc_gpio_isolate(GPIO_NUM_0);
-	// rtc_gpio_isolate(GPIO_NUM_2);
-	// rtc_gpio_isolate(GPIO_NUM_4);
-	// rtc_gpio_isolate(GPIO_NUM_12);
-	// rtc_gpio_isolate(GPIO_NUM_13);
-	// rtc_gpio_isolate(GPIO_NUM_14);
-	// rtc_gpio_isolate(GPIO_NUM_15);
-	// rtc_gpio_isolate(GPIO_NUM_16);
-	// rtc_gpio_isolate(GPIO_NUM_17);
-	// rtc_gpio_isolate(GPIO_NUM_18);
-	// rtc_gpio_isolate(GPIO_NUM_19);
-	// rtc_gpio_isolate(GPIO_NUM_21);
-	// rtc_gpio_isolate(GPIO_NUM_22);
-	// rtc_gpio_isolate(GPIO_NUM_23);
-	// rtc_gpio_isolate(GPIO_NUM_36);
-	// rtc_gpio_isolate(GPIO_NUM_39);
-	// rtc_gpio_isolate(GPIO_NUM_34);
-	// rtc_gpio_isolate(GPIO_NUM_25);
+
+	//Pinmodes to prevent current leakage
+	{
+		// pinMode(GPIO_NUM_33, INPUT);
+		// pinMode(GPIO_NUM_35, INPUT);
+		// pinMode(GPIO_NUM_5, INPUT);
+		// pinMode(GPIO_NUM_32, INPUT);
+		// pinMode(GPIO_NUM_27, INPUT);
+		// pinMode(GPIO_NUM_26, INPUT);
+		// pinMode(GPIO_NUM_0, INPUT);
+		// pinMode(GPIO_NUM_2, INPUT);
+		// pinMode(GPIO_NUM_4, INPUT);
+		// pinMode(GPIO_NUM_12, INPUT);
+		// pinMode(GPIO_NUM_13, INPUT);
+		// pinMode(GPIO_NUM_14, INPUT);
+		// pinMode(GPIO_NUM_15, INPUT);
+		// pinMode(GPIO_NUM_16, INPUT);
+		// pinMode(GPIO_NUM_17, INPUT);
+		// pinMode(GPIO_NUM_18, INPUT);
+		// pinMode(GPIO_NUM_19, INPUT);
+		// pinMode(GPIO_NUM_21, INPUT);
+		// pinMode(GPIO_NUM_22, INPUT);
+		// pinMode(GPIO_NUM_23, INPUT);
+		// pinMode(GPIO_NUM_36, INPUT);
+		// pinMode(GPIO_NUM_39, INPUT);
+		// pinMode(GPIO_NUM_34, INPUT);
+		// pinMode(GPIO_NUM_25, INPUT);
+		// rtc_gpio_isolate(GPIO_NUM_33);
+		// rtc_gpio_isolate(GPIO_NUM_35);
+		// rtc_gpio_isolate(GPIO_NUM_5);
+		// rtc_gpio_isolate(GPIO_NUM_32);
+		// rtc_gpio_isolate(GPIO_NUM_27);
+		// rtc_gpio_isolate(GPIO_NUM_26);
+		// rtc_gpio_isolate(GPIO_NUM_0);
+		// rtc_gpio_isolate(GPIO_NUM_2);
+		// rtc_gpio_isolate(GPIO_NUM_4);
+		// rtc_gpio_isolate(GPIO_NUM_12);
+		// rtc_gpio_isolate(GPIO_NUM_13);
+		// rtc_gpio_isolate(GPIO_NUM_14);
+		// rtc_gpio_isolate(GPIO_NUM_15);
+		// rtc_gpio_isolate(GPIO_NUM_16);
+		// rtc_gpio_isolate(GPIO_NUM_17);
+		// rtc_gpio_isolate(GPIO_NUM_18);
+		// rtc_gpio_isolate(GPIO_NUM_19);
+		// rtc_gpio_isolate(GPIO_NUM_21);
+		// rtc_gpio_isolate(GPIO_NUM_22);
+		// rtc_gpio_isolate(GPIO_NUM_23);
+		// rtc_gpio_isolate(GPIO_NUM_36);
+		// rtc_gpio_isolate(GPIO_NUM_39);
+		// rtc_gpio_isolate(GPIO_NUM_34);
+		// rtc_gpio_isolate(GPIO_NUM_25);
+	}
 
 	esp_light_sleep_start();
 	while(esp_sleep_get_wakeup_cause() == 4)
@@ -851,8 +893,6 @@ void MAKERphone::incomingCall(String _serialData) //TODO
 
 		else if(!played)
 		{
-			ringtone = new MPTrack((char *)ringtone_path.c_str());
-			addTrack(ringtone);
 			ringtone->setVolume(256 * volume / 14);
 			ringtone->setRepeat(1);
 			ringtone->play();
@@ -3004,10 +3044,11 @@ void MAKERphone::alarmPopup(bool animation)
 		for (int i = 0; i < display.height(); i+=1)
 		{
 			display.drawFastHLine(0, i, display.width(), TFT_WHITE);
-			update();
-			delayMicroseconds(750);
+			if(i%5 == 0)update();
+			// delayMicroseconds(750);
 		}
 	}
+	updateTimeRTC();
 	DateTime now = RTC.now();
 	char buf[100];
 	strncpy(buf, "hh:mm\0", 100);
@@ -3022,7 +3063,9 @@ void MAKERphone::alarmPopup(bool animation)
 	display.printCenter("Alarm");
 	bool blinkState = 0;
 	uint32_t blinkMillis = millis();
-	if(!SDinsertedFlag)
+	Serial.println(currentAlarm);
+
+	if(!SDinsertedFlag || (SDinsertedFlag && !_SD.exists(ringtone_path)))
 	{
 
 		bool state = 0;
@@ -3112,8 +3155,6 @@ void MAKERphone::alarmPopup(bool animation)
 	else
 	{
 		Serial.println(ringtone_path);
-		// ringtone = new MPTrack((char *)ringtone_path.c_str());
-		addTrack(ringtone);
 		ringtone->setVolume(256 * volume / 14);
 		ringtone->setRepeat(1);
 		ringtone->play();
@@ -3188,7 +3229,9 @@ void MAKERphone::alarmPopup(bool animation)
 			update();
 		}
 		ringtone->stop();
+
 	}
+
 }
 void MAKERphone::loadAlarms()
 {
@@ -3253,14 +3296,13 @@ void MAKERphone::saveAlarms()
 	} else {
 		Serial.println("Error saving alarm data");
 	}
+	checkAlarms();
 }
 void MAKERphone::checkAlarms()
 {
 	updateTimeRTC();
 	uint8_t next_alarm = 99;
 	int i = currentTime.dayOfWeek();
-	Serial.print("day of week ");
-	Serial.println(i);
 	for(int x = 0; x < 7; x++)
 	{
 		for(int y = 0; y < 5 ;y++)
@@ -3304,6 +3346,7 @@ void MAKERphone::checkAlarms()
 	}
 	Serial.print("next alarm: ");
 	Serial.println(next_alarm);
+	currentAlarm = next_alarm;
 	if(next_alarm == 99)
 		RTC.off_alarm();
 	else

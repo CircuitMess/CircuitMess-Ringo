@@ -155,7 +155,7 @@ class MAKERphone:public Buttons, public DateTime
 	void enterPUK();
 	String currentDateTime();
 	String textInput(String buffer, int16_t length = -1);
-	int textPointer = 0;
+	uint32_t textPointer = 0;
 	bool textLimitFlag = 0;
 	void loader();
 
@@ -282,7 +282,12 @@ class MAKERphone:public Buttons, public DateTime
 	void homePopupEnable(bool enable);
 	void shutdownPopupEnable(bool enable);
 	void alarmPopup(bool animation = 1);
+	void loadAlarms();
+	void saveAlarms();
 	bool inAlarmPopup = 0;
+	bool alarmCleared = 0;
+	uint8_t currentAlarm = 99;
+	uint32_t alarmMillis = millis();
 	uint8_t alarmHours[5] = {0, 0, 0, 0, 0};
 	uint8_t alarmMins[5] = {0, 0, 0, 0, 0};
 	uint8_t alarmEnabled[5] = {2, 2, 2, 2, 2};
@@ -315,8 +320,7 @@ class MAKERphone:public Buttons, public DateTime
 		void drawNotificationWindow(uint8_t y, uint8_t index);
 		void notificationView();
 
-		void loadAlarms();
-		void saveAlarms();
+	
 		void checkAlarms();
 
 		bool HOME_POPUP_ENABLE = 1;
