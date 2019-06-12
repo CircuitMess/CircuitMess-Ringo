@@ -1216,7 +1216,7 @@ void MAKERphone::incomingMessage(String _serialData)
 	if(!jarr.success())
 		Serial.println("Error");
 	else
-		saveMessage(text, number, &jarr);
+		saveMessage(text, number, 0, 1, &jarr);
 	updateTimeRTC();
 	addNotification(2, number, RTC.now());
 	popup(String(number + ": " + text), 50);
@@ -1257,12 +1257,14 @@ void MAKERphone::addCall(String number, String dateTime, int duration, uint8_t d
 	jarr.prettyPrintTo(Serial);
 	file1.close();
 }
-void MAKERphone::saveMessage(String text, String number, JsonArray *messages){
+void MAKERphone::saveMessage(String text, String number, bool isRead, bool direction, JsonArray *messages){
 	JsonObject& new_item = jb.createObject();
 	updateTimeRTC();
 	new_item["number"] = number;
 	new_item["text"] = text;
 	new_item["dateTime"] = RTC.now().unixtime();
+	new_item["read"] = isRead;
+	new_item["direction"] = direction; //0 - outgoing, 1 - incoming
 
 	messages->add(new_item);
 	File file1 = SD.open("/.core/messages.json", "w");
