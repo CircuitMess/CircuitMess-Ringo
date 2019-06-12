@@ -780,32 +780,31 @@ void MAKERphone::incomingCall(String _serialData) //TODO
 	uint32_t callMillis = millis();
 	uint16_t tmp_time = 0;
 	String localBuffer = _serialData;
+	uint16_t foo = localBuffer.indexOf("\"+", localBuffer.indexOf("CLCC:")) + 1;
+	number = localBuffer.substring(foo, localBuffer.indexOf("\"", foo));
 	bool played = 0;
-	display.setTextFont(2);
-	display.setTextColor(TFT_BLACK);
-	display.setTextSize(1);
+	tft.setTextFont(2);
+	tft.setTextColor(TFT_BLACK);
+	tft.setTextSize(1);
+	tft.fillRect(0,0,160,128,TFT_WHITE);
+	tft.setCursor(40, 9);
+	Serial.println("ringing");
+	tft.print("Incoming call");
+	tft.drawBitmap(29*2, 24*2, call_icon, TFT_DARKGREY, 2);
+	tft.setCursor(28, 28);
+	tft.print(number);
+	tft.fillRect(90, 51*2, 70, 13*2, TFT_RED);
+	tft.setCursor(105, 109);
+	tft.print("Hang up");
+	tft.fillRect(0, 51*2, 70, 13*2, TFT_GREEN);
+	tft.setCursor(10, 109);
+	tft.print("Answer");
 	Serial.print("SD inserted:");
 	Serial.println(SDinsertedFlag);
 	Serial.print("Ringtone exists:");
 	Serial.println(SD.exists(ringtone_path));
 	while(1)
 	{
-
-		uint16_t foo = localBuffer.indexOf("\"+", localBuffer.indexOf("CLCC:")) + 1;
-		number = localBuffer.substring(foo, localBuffer.indexOf("\"", foo));
-		display.fillScreen(TFT_WHITE);
-		display.setCursor(25, 9);
-		Serial.println("ringing");
-		display.printCenter("Incoming call");
-		display.drawBitmap(29*2, 24*2, call_icon, TFT_DARKGREY, 2);
-		display.setCursor(11, 28);
-		display.printCenter(number);
-		display.fillRect(90, 51*2, 70, 13*2, TFT_RED);
-		display.setCursor(100, 109);
-		display.print("Hang up");
-		display.fillRect(0, 51*2, 70, 13*2, TFT_GREEN);
-		display.setCursor(4, 109);
-		display.print("Answer");
 		if(!mp.playingNotification)
 		{
 			if (Serial1.available())
@@ -828,21 +827,18 @@ void MAKERphone::incomingCall(String _serialData) //TODO
 					Serial1.println("ATH");
 				}
 			}
-			display.fillScreen(TFT_WHITE);
-			display.setCursor(32, 9);
-			display.printCenter("00:00");
+			tft.fillRect(0,0,160,128,TFT_WHITE);
+			tft.setCursor(55, 9);
+			tft.print("00:00");
 
-			display.drawBitmap(29*2, 24*2, call_icon, TFT_RED, 2);
-			if(resolutionMode)
-					display.setCursor(11, 20);
-			else
-				display.setCursor(11, 28);
-			display.printCenter(number);
-			display.fillRect(0, 51*2, 80*2, 13*2, TFT_RED);
-			display.setCursor(2, 112);
-			display.print("Call ended");
+			tft.drawBitmap(29*2, 24*2, call_icon, TFT_RED, 2);
+			tft.setCursor(28, 28);
+			tft.print(number);
+			tft.fillRect(0, 51*2, 80*2, 13*2, TFT_RED);
+			tft.setCursor(10, 110);
+			tft.print("Call ended");
 			Serial.println("ENDED");
-			update();
+			// update();
 			updateTimeRTC();
 			// 2019-04-18 12:00:00
 			String dateTime = String(clockYear);
@@ -897,10 +893,11 @@ void MAKERphone::incomingCall(String _serialData) //TODO
 			ringtone->play();
 			played = 1;
 		}
-		update();
+		updateNotificationSound();
+		buttons.update();
 	}
 	ringtone->stop();
-	while(!update());
+	// while(!update());
 
 
 	Serial1.println("ATA");
@@ -909,30 +906,30 @@ void MAKERphone::incomingCall(String _serialData) //TODO
 		Serial1.println("ATA");
 		localBuffer = Serial1.readString();
 	}
-	display.setTextColor(TFT_BLACK);
+	tft.setTextColor(TFT_BLACK);
 	bool firstPass = 1;
 	uint32_t timeOffset = 0;
 	uint8_t scale;
 	tmp_time = 0;
 	uint8_t micGain = 4;
 	String temp;
-	if(resolutionMode)
-	{
-		scale = 1;
-		display.setFreeFont(TT1);
-	}
-	else
-	{
-		scale = 2;
-		display.setTextFont(2);
-	}
-	display.setTextSize(1);
-
-	display.printCenter(number);
+	scale = 2;
+	tft.setTextFont(2);
+	tft.setTextSize(1);
+	tft.fillRect(0,0,160,128,TFT_WHITE);
+	tft.drawBitmap(29*scale, 24*scale, call_icon, TFT_GREEN, scale);
+	tft.setCursor(3, 3);
+	tft.print(micGain);
+	tft.setCursor(28, 28);
+	tft.print(number);
+	tft.fillRect(0, 51*scale, 80*scale, 13*scale, TFT_RED);
+	tft.setCursor(100, 109);
+	tft.print("Hang up");
 	digitalWrite(soundSwitchPin, 1);
+	int8_t written = -1;
+	uint16_t prevTime = 0;
 	while (1)
 	{
-		display.fillScreen(TFT_WHITE);
 		if (Serial1.available())
 		{
 			String buffer = Serial1.readString();
@@ -945,7 +942,8 @@ void MAKERphone::incomingCall(String _serialData) //TODO
 
 		if (localBuffer.indexOf("CLCC:") != -1 || localBuffer.indexOf("AT+CMIC") != -1)
 		{
-			if (localBuffer.indexOf(",1,0,0,0") != -1 || localBuffer.indexOf("AT+CMIC") != -1)
+			if ((localBuffer.indexOf(",1,0,0,0") != -1 || localBuffer.indexOf("AT+CMIC") != -1 ) &&
+			(written != 0 || prevTime != tmp_time))
 			{
 				if (firstPass == 1)
 				{
@@ -969,19 +967,20 @@ void MAKERphone::incomingCall(String _serialData) //TODO
 					temp += "0";
 					temp += (int((millis() - timeOffset) / 1000) % 60);
 				}
-				display.setCursor(9, 9);
-				display.printCenter(temp);
-				display.drawBitmap(29*scale, 24*scale, call_icon, TFT_GREEN, scale);
-				display.setCursor(3, 3);
-				display.print(micGain);
+				tft.setCursor(55, 9);
+				tft.fillRect(50, 5, 40, 20, TFT_WHITE);
+				tft.print(temp);
+				prevTime = tmp_time;
+				written = 0;
 			}
 
 			else if (localBuffer.indexOf(",1,6,") != -1)
 			{
-				display.fillScreen(TFT_WHITE);
-				display.setCursor(32, 9);
+				
+				tft.fillRect(0,0,160,128,TFT_WHITE);
+				tft.setCursor(55, 9);
 				if (timeOffset == 0)
-					display.printCenter("00:00");
+					tft.print("00:00");
 				else
 				{
 					temp = "";
@@ -1000,23 +999,16 @@ void MAKERphone::incomingCall(String _serialData) //TODO
 						temp += "0";
 						temp += (int((millis() - timeOffset) / 1000) % 60);
 					}
-					display.setCursor(9, 9);
-					display.printCenter(temp);
+					tft.print(temp);
 				}
-				display.drawBitmap(29*scale, 24*scale, call_icon, TFT_RED, scale);
-				if(resolutionMode)
-					display.setCursor(11, 20);
-				else
-					display.setCursor(11, 28);
-				display.printCenter(number);
-				display.fillRect(0, 51*scale, 80*scale, 13*scale, TFT_RED);
-				if(resolutionMode)
-					display.setCursor(2, 62);
-				else
-					display.setCursor(2, 112);
-				display.print("Call ended");
+				tft.drawBitmap(29*scale, 24*scale, call_icon, TFT_RED, scale);
+				tft.setCursor(28, 28);
+				tft.print(number);
+				tft.fillRect(0, 51*scale, 80*scale, 13*scale, TFT_RED);
+				tft.setCursor(10, 110);
+				tft.print("Call ended");
 				Serial.println("ENDED");
-				update();
+				// update();
 
 				updateTimeRTC();
 				// 2019-04-18 12:00:00
@@ -1049,14 +1041,8 @@ void MAKERphone::incomingCall(String _serialData) //TODO
 				delay(1000);
 				break;
 			}
-			if(resolutionMode)
-					display.setCursor(11, 20);
-			else
-				display.setCursor(11, 28);
-			display.printCenter(number);
-			display.fillRect(0, 51*scale, 80*scale, 13*scale, TFT_RED);
-			display.setCursor(100, 109);
-			display.print("Hang up");
+				
+			
 
 		}
 
@@ -1066,31 +1052,18 @@ void MAKERphone::incomingCall(String _serialData) //TODO
 			if (localBuffer.indexOf("ERROR") != -1)
 			{
 
-				display.setCursor(3, 9);
-				display.printCenter("Couldn't dial number!");
-				display.drawBitmap(29*scale, 24*scale, call_icon, TFT_RED, scale);
-				if(resolutionMode)
-					display.setCursor(11, 20);
-				else
-					display.setCursor(11, 28);
-				display.printCenter(number);
-				display.fillRect(0, 51*scale, 80*scale, 13*scale, TFT_RED);
-				if(resolutionMode)
-				{
-					display.setCursor(2, 57);
-					display.print("Invalid number or");
-					display.setCursor(2, 63);
-					display.print("SIM card missing!");
-				}
-				else
-				{
-					display.setCursor(2, 100);
-					display.print("Invalid number or");
-					display.setCursor(2, 112);
-					display.print("SIM card missing!");
-				}
+				tft.setCursor(10, 9);
+				tft.print("Couldn't dial number!");
+				tft.drawBitmap(29*scale, 24*scale, call_icon, TFT_RED, scale);
+				tft.setCursor(28, 28);
+				tft.print(number);
+				tft.fillRect(0, 51*scale, 80*scale, 13*scale, TFT_RED);
+				tft.setCursor(2, 100);
+				tft.print("Invalid number or");
+				tft.setCursor(2, 112);
+				tft.print("SIM card missing!");
 				while (!buttons.released(BTN_B))
-					update();
+					buttons.update();
 				break;
 			}
 		}
@@ -1102,10 +1075,10 @@ void MAKERphone::incomingCall(String _serialData) //TODO
 			while (Serial1.readString().indexOf(",1,6,") == -1 && millis() - curr_millis < 2000){
 				Serial1.println("ATH");
 			}
-			display.fillScreen(TFT_WHITE);
-			display.setCursor(32, 9);
+			tft.fillRect(0,0,160,128,TFT_WHITE);
+			tft.setCursor(55, 9);
 			if (timeOffset == 0)
-				display.printCenter("00:00");
+				tft.print("00:00");
 			else
 			{
 				temp = "";
@@ -1124,20 +1097,17 @@ void MAKERphone::incomingCall(String _serialData) //TODO
 					temp += "0";
 					temp += (int((millis() - timeOffset) / 1000) % 60);
 				}
-				display.setCursor(9, 9);
-				display.printCenter(temp);
+				tft.print(temp);
 			}
-			display.drawBitmap(29*scale, 24*scale, call_icon, TFT_RED, scale);
-			if(resolutionMode)
-					display.setCursor(11, 20);
-			else
-				display.setCursor(11, 28);
-			display.printCenter(number);
-			display.fillRect(0, 51*scale, 80*scale, 13*scale, TFT_RED);
-			display.setCursor(2, 112);
-			display.print("Call ended");
+			tft.drawBitmap(29*scale, 24*scale, call_icon, TFT_RED, scale);
+			tft.setCursor(28, 28);
+			tft.print(number);
+			tft.fillRect(0, 51*scale, 80*scale, 13*scale, TFT_RED);
+			tft.setCursor(10, 110);
+			tft.print("Call ended");
 			Serial.println("ENDED");
-			update();
+			// update();
+
 			updateTimeRTC();
 			// 2019-04-18 12:00:00
 			String dateTime = String(clockYear);
@@ -1164,23 +1134,33 @@ void MAKERphone::incomingCall(String _serialData) //TODO
 			dateTime += String(clockMinute);
 
 			if(SDinsertedFlag)
-					addCall(number, dateTime, tmp_time, 2);
+				addCall(number, dateTime, tmp_time, 2);
+
 			delay(1000);
 			break;
 		}
-		if(buttons.released(BTN_UP) && micGain < 15 && (localBuffer.indexOf(",0,0,0,0") != -1 || localBuffer.indexOf("AT+CMIC") != -1))
+		if(buttons.released(BTN_UP) && micGain < 15 && (localBuffer.indexOf(",1,0,0,0") != -1 || localBuffer.indexOf("AT+CMIC") != -1))
 		{
 			micGain++;
 			Serial1.printf("AT+CMIC=0,%d", micGain);
+			written = -1;
+			tft.fillRect(0,0,20,20,TFT_WHITE);
+			tft.setCursor(3,3);
+			tft.print(micGain);
 		}
-		if(buttons.released(BTN_DOWN) && micGain > 0 && (localBuffer.indexOf(",0,0,0,0") != -1 || localBuffer.indexOf("AT+CMIC") != -1))
+		if(buttons.released(BTN_DOWN) && micGain > 0 && (localBuffer.indexOf(",1,0,0,0") != -1 || localBuffer.indexOf("AT+CMIC") != -1))
 		{
 			micGain--;
 			Serial1.printf("AT+CMIC=0,%d", micGain);
+			written = -1;
+			tft.fillRect(0,0,20,20,TFT_WHITE);
+			tft.setCursor(3,3);
+			tft.print(micGain);
 		}
 
 		tmp_time = int((millis() - timeOffset) / 1000);
-		update();
+		// update();
+		buttons.update();
 	}
 	digitalWrite(soundSwitchPin, 0);
 }
