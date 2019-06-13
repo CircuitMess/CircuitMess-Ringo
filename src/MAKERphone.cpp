@@ -841,30 +841,7 @@ void MAKERphone::incomingCall(String _serialData) //TODO
 			Serial.println("ENDED");
 			// update();
 			updateTimeRTC();
-			// 2019-04-18 12:00:00
-			String dateTime = String(clockYear);
-			dateTime += "-";
-			if(clockMonth < 10){
-				dateTime += "0";
-			}
-			dateTime += String(clockMonth);
-			dateTime += "-";
-			if(clockDay < 10){
-				dateTime += "0";
-			}
-			dateTime += String(clockDay);
-			dateTime += " ";
-
-			if(clockHour < 10){
-				dateTime += "0";
-			}
-			dateTime += String(clockHour);
-			dateTime += ":";
-			if(clockMinute < 10){
-				dateTime += "0";
-			}
-			dateTime += String(clockMinute);
-			addCall(number, dateTime, tmp_time, 0);
+			addCall(number, RTC.now().unixtime(), tmp_time, 0);
 			if(localBuffer.indexOf(",1,6,") != -1)
 				addNotification(1, number, RTC.now());
 
@@ -1012,32 +989,8 @@ void MAKERphone::incomingCall(String _serialData) //TODO
 				// update();
 
 				updateTimeRTC();
-				// 2019-04-18 12:00:00
-				String dateTime = String(clockYear);
-				dateTime += "-";
-				if(clockMonth < 10){
-					dateTime += "0";
-				}
-				dateTime += String(clockMonth);
-				dateTime += "-";
-				if(clockDay < 10){
-					dateTime += "0";
-				}
-				dateTime += String(clockDay);
-				dateTime += " ";
-
-				if(clockHour < 10){
-					dateTime += "0";
-				}
-				dateTime += String(clockHour);
-				dateTime += ":";
-				if(clockMinute < 10){
-					dateTime += "0";
-				}
-				dateTime += String(clockMinute);
-
 				if(SDinsertedFlag)
-					addCall(number, dateTime, tmp_time, 2);
+					addCall(number, RTC.now().unixtime(), tmp_time, 2);
 
 				delay(1000);
 				break;
@@ -1110,32 +1063,8 @@ void MAKERphone::incomingCall(String _serialData) //TODO
 			// update();
 
 			updateTimeRTC();
-			// 2019-04-18 12:00:00
-			String dateTime = String(clockYear);
-			dateTime += "-";
-			if(clockMonth < 10){
-				dateTime += "0";
-			}
-			dateTime += String(clockMonth);
-			dateTime += "-";
-			if(clockDay < 10){
-				dateTime += "0";
-			}
-			dateTime += String(clockDay);
-			dateTime += " ";
-
-			if(clockHour < 10){
-				dateTime += "0";
-			}
-			dateTime += String(clockHour);
-			dateTime += ":";
-			if(clockMinute < 10){
-				dateTime += "0";
-			}
-			dateTime += String(clockMinute);
-
 			if(SDinsertedFlag)
-				addCall(number, dateTime, tmp_time, 2);
+				addCall(number, RTC.now().unixtime(), tmp_time, 2);
 
 			delay(1000);
 			break;
@@ -1224,7 +1153,7 @@ void MAKERphone::incomingMessage(String _serialData)
 
 
 }
-void MAKERphone::addCall(String number, String dateTime, int duration, uint8_t direction){
+void MAKERphone::addCall(String number, uint32_t dateTime, int duration, uint8_t direction){
 	File file = SD.open("/.core/call_log.json", "r");
 	Serial.print("Direction of call: "); Serial.println(direction);
 	if(file.size() < 2){
@@ -1246,7 +1175,7 @@ void MAKERphone::addCall(String number, String dateTime, int duration, uint8_t d
 
 	JsonObject& new_item = jb.createObject();
 	new_item["number"] = number.c_str();
-	new_item["dateTime"] = dateTime.c_str();
+	new_item["dateTime"] = dateTime;
 	new_item["duration"] = duration;
 	new_item["direction"] = direction; //0 - missed, 1 - outgoing, 2 - incoming
 	jarr.add(new_item);
