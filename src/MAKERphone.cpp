@@ -897,13 +897,15 @@ void MAKERphone::incomingCall(String _serialData) //TODO
 	tft.setTextSize(1);
 	tft.fillRect(0,0,160,128,TFT_WHITE);
 	tft.drawBitmap(29*scale, 24*scale, call_icon, TFT_GREEN, scale);
-	tft.setCursor(3, 3);
-	tft.print(micGain);
 	tft.setCursor(28, 28);
 	tft.print(number);
 	tft.fillRect(0, 51*scale, 80*scale, 13*scale, TFT_RED);
 	tft.setCursor(100, 109);
 	tft.print("Hang up");
+	tft.setCursor(5, 109);
+	tft.print("Mic gain: ");
+	tft.setCursor(62, 109);
+	tft.print(micGain);
 	digitalWrite(soundSwitchPin, 1);
 	int8_t written = -1;
 	uint16_t prevTime = 0;
@@ -1004,7 +1006,6 @@ void MAKERphone::incomingCall(String _serialData) //TODO
 
 		}
 
-
 		else if (localBuffer.indexOf("CLCC:") == -1)
 		{
 			if (localBuffer.indexOf("ERROR") != -1)
@@ -1076,19 +1077,19 @@ void MAKERphone::incomingCall(String _serialData) //TODO
 		if(buttons.released(BTN_UP) && micGain < 15 && (localBuffer.indexOf(",1,0,0,0") != -1 || localBuffer.indexOf("AT+CMIC") != -1))
 		{
 			micGain++;
-			Serial1.printf("AT+CMIC=0,%d", micGain);
+			Serial1.printf("AT+CMIC=0,%d\r", micGain);
 			written = -1;
-			tft.fillRect(0,0,20,20,TFT_WHITE);
-			tft.setCursor(3,3);
+			tft.fillRect(61, 111, 20, 15, TFT_RED); 
+			tft.setCursor(62, 109);
 			tft.print(micGain);
 		}
 		if(buttons.released(BTN_DOWN) && micGain > 0 && (localBuffer.indexOf(",1,0,0,0") != -1 || localBuffer.indexOf("AT+CMIC") != -1))
 		{
 			micGain--;
-			Serial1.printf("AT+CMIC=0,%d", micGain);
+			Serial1.printf("AT+CMIC=0,%d\r", micGain);
 			written = -1;
-			tft.fillRect(0,0,20,20,TFT_WHITE);
-			tft.setCursor(3,3);
+			tft.fillRect(61, 111, 20, 15, TFT_RED); 
+			tft.setCursor(62, 109);
 			tft.print(micGain);
 		}
 
