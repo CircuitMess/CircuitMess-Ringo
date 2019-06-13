@@ -3047,28 +3047,33 @@ void MAKERphone::shutdownPopupEnable(bool enabled)
 }
 void MAKERphone::alarmPopup(bool animation)
 {
-	if(animation)
-	{
-		for (int i = 0; i < display.height(); i+=1)
-		{
-			display.drawFastHLine(0, i, display.width(), TFT_WHITE);
-			if(i%5 == 0)update();
-			// delayMicroseconds(750);
-		}
-	}
+	// if(animation)
+	// {
+	// 	for (int i = 0; i < display.height(); i+=1)
+	// 	{
+	// 		display.drawFastHLine(0, i, display.width(), TFT_WHITE);
+	// 		if(i%5 == 0)update();
+	// 		// delayMicroseconds(750);
+	// 	}
+	// }
 	updateTimeRTC();
 	DateTime now = RTC.now();
 	char buf[100];
 	strncpy(buf, "hh:mm\0", 100);
-	display.setCursor(4, 12);
-	display.setTextFont(1);
-	display.setTextSize(3);
-	display.setTextColor(TFT_BLACK);
-	display.printCenter(now.format(buf));
-	display.setTextFont(2);
-	display.setTextSize(2);
-	display.setCursor(50,50);
-	display.printCenter("Alarm");
+	tft.fillRect(0,0,160,128,TFT_WHITE);
+	tft.setCursor(38, 12);
+	tft.setTextFont(1);
+	tft.setTextSize(3);
+	tft.setTextColor(TFT_BLACK);
+	tft.print(now.format(buf));
+	tft.setTextFont(2);
+	tft.setTextSize(2);
+	tft.setCursor(50,50);
+	tft.print("Alarm");
+	tft.setTextSize(1);
+	tft.setCursor(2, 111);
+	tft.setTextFont(2);
+	tft.print("Press \"A\" to turn off");
 	bool blinkState = 0;
 	uint32_t blinkMillis = millis();
 	Serial.println(currentAlarm);
@@ -3097,66 +3102,13 @@ void MAKERphone::alarmPopup(bool animation)
 				blinkMillis = millis();
 				blinkState = !blinkState;
 			}
-			display.setTextFont(2);
-			display.setTextSize(2);
-			display.setCursor(50,50);
-			display.setTextColor(blinkState ? TFT_BLACK : TFT_WHITE);
-			display.printCenter("Alarm");
-			display.setTextSize(1);
-			display.setCursor(2, 111);
-			display.setTextFont(2);
-			display.setTextColor(TFT_BLACK);
-			display.fillRect(0, 114, display.width(), 14, TFT_WHITE);
-
-			display.print("Hold A to turn off alarm");
-			if (buttons.pressed(BTN_A)) {
-				display.setTextSize(1);
-
-				display.fillRect(0, 112, display.width(), 14, TFT_WHITE);
-				display.setCursor(2, 111);
-				display.setTextFont(2);
-				display.print("Turning off");
-				while (!buttons.released(BTN_A))
-				{
-
-					if (buttons.timeHeld(BTN_A) > 5 && buttons.timeHeld(BTN_A) < 12) {
-						display.fillRect(0, 114, display.width(), 14, TFT_WHITE);
-						display.setCursor(2, 111);
-						display.setTextFont(2);
-						display.print("Turning off *");
-
-					}
-					else if (buttons.timeHeld(BTN_A) >= 12 && buttons.timeHeld(BTN_A) < 18)
-					{
-						display.fillRect(0, 114, display.width(), 14, TFT_WHITE);
-						display.setCursor(2, 111);
-						display.setTextFont(2);
-						display.print("Turning off * *");
-					}
-					else if (buttons.timeHeld(BTN_A) >= 18 && buttons.timeHeld(BTN_A) < 24)
-					{
-						display.fillRect(0, 114, display.width(), 14, TFT_WHITE);
-						display.setCursor(2, 111);
-						display.setTextFont(2);
-						display.print("Turning off * * *");
-					}
-					else if (buttons.timeHeld(BTN_A) >= 24)
-					{
-						display.fillRect(0, 114, display.width(), 14, TFT_WHITE);
-						display.setCursor(2, 111);
-						display.setTextFont(2);
-						display.print("Turning off * * * *");
-
-						while(!buttons.released(BTN_A))
-							update();
-						FastLED.clear();
-						delay(10);
-						return;
-					}
-					update();
-				}
+			
+			if (buttons.released(BTN_A)) {
+				buttons.update();
+				break;
 			}
-			update();
+			buttons.update();
+			updateNotificationSound();
 		}
 		notification = tempNotification;
 	}
@@ -3169,77 +3121,14 @@ void MAKERphone::alarmPopup(bool animation)
 
 		while(1)
 		{
-			if(millis()- blinkMillis >= 350)
-			{
-				blinkMillis = millis();
-				blinkState = !blinkState;
+			if (buttons.released(BTN_A)) {
+				buttons.update();
+				break;
 			}
-
-			display.setTextFont(2);
-			display.setTextSize(2);
-			display.setCursor(50,50);
-			display.setTextColor(blinkState ? TFT_BLACK : TFT_WHITE);
-			display.printCenter("Alarm");
-			display.setTextSize(1);
-			display.setCursor(2, 111);
-			display.setTextFont(2);
-			display.setTextColor(TFT_BLACK);
-			display.fillRect(0, 114, display.width(), 14, TFT_WHITE);
-
-			display.print("Hold A to turn off alarm");
-			if (buttons.pressed(BTN_A)) {
-				display.setTextSize(1);
-
-				display.fillRect(0, 112, display.width(), 14, TFT_WHITE);
-				display.setCursor(2, 111);
-				display.setTextFont(2);
-				display.print("Turning off");
-				while (!buttons.released(BTN_A))
-				{
-
-					if (buttons.timeHeld(BTN_A) > 5 && buttons.timeHeld(BTN_A) < 12) {
-						display.fillRect(0, 114, display.width(), 14, TFT_WHITE);
-						display.setCursor(2, 111);
-						display.setTextFont(2);
-						display.print("Turning off *");
-
-					}
-					else if (buttons.timeHeld(BTN_A) >= 12 && buttons.timeHeld(BTN_A) < 18)
-					{
-						display.fillRect(0, 114, display.width(), 14, TFT_WHITE);
-						display.setCursor(2, 111);
-						display.setTextFont(2);
-						display.print("Turning off * *");
-					}
-					else if (buttons.timeHeld(BTN_A) >= 18 && buttons.timeHeld(BTN_A) < 24)
-					{
-						display.fillRect(0, 114, display.width(), 14, TFT_WHITE);
-						display.setCursor(2, 111);
-						display.setTextFont(2);
-						display.print("Turning off * * *");
-					}
-					else if (buttons.timeHeld(BTN_A) >= 24)
-					{
-						display.fillRect(0, 114, display.width(), 14, TFT_WHITE);
-						display.setCursor(2, 111);
-						display.setTextFont(2);
-						display.print("Turning off * * * *");
-
-						while(!buttons.released(BTN_A))
-							update();
-						FastLED.clear();
-						delay(10);
-						return;
-					}
-					update();
-				}
-			}
-			update();
+			buttons.update();
 		}
 		ringtone->stop();
-
 	}
-
 }
 void MAKERphone::loadAlarms()
 {
