@@ -156,7 +156,8 @@ void MAKERphone::begin(bool splash) {
 		loadSettings(1);
 		loadAlarms();
 		loadNotifications();
-
+		ringtone = new MPTrack((char*)ringtone_path.c_str());
+		addTrack(ringtone);
 	}
 	applySettings();
 	checkAlarms();
@@ -173,11 +174,7 @@ void MAKERphone::begin(bool splash) {
 				0);				/* Task handle to keep track of created task */
 	addOscillator(osc);
 	// osc->setADSR(10,20,0.8,10);
-	if(SDinsertedFlag)
-	{
-		ringtone = new MPTrack((char *)(ringtone_path.c_str()));
-		addTrack(ringtone);
-	}
+	addTrack(ringtone);
 	sleepTimer = millis();
 }
 
@@ -823,14 +820,6 @@ void MAKERphone::incomingCall(String _serialData) //TODO
 		if(buttons.released(BTN_FUN_RIGHT) || localBuffer.indexOf(",1,6,") != -1)
 		{
 			ringtone->stop();
-			if(localBuffer.indexOf(",1,6,") == -1)
-			{
-				Serial1.println("ATH");
-				long long curr_millis = millis();
-				while (Serial1.readString().indexOf(",0,6,") == -1 && millis() - curr_millis < 2000){
-					Serial1.println("ATH");
-				}
-			}
 			tft.fillRect(0,0,160,128,TFT_WHITE);
 			tft.setCursor(55, 9);
 			tft.print("00:00");
@@ -842,6 +831,15 @@ void MAKERphone::incomingCall(String _serialData) //TODO
 			tft.setCursor(10, 110);
 			tft.print("Call ended");
 			Serial.println("ENDED");
+			if(localBuffer.indexOf(",1,6,") == -1)
+			{
+				Serial1.println("ATH");
+				long long curr_millis = millis();
+				while (Serial1.readString().indexOf(",0,6,") == -1 && millis() - curr_millis < 2000){
+					Serial1.println("ATH");
+				}
+			}
+			
 			// update();
 			updateTimeRTC();
 			addCall(number, RTC.now().unixtime(), tmp_time, 0);
@@ -1875,7 +1873,6 @@ void MAKERphone::loadSettings(bool debug)
 		backgroundIndex = settings["background_color"];
 		notification = settings["notification"];
 		ringtone_path = String(settings["ringtone"].as<char*>());
-		ringtone = new MPTrack(settings["ringtone"].as<char*>());
 		         
 	} else {
 		Serial.println("Error loading new settings");
@@ -1933,7 +1930,9 @@ void MAKERphone::applySettings()
 		break;
 	}
 	osc->setVolume(256 * volume / 14);
+	removeTrack(ringtone);
 	ringtone = new MPTrack((char*)ringtone_path.c_str());
+	addTrack(ringtone);
 }
 
 //save manipulation
