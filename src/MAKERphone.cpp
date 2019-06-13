@@ -94,7 +94,6 @@ void MAKERphone::begin(bool splash) {
 	display.setTextSize(1); // landscape
 	popupSprite.setColorDepth(8); // Set colour depth of Sprite to 8 (or 16) bits
 	popupSprite.createSprite(160, 18);
-	tempSprite.setColorDepth(8);
 	// buf.createSprite(BUF2WIDTH, BUF2HEIGHT); // Create the sprite and clear background to black
 	// buf.setTextSize(1);
 	if (splash == 1)
@@ -781,9 +780,12 @@ void MAKERphone::incomingCall(String _serialData) //TODO
 	uint32_t callMillis = millis();
 	uint16_t tmp_time = 0;
 	String localBuffer = _serialData;
+	String buffer = "";
 	uint16_t foo = localBuffer.indexOf("\"+", localBuffer.indexOf("CLCC:")) + 1;
 	number = localBuffer.substring(foo, localBuffer.indexOf("\"", foo));
+	localBuffer = "";
 	bool played = 0;
+	char c;
 	tft.setTextFont(2);
 	tft.setTextColor(TFT_BLACK);
 	tft.setTextSize(1);
@@ -806,14 +808,15 @@ void MAKERphone::incomingCall(String _serialData) //TODO
 	Serial.println(SD.exists(ringtone_path));
 	while(1)
 	{
-		if(!mp.playingNotification)
+		if (Serial1.available())
 		{
-			if (Serial1.available())
-			{
-				String buffer = Serial1.readString();
-				if(buffer.indexOf("CLCC:") != -1)
-					localBuffer = buffer;
-			}
+			c = Serial1.read();
+			buffer += c;
+		}
+		if(buffer.indexOf("CLCC:") != -1 && buffer.indexOf("\r", buffer.indexOf("CLCC:")) != -1)
+		{
+			localBuffer = buffer;
+			buffer = "";
 		}
 		if(buttons.released(BTN_FUN_LEFT))
 			break;
@@ -906,18 +909,22 @@ void MAKERphone::incomingCall(String _serialData) //TODO
 	digitalWrite(soundSwitchPin, 1);
 	int8_t written = -1;
 	uint16_t prevTime = 0;
+	// localBuffer = "";
 	while (1)
 	{
 		if (Serial1.available())
 		{
-			String buffer = Serial1.readString();
-			if(buffer.indexOf("CLCC:") != -1)
-				localBuffer = buffer;
+			c = Serial1.read();
+			buffer += c;
 		}
-		Serial.println(localBuffer);
-		delay(5);
-
-
+		if(buffer.indexOf("CLCC:") != -1 && buffer.indexOf("\r", buffer.indexOf("CLCC:")) != -1)
+		{
+			localBuffer = buffer;
+			buffer = "";
+		}
+		Serial.println("----------");
+		Serial.println(buffer);
+		delay(1);
 		if (localBuffer.indexOf("CLCC:") != -1 || localBuffer.indexOf("AT+CMIC") != -1)
 		{
 			if ((localBuffer.indexOf(",1,0,0,0") != -1 || localBuffer.indexOf("AT+CMIC") != -1 ) &&
@@ -931,7 +938,7 @@ void MAKERphone::incomingCall(String _serialData) //TODO
 
 				temp = "";
 				if ((int((millis() - timeOffset) / 1000) / 60) > 9)
-					temp += (int((millis() - timeOffset) / 1000) / 60) ;
+					temp += (int((millis() - timeOffset) / 1000) / 60);
 				else
 				{
 					temp += "0";
@@ -951,7 +958,6 @@ void MAKERphone::incomingCall(String _serialData) //TODO
 				prevTime = tmp_time;
 				written = 0;
 			}
-
 			else if (localBuffer.indexOf(",1,6,") != -1)
 			{
 				
@@ -1182,7 +1188,6 @@ void MAKERphone::addCall(String number, uint32_t dateTime, int duration, uint8_t
 
 	File file1 = SD.open("/.core/call_log.json", "w");
 	jarr.prettyPrintTo(file1);
-	jarr.prettyPrintTo(Serial);
 	file1.close();
 }
 void MAKERphone::saveMessage(String text, String number, bool isRead, bool direction, JsonArray *messages){
