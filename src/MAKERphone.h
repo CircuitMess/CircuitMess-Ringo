@@ -128,6 +128,8 @@ class MAKERphone:public Buttons, public DateTime
 
 	TFT_eSPI tft = TFT_eSPI();  // Invoke library, pins defined in User_Setup.h
 	TFT_eSprite display = TFT_eSprite(&tft);
+	TFT_eSprite popupSprite = TFT_eSprite(&tft);
+	TFT_eSprite tempSprite = TFT_eSprite(&tft);
 	// TFT_eSprite buf = TFT_eSprite(&tft);
 	Oscillator* osc = new Oscillator();
 

@@ -92,7 +92,9 @@ void MAKERphone::begin(bool splash) {
 	display.createSprite(BUFWIDTH, BUFHEIGHT); // Create the sprite and clear background to black
 	display.setTextWrap(0);             //setRotation(1);
 	display.setTextSize(1); // landscape
-
+	popupSprite.setColorDepth(8); // Set colour depth of Sprite to 8 (or 16) bits
+	popupSprite.createSprite(160, 18);
+	tempSprite.setColorDepth(8);
 	// buf.createSprite(BUF2WIDTH, BUF2HEIGHT); // Create the sprite and clear background to black
 	// buf.setTextSize(1);
 	if (splash == 1)
@@ -408,15 +410,14 @@ bool MAKERphone::update() {
 	}
 	if (millis() - lastFrameCount >= frameSpeed) {
 		lastFrameCount = millis();
-		updatePopup();
 
 		if(resolutionMode == 0) //native res mode
-			display.pushSprite(0, 0);
-
-		// else//halved res mode
-			// buf.pushSprite(0,0);
-
-
+		{
+			if(popupTimeLeft)
+				updatePopup();		// else//halved res mode
+			else
+				display.pushSprite(0, 0);
+		}
 		FastLED.setBrightness(255/5 * pixelsBrightness);
 		FastLED.show();
 		delay(1);
@@ -1199,7 +1200,25 @@ void MAKERphone::incomingMessage(String _serialData)
 		saveMessage(text, number, 0, 1, &jarr);
 	updateTimeRTC();
 	addNotification(2, number, RTC.now());
-	popup(String(number + ": " + text), 50);
+	// popup(String(number + ": " + text), 50);
+	tft.setTextColor(TFT_BLACK);
+	tft.fillRect(0,0,160,128,TFT_WHITE);
+	tft.fillRect(0,108,160,20, 0xA534);
+	tft.setTextFont(2);
+	tft.setTextSize(1);
+	tft.setCursor(40, 7);
+	tft.print("NEW MESSAGE!");
+	tft.drawBitmap(10, 5, incomingMessageIcon, TFT_BLUE, 2);
+	tft.setCursor(10,40);
+	tft.print("From: ");
+	tft.print(number);
+	tft.setCursor(10, 70);
+	tft.setTextWrap(1);
+	tft.print(text);
+	tft.setCursor(3, 110);
+	tft.print("Press \"A\" to continue");
+	while(!buttons.released(BTN_A))
+		buttons.update();
 	// +CMT: "+385921488476","","19/06/03,20:14:58+08"
 	// Wjd
 
@@ -2286,18 +2305,26 @@ void MAKERphone::updatePopup() {
 	}
 	uint8_t yOffset = 0;
 	if (popupTimeLeft >= popupTotalTime - 18) {
-		yOffset = (18 - (popupTotalTime - popupTimeLeft));
+		yOffset = (19 - (popupTotalTime - popupTimeLeft));
 	}
 	if (popupTimeLeft < 18) {
-		yOffset = (18 - popupTimeLeft);
+		yOffset = (19 - popupTimeLeft);
 	}
-	display.setTextFont(2);
-	display.setTextSize(1);
-	display.setTextColor(TFT_WHITE);
-	display.fillRect(0, display.height() - 18 + yOffset, display.width(), 20, TFT_DARKGREY);
-	display.fillRect(0, display.height() - 20 + yOffset, display.width(), 2, TFT_BLACK);
-	display.setCursor(2, display.height() - 17 + yOffset);
-	display.print(popupText);
+	
+	
+	popupSprite.setTextColor(TFT_WHITE);
+	popupSprite.fillScreen(TFT_BLACK);
+	popupSprite.fillRect(0, yOffset, display.width(), 18, TFT_DARKGREY);
+	// popupSprite.fillRect(0, 18 - yOffset, display.width(), 2, TFT_BLACK);
+	if(yOffset == 0)
+	{
+		popupSprite.setTextFont(2);
+		popupSprite.setTextSize(1);
+		popupSprite.setCursor(2, yOffset + 2);
+		popupSprite.print(popupText);
+	}
+	popupSprite.pushSprite(0, 110, TFT_BLACK);
+
 	popupTimeLeft--;
 }
 void MAKERphone::homePopup(bool animation)
