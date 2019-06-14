@@ -1835,6 +1835,7 @@ void MAKERphone::saveSettings(bool debug)
 		settings["background_color"] = backgroundIndex;
 		settings["notification"] = notification;
 		settings["ringtone"] = ringtone_path.c_str();
+		settings["volume"] = volume;
 		File file1 = SD.open(path, "w");
 		settings.prettyPrintTo(file1);
 		file1.close();
@@ -1889,6 +1890,7 @@ void MAKERphone::loadSettings(bool debug)
 		backgroundIndex = settings["background_color"];
 		notification = settings["notification"];
 		ringtone_path = String(settings["ringtone"].as<char*>());
+		volume = settings["volume"];
 		         
 	} else {
 		Serial.println("Error loading new settings");
