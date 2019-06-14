@@ -128,6 +128,7 @@ class MAKERphone:public Buttons, public DateTime
 
 	TFT_eSPI tft = TFT_eSPI();  // Invoke library, pins defined in User_Setup.h
 	TFT_eSprite display = TFT_eSprite(&tft);
+	TFT_eSprite popupSprite = TFT_eSprite(&tft);
 	// TFT_eSprite buf = TFT_eSprite(&tft);
 	Oscillator* osc = new Oscillator();
 
@@ -146,9 +147,9 @@ class MAKERphone:public Buttons, public DateTime
 	void splashScreen();
 	void sleep();
 	void incomingCall(String _serialData);
-	void addCall(String number, String dateTime, int duration, uint8_t direction);
+	void addCall(String number, uint32_t dateTime, int duration, uint8_t direction);
 	void incomingMessage(String _serialData);
-	void saveMessage(String text, String number, JsonArray *messages);
+	void saveMessage(String text, String number, bool isRead, bool direction, JsonArray *messages);
 	void checkSim();
 	void enterPin();
 	void enterPUK();

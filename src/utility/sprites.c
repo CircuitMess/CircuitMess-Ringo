@@ -1300,7 +1300,18 @@ const byte newContactIcon[] PROGMEM = { 16,9,
 	B00000110,B00000000,
 	B00000110,B00000000,
 };
-
+const byte incomingMessageIcon[] PROGMEM = {
+	8,9,
+	B01111110,
+	B10000001,
+	B10000101,
+	B10101001,
+	B10110001,
+	B10111001,
+	B10000001,
+	B01111010,
+	B00000100,
+};
 //home menu popup icons
 const unsigned short popupExit[0x190] PROGMEM ={
     0xFED4, 0xFED4, 0xFED4, 0xFED4, 0xFED4, 0xFED4, 0xFED4, 0xFED4, 0xFED4, 0xFED4, 0xFED4, 0xFED4, 0xFED4, 0xFED4, 0xFED4, 0xFED4,   // 0x0010 (16)
