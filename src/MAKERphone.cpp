@@ -138,6 +138,18 @@ void MAKERphone::begin(bool splash) {
 		Serial.println("Serial1 up and running...");
 	}
 
+	//Audio
+	initWavLib();
+	xTaskCreatePinnedToCore(
+				Task1code,				/* Task function. */
+				"Task1",				/* name of task. */
+				10000,					/* Stack size of task */
+				NULL,					/* parameter of the task */
+				1,						/* priority of the task */
+				&Task1,
+				0);				/* Task handle to keep track of created task */
+	addOscillator(osc);
+
 	//SD startup
 	uint32_t tempMillis = millis();
 	SDinsertedFlag = 1;
@@ -162,19 +174,8 @@ void MAKERphone::begin(bool splash) {
 	applySettings();
 	checkAlarms();
 
-	//Audio
-	initWavLib();
-	xTaskCreatePinnedToCore(
-				Task1code,				/* Task function. */
-				"Task1",				/* name of task. */
-				10000,					/* Stack size of task */
-				NULL,					/* parameter of the task */
-				1,						/* priority of the task */
-				&Task1,
-				0);				/* Task handle to keep track of created task */
-	addOscillator(osc);
+	
 	// osc->setADSR(10,20,0.8,10);
-	addTrack(ringtone);
 	sleepTimer = millis();
 }
 
@@ -819,7 +820,8 @@ void MAKERphone::incomingCall(String _serialData) //TODO
 			break;
 		if(buttons.released(BTN_FUN_RIGHT) || localBuffer.indexOf(",1,6,") != -1)
 		{
-			ringtone->stop();
+			if(SDinsertedFlag && SD.exists(ringtone_path))
+				ringtone->stop();
 			tft.fillRect(0,0,160,128,TFT_WHITE);
 			tft.setCursor(55, 9);
 			tft.print("00:00");
@@ -842,7 +844,8 @@ void MAKERphone::incomingCall(String _serialData) //TODO
 			
 			// update();
 			updateTimeRTC();
-			addCall(number, RTC.now().unixtime(), tmp_time, 0);
+			if(SDinsertedFlag)
+				addCall(number, RTC.now().unixtime(), tmp_time, 0);
 			if(localBuffer.indexOf(",1,6,") != -1)
 				addNotification(1, number, RTC.now());
 
@@ -867,6 +870,7 @@ void MAKERphone::incomingCall(String _serialData) //TODO
 
 		else if(!played)
 		{
+			Serial.println("PLAYED");
 			ringtone->setVolume(256 * volume / 14);
 			ringtone->setRepeat(1);
 			ringtone->play();
@@ -875,7 +879,8 @@ void MAKERphone::incomingCall(String _serialData) //TODO
 		updateNotificationSound();
 		buttons.update();
 	}
-	ringtone->stop();
+	if(SDinsertedFlag && SD.exists(ringtone_path))
+		ringtone->stop();
 	// while(!update());
 
 
@@ -1109,31 +1114,41 @@ void MAKERphone::incomingMessage(String _serialData)
 	helper+=number.length() + 1;
 	helper = _serialData.indexOf("\"\r", helper);
 	String text = _serialData.substring(helper + 3, _serialData.indexOf("\r", helper + 2));
-	File file = SD.open("/.core/messages.json", "r");
+	if(SDinsertedFlag)
+	{
+		File file = SD.open("/.core/messages.json", "r");
+		if(file.size() < 2){ // empty -> FILL
+			Serial.println("Override");
+			file.close();
+			// JsonArray& jarr = jb.parseArray("[{\"number\":\"123123\", \"dateTime\":\"2018-12-12 12:12:12\", \"text\":\"asd asd asd asd\"}]");
+			// JsonArray& jarr = jb.parseArray("[{\"number\":\"123123\", \"dateTime\":\"2018-12-12 12:12:12\", \"text\":\"asd asd asd asd\"}, {\"number\":\"09123\", \"dateTime\":\"2018-12-12 12:12:12\", \"text\":\"Some other text\"}, {\"number\":\"911\", \"dateTime\":\"2018-03-12 12:12:12\", \"text\":\"Help\"}]");
+			JsonArray& jarr = jb.createArray();
+			delay(10);
+			File file1 = SD.open("/.core/messages.json", "w");
+			jarr.prettyPrintTo(file1);
+			file1.close();
+			file = SD.open("/.core/messages.json", "r");
+			while(!file)
+				Serial.println("Messages ERROR");
+		}
+		jb.clear();
+		JsonArray& jarr = jb.parseArray(file);
+		updateTimeRTC();
 
-	if(file.size() < 2){ // empty -> FILL
-		Serial.println("Override");
+		if(!jarr.success())
+		{
+			Serial.println("MESSAGE NOT SAVED");
+			// Serial.println(readFile("/.core/messages.json"));
+		}
+		else
+		{
+			saveMessage(text, number, 0, 1, &jarr);
+			addNotification(2, number, RTC.now());
+		}
+
 		file.close();
-		// JsonArray& jarr = jb.parseArray("[{\"number\":\"123123\", \"dateTime\":\"2018-12-12 12:12:12\", \"text\":\"asd asd asd asd\"}]");
-		// JsonArray& jarr = jb.parseArray("[{\"number\":\"123123\", \"dateTime\":\"2018-12-12 12:12:12\", \"text\":\"asd asd asd asd\"}, {\"number\":\"09123\", \"dateTime\":\"2018-12-12 12:12:12\", \"text\":\"Some other text\"}, {\"number\":\"911\", \"dateTime\":\"2018-03-12 12:12:12\", \"text\":\"Help\"}]");
-		JsonArray& jarr = jb.createArray();
-		delay(10);
-		File file1 = SD.open("/.core/messages.json", "w");
-		jarr.prettyPrintTo(file1);
-		file1.close();
-		file = SD.open("/.core/messages.json", "r");
-		while(!file)
-			Serial.println("Messages ERROR");
 	}
 	
-	JsonArray& jarr = jb.parseArray(file);
-	file.close();
-	if(!jarr.success())
-		Serial.println("Error");
-	else
-		saveMessage(text, number, 0, 1, &jarr);
-	updateTimeRTC();
-	addNotification(2, number, RTC.now());
 	// popup(String(number + ": " + text), 50);
 	tft.setTextColor(TFT_BLACK);
 	tft.fillRect(0,0,160,128,TFT_WHITE);
@@ -1931,9 +1946,13 @@ void MAKERphone::applySettings()
 		break;
 	}
 	osc->setVolume(256 * volume / 14);
-	removeTrack(ringtone);
-	ringtone = new MPTrack((char*)ringtone_path.c_str());
-	addTrack(ringtone);
+	if(SDinsertedFlag)
+	{
+		removeTrack(ringtone);
+		ringtone = new MPTrack((char*)ringtone_path.c_str());
+		addTrack(ringtone);
+		ringtone->setVolume(256 * volume / 14);
+	}
 }
 
 //save manipulation
@@ -2746,7 +2765,6 @@ void MAKERphone::addNotification(uint8_t _type, String _description, DateTime _t
 			break;
 		}
 	}
-	Serial.println(notificationDescriptionList[0]);
 	saveNotifications();
 }
 void MAKERphone::removeNotification(uint8_t index)
@@ -2802,7 +2820,7 @@ void MAKERphone::saveNotifications(bool debug)
 
 		File file1 = SD.open(path, "w");
 		notifications.prettyPrintTo(file1);
-		notifications.prettyPrintTo(Serial);
+		// notifications.prettyPrintTo(Serial);
 		file1.close();
 	} else {
 		Serial.println("Error saving notifications data");
