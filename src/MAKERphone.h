@@ -149,6 +149,7 @@ class MAKERphone:public Buttons, public DateTime
 	void incomingCall(String _serialData);
 	void addCall(String number, uint32_t dateTime, int duration, uint8_t direction);
 	void incomingMessage(String _serialData);
+	bool newMessage = 0;
 	void saveMessage(String text, String number, bool isRead, bool direction, JsonArray *messages);
 	void checkSim();
 	void enterPin();

@@ -182,6 +182,7 @@ void MAKERphone::begin(bool splash) {
 bool MAKERphone::update() {
 	char c;
 	uint16_t refreshInterval = 5000;
+	newMessage = 0;
 	if(screenshotFlag)
 	{
 		screenshotFlag = 0;
@@ -1172,6 +1173,7 @@ void MAKERphone::incomingMessage(String _serialData)
 	tft.print("Press \"A\" to continue");
 	while(!buttons.released(BTN_A))
 		buttons.update();
+	newMessage = 1;
 	// +CMT: "+385921488476","","19/06/03,20:14:58+08"
 	// Wjd
 
