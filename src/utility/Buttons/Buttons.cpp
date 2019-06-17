@@ -141,7 +141,10 @@ uint16_t Buttons::timeHeld(uint8_t button) {
 
 void Buttons::activateInterrupt()
 {
-	// ads.startComparator_SingleEnded(3, 2);
-	ads.startComparator_Windowed(1, 1000, 200);
-	ads.startComparator_Windowed(0, 1000, 200);
+	ads.startComparator_Windowed(3, 1199, 10);
+	// ads.readADC_SingleEnded(0);
+	// ads.startComparator_Windowed(0,1000,100);
+	// ads.readADC_SingleEnded(1);
+	// ads.startComparator_Windowed(1,1000,100);
+
 }

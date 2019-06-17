@@ -182,6 +182,7 @@ void MAKERphone::begin(bool splash) {
 bool MAKERphone::update() {
 	char c;
 	uint16_t refreshInterval = 5000;
+	Serial.println(digitalRead(BTN_INT));
 	if(screenshotFlag)
 	{
 		screenshotFlag = 0;
@@ -208,7 +209,16 @@ bool MAKERphone::update() {
 	// 	}
 	// }
 	//buf2.invertDisplay(1);
-	if (digitalRead(BTN_INT) && sleepTime != 0)
+	bool buttonsPressed = 0;
+	for(uint8_t i = 16; i < 22;i++)
+	{
+		if(buttons.pressed(i))
+		{
+			buttonsPressed = 1;
+			break;
+		}
+	}
+	if (!buttonsPressed && digitalRead(BTN_INT) && sleepTime != 0)
 	{
 		if (millis() - sleepTimer >= sleepTimeActual * 1000)
 		{
@@ -216,7 +226,7 @@ bool MAKERphone::update() {
 			sleepTimer = millis();
 		}
 	}
-	else if(!digitalRead(BTN_INT) && sleepTime)
+	else if((buttonsPressed || !digitalRead(BTN_INT)) && sleepTime)
 			sleepTimer = millis();
 
 	if (millis() > 7000)
@@ -553,7 +563,6 @@ void MAKERphone::sleep() {
 		// rtc_gpio_isolate(GPIO_NUM_34);
 		// rtc_gpio_isolate(GPIO_NUM_25);
 	}
-	buttons.update();
 	buttons.activateInterrupt();
 	
 
@@ -584,6 +593,7 @@ void MAKERphone::sleep() {
 			digitalWrite(OFF_PIN, 1);
 		}
 		ledcAnalogWrite(LEDC_CHANNEL, 255);
+		buttons.activateInterrupt();
 		esp_light_sleep_start();
 	}
 	Serial.println("Buttons wakeup");
