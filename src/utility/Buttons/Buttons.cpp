@@ -17,21 +17,20 @@ void Buttons::update() {
 	buttonsData = 0;
 	
 	delay(1);
-	button_b = ads.readADC_SingleEnded(3);
+	button_a = ads.readADC_SingleEnded(3);
 	delay(1);
 	joystick_x = ads.readADC_SingleEnded(1);
 	delay(1);
 	joystick_y = ads.readADC_SingleEnded(0);
 	delay(1);
-	button_a = ads.readADC_SingleEnded(2);
-	
+	button_b = ads.readADC_SingleEnded(2);
 
 	bitWrite(buttonsData, 18, !(joystick_y < 100 && joystick_x > 300 && joystick_x < 800)); //BTN_UP
 	bitWrite(buttonsData, 19, !(joystick_y > 1000 && joystick_x > 300 && joystick_x < 800)); //BTN_DOWN
 	bitWrite(buttonsData, 20, !(joystick_x > 1000 && joystick_y > 300 && joystick_y < 800)); //BTN_LEFT
 	bitWrite(buttonsData, 21, !(joystick_x < 100 && joystick_y > 300 && joystick_y < 800)); //BTN_RIGHT
-	bitWrite(buttonsData, 17, !(button_a < 1));
-	bitWrite(buttonsData, 16, !(button_b < 1));
+	bitWrite(buttonsData, 16, !(button_a < 1));
+	bitWrite(buttonsData, 17, !(button_b < 1));
 
 	int tmp_value = kpd.port_read();
 
@@ -142,8 +141,7 @@ uint16_t Buttons::timeHeld(uint8_t button) {
 
 void Buttons::activateInterrupt()
 {
-	// ads.startComparator_Windowed(3, 1200, 10);
-	// ads.startComparator_Windowed(3, 1200, 1);
+	// ads.startComparator_SingleEnded(3, 2);
 	ads.startComparator_Windowed(1, 1000, 200);
 	ads.startComparator_Windowed(0, 1000, 200);
 }

@@ -332,7 +332,7 @@ void Adafruit_ADS1015::startComparator_SingleEnded(uint8_t channel, int16_t thre
 
   // Set the high threshold register
   // Shift 12-bit results left 4 bits for the ADS1015
-  writeRegister(m_i2cAddress, ADS1015_REG_POINTER_HITHRESH, threshold << m_bitShift);
+  writeRegister(m_i2cAddress, ADS1015_REG_POINTER_LOWTHRESH, threshold << m_bitShift);
 
   // Write config register to the ADC
   writeRegister(m_i2cAddress, ADS1015_REG_POINTER_CONFIG, config);
