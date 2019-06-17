@@ -198,7 +198,7 @@ bool MPTrack::reloadFile(char path[])
         trackFile.seek(0x2C);
         loaded=0;
         pos=0;
-        playing=true;
+        playing=false;
         return true;
 	}
 	else
