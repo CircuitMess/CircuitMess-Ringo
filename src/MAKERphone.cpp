@@ -182,7 +182,6 @@ void MAKERphone::begin(bool splash) {
 bool MAKERphone::update() {
 	char c;
 	uint16_t refreshInterval = 5000;
-	Serial.println(digitalRead(BTN_INT));
 	if(screenshotFlag)
 	{
 		screenshotFlag = 0;
