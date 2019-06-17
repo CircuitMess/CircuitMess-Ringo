@@ -40,6 +40,7 @@ public:
     void setRepeat(bool r);
     bool openFile();
     void closeFile();
+    bool reloadFile(char path[]);
 
 private:
     File trackFile;
