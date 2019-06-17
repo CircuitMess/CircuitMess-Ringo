@@ -198,6 +198,10 @@ bool MAKERphone::update() {
 		display.setRotation(1);
 		spriteCreated=1;
 	}
+	if(buttons.released(14))
+	{
+		sleep();
+	}
 	//halved resolution mode
 	// if(resolutionMode == 1)
 	// {
@@ -399,7 +403,7 @@ bool MAKERphone::update() {
 			inHomePopup = 0;
 		}
 	}
-	if(buttons.released(14) && !inShutdownPopup && SHUTDOWN_POPUP_ENABLE)
+	if(buttons.held(14, 40) && !inShutdownPopup && SHUTDOWN_POPUP_ENABLE)
 	{
 		inShutdownPopup = 1;
 		shutdownPopup();
