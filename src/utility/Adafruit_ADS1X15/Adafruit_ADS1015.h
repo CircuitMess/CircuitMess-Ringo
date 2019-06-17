@@ -135,6 +135,7 @@ protected:
   void      startComparator_SingleEnded(uint8_t channel, int16_t threshold);
   int16_t   getLastConversionResults();
   void      setGain(adsGain_t gain);
+  void startComparator_Windowed(uint8_t channel, int16_t thresholdhi, int16_t thresholdlo);
   adsGain_t getGain(void);
 
  private:
