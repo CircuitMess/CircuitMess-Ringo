@@ -2989,6 +2989,7 @@ void MAKERphone::shutdownPopup(bool animation)
 				tft.fillRect(12, 36, 138, 56, TFT_WHITE);
 				tft.setCursor(40, 51);
 				tft.print("Turning off...");
+				Serial1.println("AT+CFUN=1,1");
 				delay(750);
 				Serial.println("TURN OFF");
 				digitalWrite(OFF_PIN, 1);
