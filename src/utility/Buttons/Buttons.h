@@ -27,10 +27,11 @@ class Buttons
 			{ '7', '8', '9', 'B' },
 			{ '*', '0', '#', 'A' }
 		};
-		Adafruit_ADS1015 ads;
 		int16_t joystick_x, joystick_y, button_a, button_b;
 
 	public:
+		Adafruit_ADS1015 ads;
+
 		///////////////////
 		//Keypad variables
 		//////////////////
@@ -51,5 +52,6 @@ class Buttons
 
 		uint16_t getJoystickX(){ return joystick_x; }
 		uint16_t getJoystickY(){ return joystick_y; }
+		void activateInterrupt();
 };
 #endif

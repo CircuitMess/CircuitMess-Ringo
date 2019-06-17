@@ -489,6 +489,7 @@ void MAKERphone::sleep() {
 	}
 
 	FastLED.clear();
+	buttons.update();
 
 	ledcAnalogWrite(LEDC_CHANNEL, 255);
 	for (uint8_t i = actualBrightness; i < 255; i++) {
@@ -553,6 +554,8 @@ void MAKERphone::sleep() {
 		// rtc_gpio_isolate(GPIO_NUM_34);
 		// rtc_gpio_isolate(GPIO_NUM_25);
 	}
+	delay(100);
+	buttons.activateInterrupt();
 
 	esp_light_sleep_start();
 	while(esp_sleep_get_wakeup_cause() == 4)

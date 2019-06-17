@@ -4,6 +4,7 @@ void Buttons::begin() {
 	ads.begin();
 	kpd.begin();
 
+
 	// kpd.setDebounceTime(20);
 	// kpd.setHoldTime(0);
 
@@ -139,65 +140,10 @@ uint16_t Buttons::timeHeld(uint8_t button) {
 	}
 }
 
-
-
-// void Buttons::updateJoystick()
-// {
-
-// 	joystick_x = ads.readADC_SingleEnded(0);
-// 	joystick_y = ads.readADC_SingleEnded(1);
-
-// 	bitWrite(buttonsData, 18, !(joystick_y < 100 && joystick_x > 300 && joystick_x < 800)); //BTN_UP
-// 	bitWrite(buttonsData, 19, !(joystick_y > 1000 && joystick_x > 300 && joystick_x < 800)); //BTN_DOWN
-// 	bitWrite(buttonsData, 20, !(joystick_x > 1000 && joystick_y > 300 && joystick_y < 800)); //BTN_LEFT
-// 	bitWrite(buttonsData, 21, !(joystick_x < 100 && joystick_y > 300 && joystick_y < 800)); //BTN_RIGHT
-// 	for (uint8_t i = 18; i < NUM_BTN; i++) {
-// 		//extract the corresponding bit corresponding to the current button
-// 		//Inverted logic : button pressed = low state = 0
-// 		bool pressed = (buttonsData & (1 << i)) == 0;
-
-// 		if (pressed) { //if button pressed
-// 			if (states[i] < 0xFFFE) { // we want 0xFFFE to be max value for the counter
-// 				states[i]++; //increase button hold time
-// 			}
-// 			else if (states[i] == 0xFFFF) { // if we release / hold again too fast
-// 				states[i] = 1;
-// 			}
-// 		}
-// 		else {
-// 			if (states[i] == 0) {//button idle
-// 				continue;
-// 			}
-// 			if (states[i] == 0xFFFF) {//if previously released
-// 				states[i] = 0; //set to idle
-// 			}
-// 			else {
-// 				states[i] = 0xFFFF; //button just released
-// 			}
-// 		}
-// 	}
-// }
-
-// buttonsData = 0;
-// for (int y = 0; y < ROWS;y++)
-// {
-// 	for (int x = 0; x < COLS; x++)
-// 	{
-// 		if(currentKey == keys[y][x] && currentKey != 'B' && currentKey != 'C')
-// 			bitWrite(buttonsData, y * 4 + x, 0);
-// 		else
-// 			bitWrite(buttonsData, y * 4 + x, 1);
-// 	}
-// }
-// bitWrite(buttonsData, 16, (bool)kpd.pin_read(5));//BTN_A
-// bitWrite(buttonsData, 17, (bool)kpd.pin_read(4));//BTN_B
-
-// bool counter = 0;
-// // for(uint8_t i = 0; i< 4;i++)
-// // {
-// // 	if(counter)
-// // 		bitWrite(buttonsData, i+18, 0);
-// // 	if(bitRead(buttonsData, i+18))
-// // 		counter=1;
-// // }
-// }
+void Buttons::activateInterrupt()
+{
+	// ads.startComparator_Windowed(3, 1200, 10);
+	// ads.startComparator_Windowed(3, 1200, 1);
+	ads.startComparator_Windowed(1, 1000, 200);
+	ads.startComparator_Windowed(0, 1000, 200);
+}
