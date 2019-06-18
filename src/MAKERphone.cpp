@@ -97,6 +97,23 @@ void MAKERphone::begin(bool splash) {
 	popupSprite.createSprite(160, 18);
 	// buf.createSprite(BUF2WIDTH, BUF2HEIGHT); // Create the sprite and clear background to black
 	// buf.setTextSize(1);
+
+	//SD startup
+	uint32_t tempMillis = millis();
+	if(!digitalRead(SD_INT))
+	{
+		SDinsertedFlag = 1;
+		while (!SD.begin(5, SPI, 8000000))
+		{
+			Serial.println("SD ERROR");
+			if(millis()-tempMillis > 5)
+			{
+				SDinsertedFlag = 0;
+				break;
+			}
+		}
+	}
+
 	if (splash == 1)
 	{
 		display.fillScreen(TFT_RED);
@@ -151,21 +168,7 @@ void MAKERphone::begin(bool splash) {
 				0);				/* Task handle to keep track of created task */
 	addOscillator(osc);
 
-	//SD startup
-	uint32_t tempMillis = millis();
-	if(!digitalRead(SD_INT))
-	{
-		SDinsertedFlag = 1;
-		while (!SD.begin(5, SPI, 8000000))
-		{
-			Serial.println("SD ERROR");
-			if(millis()-tempMillis > 5)
-			{
-				SDinsertedFlag = 0;
-				break;
-			}
-		}
-	}
+	
 
 	if(SDinsertedFlag)
 	{
@@ -190,8 +193,15 @@ bool MAKERphone::update() {
 	if(digitalRead(SD_INT) && SDinsertedFlag)
 	{
 		SDinsertedFlag = 0;
+		for(int i = 0; i<4;i++)
+		{
+			if(tracks[i] != nullptr)
+				if(tracks[i]->isPlaying())
+					tracks[i] = nullptr;
+		}
 		SDremovedPopup();
 		SD.end();
+		// initWavLib();
 	}
 	if(!digitalRead(SD_INT) && !SDinsertedFlag)
 	{
@@ -3273,13 +3283,14 @@ void MAKERphone::checkAlarms()
 }
 void MAKERphone::SDremovedPopup()
 {
-	for (int i = 2; i < 70; i++)
+	for (int i = 2; i < 72; i++)
 	{
-		tft.drawRect(tft.width()/2 - i, 50, i*2+2, 28, TFT_BLACK);
-		tft.drawRect(tft.width()/2 - i + 1, 51, i*2+1, 26, TFT_BLACK);
-		tft.fillRect(tft.width()/2 - i + 2, 52, i * 2 - 2, 24, TFT_WHITE);
+		tft.drawRect(tft.width()/2 - i, 46, i * 2 + 2, 36, TFT_BLACK);
+		tft.drawRect(tft.width()/2 - i + 1, 47, i * 2 + 1, 34, TFT_BLACK);
+		tft.fillRect(tft.width()/2 - i + 2, 48, i * 2 - 2, 32, TFT_WHITE);
 	}
-	tft.setCursor(26, 55);
+	tft.drawBitmap(14, 52, SDcardIcon, TFT_BLACK, 2);
+	tft.setCursor(38, 55);
 	tft.setTextColor(TFT_BLACK);
 	tft.setTextFont(2);
 	tft.setTextSize(1);
@@ -3288,13 +3299,14 @@ void MAKERphone::SDremovedPopup()
 }
 void MAKERphone::SDinsertedPopup()
 {
-	for (int i = 2; i < 70; i++)
+	for (int i = 2; i < 72; i++)
 	{
-		tft.drawRect(tft.width()/2 - i, 50, i*2+2, 28, TFT_BLACK);
-		tft.drawRect(tft.width()/2 - i + 1, 51, i*2+1, 26, TFT_BLACK);
-		tft.fillRect(tft.width()/2 - i + 2, 52, i * 2 - 2, 24, TFT_WHITE);
+		tft.drawRect(tft.width()/2 - i, 46, i * 2 + 2, 36, TFT_BLACK);
+		tft.drawRect(tft.width()/2 - i + 1, 47, i * 2 + 1, 34, TFT_BLACK);
+		tft.fillRect(tft.width()/2 - i + 2, 48, i * 2 - 2, 32, TFT_WHITE);
 	}
-	tft.setCursor(24, 55);
+	tft.drawBitmap(14, 52, SDcardIcon, TFT_BLACK, 2);
+	tft.setCursor(38, 55);
 	tft.setTextColor(TFT_BLACK);
 	tft.setTextFont(2);
 	tft.setTextSize(1);

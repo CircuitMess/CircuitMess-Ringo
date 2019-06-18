@@ -17,8 +17,11 @@ MPTrack::~MPTrack()
 
 bool MPTrack::openFile()
 {
-    while(!SD.begin(5, SPI, 8000000))
+    if(!SD.begin(5, SPI, 8000000))
+    {
         Serial.println("SD ERROR");
+        return false; 
+    }
     trackFile=SD.open(trackPath);
     if(trackFile)
     {
