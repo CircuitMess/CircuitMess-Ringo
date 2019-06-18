@@ -38,6 +38,7 @@ void MAKERphone::begin(bool splash) {
 	digitalWrite(SIM800_DTR, 0);
 	pinMode(BTN_INT, INPUT_PULLUP);
 	pinMode(SIM_INT, INPUT_PULLUP);
+	pinMode(SD_INT, INPUT_PULLUP);
 	pinMode(RTC_INT, INPUT_PULLUP);
 	pinMode(OFF_PIN, OUTPUT);
 	digitalWrite(OFF_PIN, 0);
@@ -152,14 +153,17 @@ void MAKERphone::begin(bool splash) {
 
 	//SD startup
 	uint32_t tempMillis = millis();
-	SDinsertedFlag = 1;
-	while (!SD.begin(5, SPI, 8000000))
+	if(!digitalRead(SD_INT))
 	{
-		Serial.println("SD ERROR");
-		if(millis()-tempMillis > 5)
+		SDinsertedFlag = 1;
+		while (!SD.begin(5, SPI, 8000000))
 		{
-			SDinsertedFlag = 0;
-			break;
+			Serial.println("SD ERROR");
+			if(millis()-tempMillis > 5)
+			{
+				SDinsertedFlag = 0;
+				break;
+			}
 		}
 	}
 
@@ -183,6 +187,27 @@ bool MAKERphone::update() {
 	char c;
 	uint16_t refreshInterval = 5000;
 	newMessage = 0;
+	if(digitalRead(SD_INT) && SDinsertedFlag)
+	{
+		SDinsertedFlag = 0;
+		SDremovedPopup();
+		SD.end();
+	}
+	if(!digitalRead(SD_INT) && !SDinsertedFlag)
+	{
+		SDinsertedFlag = 1;
+		SDinsertedPopup();
+		uint32_t tempMillis = millis();
+		while (!SD.begin(5, SPI, 8000000))
+		{
+			Serial.println("SD ERROR");
+			if(millis()-tempMillis > 5)
+			{
+				SDinsertedFlag = 0;
+				break;
+			}
+		}
+	}
 	if(screenshotFlag)
 	{
 		screenshotFlag = 0;
@@ -980,7 +1005,7 @@ void MAKERphone::incomingCall(String _serialData) //TODO
 				prevTime = tmp_time;
 				written = 0;
 			}
-			else if (localBuffer.indexOf(",1,6,") != -1)
+			else if (localBuffer.indexOf(",1,6,0") != -1)
 			{
 				
 				tft.fillRect(0,0,160,128,TFT_WHITE);
@@ -3245,6 +3270,36 @@ void MAKERphone::checkAlarms()
 		RTC.set_alarm(alarm, flags);
 		RTC.on_alarm();
 	}
+}
+void MAKERphone::SDremovedPopup()
+{
+	for (int i = 2; i < 70; i++)
+	{
+		tft.drawRect(tft.width()/2 - i, 50, i*2+2, 28, TFT_BLACK);
+		tft.drawRect(tft.width()/2 - i + 1, 51, i*2+1, 26, TFT_BLACK);
+		tft.fillRect(tft.width()/2 - i + 2, 52, i * 2 - 2, 24, TFT_WHITE);
+	}
+	tft.setCursor(26, 55);
+	tft.setTextColor(TFT_BLACK);
+	tft.setTextFont(2);
+	tft.setTextSize(1);
+	tft.print("SD card removed!");
+	delay(1500);
+}
+void MAKERphone::SDinsertedPopup()
+{
+	for (int i = 2; i < 70; i++)
+	{
+		tft.drawRect(tft.width()/2 - i, 50, i*2+2, 28, TFT_BLACK);
+		tft.drawRect(tft.width()/2 - i + 1, 51, i*2+1, 26, TFT_BLACK);
+		tft.fillRect(tft.width()/2 - i + 2, 52, i * 2 - 2, 24, TFT_WHITE);
+	}
+	tft.setCursor(24, 55);
+	tft.setTextColor(TFT_BLACK);
+	tft.setTextFont(2);
+	tft.setTextSize(1);
+	tft.print("SD card inserted!");
+	delay(1500);
 }
 
 //Misc

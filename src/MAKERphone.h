@@ -109,7 +109,7 @@ extern HardwareSerial Serial1;
 
 #define LEDC_CHANNEL 1 // use second channel of 16 channels(started from zero)
 #define LEDC_TIMER  13 // use 13 bit precission for LEDC timer
-#define LEDC_BASE_FREQ  5000 // use 5000 Hz as a LEDC base frequency
+#define LEDC_BASE_FREQ  5000 // use 5000 Hz as a LEDC base frequencyF
 
 // capacity = JSON_ARRAY_SIZE(number_of_contacts) + number_of_contacts*JSON_OBJECT_SIZE(2);
 // The following size is calculated of 100 contracts and the formula is ^
@@ -318,7 +318,8 @@ class MAKERphone:public Buttons, public DateTime
 		void loadNotifications(bool debug = 0);
 		void drawNotificationWindow(uint8_t y, uint8_t index);
 		void notificationView();
-
+		void SDremovedPopup();
+		void SDinsertedPopup();
 	
 		void checkAlarms();
 
