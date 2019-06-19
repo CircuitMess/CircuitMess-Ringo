@@ -26,7 +26,7 @@ TaskHandle_t MeasuringTask;
 uint32_t voltageMillis = millis();
 uint32_t voltageSum = 0;
 uint16_t voltageSample = 0;
-volatile double voltage = 50000;
+volatile double voltage = 3700;
 void Task1code( void * pvParameters ){
 	while (true)
 		updateWav();
@@ -399,7 +399,7 @@ bool MAKERphone::update() {
 	updateNotificationSound();
 	mp.batteryVoltage = voltage;
 
-	if(batteryVoltage <= 3600)
+	if(batteryVoltage <= 3580)
 	{
 		tft.setTextColor(TFT_BLACK);
 		tft.setTextSize(1);
@@ -2453,15 +2453,15 @@ void MAKERphone::homePopup(bool animation)
 			display.drawBitmap(helper*scale, 1*scale, noSDIcon, TFT_BLACK, scale);
 		if (batteryVoltage > 4300)
 			display.drawBitmap(74*scale, 1*scale, batteryCharging, TFT_BLACK, scale);
-		else if (batteryVoltage <= 4300 && batteryVoltage >= 4000)
+		else if (batteryVoltage <= 4300 && batteryVoltage >= 3850)
 			display.drawBitmap(74*scale, 1*scale, batteryFull, TFT_BLACK, scale);
-		else if (batteryVoltage < 4000 && batteryVoltage >= 3900)
+		else if (batteryVoltage < 3850 && batteryVoltage >= 3750)
 			display.drawBitmap(74*scale, 1*scale, batteryMid, TFT_BLACK, scale);
-		else if (batteryVoltage < 3900 && batteryVoltage >= 3800)
+		else if (batteryVoltage < 3750 && batteryVoltage >= 3650)
 			display.drawBitmap(74*scale, 1*scale, batteryMidLow, TFT_BLACK, scale);
-		else if (batteryVoltage < 3800 && batteryVoltage >= 3700)
+		else if (batteryVoltage < 3650 && batteryVoltage >= 3600)
 			display.drawBitmap(74*scale, 1*scale, batteryLow, TFT_BLACK, scale);
-		else if (batteryVoltage < 3700)
+		else if (batteryVoltage < 3600)
 			display.drawBitmap(74*scale, 1*scale, batteryEmpty, TFT_BLACK, scale);
 
 
