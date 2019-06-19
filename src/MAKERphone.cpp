@@ -398,33 +398,22 @@ bool MAKERphone::update() {
 	}
 	updateNotificationSound();
 	mp.batteryVoltage = voltage;
-	// if(voltageMillis - millis() > 10)
-	// {
-	// 	voltageMillis = millis();
-	// 	voltageSum += analogRead(VOLTAGE_PIN);
-	// 	voltageSample++;
-	// 	if(voltageSample >= ADC_COUNT)
-	// 	{
-	// 		batteryVoltage = ((voltageSum * 2 )/1150.0)/ADC_COUNT;
-	// 		if(batteryVoltage <= 3.6)
-	// 		{
-	// 			tft.setTextColor(TFT_BLACK);
-	// 			tft.setTextSize(1);
-	// 			tft.setTextFont(2);
-	// 			tft.fillRect(12, 36, 138, 56, TFT_WHITE);
-	// 			tft.setCursor(37, 45);
-	// 			tft.print("Battery critical!");
-	// 			tft.setCursor(40, 61);
-	// 			tft.print("Turning off...");
-	// 			delay(1500);
-	// 			Serial.println("TURN OFF");
-	// 			digitalWrite(OFF_PIN, 1);
-	// 		}
-	// 		voltageSample = 0;
-	// 		voltageSum = 0;
-	// 	}
-		
-	// }
+
+	if(batteryVoltage <= 3600)
+	{
+		tft.setTextColor(TFT_BLACK);
+		tft.setTextSize(1);
+		tft.setTextFont(2);
+		tft.fillRect(12, 36, 138, 56, TFT_WHITE);
+		tft.setCursor(37, 45);
+		tft.print("Battery critical!");
+		tft.setCursor(40, 61);
+		tft.print("Turning off...");
+		delay(1500);
+		Serial.println("TURN OFF");
+		digitalWrite(OFF_PIN, 1);
+	}
+
 	if(!digitalRead(RTC_INT) && !inAlarmPopup && !alarmCleared)
 	{
 		inAlarmPopup = 1;
@@ -2462,17 +2451,17 @@ void MAKERphone::homePopup(bool animation)
 		}
 		if(!SDinsertedFlag)
 			display.drawBitmap(helper*scale, 1*scale, noSDIcon, TFT_BLACK, scale);
-		if (batteryVoltage > 4000)
+		if (batteryVoltage > 4300)
 			display.drawBitmap(74*scale, 1*scale, batteryCharging, TFT_BLACK, scale);
-		else if (batteryVoltage <= 4000 && batteryVoltage >= 3800)
+		else if (batteryVoltage <= 4300 && batteryVoltage >= 4000)
 			display.drawBitmap(74*scale, 1*scale, batteryFull, TFT_BLACK, scale);
-		else if (batteryVoltage < 3800 && batteryVoltage >= 3600)
+		else if (batteryVoltage < 4000 && batteryVoltage >= 3900)
 			display.drawBitmap(74*scale, 1*scale, batteryMid, TFT_BLACK, scale);
-		else if (batteryVoltage < 3600 && batteryVoltage >= 3400)
+		else if (batteryVoltage < 3900 && batteryVoltage >= 3800)
 			display.drawBitmap(74*scale, 1*scale, batteryMidLow, TFT_BLACK, scale);
-		else if (batteryVoltage < 3400 && batteryVoltage >= 3200)
+		else if (batteryVoltage < 3800 && batteryVoltage >= 3700)
 			display.drawBitmap(74*scale, 1*scale, batteryLow, TFT_BLACK, scale);
-		else if (batteryVoltage < 3200)
+		else if (batteryVoltage < 3700)
 			display.drawBitmap(74*scale, 1*scale, batteryEmpty, TFT_BLACK, scale);
 
 
