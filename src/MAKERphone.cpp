@@ -286,7 +286,7 @@ bool MAKERphone::update() {
 			break;
 		}
 	}
-	if (!buttonsPressed && digitalRead(BTN_INT) && sleepTime != 0)
+	if (!buttonsPressed && digitalRead(BTN_INT) && sleepTime != 0 && !inCall && !inAlarmPopup)
 	{
 		if (millis() - sleepTimer >= sleepTimeActual * 1000)
 		{
@@ -294,7 +294,7 @@ bool MAKERphone::update() {
 			sleepTimer = millis();
 		}
 	}
-	else if((buttonsPressed || !digitalRead(BTN_INT)) && sleepTime)
+	else if((buttonsPressed || !digitalRead(BTN_INT) || inCall || inAlarmPopup) && sleepTime)
 			sleepTimer = millis();
 
 	if (millis() > 7000)

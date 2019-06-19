@@ -309,6 +309,7 @@ class MAKERphone:public Buttons, public DateTime
 	void saveNotifications(bool debug = 0);
 	void deallocateAudio();
 	void reallocateAudio();
+	bool inCall = 0;
 	private:
 		MPTrack* ringtone;
 		int multi_tap(byte key);
@@ -337,7 +338,6 @@ class MAKERphone:public Buttons, public DateTime
 			"LED brightness"
 		};
 		String monthsList[12] PROGMEM = {"JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"};
-		bool inCall = 0;
 		bool inHomePopup = 0;
 		bool inShutdownPopup = 0;
 		void shutdownPopup(bool animation = 1);
