@@ -1151,7 +1151,25 @@ void MAKERphone::incomingCall(String _serialData) //TODO
 		}
 
 		tmp_time = int((millis() - timeOffset) / 1000);
-		// update();
+		for(int i = 0; i < 12;i++)
+		{
+			
+			if(buttons.released(i))
+			{
+				if(i == 9)
+					Serial1.println("AT+VTS=*");
+				else if(i == 10)
+					Serial1.println("AT+VTS=0");
+				else if(i == 11)
+					Serial1.println("AT+VTS=#");
+				else
+				{
+					Serial1.print("AT+VTS=");
+					Serial1.println(i+1);
+				}
+				break;
+			}
+		}
 		buttons.update();
 	}
 	digitalWrite(soundSwitchPin, 0);
