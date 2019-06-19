@@ -22,10 +22,32 @@ Authors:
 extern MAKERphone mp;
 //audio refresh task
 TaskHandle_t Task1;
-
+TaskHandle_t MeasuringTask;
+uint32_t voltageMillis = millis();
+uint32_t voltageSum = 0;
+uint16_t voltageSample = 0;
+volatile double voltage = 50000;
 void Task1code( void * pvParameters ){
 	while (true)
 		updateWav();
+}
+
+void ADCmeasuring(void *parameters)
+{
+	while(1)
+	{
+		for(int i = 0; i < 2000; i++)
+		{
+			vTaskDelay(1);
+			voltageSum += analogRead(VOLTAGE_PIN);
+			voltageSample++;
+		}
+		voltage = ((voltageSum )/1150.0);
+		voltageSum = 0;
+		voltageSample = 0;
+		// vTaskDelay(1000);
+	}
+
 }
 
 //core
@@ -167,7 +189,14 @@ void MAKERphone::begin(bool splash) {
 				&Task1,
 				0);				/* Task handle to keep track of created task */
 	addOscillator(osc);
-
+	xTaskCreatePinnedToCore(
+				ADCmeasuring,				/* Task function. */
+				"MeasuringTask",				/* name of task. */
+				10000,					/* Stack size of task */
+				NULL,					/* parameter of the task */
+				1,						/* priority of the task */
+				&MeasuringTask,
+				0);				/* Task handle to keep track of created task */
 	
 
 	if(SDinsertedFlag)
@@ -368,33 +397,34 @@ bool MAKERphone::update() {
 		}
 	}
 	updateNotificationSound();
-
-	if(voltageMillis - millis() > 50)
-	{
-		if(voltageSample > 1000)
-		{
-			batteryVoltage = (voltageSum / 1000 * 3.3) * 2000 / 4096 + VOLTAGE_OFFSET;
-			if(batteryVoltage <= 3200)
-			{
-				tft.setTextColor(TFT_BLACK);
-				tft.setTextSize(1);
-				tft.setTextFont(2);
-				tft.fillRect(12, 36, 138, 56, TFT_WHITE);
-				tft.setCursor(37, 45);
-				tft.print("Battery critical!");
-				tft.setCursor(40, 61);
-				tft.print("Turning off...");
-				delay(1500);
-				Serial.println("TURN OFF");
-				digitalWrite(OFF_PIN, 1);
-			}
-			voltageSample = 0;
-			voltageSum = 0;
-		}
-		voltageMillis = millis();
-		voltageSum += analogRead(VOLTAGE_PIN);
-		voltageSample++;
-	}
+	mp.batteryVoltage = voltage;
+	// if(voltageMillis - millis() > 10)
+	// {
+	// 	voltageMillis = millis();
+	// 	voltageSum += analogRead(VOLTAGE_PIN);
+	// 	voltageSample++;
+	// 	if(voltageSample >= ADC_COUNT)
+	// 	{
+	// 		batteryVoltage = ((voltageSum * 2 )/1150.0)/ADC_COUNT;
+	// 		if(batteryVoltage <= 3.6)
+	// 		{
+	// 			tft.setTextColor(TFT_BLACK);
+	// 			tft.setTextSize(1);
+	// 			tft.setTextFont(2);
+	// 			tft.fillRect(12, 36, 138, 56, TFT_WHITE);
+	// 			tft.setCursor(37, 45);
+	// 			tft.print("Battery critical!");
+	// 			tft.setCursor(40, 61);
+	// 			tft.print("Turning off...");
+	// 			delay(1500);
+	// 			Serial.println("TURN OFF");
+	// 			digitalWrite(OFF_PIN, 1);
+	// 		}
+	// 		voltageSample = 0;
+	// 		voltageSum = 0;
+	// 	}
+		
+	// }
 	if(!digitalRead(RTC_INT) && !inAlarmPopup && !alarmCleared)
 	{
 		inAlarmPopup = 1;
@@ -622,7 +652,7 @@ void MAKERphone::sleep() {
 				voltageSample++;
 			}
 		}
-		batteryVoltage = (voltageSum / 100 * 3.3) * 2000 / 4096 + VOLTAGE_OFFSET;
+		batteryVoltage = (voltageSum / 100 * 3.3) * 2000 / 4096 + ADC_COUNT;
 		voltageSample = 0;
 		voltageSum = 0;
 		Serial.println(batteryVoltage);

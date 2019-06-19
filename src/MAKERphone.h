@@ -84,7 +84,7 @@ extern HardwareSerial Serial1;
 #define OFF_PIN 25
 #define INTERRUPT_PIN 36
 #define VOLTAGE_PIN 35
-#define VOLTAGE_OFFSET 300 //offset for the adc reading (mV)
+#define ADC_COUNT 500 //offset for the adc reading (mV)
 #define SLEEP_WAKEUP_TIME 900
 #define NUMPIXELS 8 //number of pixels connected
 #define PIXELPIN 12
@@ -219,8 +219,8 @@ class MAKERphone:public Buttons, public DateTime
 	bool simInserted = 0;
 	bool simReady = 0;
 	uint32_t sleepTimer = millis();
-	uint16_t batteryVoltage;
-	uint16_t signalStrength;
+	volatile double batteryVoltage = 50000;
+	uint16_t signalStrength =0;
 	String carrierName = "";
 	uint8_t sleepTime = 0;
 	String ringtone_path = "/Ringtones/Default ringtone.wav";
@@ -241,9 +241,9 @@ class MAKERphone:public Buttons, public DateTime
 	uint32_t refreshMillis = millis();
 	uint32_t buttonsRefreshMillis = millis();
 	uint32_t joystickMillis = millis();
-	uint32_t voltageMillis = millis();
-	uint32_t voltageSum = 0;
-	uint16_t voltageSample = 0;
+	// uint32_t voltageMillis = millis();
+	// uint32_t voltageSum = 0;
+	// uint16_t voltageSample = 0;
 	bool dataRefreshFlag = 0;
 	bool receivedFlag = 1;
 	bool SDinsertedFlag = 0;
