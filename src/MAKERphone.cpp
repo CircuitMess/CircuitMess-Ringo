@@ -3248,21 +3248,25 @@ void MAKERphone::checkAlarms()
 	updateTimeRTC();
 	uint8_t next_alarm = 99;
 	int i = currentTime.dayOfWeek();
-	for(int x = 0; x < 7; x++)
+	Serial.print("Today: ");
+	Serial.println(currentTime.dayOfWeek());
+	delay(5);
+	for(int x = 0; x < 6; x++)
 	{
 		for(int y = 0; y < 5 ;y++)
 		{
-			// if(y == 1)
+			// if(i == currentTime.dayOfWeek())
 			// {
-			// 	Serial.println(i);
-			// 	Serial.println(alarmEnabled[y]);
-			// 	Serial.println(alarmRepeat[y]);
-			// 	Serial.println(alarmRepeatDays[y][i]);
-			// 	Serial.println();
+			// 	Serial.print(y);Serial.println(".");
+			// 	Serial.print("alarmEnabled: "); Serial.println(alarmEnabled[y]);
+			// 	Serial.print("alarmRepeat: ");Serial.println(alarmRepeat[y]);
+			// 	Serial.print("alarmRepeatToday: ");Serial.println(alarmRepeatDays[y][i]);
+			// 	Serial.println("-----------");
+			// 	delay(10);
 			// }
 			if(alarmEnabled[y] == 1 && alarmRepeat[y] && alarmRepeatDays[y][i] &&
 			((DateTime(clockYear, clockMonth, clockDay, alarmHours[y], alarmMins[y], 0) > currentTime &&
-			 i == currentTime.dayOfWeek()) || i != currentTime.dayOfWeek()))
+			i == currentTime.dayOfWeek()) || i != currentTime.dayOfWeek()))
 			{
 				if(next_alarm == 99)
 					next_alarm = y;
@@ -3272,19 +3276,23 @@ void MAKERphone::checkAlarms()
 			}
 		}
 		i++;
-		if(i > 6)
-			i = 0;
+		if(i > 7)
+			i = 1;
 	}
+
 	for(int x = 0; x < 5; x++)
 	{
 		DateTime tempAlarm = DateTime(clockYear, clockMonth, clockDay, alarmHours[x], alarmMins[x], 0);
+		DateTime nextAlarm;
+		if(next_alarm != 99)
+			DateTime nextAlarm = DateTime(clockYear, clockMonth, clockDay, alarmHours[next_alarm], alarmMins[next_alarm], 0);
 		if(alarmEnabled[x] == 1 && !alarmRepeat[x])
 		{
 			if(next_alarm == 99)
 				next_alarm = x;
-			if(((!alarmRepeat[next_alarm] || (alarmRepeat[next_alarm] &&
+			else if(((!alarmRepeat[next_alarm] || (alarmRepeat[next_alarm] &&
 			alarmRepeatDays[next_alarm][currentTime.dayOfWeek()])) &&
-			tempAlarm < DateTime(clockYear, clockMonth, clockDay, alarmHours[next_alarm], alarmMins[next_alarm], 0))
+			(tempAlarm > RTC.now() && tempAlarm > nextAlarm) || (tempAlarm < RTC.now() && nextAlarm < RTC.now() && tempAlarm < nextAlarm))
 			|| (alarmRepeat[next_alarm] && !alarmRepeatDays[next_alarm][currentTime.dayOfWeek()]))
 				next_alarm = x;
 		}
