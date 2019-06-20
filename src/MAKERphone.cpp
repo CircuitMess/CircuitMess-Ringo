@@ -199,6 +199,7 @@ void MAKERphone::begin(bool splash) {
 				0);				/* Task handle to keep track of created task */
 	
 
+	ringtone = nullptr;
 	if(SDinsertedFlag)
 	{
 		loadSettings(1);
@@ -243,6 +244,11 @@ bool MAKERphone::update() {
 				SDerror = 1;
 				break;
 			}
+		}
+		if(SDinsertedFlag)
+		{
+			loadSettings();
+			applySettings();
 		}
 	}
 	if(screenshotFlag)
@@ -897,7 +903,7 @@ void MAKERphone::incomingCall(String _serialData) //TODO
 			if(SDinsertedFlag && SD.exists(ringtone_path))
 				ringtone->stop();
 			tft.fillRect(0,0,160,128,TFT_WHITE);
-			tft.setCursor(55, 9);
+			tft.setCursor(60, 9);
 			tft.print("00:00");
 
 			tft.drawBitmap(29*2, 24*2, call_icon, TFT_RED, 2);
@@ -2041,7 +2047,7 @@ void MAKERphone::applySettings()
 		break;
 	}
 	osc->setVolume(256 * volume / 14);
-	if(SDinsertedFlag)
+	if(SDinsertedFlag && ringtone != nullptr)
 	{
 		removeTrack(ringtone);
 		ringtone = new MPTrack((char*)ringtone_path.c_str());
