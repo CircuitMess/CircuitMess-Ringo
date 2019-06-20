@@ -85,7 +85,7 @@ extern HardwareSerial Serial1;
 #define INTERRUPT_PIN 36
 #define VOLTAGE_PIN 35
 #define ADC_COUNT 500 //offset for the adc reading (mV)
-#define SLEEP_WAKEUP_TIME 900
+#define SLEEP_WAKEUP_TIME 900 //intervals to wake up and check battery when sleeping (s)
 #define NUMPIXELS 8 //number of pixels connected
 #define PIXELPIN 12
 
@@ -353,5 +353,10 @@ class MAKERphone:public Buttons, public DateTime
 		};
 		float notificationSoundDuration = 0;
 		uint8_t notificationSoundNote = 0;
+		bool SDerror = 0;
+		char c;
+		bool buttonsPressed = 0;
+
+
 };
 #endif

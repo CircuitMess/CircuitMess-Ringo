@@ -23,10 +23,10 @@ extern MAKERphone mp;
 //audio refresh task
 TaskHandle_t Task1;
 TaskHandle_t MeasuringTask;
-uint32_t voltageMillis = millis();
 uint32_t voltageSum = 0;
 uint16_t voltageSample = 0;
 volatile double voltage = 3700;
+uint16_t measuringCounter = 0;
 void Task1code( void * pvParameters ){
 	while (true)
 		updateWav();
@@ -36,7 +36,7 @@ void ADCmeasuring(void *parameters)
 {
 	while(1)
 	{
-		for(int i = 0; i < 2000; i++)
+		for(measuringCounter = 0; measuringCounter < 2000; measuringCounter++)
 		{
 			vTaskDelay(1);
 			voltageSum += analogRead(VOLTAGE_PIN);
@@ -216,23 +216,20 @@ void MAKERphone::begin(bool splash) {
 }
 
 bool MAKERphone::update() {
-	char c;
-	uint16_t refreshInterval = 5000;
 	newMessage = 0;
-	if(digitalRead(SD_INT) && SDinsertedFlag)
+	if(digitalRead(SD_INT) && (SDinsertedFlag || (!SDinsertedFlag && SDerror)))
 	{
 		SDinsertedFlag = 0;
+		SDerror = 0;
 		for(int i = 0; i<4;i++)
-		{
 			if(tracks[i] != nullptr)
-				if(tracks[i]->isPlaying())
-					tracks[i] = nullptr;
-		}
+				tracks[i] = nullptr;
+
 		SDremovedPopup();
 		SD.end();
 		// initWavLib();
 	}
-	if(!digitalRead(SD_INT) && !SDinsertedFlag)
+	else if(!digitalRead(SD_INT) && !SDinsertedFlag && !SDerror)
 	{
 		SDinsertedFlag = 1;
 		SDinsertedPopup();
@@ -240,9 +237,10 @@ bool MAKERphone::update() {
 		while (!SD.begin(5, SPI, 8000000))
 		{
 			Serial.println("SD ERROR");
-			if(millis()-tempMillis > 5)
+			if(millis()-tempMillis > 50)
 			{
 				SDinsertedFlag = 0;
+				SDerror = 1;
 				break;
 			}
 		}
@@ -265,6 +263,7 @@ bool MAKERphone::update() {
 	}
 	if(buttons.released(14))
 	{
+		buttons.update();
 		sleep();
 	}
 	//halved resolution mode
@@ -277,7 +276,7 @@ bool MAKERphone::update() {
 	// 	}
 	// }
 	//buf2.invertDisplay(1);
-	bool buttonsPressed = 0;
+	buttonsPressed = 0;
 	for(uint8_t i = 16; i < 22;i++)
 	{
 		if(buttons.pressed(i))
@@ -307,7 +306,7 @@ bool MAKERphone::update() {
 	{
 		// Serial.println(updateBuffer);
 		
-		if (millis() - refreshMillis >= refreshInterval)
+		if (millis() - refreshMillis >= 5000)
 		{
 			if(receivedFlag && simInserted && !airplaneMode)
 			{
@@ -622,42 +621,46 @@ void MAKERphone::sleep() {
 		// rtc_gpio_isolate(GPIO_NUM_25);
 	}
 	buttons.activateInterrupt();
-	
-
+	uint8_t reason = 4;
+	vTaskSuspend(MeasuringTask);
 	esp_light_sleep_start();
-	while(esp_sleep_get_wakeup_cause() == 4)
+	reason = esp_sleep_get_wakeup_cause();
+	while(reason == 4)
 	{
+		reason = esp_sleep_get_wakeup_cause();
 		Serial.println("Timer wakeup");
-		voltageSample = 0;
-		voltageMillis = 0;
 		voltageSum = 0;
-		while(voltageSample < 100)
+		voltageSample = 0;
+		for(int i = 0; i < 2000; i++)
 		{
-			if(voltageMillis - millis() > 500)
-			{
-
-				voltageMillis = millis();
-				voltageSum += analogRead(VOLTAGE_PIN);
-				voltageSample++;
-			}
+			delayMicroseconds(1);
+			voltageSum += analogRead(VOLTAGE_PIN);
+			voltageSample++;
 		}
-		batteryVoltage = (voltageSum / 100 * 3.3) * 2000 / 4096 + ADC_COUNT;
-		voltageSample = 0;
+		batteryVoltage = ((voltageSum )/1150.0);
 		voltageSum = 0;
+		voltageSample = 0;
+		// while(millis() - tempMillis < 500)
+		// 	update();
 		Serial.println(batteryVoltage);
-		delay(5);
-		if(batteryVoltage <= 3200)
-		{
+		delay(50);
+		if(batteryVoltage <= 3580)
 			digitalWrite(OFF_PIN, 1);
-		}
-		ledcAnalogWrite(LEDC_CHANNEL, 255);
+		
+		
 		buttons.activateInterrupt();
 		esp_light_sleep_start();
 	}
 	Serial.println("Buttons wakeup");
 	delay(5);
-	initWavLib();
+	voltage = batteryVoltage;
+	measuringCounter = 0;
+	voltageSum = 0;
+	voltageSample = 0;
+	vTaskResume(MeasuringTask);
 	tft.writecommand(17);
+	while (!update());
+	initWavLib();
 	ledcAttachPin(LCD_BL_PIN, LEDC_CHANNEL);
 	ledcAnalogWrite(LEDC_CHANNEL, 255);
 	for (uint8_t i = 255; i > actualBrightness; i--) {
@@ -674,8 +677,8 @@ void MAKERphone::sleep() {
 
 	delay(2);
 	FastLED.clear();
+	updateTimeRTC();
 
-	// while (!update());
 }
 void MAKERphone::loader()
 {
@@ -3348,7 +3351,7 @@ void MAKERphone::SDinsertedPopup()
 	tft.setTextFont(2);
 	tft.setTextSize(1);
 	tft.print("SD card inserted!");
-	delay(1500);
+	delay(1250);
 }
 
 //Misc
