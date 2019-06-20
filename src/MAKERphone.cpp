@@ -174,6 +174,7 @@ void MAKERphone::begin(bool splash) {
 		Serial1.println(F("AT+CLTS=1")); //Enable local Timestamp mode (used for syncrhonising RTC with GSM time
 		Serial1.println(F("AT+CPMS=\"SM\",\"SM\",\"SM\""));
 		Serial1.println(F("AT+CLCC=1"));
+		Serial1.println(F("AT+CSCLK=1"));
 		Serial1.println(F("AT&W"));
 		Serial.println("Serial1 up and running...");
 	}
@@ -438,21 +439,24 @@ bool MAKERphone::update() {
 
 	if(!digitalRead(SIM_INT) && !inCall)
 	{
-		String localBuffer = "";
+		String temp = "";
 		long long curr_millis = millis();
 
-		while ((localBuffer.indexOf("+CLCC:") == -1 || localBuffer.indexOf("+CMT:") == -1)
-		&& millis() - curr_millis < 500)
-			localBuffer = Serial1.readString();
-		if(localBuffer.indexOf("+CLCC:") != -1)
+		while ((temp.indexOf("\r", temp.indexOf("+CLCC:")) == -1 || temp.indexOf("\r", temp.indexOf("+CMT:") == -1)
+		|| temp.indexOf("\r", temp.indexOf("1,1,4,0,0,")) == -1 ) && millis() - curr_millis < 500)
+		{
+			temp += (char)Serial1.read();
+			Serial.println(temp);
+		}
+		if(temp.indexOf("+CLCC:") != -1 || temp.indexOf("RING") != -1)
 		{
 			inCall = 1;
-			incomingCall(localBuffer);
+			incomingCall(temp);
 			inCall = 0;
 		}
-		else if(localBuffer.indexOf("+CMT:") != -1)
+		else if(temp.indexOf("+CMT:") != -1)
 		{
-			incomingMessage(localBuffer);
+			incomingMessage(temp);
 		}
 	}
 	updateNotificationSound();
@@ -558,11 +562,9 @@ void MAKERphone::sleep() {
 	if(simInserted)
 	{
 		digitalWrite(SIM800_DTR, 1);
-		Serial1.println(F("AT+CSCLK=1"));
 	}
 
 	FastLED.clear();
-
 	ledcAnalogWrite(LEDC_CHANNEL, 255);
 	for (uint8_t i = actualBrightness; i < 255; i++) {
 		ledcAnalogWrite(LEDC_CHANNEL, i);
@@ -629,6 +631,7 @@ void MAKERphone::sleep() {
 	buttons.activateInterrupt();
 	uint8_t reason = 4;
 	vTaskSuspend(MeasuringTask);
+
 	esp_light_sleep_start();
 	reason = esp_sleep_get_wakeup_cause();
 	while(reason == 4)
@@ -657,15 +660,29 @@ void MAKERphone::sleep() {
 		buttons.activateInterrupt();
 		esp_light_sleep_start();
 	}
-	Serial.println("Buttons wakeup");
-	delay(5);
+	if(simInserted)
+	{
+		digitalWrite(SIM800_DTR, 0);
+		// Serial1.println(F("AT"));
+		// Serial1.println(F("AT+CSCLK=0"));
+	}
 	voltage = batteryVoltage;
 	measuringCounter = 0;
 	voltageSum = 0;
 	voltageSample = 0;
 	vTaskResume(MeasuringTask);
+	if(!digitalRead(SIM_INT))
+	{	
+		initWavLib();
+		ledcAttachPin(LCD_BL_PIN, LEDC_CHANNEL);
+		ledcAnalogWrite(LEDC_CHANNEL, actualBrightness);
+		tft.writecommand(17);
+		while(!update());
+		return;
+	}
+	while(!update());
 	tft.writecommand(17);
-	while (!update());
+	display.pushSprite(0,0);
 	initWavLib();
 	ledcAttachPin(LCD_BL_PIN, LEDC_CHANNEL);
 	ledcAnalogWrite(LEDC_CHANNEL, 255);
@@ -673,17 +690,10 @@ void MAKERphone::sleep() {
 		ledcAnalogWrite(LEDC_CHANNEL, i);
 		delay(1);
 	}
-	ledcAnalogWrite(LEDC_CHANNEL, actualBrightness);
-	if(simInserted)
-	{
-		digitalWrite(SIM800_DTR, 0);
-		Serial1.println(F("AT"));
-		Serial1.println(F("AT+CSCLK=0"));
-	}
-
 	delay(2);
 	FastLED.clear();
 	updateTimeRTC();
+	while(!update());
 
 }
 void MAKERphone::loader()
@@ -859,7 +869,7 @@ void MAKERphone::incomingCall(String _serialData) //TODO
 	uint16_t tmp_time = 0;
 	String localBuffer = _serialData;
 	String buffer = "";
-	uint16_t foo = localBuffer.indexOf("\"+", localBuffer.indexOf("CLCC:")) + 1;
+	uint16_t foo = localBuffer.indexOf("\"+", localBuffer.indexOf("1,1,4,0,0,")) + 1;
 	number = localBuffer.substring(foo, localBuffer.indexOf("\"", foo));
 	localBuffer = "";
 	bool played = 0;
@@ -888,8 +898,9 @@ void MAKERphone::incomingCall(String _serialData) //TODO
 	{
 		if (Serial1.available())
 		{
-			c = Serial1.read();
+			c = (char)Serial1.read();
 			buffer += c;
+			Serial.println(buffer);
 		}
 		if(buffer.indexOf("CLCC:") != -1 && buffer.indexOf("\r", buffer.indexOf("CLCC:")) != -1)
 		{
@@ -1285,7 +1296,9 @@ void MAKERphone::addCall(String number, uint32_t dateTime, int duration, uint8_t
 		file1.close();
 		file = SD.open("/.core/call_log.json", "r");
 		while(!file)
-			Serial.println("CONTACTS ERROR");
+		{
+			file = SD.open("/.core/call_log.json", "r");
+		}
 	}
 
 	jb.clear();
