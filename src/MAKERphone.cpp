@@ -324,15 +324,12 @@ bool MAKERphone::update() {
 		
 		if (millis() - refreshMillis >= 5000)
 		{
-			if(simInserted && !airplaneMode)
-			{
-			}
 			Serial1.println("AT+CBC");
 			updateBuffer = "";
 			if (simInserted && !airplaneMode)
 			{
-				// if (carrierName == "")
-				// 	Serial1.println("AT+CSPN?");
+				if (carrierName == "")
+					Serial1.println("AT+CSPN?");
 				Serial1.println("AT+CSQ");
 
 				if (clockYear%100 == 4 || clockYear%100 == 80 || clockMonth == 0 || clockMonth > 12 ||
@@ -350,13 +347,10 @@ bool MAKERphone::update() {
 			
 			if (simInserted && !airplaneMode)
 			{
-				// if (carrierName == "")
-				// {
-				// 	if (updateBuffer.indexOf("\n", updateBuffer.indexOf("+CSPN:")) != -1)
-				// 	{
-				// 		carrierName = updateBuffer.substring(updateBuffer.indexOf("\"", updateBuffer.indexOf("+CSPN:")) + 1, updateBuffer.indexOf("\"", updateBuffer.indexOf("\"", updateBuffer.indexOf("+CSPN:")) + 1));
-				// 	}
-				// }
+				if (carrierName == "")
+					if (updateBuffer.indexOf("\n", updateBuffer.indexOf("+CSPN:")) != -1)
+						carrierName = updateBuffer.substring(updateBuffer.indexOf("\"", updateBuffer.indexOf("+CSPN:")) + 1, updateBuffer.indexOf("\"", updateBuffer.indexOf("\"", updateBuffer.indexOf("+CSPN:")) + 1));
+						
 				if (updateBuffer.indexOf("\n", updateBuffer.indexOf("+CSQ:")) != -1)
 					signalStrength = updateBuffer.substring(updateBuffer.indexOf(" ", updateBuffer.indexOf("+CSQ:")) + 1, updateBuffer.indexOf(",", updateBuffer.indexOf(" ", updateBuffer.indexOf("+CSQ:")))).toInt();
 				
