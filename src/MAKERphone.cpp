@@ -162,7 +162,8 @@ void MAKERphone::begin(bool splash) {
 	updateTimeRTC();
 	if(simInserted)
 	{
-		Serial1.println(F("AT+CMIC=0,14"));
+		Serial1.print(F("AT+CMIC=0,"));
+		Serial1.println(micGain);
 		// updateTimeGSM();
 		Serial1.println(F("AT+CMEE=2"));
 		Serial1.println(F("AT+CLVL=100"));
@@ -317,7 +318,7 @@ bool MAKERphone::update() {
 		simReady = 0;
 
 	//refreshing signal and battery info
-	if (dataRefreshFlag)
+	if (dataRefreshFlag && simReady)
 	{
 		// Serial.println(updateBuffer);
 		
@@ -328,7 +329,9 @@ bool MAKERphone::update() {
 				Serial1.println("AT+CSQ");
 				receivedFlag = 0;
 			}
-			// receivedFlag = 0;
+			Serial.println("sent");
+			Serial1.println("AT+CBC");
+			receivedFlag = 0;
 			updateBuffer = "";
 			if (simInserted && !airplaneMode)
 			{
@@ -344,6 +347,9 @@ bool MAKERphone::update() {
 		{
 			c = Serial1.read();
 			updateBuffer += c;
+			Serial.println("--------------");
+			Serial.println(updateBuffer);
+			
 			if (simInserted && !airplaneMode)
 			{
 				// if (carrierName == "")
@@ -358,6 +364,7 @@ bool MAKERphone::update() {
 					receivedFlag = 1;
 					signalStrength = updateBuffer.substring(updateBuffer.indexOf(" ", updateBuffer.indexOf("+CSQ:")) + 1, updateBuffer.indexOf(",", updateBuffer.indexOf(" ", updateBuffer.indexOf("+CSQ:")))).toInt();
 				}
+				
 				if (clockYear % 100 == 4 || clockYear % 100 == 80 || clockMonth == 0 || clockMonth > 12 || clockHour > 24 || clockMinute >= 60)
 					if (updateBuffer.indexOf("\n", updateBuffer.indexOf("+CCLK:")) != -1)
 					{
@@ -408,6 +415,14 @@ bool MAKERphone::update() {
 						Serial.println(F("\nRTC TIME UPDATE OVER GSM DONE!"));
 					}
 
+			}
+			if (updateBuffer.indexOf("\n", updateBuffer.indexOf("+CBC:")) != -1)
+			{
+				uint16_t helper = updateBuffer.indexOf(",", updateBuffer.indexOf("+CBC:"));
+				helper = updateBuffer.indexOf(",", helper + 1) + 1;
+				Serial.println("read");
+				simVoltage = updateBuffer.substring(helper, updateBuffer.indexOf("\n", helper)).toInt();
+				updateBuffer = "";
 			}
 		}
 	}
@@ -997,7 +1012,6 @@ void MAKERphone::incomingCall(String _serialData) //TODO
 	uint32_t timeOffset = 0;
 	uint8_t scale;
 	tmp_time = 0;
-	uint8_t micGain = 4;
 	String temp;
 	scale = 2;
 	tft.setTextFont(2);
@@ -1960,6 +1974,7 @@ void MAKERphone::saveSettings(bool debug)
 		settings["notification"] = notification;
 		settings["ringtone"] = ringtone_path.c_str();
 		settings["volume"] = volume;
+		settings["micGain"] = micGain;
 		File file1 = SD.open(path, "w");
 		settings.prettyPrintTo(file1);
 		file1.close();
@@ -2015,6 +2030,7 @@ void MAKERphone::loadSettings(bool debug)
 		notification = settings["notification"];
 		ringtone_path = String(settings["ringtone"].as<char*>());
 		volume = settings["volume"];
+		micGain = settings["micGain"];
 		         
 	} else {
 		Serial.println("Error loading new settings");
@@ -2083,6 +2099,11 @@ void MAKERphone::applySettings()
 			ringtone->reloadFile(((char*)ringtone_path.c_str()));
 
 		ringtone->setVolume(256 * volume / 14);
+	}
+	if(simInserted)
+	{
+		Serial1.print(F("AT+CMIC=0,"));
+		Serial1.println(micGain);
 	}
 }
 

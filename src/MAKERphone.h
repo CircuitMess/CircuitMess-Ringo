@@ -310,6 +310,9 @@ class MAKERphone:public Buttons, public DateTime
 	void deallocateAudio();
 	void reallocateAudio();
 	bool inCall = 0;
+	uint8_t micGain = 15;
+	uint16_t simVoltage = 3900;
+
 	private:
 		MPTrack* ringtone = nullptr;
 		int multi_tap(byte key);
@@ -356,7 +359,5 @@ class MAKERphone:public Buttons, public DateTime
 		bool SDerror = 0;
 		char c;
 		bool buttonsPressed = 0;
-
-
 };
 #endif
