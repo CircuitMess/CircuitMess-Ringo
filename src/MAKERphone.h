@@ -311,7 +311,7 @@ class MAKERphone:public Buttons, public DateTime
 	void reallocateAudio();
 	bool inCall = 0;
 	private:
-		MPTrack* ringtone;
+		MPTrack* ringtone = nullptr;
 		int multi_tap(byte key);
 		uint8_t timesRemaining;
 
