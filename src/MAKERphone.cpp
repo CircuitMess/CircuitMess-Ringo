@@ -222,8 +222,18 @@ bool MAKERphone::update() {
 		SDinsertedFlag = 0;
 		SDerror = 0;
 		for(int i = 0; i<4;i++)
+		{
 			if(tracks[i] != nullptr)
+			{
+				removeTrack(tracks[i]);
 				tracks[i] = nullptr;
+			}
+		}
+		if(ringtone != nullptr)
+		{
+			removeTrack(ringtone);
+			ringtone = nullptr;
+		}
 
 		SDremovedPopup();
 		SD.end();
@@ -446,7 +456,7 @@ bool MAKERphone::update() {
 		|| temp.indexOf("\r", temp.indexOf("1,1,4,0,0,")) == -1 ) && millis() - curr_millis < 500)
 		{
 			temp += (char)Serial1.read();
-			Serial.println(temp);
+			// Serial.println(temp);
 		}
 		if(temp.indexOf("+CLCC:") != -1 || temp.indexOf("RING") != -1)
 		{
@@ -682,6 +692,8 @@ void MAKERphone::sleep() {
 	tft.writecommand(17);
 	display.pushSprite(0,0);
 	initWavLib();
+	if(ringtone != nullptr)
+		addTrack(ringtone);
 	ledcAttachPin(LCD_BL_PIN, LEDC_CHANNEL);
 	ledcAnalogWrite(LEDC_CHANNEL, 255);
 	for (uint8_t i = 255; i > actualBrightness; i--) {
@@ -890,7 +902,8 @@ void MAKERphone::incomingCall(String _serialData) //TODO
 	tft.print("Answer");
 	Serial.print("SD inserted:");
 	Serial.println(SDinsertedFlag);
-	Serial.print("Ringtone exists:");
+	Serial.print("Ringtone exists: ");
+	Serial.print(ringtone_path);
 	Serial.println(SD.exists(ringtone_path));
 	while(1)
 	{
@@ -898,7 +911,7 @@ void MAKERphone::incomingCall(String _serialData) //TODO
 		{
 			c = (char)Serial1.read();
 			buffer += c;
-			Serial.println(buffer);
+			// Serial.println(buffer);
 		}
 		if(buffer.indexOf("CLCC:") != -1 && buffer.indexOf("\r", buffer.indexOf("CLCC:")) != -1)
 		{
@@ -2068,7 +2081,7 @@ void MAKERphone::applySettings()
 		}
 		else
 			ringtone->reloadFile(((char*)ringtone_path.c_str()));
-			
+
 		ringtone->setVolume(256 * volume / 14);
 	}
 }
