@@ -2061,9 +2061,7 @@ void MAKERphone::applySettings()
 	osc->setVolume(256 * volume / 14);
 	if(SDinsertedFlag && ringtone != nullptr)
 	{
-		removeTrack(ringtone);
-		ringtone = new MPTrack((char*)ringtone_path.c_str());
-		addTrack(ringtone);
+		ringtone->reloadFile(((char*)ringtone_path.c_str()));
 		ringtone->setVolume(256 * volume / 14);
 	}
 }

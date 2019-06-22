@@ -186,6 +186,27 @@ void MPTrack::setRepeat(bool r)
     repeat=r;
 }
 
+bool MPTrack::reloadFile(char path[])
+{
+    playing=false;
+    finished=false;
+    strcpy(trackPath,path);
+    trackFile.close();
+     while(!SD.begin(5, SPI, 8000000))
+         Serial.println("SD ERROR");
+    trackFile=SD.open(trackPath);
+    if(trackFile)
+    {
+        size=trackFile.size();
+        trackFile.seek(0x2C);
+        loaded=0;
+        pos=0;
+        playing=false;
+        return true;
+	}
+	else
+		return false;
+}
 
 // ------------------------- OSC --------------------------------
 
