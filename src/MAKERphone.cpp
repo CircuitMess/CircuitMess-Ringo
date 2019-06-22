@@ -45,9 +45,7 @@ void ADCmeasuring(void *parameters)
 		voltage = ((voltageSum )/1150.0);
 		voltageSum = 0;
 		voltageSample = 0;
-		// vTaskDelay(1000);
 	}
-
 }
 
 //core
@@ -326,7 +324,8 @@ bool MAKERphone::update() {
 			{
 				// if (carrierName == "")
 				// 	Serial1.println("AT+CSPN?");
-				if (clockYear%100 == 4 || clockYear%100 == 80 || clockMonth == 0 || clockMonth > 12 || clockHour > 24 || clockMinute >= 60)
+				if (clockYear%100 == 4 || clockYear%100 == 80 || clockMonth == 0 || clockMonth > 12 ||
+				clockHour > 24 || clockMinute >= 60)
 					Serial1.println("AT+CCLK?");
 			}
 			refreshMillis = millis();
@@ -417,6 +416,7 @@ bool MAKERphone::update() {
 		tft.print("Turning off...");
 		delay(1500);
 		Serial.println("TURN OFF");
+		FastLED.clear(1);
 		digitalWrite(OFF_PIN, 1);
 	}
 
@@ -564,7 +564,7 @@ void MAKERphone::sleep() {
 		digitalWrite(SIM800_DTR, 1);
 	}
 
-	FastLED.clear();
+	FastLED.clear(1);
 	ledcAnalogWrite(LEDC_CHANNEL, 255);
 	for (uint8_t i = actualBrightness; i < 255; i++) {
 		ledcAnalogWrite(LEDC_CHANNEL, i);
@@ -649,8 +649,6 @@ void MAKERphone::sleep() {
 		batteryVoltage = ((voltageSum )/1150.0);
 		voltageSum = 0;
 		voltageSample = 0;
-		// while(millis() - tempMillis < 500)
-		// 	update();
 		Serial.println(batteryVoltage);
 		delay(50);
 		if(batteryVoltage <= 3580)
@@ -1328,6 +1326,7 @@ void MAKERphone::saveMessage(String text, String number, bool isRead, bool direc
 	messages->add(new_item);
 	File file1 = SD.open("/.core/messages.json", "w");
 	messages->prettyPrintTo(file1);
+	messages->prettyPrintTo(Serial);
 	file1.close();
 }
 void MAKERphone::checkSim()
@@ -2473,9 +2472,9 @@ void MAKERphone::homePopup(bool animation)
 		}
 		if(!SDinsertedFlag)
 			display.drawBitmap(helper*scale, 1*scale, noSDIcon, TFT_BLACK, scale);
-		if (batteryVoltage > 4300)
+		if (batteryVoltage > 4100)
 			display.drawBitmap(74*scale, 1*scale, batteryCharging, TFT_BLACK, scale);
-		else if (batteryVoltage <= 4300 && batteryVoltage >= 3850)
+		else if (batteryVoltage <= 4100 && batteryVoltage >= 3850)
 			display.drawBitmap(74*scale, 1*scale, batteryFull, TFT_BLACK, scale);
 		else if (batteryVoltage < 3850 && batteryVoltage >= 3750)
 			display.drawBitmap(74*scale, 1*scale, batteryMid, TFT_BLACK, scale);
@@ -3100,6 +3099,7 @@ void MAKERphone::shutdownPopup(bool animation)
 				Serial1.println("AT+CFUN=1,1");
 				delay(750);
 				Serial.println("TURN OFF");
+				FastLED.clear(1);
 				digitalWrite(OFF_PIN, 1);
 			}
 		}
