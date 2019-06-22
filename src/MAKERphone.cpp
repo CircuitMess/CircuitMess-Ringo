@@ -324,19 +324,17 @@ bool MAKERphone::update() {
 		
 		if (millis() - refreshMillis >= 5000)
 		{
-			if(receivedFlag && simInserted && !airplaneMode)
+			if(simInserted && !airplaneMode)
 			{
-				Serial1.println("AT+CSQ");
-				receivedFlag = 0;
 			}
-			Serial.println("sent");
 			Serial1.println("AT+CBC");
-			receivedFlag = 0;
 			updateBuffer = "";
 			if (simInserted && !airplaneMode)
 			{
 				// if (carrierName == "")
 				// 	Serial1.println("AT+CSPN?");
+				Serial1.println("AT+CSQ");
+
 				if (clockYear%100 == 4 || clockYear%100 == 80 || clockMonth == 0 || clockMonth > 12 ||
 				clockHour > 24 || clockMinute >= 60)
 					Serial1.println("AT+CCLK?");
@@ -360,10 +358,7 @@ bool MAKERphone::update() {
 				// 	}
 				// }
 				if (updateBuffer.indexOf("\n", updateBuffer.indexOf("+CSQ:")) != -1)
-				{
-					receivedFlag = 1;
 					signalStrength = updateBuffer.substring(updateBuffer.indexOf(" ", updateBuffer.indexOf("+CSQ:")) + 1, updateBuffer.indexOf(",", updateBuffer.indexOf(" ", updateBuffer.indexOf("+CSQ:")))).toInt();
-				}
 				
 				if (clockYear % 100 == 4 || clockYear % 100 == 80 || clockMonth == 0 || clockMonth > 12 || clockHour > 24 || clockMinute >= 60)
 					if (updateBuffer.indexOf("\n", updateBuffer.indexOf("+CCLK:")) != -1)
@@ -420,9 +415,7 @@ bool MAKERphone::update() {
 			{
 				uint16_t helper = updateBuffer.indexOf(",", updateBuffer.indexOf("+CBC:"));
 				helper = updateBuffer.indexOf(",", helper + 1) + 1;
-				Serial.println("read");
 				simVoltage = updateBuffer.substring(helper, updateBuffer.indexOf("\n", helper)).toInt();
-				updateBuffer = "";
 			}
 		}
 	}
