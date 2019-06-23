@@ -2425,11 +2425,12 @@ void MAKERphone::homePopup(bool animation)
 {
 	if(animation)
 	{
-		for (int i = 0; i < display.height(); i+=1)
+		for (int i = 0; i < display.height(); i++)
 		{
 			display.drawFastHLine(0, i, display.width(), TFT_WHITE);
-			update();
-			delayMicroseconds(750);
+			if(i % 4 == 0)
+				update();
+			// delayMicroseconds(750);
 		}
 	}
 	dataRefreshFlag = 1;
@@ -2475,31 +2476,34 @@ void MAKERphone::homePopup(bool animation)
 		}
 		else if(!simInserted && !airplaneMode)
 			display.drawBitmap(1*scale, 1*scale, signalErrorIcon, TFT_BLACK, scale);
+		if(airplaneMode)
+		{
+			display.drawBitmap(scale, scale, airplaneModeIcon, TFT_BLACK, scale);
+			helper += 10;
+		}
 		if (volume == 0)
 		{
 			display.drawBitmap(helper*scale, 1*scale, silentmode, TFT_BLACK, scale);
 			helper += 10;
 		}
-		// if (!airplaneMode)
-		// {
-		// 	if (wifi == 1)
-		// 		display.drawBitmap(helper*scale, 1*scale, wifion, TFT_BLACK, scale);
-		// 	else
-		// 		display.drawBitmap(helper*scale, 1*scale, wifioff, TFT_BLACK, scale);
-		// 	helper += 10;
-		// 	if (bt)
-		// 		display.drawBitmap(helper*scale, 1*scale, BTon, TFT_BLACK, scale);
-		// 	else
-		// 		display.drawBitmap(helper*scale, 1*scale, BToff, TFT_BLACK, scale);
-		// 	helper += 10;
-		// }
-		else
-		{
-			display.drawBitmap(scale, scale, airplaneModeIcon, TFT_BLACK, scale);
-			helper += 10;
-		}
+
+	
 		if(!SDinsertedFlag)
+		{
 			display.drawBitmap(helper*scale, 1*scale, noSDIcon, TFT_BLACK, scale);
+			helper+=10;
+		}
+		if(carrierName != "")
+		{
+			// mp.display.setFreeFont(TT1);
+			// mp.display.setTextSize(2);
+			// mp.display.setCursor(helper*2, 15);
+
+			display.setTextFont(2);
+			display.setTextSize(1);
+			display.setCursor(helper*2, 4);
+			display.print(carrierName);
+		}
 		if (batteryVoltage > 4100)
 			display.drawBitmap(74*scale, 1*scale, batteryCharging, TFT_BLACK, scale);
 		else if (batteryVoltage <= 4100 && batteryVoltage >= 3850)
