@@ -277,11 +277,7 @@ bool MAKERphone::update() {
 		display.setRotation(1);
 		spriteCreated=1;
 	}
-	if(buttons.released(14))
-	{
-		buttons.update();
-		sleep();
-	}
+	
 	//halved resolution mode
 	// if(resolutionMode == 1)
 	// {
@@ -342,14 +338,13 @@ bool MAKERphone::update() {
 		{
 			c = Serial1.read();
 			updateBuffer += c;
-			Serial.println("--------------");
-			Serial.println(updateBuffer);
+			// Serial.println("--------------");
+			// Serial.println(updateBuffer);
 			
 			if (simInserted && !airplaneMode)
 			{
-				if (carrierName == "")
-					if (updateBuffer.indexOf("\n", updateBuffer.indexOf("+CSPN:")) != -1)
-						carrierName = updateBuffer.substring(updateBuffer.indexOf("\"", updateBuffer.indexOf("+CSPN:")) + 1, updateBuffer.indexOf("\"", updateBuffer.indexOf("\"", updateBuffer.indexOf("+CSPN:")) + 1));
+				if (carrierName == "" && updateBuffer.indexOf("\n", updateBuffer.indexOf("+CSPN:")) != -1)
+					carrierName = updateBuffer.substring(updateBuffer.indexOf("\"", updateBuffer.indexOf("+CSPN:")) + 1, updateBuffer.indexOf("\"", updateBuffer.indexOf("\"", updateBuffer.indexOf("+CSPN:")) + 1));
 						
 				if (updateBuffer.indexOf("\n", updateBuffer.indexOf("+CSQ:")) != -1)
 					signalStrength = updateBuffer.substring(updateBuffer.indexOf(" ", updateBuffer.indexOf("+CSQ:")) + 1, updateBuffer.indexOf(",", updateBuffer.indexOf(" ", updateBuffer.indexOf("+CSQ:")))).toInt();
@@ -468,6 +463,7 @@ bool MAKERphone::update() {
 		}
 		else if(temp.indexOf("+CMT:") != -1)
 		{
+			playNotificationSound(notification);
 			incomingMessage(temp);
 		}
 	}
@@ -487,6 +483,11 @@ bool MAKERphone::update() {
 			homePopup();
 			inHomePopup = 0;
 		}
+	}
+	if(SHUTDOWN_POPUP_ENABLE && buttons.released(14))
+	{
+		buttons.update();
+		sleep();
 	}
 	if(buttons.held(14, 40) && !inShutdownPopup && SHUTDOWN_POPUP_ENABLE)
 	{
@@ -1288,7 +1289,10 @@ void MAKERphone::incomingMessage(String _serialData)
 	tft.setCursor(3, 110);
 	tft.print("Press \"A\" to continue");
 	while(!buttons.released(BTN_A))
+	{
+		updateNotificationSound();
 		buttons.update();
+	}
 	newMessage = 1;
 	// +CMT: "+385921488476","","19/06/03,20:14:58+08"
 	// Wjd
@@ -1554,11 +1558,9 @@ void MAKERphone::enterPUK()
 						Serial1.println("\"");
 						while (!Serial1.available());
 						while (reply.indexOf("OK", reply.indexOf("AT+CPWD")) == -1)
-							reply = Serial1.readString();
+							reply = Serial1.readString();						
 						break;
 					}
-					if (buttons.released(BTN_B)) //sleeps
-						sleep();
 					update();
 				}
 
@@ -1938,10 +1940,10 @@ void MAKERphone::saveSettings(bool debug)
 
 	if (settings.success()) {
 		if(debug){
-			Serial.print("wifi: ");
-			Serial.println(settings["wifi"].as<bool>());
-			Serial.print("bluetooth: ");
-			Serial.println(settings["bluetooth"].as<bool>());
+			// Serial.print("wifi: ");
+			// Serial.println(settings["wifi"].as<bool>());
+			// Serial.print("bluetooth: ");
+			// Serial.println(settings["bluetooth"].as<bool>());
 			Serial.print("airplane_mode: ");
 			Serial.println(settings["airplane_mode"].as<bool>());
 			Serial.print("brightness: ");
@@ -1952,8 +1954,8 @@ void MAKERphone::saveSettings(bool debug)
 			Serial.println(settings["background_color"].as<int>());
 		}
 
-		settings["wifi"] = wifi;
-		settings["bluetooth"] = bt;
+		// settings["wifi"] = wifi;
+		// settings["bluetooth"] = bt;
 		settings["airplane_mode"] = airplaneMode;
 		settings["brightness"] = brightness;
 		settings["sleep_time"] = sleepTime;
@@ -1991,10 +1993,10 @@ void MAKERphone::loadSettings(bool debug)
 
 	if (settings.success()) {
 		if(debug){
-			Serial.print("wifi: ");
-			Serial.println(settings["wifi"].as<bool>());
-			Serial.print("bluetooth: ");
-			Serial.println(settings["bluetooth"].as<bool>());
+			// Serial.print("wifi: ");
+			// Serial.println(settings["wifi"].as<bool>());
+			// Serial.print("bluetooth: ");
+			// Serial.println(settings["bluetooth"].as<bool>());
 			Serial.print("airplane_mode: ");
 			Serial.println(settings["airplane_mode"].as<bool>());
 			Serial.print("brightness: ");
@@ -2008,8 +2010,8 @@ void MAKERphone::loadSettings(bool debug)
 			Serial.print("ringtone: ");
 			Serial.println(settings["ringtone"].as<char*>());
 		}
-		wifi = settings["wifi"];
-		bt = settings["bluetooth"];
+		// wifi = settings["wifi"];
+		// bt = settings["bluetooth"];
 		airplaneMode = settings["airplane_mode"];
 		brightness = settings["brightness"];
 		sleepTime = settings["sleep_time"];
@@ -2026,24 +2028,24 @@ void MAKERphone::loadSettings(bool debug)
 }
 void MAKERphone::applySettings()
 {
-	if(wifi)
-	{
-		delay(200);
-		WiFi.begin();
-		WiFi.mode(WIFI_STA);
-		WiFi.disconnect();
-		delay(200);
-	}
-	else
-	{
-		WiFi.disconnect(true); delay(10); // disable WIFI altogether
-		WiFi.mode(WIFI_MODE_NULL); delay(10);
-	}
+	// if(wifi)
+	// {
+	// delay(200);
+	// WiFi.begin();
+	// WiFi.mode(WIFI_STA);
+	// WiFi.disconnect();
+	// delay(200);
+	// }
+	// else
+	// {
+	WiFi.disconnect(true); delay(10); // disable WIFI altogether
+	WiFi.mode(WIFI_MODE_NULL); delay(10);
+	// }
 
-	if(bt)
-		btStart();
-	else
-		btStop();
+	// if(bt)
+	// 	btStart();
+	// else
+	btStop();
 	if(airplaneMode)
 		Serial1.println("AT+CFUN=4");
 	else
@@ -2478,19 +2480,19 @@ void MAKERphone::homePopup(bool animation)
 			display.drawBitmap(helper*scale, 1*scale, silentmode, TFT_BLACK, scale);
 			helper += 10;
 		}
-		if (!airplaneMode)
-		{
-			if (wifi == 1)
-				display.drawBitmap(helper*scale, 1*scale, wifion, TFT_BLACK, scale);
-			else
-				display.drawBitmap(helper*scale, 1*scale, wifioff, TFT_BLACK, scale);
-			helper += 10;
-			if (bt)
-				display.drawBitmap(helper*scale, 1*scale, BTon, TFT_BLACK, scale);
-			else
-				display.drawBitmap(helper*scale, 1*scale, BToff, TFT_BLACK, scale);
-			helper += 10;
-		}
+		// if (!airplaneMode)
+		// {
+		// 	if (wifi == 1)
+		// 		display.drawBitmap(helper*scale, 1*scale, wifion, TFT_BLACK, scale);
+		// 	else
+		// 		display.drawBitmap(helper*scale, 1*scale, wifioff, TFT_BLACK, scale);
+		// 	helper += 10;
+		// 	if (bt)
+		// 		display.drawBitmap(helper*scale, 1*scale, BTon, TFT_BLACK, scale);
+		// 	else
+		// 		display.drawBitmap(helper*scale, 1*scale, BToff, TFT_BLACK, scale);
+		// 	helper += 10;
+		// }
 		else
 		{
 			display.drawBitmap(scale, scale, airplaneModeIcon, TFT_BLACK, scale);

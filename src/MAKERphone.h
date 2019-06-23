@@ -205,8 +205,8 @@ class MAKERphone:public Buttons, public DateTime
 	StaticJsonBuffer<capacity> jb;
 
 	//Settings values
-	bool wifi = 1;
-	bool bt = 0;
+	// bool wifi = 1;
+	// bool bt = 0;
 	bool airplaneMode = 0;
 	uint8_t brightness = 5;  //brightness 0-5
 	uint8_t actualBrightness = 0; //value from 0 (brightest) to 255 (backlight off)
@@ -220,7 +220,7 @@ class MAKERphone:public Buttons, public DateTime
 	bool simReady = 0;
 	uint32_t sleepTimer = millis();
 	volatile double batteryVoltage = 50000;
-	uint16_t signalStrength =0;
+	uint16_t signalStrength = 0;
 	String carrierName = "";
 	uint8_t sleepTime = 0;
 	String ringtone_path = "/Ringtones/Default ringtone.wav";
