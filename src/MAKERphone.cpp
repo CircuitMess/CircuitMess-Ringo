@@ -906,6 +906,7 @@ void MAKERphone::incomingCall(String _serialData) //TODO
 	Serial.print("Ringtone exists: ");
 	Serial.print(ringtone_path);
 	Serial.println(SD.exists(ringtone_path));
+	MPTrack *tempTrack = nullptr;
 	while(1)
 	{
 		if (Serial1.available())
@@ -976,7 +977,12 @@ void MAKERphone::incomingCall(String _serialData) //TODO
 
 		else if(!played)
 		{
-			addTrack(ringtone);
+			if(!addTrack(ringtone))
+			{
+				tempTrack = tracks[3];
+				removeTrack(tempTrack);
+				addTrack(ringtone);
+			}
 			Serial.println("PLAYED");
 			ringtone->setVolume(256 * volume / 14);
 			ringtone->setRepeat(1);
@@ -990,6 +996,8 @@ void MAKERphone::incomingCall(String _serialData) //TODO
 	{
 		ringtone->stop();
 		removeTrack(ringtone);
+		if(tempTrack != nullptr)
+			addTrack(tempTrack);
 	}
 	// while(!update());
 
@@ -3159,6 +3167,7 @@ void MAKERphone::alarmPopup(bool animation)
 	// 		// delayMicroseconds(750);
 	// 	}
 	// }
+	MPTrack *temp;
 	updateTimeRTC();
 	DateTime now = RTC.now();
 	char buf[100];
@@ -3217,7 +3226,12 @@ void MAKERphone::alarmPopup(bool animation)
 	}
 	else
 	{
-		addTrack(ringtone);
+		if(!addTrack(ringtone))
+		{
+			temp = tracks[3];
+			removeTrack(temp);
+			addTrack(ringtone);
+		}
 		Serial.println(ringtone_path);
 		ringtone->setVolume(256 * volume / 14);
 		ringtone->setRepeat(1);
@@ -3233,6 +3247,8 @@ void MAKERphone::alarmPopup(bool animation)
 		}
 		ringtone->stop();
 		removeTrack(ringtone);
+		if(temp != nullptr)
+			addTrack(temp);
 	}
 }
 void MAKERphone::loadAlarms()
