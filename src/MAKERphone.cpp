@@ -139,7 +139,7 @@ void MAKERphone::begin(bool splash) {
 	}
 
 	ledcAnalogWrite(LEDC_CHANNEL, 0);
-	
+
 	//SD startup
 	uint32_t tempMillis = millis();
 	if(!digitalRead(SD_INT))
@@ -485,6 +485,7 @@ bool MAKERphone::update() {
 	}
 
 	buttons.update();
+	
 	if(HOME_POPUP_ENABLE && !inHomePopup && !inShutdownPopup)
 	{
 		if(buttons.released(13)) //BUTTONSREFRESH
@@ -494,17 +495,20 @@ bool MAKERphone::update() {
 			inHomePopup = 0;
 		}
 	}
-	if(SHUTDOWN_POPUP_ENABLE && buttons.released(14))
+
+	if(SHUTDOWN_POPUP_ENABLE && buttons.released(14) && !wokeWithPWRBTN)
 	{
 		buttons.update();
 		sleep();
 	}
-	if(buttons.held(14, 40) && !inShutdownPopup && SHUTDOWN_POPUP_ENABLE)
+	if(buttons.held(14, 40) && !inShutdownPopup && SHUTDOWN_POPUP_ENABLE && !wokeWithPWRBTN)
 	{
 		inShutdownPopup = 1;
 		shutdownPopup();
 		inShutdownPopup = 0;
 	}
+	if(wokeWithPWRBTN && buttons.released(14))
+		wokeWithPWRBTN = 0;
 	if (millis() - lastFrameCount >= frameSpeed) {
 		lastFrameCount = millis();
 
@@ -691,16 +695,15 @@ void MAKERphone::sleep() {
 		esp_light_sleep_start();
 	}
 	if(simInserted)
-	{
 		digitalWrite(SIM800_DTR, 0);
-		// Serial1.println(F("AT"));
-		// Serial1.println(F("AT+CSCLK=0"));
-	}
 	voltage = batteryVoltage;
 	measuringCounter = 0;
 	voltageSum = 0;
 	voltageSample = 0;
 	vTaskResume(MeasuringTask);
+	buttons.update();
+	if(buttons.pressed(14))
+		wokeWithPWRBTN = 1;
 	if(!digitalRead(SIM_INT))
 	{
 		initWavLib();

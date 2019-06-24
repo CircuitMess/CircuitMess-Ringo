@@ -359,5 +359,6 @@ class MAKERphone:public Buttons, public DateTime
 		bool SDerror = 0;
 		char c;
 		bool buttonsPressed = 0;
+		bool wokeWithPWRBTN = 0;
 };
 #endif
