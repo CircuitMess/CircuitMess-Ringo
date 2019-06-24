@@ -1031,6 +1031,8 @@ void MAKERphone::incomingCall(String _serialData) //TODO
 			localBuffer = buffer;
 			buffer = "";
 		}
+		if(buffer.indexOf("OK", buffer.indexOf("AT+CMIC=")) != -1)
+			buffer = "";
 		Serial.println("----------");
 		Serial.println(buffer);
 		delay(1);
