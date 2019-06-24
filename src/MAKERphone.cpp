@@ -206,7 +206,6 @@ void MAKERphone::begin(bool splash) {
 		loadAlarms();
 		loadNotifications();
 		ringtone = new MPTrack((char*)ringtone_path.c_str());
-		addTrack(ringtone);
 	}
 	applySettings();
 	checkAlarms();
@@ -695,8 +694,7 @@ void MAKERphone::sleep() {
 	tft.writecommand(17);
 	display.pushSprite(0,0);
 	initWavLib();
-	if(ringtone != nullptr)
-		addTrack(ringtone);
+	
 	ledcAttachPin(LCD_BL_PIN, LEDC_CHANNEL);
 	ledcAnalogWrite(LEDC_CHANNEL, 255);
 	for (uint8_t i = 255; i > actualBrightness; i--) {
@@ -926,7 +924,10 @@ void MAKERphone::incomingCall(String _serialData) //TODO
 		if(buttons.released(BTN_FUN_RIGHT) || localBuffer.indexOf(",1,6,") != -1)
 		{
 			if(SDinsertedFlag && SD.exists(ringtone_path))
+			{
 				ringtone->stop();
+				removeTrack(ringtone);
+			}
 			tft.fillRect(0,0,160,128,TFT_WHITE);
 			tft.setCursor(60, 9);
 			tft.print("00:00");
@@ -975,6 +976,7 @@ void MAKERphone::incomingCall(String _serialData) //TODO
 
 		else if(!played)
 		{
+			addTrack(ringtone);
 			Serial.println("PLAYED");
 			ringtone->setVolume(256 * volume / 14);
 			ringtone->setRepeat(1);
@@ -985,7 +987,10 @@ void MAKERphone::incomingCall(String _serialData) //TODO
 		buttons.update();
 	}
 	if(SDinsertedFlag && SD.exists(ringtone_path))
+	{
 		ringtone->stop();
+		removeTrack(ringtone);
+	}
 	// while(!update());
 
 
@@ -2082,10 +2087,7 @@ void MAKERphone::applySettings()
 	if(SDinsertedFlag)
 	{
 		if(ringtone == nullptr)
-		{
 			ringtone = new MPTrack((char*)ringtone_path.c_str());
-			addTrack(ringtone);
-		}
 		else
 			ringtone->reloadFile(((char*)ringtone_path.c_str()));
 
@@ -3215,6 +3217,7 @@ void MAKERphone::alarmPopup(bool animation)
 	}
 	else
 	{
+		addTrack(ringtone);
 		Serial.println(ringtone_path);
 		ringtone->setVolume(256 * volume / 14);
 		ringtone->setRepeat(1);
@@ -3229,6 +3232,7 @@ void MAKERphone::alarmPopup(bool animation)
 			buttons.update();
 		}
 		ringtone->stop();
+		removeTrack(ringtone);
 	}
 }
 void MAKERphone::loadAlarms()
