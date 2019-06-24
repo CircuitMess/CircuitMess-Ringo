@@ -1323,7 +1323,22 @@ void MAKERphone::incomingMessage(String _serialData)
 	tft.print(number);
 	tft.setCursor(10, 70);
 	tft.setTextWrap(1);
-	tft.print(text);
+	for(int i = 0; i < text.length();i++)
+	{
+		tft.print(text[i]);
+		if(tft.getCursorY() > 80 && tft.getCursorX() > 130)
+		{
+			tft.print("...");
+			break;
+		}
+		if(tft.getCursorX() > 150)
+		{
+			
+				tft.print("\n");
+				tft.setCursor(10, tft.getCursorY());
+		}
+	}
+	// tft.print(text);
 	tft.setCursor(3, 110);
 	tft.print("Press \"A\" to continue");
 	while(!buttons.released(BTN_A))
@@ -3177,7 +3192,6 @@ void MAKERphone::shutdownPopup(bool animation)
 				// Serial1.println("AT+CFUN=1,1");
 				Serial1.println("AT+CFUN=4");
 
-
 				delay(750);
 				Serial.println("TURN OFF");
 				digitalWrite(SIM800_DTR, 1);
@@ -3186,6 +3200,8 @@ void MAKERphone::shutdownPopup(bool animation)
 				pinMode(LCD_BL_PIN, OUTPUT);
 				digitalWrite(LCD_BL_PIN, 1);
 				digitalWrite(OFF_PIN, 1);
+				// ESP.deepSleep(0);
+				
 			}
 		}
 		// update();
