@@ -423,6 +423,12 @@ bool MAKERphone::update() {
 		delay(1500);
 		Serial.println("TURN OFF");
 		FastLED.clear(1);
+		ledcDetachPin(LCD_BL_PIN);
+		pinMode(LCD_BL_PIN, OUTPUT);
+		digitalWrite(LCD_BL_PIN, 1);
+		Serial1.println("AT+CFUN=4");
+		digitalWrite(SIM800_DTR, 1);
+
 		digitalWrite(OFF_PIN, 1);
 	}
 
@@ -664,7 +670,16 @@ void MAKERphone::sleep() {
 		Serial.println(batteryVoltage);
 		delay(50);
 		if(batteryVoltage <= 3580)
+		{
+			ledcDetachPin(LCD_BL_PIN);
+			pinMode(LCD_BL_PIN, OUTPUT);
+			digitalWrite(LCD_BL_PIN, 1);
+			FastLED.clear(1);
+			Serial1.println("AT+CFUN=4");
+			digitalWrite(SIM800_DTR, 1);
+
 			digitalWrite(OFF_PIN, 1);
+		}
 		
 		
 		buttons.activateInterrupt();
@@ -682,7 +697,7 @@ void MAKERphone::sleep() {
 	voltageSample = 0;
 	vTaskResume(MeasuringTask);
 	if(!digitalRead(SIM_INT))
-	{	
+	{
 		initWavLib();
 		ledcAttachPin(LCD_BL_PIN, LEDC_CHANNEL);
 		ledcAnalogWrite(LEDC_CHANNEL, actualBrightness);
@@ -3140,10 +3155,17 @@ void MAKERphone::shutdownPopup(bool animation)
 				tft.fillRect(12, 36, 138, 56, TFT_WHITE);
 				tft.setCursor(40, 51);
 				tft.print("Turning off...");
-				Serial1.println("AT+CFUN=1,1");
+				// Serial1.println("AT+CFUN=1,1");
+				Serial1.println("AT+CFUN=4");
+
+
 				delay(750);
 				Serial.println("TURN OFF");
+				digitalWrite(SIM800_DTR, 1);
 				FastLED.clear(1);
+				ledcDetachPin(LCD_BL_PIN);
+				pinMode(LCD_BL_PIN, OUTPUT);
+				digitalWrite(LCD_BL_PIN, 1);
 				digitalWrite(OFF_PIN, 1);
 			}
 		}
