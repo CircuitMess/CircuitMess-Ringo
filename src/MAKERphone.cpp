@@ -343,7 +343,8 @@ bool MAKERphone::update() {
 			if (simInserted && !airplaneMode)
 			{
 				if (carrierName == "" && updateBuffer.indexOf("\n", updateBuffer.indexOf("+CSPN:")) != -1)
-					carrierName = updateBuffer.substring(updateBuffer.indexOf("\"", updateBuffer.indexOf("+CSPN:")) + 1, updateBuffer.indexOf("\"", updateBuffer.indexOf("\"", updateBuffer.indexOf("+CSPN:")) + 1));
+					carrierName = updateBuffer.substring(updateBuffer.indexOf("\"", updateBuffer.indexOf("+CSPN:")) + 1,
+					updateBuffer.indexOf("\"", updateBuffer.indexOf("\"", updateBuffer.indexOf("+CSPN:")) + 1));
 						
 				if (updateBuffer.indexOf("\n", updateBuffer.indexOf("+CSQ:")) != -1)
 					signalStrength = updateBuffer.substring(updateBuffer.indexOf(" ", updateBuffer.indexOf("+CSQ:")) + 1, updateBuffer.indexOf(",", updateBuffer.indexOf(" ", updateBuffer.indexOf("+CSQ:")))).toInt();
@@ -3082,12 +3083,12 @@ void MAKERphone::shutdownPopup(bool animation)
 
 	if(animation)
 	{
-		for (int i = 2; i < 70; i++)
+		for (int i = 2; i < 75; i++)
 		{
 			// tft.fillRect(tft.width()/2 - i, 34, i * 2 + 2, 60, TFT_BLACK);
-			tft.drawRect(tft.width()/2 - i, 34, i*2+2, 60, TFT_BLACK);
-			tft.drawRect(tft.width()/2 - i + 1, 35, i*2+1, 58, TFT_BLACK);
-			tft.fillRect(tft.width()/2 - i + 2, 36, i * 2 - 2, 56, TFT_WHITE);
+			tft.drawRect(tft.width()/2 - i, 28, i*2+2, 72, TFT_BLACK);
+			tft.drawRect(tft.width()/2 - i + 1, 29, i*2+1, 70, TFT_BLACK);
+			tft.fillRect(tft.width()/2 - i + 2, 30, i * 2 - 2, 68, TFT_WHITE);
 			// update();
 			// delayMicroseconds(2000);
 		}
@@ -3096,22 +3097,26 @@ void MAKERphone::shutdownPopup(bool animation)
 	// tft.fillRect(10, 34, 142, 60, TFT_BLACK);
 	// tft.fillRect(12, 36, 138, 56, TFT_WHITE);
 
-	uint8_t cursor = 1;
+	uint8_t cursor = 0;
 	uint32_t blinkMillis = millis();
 	bool blinkState = 0;
 	dataRefreshFlag = 1;
-	tft.fillRect(12, 36, 138, 56, TFT_WHITE);
+	// tft.fillRect(12, 36, 138, 56, TFT_WHITE);
 	tft.setTextColor(TFT_BLACK);
-	tft.drawBitmap(25, 42, powerButton, TFT_RED);
+	tft.drawBitmap(38, 45, powerButton, TFT_RED);
+	tft.drawBitmap(107, 45, resetButton, TFT_GREEN);
 	tft.setTextFont(2);
 	tft.setTextSize(1);
-	tft.setCursor(55, 44);
-	tft.print("Turn off?");
+	// tft.setCursor(55, 44);
+	// tft.print("Turn off?");
 	// mp.tft.print("YES");
 	// mp.tft.setCursor(98, 61);
 	// mp.tft.print("NO");
-	tft.setCursor(42, 68);
-	tft.print("YES      NO");
+	tft.setCursor(18, 68);
+	tft.print("Power off");
+	tft.setCursor(95, 68);
+	tft.print("Restart");
+	// tft.print("YES      NO");
 	while(!buttons.released(BTN_B))
 	{
 		if(millis() - blinkMillis > 350)
@@ -3122,12 +3127,12 @@ void MAKERphone::shutdownPopup(bool animation)
 		switch (cursor)
 		{
 			case 0:
-				tft.drawRect(37, 65, 33, 22, blinkState ? TFT_RED: TFT_WHITE);
-				tft.drawRect(38, 66, 31, 20, blinkState ? TFT_RED: TFT_WHITE);
+				tft.drawRect(13, 37, 71, 54, blinkState ? TFT_RED: TFT_WHITE);
+				tft.drawRect(14, 38, 69, 52, blinkState ? TFT_RED: TFT_WHITE);
 			break;
 			case 1:
-				tft.drawRect(96, 65, 27, 22, blinkState ? TFT_RED: TFT_WHITE);
-				tft.drawRect(97, 66, 25, 20, blinkState ? TFT_RED: TFT_WHITE);
+				tft.drawRect(86, 37, 60, 54, blinkState ? TFT_RED: TFT_WHITE);
+				tft.drawRect(87, 38, 58, 52, blinkState ? TFT_RED: TFT_WHITE);
 			break;
 		}
 		if(buttons.released(BTN_LEFT) && cursor == 1)
@@ -3135,21 +3140,28 @@ void MAKERphone::shutdownPopup(bool animation)
 			cursor = 0;
 			blinkMillis = millis();
 			blinkState = 1;
-			tft.drawRect(96, 65, 27, 22, TFT_WHITE);
-			tft.drawRect(97, 66, 25, 20, TFT_WHITE);
+			tft.drawRect(86, 37, 60, 54, TFT_WHITE);
+			tft.drawRect(87, 38, 58, 52, TFT_WHITE);
 		}
 		if(buttons.released(BTN_RIGHT) && cursor == 0)
 		{
 			cursor = 1;
 			blinkMillis = millis();
 			blinkState = 1;
-			tft.drawRect(37, 65, 33, 22, TFT_WHITE);
-			tft.drawRect(38, 66, 31, 20, TFT_WHITE);
+			tft.drawRect(13, 37, 71, 54, TFT_WHITE);
+			tft.drawRect(14, 38, 69, 52, TFT_WHITE);
 		}
 		if(buttons.released(BTN_A))
 		{
 			if(cursor == 1)
-				break;
+			{
+				tft.fillRect(12, 36, 138, 56, TFT_WHITE);
+				tft.setCursor(40, 51);
+				tft.print("Restarting...");
+				Serial1.println("AT+CFUN=1,1");
+				delay(1000);
+				ESP.restart();
+			}
 			else
 			{
 				tft.fillRect(12, 36, 138, 56, TFT_WHITE);
