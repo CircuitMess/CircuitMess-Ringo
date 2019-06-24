@@ -99,25 +99,47 @@ void MAKERphone::begin(bool splash) {
 	}
 	firmware_version = EEPROM.readUInt(FIRMWARE_VERSION_ADDRESS);
 
-	//PWM SETUP FOR ESP32
-	ledcSetup(0, 2000, 8);
-	ledcSetup(LEDC_CHANNEL, LEDC_BASE_FREQ, LEDC_TIMER);
-	ledcAttachPin(LCD_BL_PIN, LEDC_CHANNEL);
-	ledcAnalogWrite(LEDC_CHANNEL, 255);
+	
 
 	//display initialization
 	tft.init();
 	tft.invertDisplay(0);
 	tft.setRotation(3);
 	display.setColorDepth(8); // Set colour depth of Sprite to 8 (or 16) bits
-	display.createSprite(BUFWIDTH, BUFHEIGHT); // Create the sprite and clear background to black
-	display.setTextWrap(0);             //setRotation(1);
-	display.setTextSize(1); // landscape
-	popupSprite.setColorDepth(8); // Set colour depth of Sprite to 8 (or 16) bits
-	popupSprite.createSprite(160, 18);
+	display.createSprite(160, 128);
+	display.setRotation(1);
+
+	// popupSprite.setColorDepth(8); // Set colour depth of Sprite to 8 (or 16) bits
+	// popupSprite.createSprite(160, 18);
 	// buf.createSprite(BUF2WIDTH, BUF2HEIGHT); // Create the sprite and clear background to black
 	// buf.setTextSize(1);
 
+	
+
+	if (splash == 1)
+	{
+		display.fillScreen(TFT_RED);
+		display.pushSprite(0,0);
+		// while (!update());
+	}
+	else {
+		display.fillScreen(TFT_BLACK);
+		display.pushSprite(0,0);
+		// while (!update());
+	}
+	//PWM SETUP FOR ESP32
+	delay(30);
+	ledcSetup(0, 2000, 8);
+	ledcSetup(LEDC_CHANNEL, LEDC_BASE_FREQ, LEDC_TIMER);
+	ledcAttachPin(LCD_BL_PIN, LEDC_CHANNEL);
+	ledcAnalogWrite(LEDC_CHANNEL, 255);
+	for (uint8_t i = 255; i > actualBrightness; i--) {
+		ledcAnalogWrite(LEDC_CHANNEL, i);
+		delay(2);
+	}
+
+	ledcAnalogWrite(LEDC_CHANNEL, 0);
+	
 	//SD startup
 	uint32_t tempMillis = millis();
 	if(!digitalRead(SD_INT))
@@ -133,24 +155,6 @@ void MAKERphone::begin(bool splash) {
 			}
 		}
 	}
-
-	if (splash == 1)
-	{
-		display.fillScreen(TFT_RED);
-		while (!update());
-	}
-	else {
-		display.fillScreen(TFT_BLACK);
-		while (!update());
-	}
-
-	ledcAnalogWrite(LEDC_CHANNEL, 255);
-	for (uint8_t i = 255; i > actualBrightness; i--) {
-		ledcAnalogWrite(LEDC_CHANNEL, i);
-		delay(2);
-	}
-
-	ledcAnalogWrite(LEDC_CHANNEL, 0);
 
 	if (splash == 1)
 		splashScreen(); //Show the main splash screen
@@ -266,16 +270,16 @@ bool MAKERphone::update() {
 		takeScreenshot();
 		homePopup(0);
 	}
-	if(!spriteCreated)
-	{
-		display.deleteSprite();
-		if(resolutionMode)
-			display.createSprite(BUFWIDTH, BUFHEIGHT);
-		else
-			display.createSprite(BUF2WIDTH, BUF2HEIGHT);
-		display.setRotation(1);
-		spriteCreated=1;
-	}
+	// if(!spriteCreated)
+	// {
+	// 	display.deleteSprite();
+	// 	if(resolutionMode)
+	// 		display.createSprite(BUFWIDTH, BUFHEIGHT);
+	// 	else
+	// 		display.createSprite(BUF2WIDTH, BUF2HEIGHT);
+	// 	display.setRotation(1);
+	// 	spriteCreated=1;
+	// }
 	
 	//halved resolution mode
 	// if(resolutionMode == 1)
