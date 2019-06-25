@@ -65,7 +65,7 @@ void MAKERphone::begin(bool splash) {
 	esp_sleep_enable_ext0_wakeup(GPIO_NUM_36, 0);
 	//Initialize and start with the NeoPixels
 	FastLED.addLeds<NEOPIXEL, PIXELPIN>(leds, 8);
-	Serial1.begin(9600, SERIAL_8N1, 17, 16);
+
 
 
 	//Serial1.println(F("AT+CFUN=1,1"));
@@ -90,14 +90,71 @@ void MAKERphone::begin(bool splash) {
 	FastLED.clear();
 	buttons.begin();
 	RTC.begin();
+
 	//EEPROM setup for firmware_version
-	// EEPROM.begin(64);
+	EEPROM.begin(256);
 	if(EEPROM.readUInt(FIRMWARE_VERSION_ADDRESS) > 999)
 	{
 		EEPROM.writeUInt(FIRMWARE_VERSION_ADDRESS, firmware_version);
 		EEPROM.commit();
 	}
 	firmware_version = EEPROM.readUInt(FIRMWARE_VERSION_ADDRESS);
+	sim_module_version = EEPROM.readByte(GSM_MODULE_ADDRESS);
+	// if(sim_module_version == 255)
+	// {
+	uint32_t temp = millis();
+	String buffer = "";
+	Serial1.begin(115200, SERIAL_8N1, 17, 16);
+	// Serial1.println("AT");
+	// while(buffer.indexOf("OK") == -1 && millis() - temp < 1000)
+	// {
+	// 	if(Serial1.available())
+	// 	{
+	// 		buffer+=(char)Serial1.read();
+	// 		Serial.println(buffer);
+	// 	}
+	// }
+	// if(buffer.indexOf("OK") == -1)
+	// {
+	// 	Serial1.end();
+	// 	temp = millis();
+	// 	buffer = "";
+	// 	Serial1.begin(9600, SERIAL_8N1, 17, 16);
+	// 	Serial1.println("AT");
+	// 	while(buffer.indexOf("OK") == -1 && millis() - temp < 1000)
+	// 	{
+	// 		if(Serial1.available())
+	// 		{
+	// 			buffer+=(char)Serial1.read();
+	// 			Serial.println(buffer);
+	// 		}
+	// 	}
+	// 	if(buffer.indexOf("OK") != -1)
+	// 		sim_module_version = 1; //SIM800
+	// 	else
+	// 	{
+	// 		Serial1.end();
+	// 		sim_module_version = 255; //NO SIM MODULE
+	// 	}
+		
+	// }
+	// else
+	// 	sim_module_version = 0; //SIM7600
+
+	// if(EEPROM.readByte(GSM_MODULE_ADDRESS) != sim_module_version)
+	// {
+	// 	Serial.println("written module type");
+	// 	EEPROM.writeByte(GSM_MODULE_ADDRESS, sim_module_version);
+	// 	EEPROM.commit();
+	// }
+
+	// }
+	// else if(sim_module_version == 0)
+		// Serial1.begin(115200, SERIAL_8N1, 17, 16);
+	// else if(sim_module_version == 1)
+		// Serial1.begin(9600, SERIAL_8N1, 17, 16);
+	Serial.print("MODULE TYPE: ");
+	Serial.println(sim_module_version);
 
 	
 
@@ -158,7 +215,7 @@ void MAKERphone::begin(bool splash) {
 
 	if (splash == 1)
 		splashScreen(); //Show the main splash screen
-	else
+	else if(sim_module_version != 255)
 	{
 		delay(500);
 		checkSim();
@@ -341,8 +398,8 @@ bool MAKERphone::update() {
 		{
 			c = Serial1.read();
 			updateBuffer += c;
-			// Serial.println("--------------");
-			// Serial.println(updateBuffer);
+			Serial.println("--------------");
+			Serial.println(updateBuffer);
 			
 			if (simInserted && !airplaneMode)
 			{
@@ -2099,10 +2156,7 @@ void MAKERphone::applySettings()
 	// 	btStart();
 	// else
 	btStop();
-	if(airplaneMode)
-		Serial1.println("AT+CFUN=4");
-	else
-		Serial1.println("AT+CFUN=1");
+
 
 	if (brightness == 0)
 		actualBrightness = 230;
@@ -2143,6 +2197,10 @@ void MAKERphone::applySettings()
 	{
 		Serial1.print(F("AT+CMIC=0,"));
 		Serial1.println(micGain);
+		if(airplaneMode)
+			Serial1.println("AT+CFUN=4");
+		else if(simInserted)
+			Serial1.println("AT+CFUN=1");
 	}
 }
 

@@ -117,6 +117,7 @@ extern HardwareSerial Serial1;
 #define number_of_contacts 100
 
 #define FIRMWARE_VERSION_ADDRESS 0
+#define GSM_MODULE_ADDRESS 200
 #define smsNumber 22
 
 
@@ -312,6 +313,7 @@ class MAKERphone:public Buttons, public DateTime
 	bool inCall = 0;
 	uint8_t micGain = 15;
 	uint16_t simVoltage = 3900;
+	uint8_t sim_module_version = 0;
 
 	private:
 		MPTrack* ringtone = nullptr;
