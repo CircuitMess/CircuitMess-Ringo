@@ -412,7 +412,6 @@ bool MAKERphone::update() {
 			}
 		}
 	}
-	updateNotificationSound();
 	mp.batteryVoltage = voltage;
 
 	if(batteryVoltage <= 3580)
@@ -433,7 +432,6 @@ bool MAKERphone::update() {
 		digitalWrite(LCD_BL_PIN, 1);
 		Serial1.println("AT+CFUN=4");
 		digitalWrite(SIM800_DTR, 1);
-
 		digitalWrite(OFF_PIN, 1);
 	}
 
@@ -478,13 +476,8 @@ bool MAKERphone::update() {
 		}
 	}
 	updateNotificationSound();
-	if(millis() - buttonsRefreshMillis > 200)
-	{
-		buttons.currentKey = buttons.kpd.getKey();
-		buttonsRefreshMillis = millis();
-	}
 
-	buttons.update();
+		buttons.update();
 	
 	if(HOME_POPUP_ENABLE && !inHomePopup && !inShutdownPopup)
 	{
@@ -509,6 +502,7 @@ bool MAKERphone::update() {
 	}
 	if(wokeWithPWRBTN && buttons.released(14))
 		wokeWithPWRBTN = 0;
+
 	if (millis() - lastFrameCount >= frameSpeed) {
 		lastFrameCount = millis();
 
@@ -523,7 +517,6 @@ bool MAKERphone::update() {
 		FastLED.show();
 		delay(1);
 		FastLED.clear();
-
 		return true;
 	}
 	else
