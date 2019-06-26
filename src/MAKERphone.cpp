@@ -425,14 +425,29 @@ bool MAKERphone::update() {
 		tft.setCursor(40, 61);
 		tft.print("Turning off...");
 		delay(1500);
+
+
+		Serial1.println("AT+CFUN=4");
+		Serial1.println("AT+CSCLK=2");
+
+		delay(750);
 		Serial.println("TURN OFF");
+		digitalWrite(SIM800_DTR, 1);
 		FastLED.clear(1);
 		ledcDetachPin(LCD_BL_PIN);
 		pinMode(LCD_BL_PIN, OUTPUT);
 		digitalWrite(LCD_BL_PIN, 1);
-		Serial1.println("AT+CFUN=4");
-		digitalWrite(SIM800_DTR, 1);
 		digitalWrite(OFF_PIN, 1);
+		
+		rtc_gpio_isolate(GPIO_NUM_16);
+		rtc_gpio_isolate(GPIO_NUM_17);
+		rtc_gpio_isolate(GPIO_NUM_33);
+		rtc_gpio_isolate(GPIO_NUM_34);
+		rtc_gpio_isolate(GPIO_NUM_36);
+		rtc_gpio_isolate(GPIO_NUM_39);
+		
+		digitalWrite(OFF_PIN, 1);
+		ESP.deepSleep(0);
 	}
 
 	if(!digitalRead(RTC_INT) && !inAlarmPopup && !alarmCleared)
@@ -673,14 +688,27 @@ void MAKERphone::sleep() {
 		delay(50);
 		if(batteryVoltage <= 3580)
 		{
+			Serial1.println("AT+CFUN=4");
+			Serial1.println("AT+CSCLK=2");
+
+			delay(750);
+			Serial.println("TURN OFF");
+			digitalWrite(SIM800_DTR, 1);
+			FastLED.clear(1);
 			ledcDetachPin(LCD_BL_PIN);
 			pinMode(LCD_BL_PIN, OUTPUT);
 			digitalWrite(LCD_BL_PIN, 1);
-			FastLED.clear(1);
-			Serial1.println("AT+CFUN=4");
-			digitalWrite(SIM800_DTR, 1);
-
 			digitalWrite(OFF_PIN, 1);
+			
+			rtc_gpio_isolate(GPIO_NUM_16);
+			rtc_gpio_isolate(GPIO_NUM_17);
+			rtc_gpio_isolate(GPIO_NUM_33);
+			rtc_gpio_isolate(GPIO_NUM_34);
+			rtc_gpio_isolate(GPIO_NUM_36);
+			rtc_gpio_isolate(GPIO_NUM_39);
+			
+			digitalWrite(OFF_PIN, 1);
+			ESP.deepSleep(0);
 		}
 		
 		
@@ -3184,6 +3212,7 @@ void MAKERphone::shutdownPopup(bool animation)
 				tft.print("Turning off...");
 				// Serial1.println("AT+CFUN=1,1");
 				Serial1.println("AT+CFUN=4");
+				Serial1.println("AT+CSCLK=2");
 
 				delay(750);
 				Serial.println("TURN OFF");
@@ -3192,8 +3221,17 @@ void MAKERphone::shutdownPopup(bool animation)
 				ledcDetachPin(LCD_BL_PIN);
 				pinMode(LCD_BL_PIN, OUTPUT);
 				digitalWrite(LCD_BL_PIN, 1);
+				// digitalWrite(OFF_PIN, 1);
+				
+				rtc_gpio_isolate(GPIO_NUM_16);
+				rtc_gpio_isolate(GPIO_NUM_17);
+				rtc_gpio_isolate(GPIO_NUM_33);
+				rtc_gpio_isolate(GPIO_NUM_34);
+				rtc_gpio_isolate(GPIO_NUM_36);
+				rtc_gpio_isolate(GPIO_NUM_39);
+				
 				digitalWrite(OFF_PIN, 1);
-				// ESP.deepSleep(0);
+				ESP.deepSleep(0);
 				
 			}
 		}
