@@ -138,7 +138,13 @@ void MAKERphone::begin(bool splash) {
 		
 	}
 	else
+	{
 		sim_module_version = 0; //SIM7600
+		Serial1.println("AT+IPREX=9600");
+		delay(10);
+		Serial1.end();
+		Serial1.begin(9600, SERIAL_8N1, 17, 16);
+	}
 
 	if(EEPROM.readByte(GSM_MODULE_ADDRESS) != sim_module_version)
 	{
@@ -148,12 +154,10 @@ void MAKERphone::begin(bool splash) {
 	}
 
 	if(sim_module_version == 1)
-	{
-		Serial1.begin(9600, SERIAL_8N1, 17, 16);
 		micGain = 15;
-	}
 	else if(sim_module_version == 0)
-		micGain = 8;
+		micGain = 0;
+		
 	Serial.print("MODULE TYPE: ");
 	Serial.println(sim_module_version);
 
@@ -224,15 +228,20 @@ void MAKERphone::begin(bool splash) {
 	updateTimeRTC();
 	if(simInserted)
 	{
-		Serial1.print(F("AT+CMIC=0,"));
-		Serial1.println(micGain);
-		delay(5);
 		// updateTimeGSM();
 		Serial1.println(F("AT+CMEE=2"));
 		delay(5);
-		Serial1.println(F("AT+CLVL=100"));
-		delay(5);
-		Serial1.println(F("AT+CRSL=100"));
+		if(sim_module_version == 1)
+		{
+			Serial1.println(F("AT+CRSL=100"));
+			Serial1.println(F("AT+CLVL=100"));
+		}
+		else if(sim_module_version == 0)
+		{
+			Serial1.println("AT+OUTGAIN=8");
+			delay(5);
+			Serial1.println("AT+CVHU=0");
+		}
 		delay(5);
 		Serial1.println(F("AT+CMGF=1"));
 		delay(5);
@@ -246,11 +255,6 @@ void MAKERphone::begin(bool splash) {
 		delay(5);
 		Serial1.println(F("AT+CSCLK=1"));
 		delay(5);
-		if(sim_module_version == 0)
-		{
-			Serial1.println("AT+CVHU=0");
-			delay(5);
-		}
 		Serial1.println(F("AT&W"));
 		delay(5);
 		Serial.println("Serial1 up and running...");
@@ -393,31 +397,70 @@ bool MAKERphone::update() {
 	//refreshing signal and battery info
 	if (dataRefreshFlag && simReady)
 	{
-		// Serial.println(updateBuffer);
 		
-		if (millis() - refreshMillis >= 5000)
+		if (millis() - refreshMillis >= 2000)
 		{
-			Serial1.println("AT+CBC");
-			updateBuffer = "";
-			if (simInserted && !airplaneMode)
-			{
-				if (carrierName == "")
-					Serial1.println("AT+CSPN?");
-				Serial1.println("AT+CSQ");
-
-				if (clockYear%100 == 4 || clockYear%100 == 80 || clockMonth == 0 || clockMonth > 12 ||
-				clockHour > 24 || clockMinute >= 60)
-					Serial1.println("AT+CCLK?");
-			}
 			refreshMillis = millis();
+			switch (alternatingRefresh)
+			{
+			case 0:
+				Serial1.println("AT+CBC");
+				break;
+				
+			case 1:
+				if (simInserted && !airplaneMode)
+				{
+					if (carrierName == "")
+						Serial1.println("AT+CSPN?");
+					else
+						refreshMillis = millis() + 2000;				
+				}
+				else
+					refreshMillis = millis() + 2000;
+				break;
+
+			case 2:
+				if (simInserted && !airplaneMode)
+					Serial1.println("AT+CSQ");
+				else
+					refreshMillis = millis() + 2000;
+				break;
+
+			case 3:
+				if (simInserted && !airplaneMode)
+				{
+					if (clockYear%100 == 4 || clockYear%100 == 80 || clockMonth == 0 || clockMonth > 12 ||
+					clockHour > 24 || clockMinute >= 60)
+						Serial1.println("AT+CCLK?");
+					else
+						refreshMillis = millis() + 2000;
+				}
+				else
+					refreshMillis = millis() + 2000;
+				break;
+			}
+			updateBuffer = "";
+			// if (simInserted && !airplaneMode)
+			// {
+			// 	if (carrierName == "")
+			// 		Serial1.println("AT+CSPN?");
+			// 	Serial1.println("AT+CSQ");
+
+			// 	if (clockYear%100 == 4 || clockYear%100 == 80 || clockMonth == 0 || clockMonth > 12 ||
+			// 	clockHour > 24 || clockMinute >= 60)
+			// 		Serial1.println("AT+CCLK?");
+			// }
+			alternatingRefresh++;
+			if(alternatingRefresh > 3)
+				alternatingRefresh = 0;
 		}
 		if (Serial1.available())
 		{
 			c = Serial1.read();
 			if((uint8_t)c != 255)
 				updateBuffer += c;
-			Serial.println("--------------");
-			Serial.println(updateBuffer);
+			// Serial.println("--------------");
+			// Serial.println(updateBuffer);
 			
 			if (simInserted && !airplaneMode)
 			{
@@ -436,46 +479,46 @@ bool MAKERphone::update() {
 						c1 = updateBuffer.charAt(index + 8);
 						c2 = updateBuffer.charAt(index + 9);
 						clockYear = 2000 + ((c1 - '0') * 10) + (c2 - '0');
-						Serial.println(F("CLOCK YEAR:"));
-						Serial.println(clockYear);
-						delay(5);
+						// Serial.println(F("CLOCK YEAR:"));
+						// Serial.println(clockYear);
+						// delay(5);
 						// clockYear = ((c1 - '0') * 10) + (c2 - '0');
 
 						c1 = updateBuffer.charAt(index + 11);
 						c2 = updateBuffer.charAt(index + 12);
 						clockMonth = ((c1 - '0') * 10) + (c2 - '0');
-						Serial.println(F("CLOCK MONTH:"));
-						Serial.println(clockMonth);
+						// Serial.println(F("CLOCK MONTH:"));
+						// Serial.println(clockMonth);
 
 						c1 = updateBuffer.charAt(index + 14);
 						c2 = updateBuffer.charAt(index + 15);
 						clockDay = ((c1 - '0') * 10) + (c2 - '0');
-						Serial.println(F("CLOCK DAY:"));
-						Serial.println(clockDay);
+						// Serial.println(F("CLOCK DAY:"));
+						// Serial.println(clockDay);
 
 						c1 = updateBuffer.charAt(index + 17);
 						c2 = updateBuffer.charAt(index + 18);
 						clockHour = ((c1 - '0') * 10) + (c2 - '0');
-						Serial.println(F("CLOCK HOUR:"));
-						Serial.println(clockHour);
+						// Serial.println(F("CLOCK HOUR:"));
+						// Serial.println(clockHour);
 
 						c1 = updateBuffer.charAt(index + 20);
 						c2 = updateBuffer.charAt(index + 21);
 						clockMinute = ((c1 - '0') * 10) + (c2 - '0');
-						Serial.println(F("CLOCK MINUTE:"));
-						Serial.println(clockMinute);
+						// Serial.println(F("CLOCK MINUTE:"));
+						// Serial.println(clockMinute);
 
 						c1 = updateBuffer.charAt(index + 23);
 						c2 = updateBuffer.charAt(index + 24);
 						clockSecond = ((c1 - '0') * 10) + (c2 - '0');
-						Serial.println(F("CLOCK SECOND:"));
-						Serial.println(clockSecond);
+						// Serial.println(F("CLOCK SECOND:"));
+						// Serial.println(clockSecond);
 
 						//TO-DO: UPDATE THE RTC HERE
 						DateTime now = DateTime(clockYear, clockMonth, clockDay,
 						clockHour, clockMinute, clockSecond);
 						RTC.adjust(now);
-						Serial.println(F("\nRTC TIME UPDATE OVER GSM DONE!"));
+						// Serial.println(F("\nRTC TIME UPDATE OVER GSM DONE!"));
 					}
 
 			}
@@ -528,17 +571,24 @@ bool MAKERphone::update() {
 	}
 	if(alarmCleared && millis() - alarmMillis > 60000)
 		alarmCleared = 0;
-
 	if(!digitalRead(SIM_INT) && !inCall)
 	{
 		String temp = "";
 		long long curr_millis = millis();
-
+		Serial1.write(13);
 		while ((temp.indexOf("\r", temp.indexOf("+CLCC:")) == -1 || temp.indexOf("\r", temp.indexOf("+CMT:") == -1)
 		|| temp.indexOf("\r", temp.indexOf("1,1,4,0,0,")) == -1 ) && millis() - curr_millis < 500)
 		{
-			temp += (char)Serial1.read();
-			// Serial.println(temp);
+			if(Serial1.available())
+			{
+				char c = Serial1.read();
+				if((uint8_t)c != 255)
+					temp += c;
+
+				Serial.println(temp);
+				Serial.println("-----------------");
+			}
+
 		}
 		if(temp.indexOf("+CLCC:") != -1 || temp.indexOf("RING") != -1)
 		{
@@ -1306,7 +1356,12 @@ void MAKERphone::incomingCall(String _serialData) //TODO
 			if(sim_module_version == 1)
 				Serial1.printf("AT+CMIC=0,%d\r", micGain);
 			else if(sim_module_version == 0)
-				Serial.printf("AT+CMICGAIN=%d\r\n", micGain);
+			{
+				String foo = "AT+CMICGAIN=";
+				foo+=micGain;
+				Serial1.println(foo);
+				delay(10);
+			}
 			written = -1;
 			tft.fillRect(61, 111, 20, 15, TFT_RED); 
 			tft.setCursor(62, 109);
@@ -1318,7 +1373,12 @@ void MAKERphone::incomingCall(String _serialData) //TODO
 			if(sim_module_version == 1)
 				Serial1.printf("AT+CMIC=0,%d\r", micGain);
 			else if(sim_module_version == 0)
-				Serial.printf("AT+CMICGAIN=%d\r\n", micGain);
+			{
+				String foo = "AT+CMICGAIN=";
+				foo+=micGain;
+				Serial1.println(foo);
+				delay(10);
+			}
 			written = -1;
 			tft.fillRect(61, 111, 20, 15, TFT_RED); 
 			tft.setCursor(62, 109);
@@ -2223,8 +2283,19 @@ void MAKERphone::applySettings()
 	}
 	if(simInserted)
 	{
-		Serial1.print(F("AT+CMIC=0,"));
-		Serial1.println(micGain);
+		if(sim_module_version == 1)
+		{
+			Serial1.print(F("AT+CMIC=0,"));
+			Serial1.println(micGain);
+		}
+		else if(sim_module_version == 0)
+		{
+			String foo = "AT+CMICGAIN=";
+			foo+=micGain;
+			Serial1.println(foo);
+			delay(10);
+		}
+		
 		if(airplaneMode)
 			Serial1.println("AT+CFUN=4");
 		else if(simInserted)
