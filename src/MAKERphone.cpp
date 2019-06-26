@@ -100,59 +100,60 @@ void MAKERphone::begin(bool splash) {
 	}
 	firmware_version = EEPROM.readUInt(FIRMWARE_VERSION_ADDRESS);
 	sim_module_version = EEPROM.readByte(GSM_MODULE_ADDRESS);
-	// if(sim_module_version == 255)
-	// {
 	uint32_t temp = millis();
 	String buffer = "";
 	Serial1.begin(115200, SERIAL_8N1, 17, 16);
-	// Serial1.println("AT");
-	// while(buffer.indexOf("OK") == -1 && millis() - temp < 1000)
-	// {
-	// 	if(Serial1.available())
-	// 	{
-	// 		buffer+=(char)Serial1.read();
-	// 		Serial.println(buffer);
-	// 	}
-	// }
-	// if(buffer.indexOf("OK") == -1)
-	// {
-	// 	Serial1.end();
-	// 	temp = millis();
-	// 	buffer = "";
-	// 	Serial1.begin(9600, SERIAL_8N1, 17, 16);
-	// 	Serial1.println("AT");
-	// 	while(buffer.indexOf("OK") == -1 && millis() - temp < 1000)
-	// 	{
-	// 		if(Serial1.available())
-	// 		{
-	// 			buffer+=(char)Serial1.read();
-	// 			Serial.println(buffer);
-	// 		}
-	// 	}
-	// 	if(buffer.indexOf("OK") != -1)
-	// 		sim_module_version = 1; //SIM800
-	// 	else
-	// 	{
-	// 		Serial1.end();
-	// 		sim_module_version = 255; //NO SIM MODULE
-	// 	}
+	Serial1.println("AT");
+	while(buffer.indexOf("OK") == -1 && millis() - temp < 1500)
+	{
+		if(Serial1.available())
+		{
+			buffer+=(char)Serial1.read();
+			Serial.println(buffer);
+		}
+	}
+	if(buffer.indexOf("OK") == -1)
+	{
+		Serial1.end();
+		temp = millis();
+		buffer = "";
+		Serial1.begin(9600, SERIAL_8N1, 17, 16);
+		Serial1.println("AT");
+		while(buffer.indexOf("OK") == -1 && millis() - temp < 1500)
+		{
+
+			if(Serial1.available())
+			{
+				buffer+=(char)Serial1.read();
+				Serial.println(buffer);
+			}
+		}
+		if(buffer.indexOf("OK") != -1)
+			sim_module_version = 1; //SIM800
+		else
+		{
+			Serial1.end();
+			sim_module_version = 255; //NO SIM MODULE
+		}
 		
-	// }
-	// else
-	// 	sim_module_version = 0; //SIM7600
+	}
+	else
+		sim_module_version = 0; //SIM7600
 
-	// if(EEPROM.readByte(GSM_MODULE_ADDRESS) != sim_module_version)
-	// {
-	// 	Serial.println("written module type");
-	// 	EEPROM.writeByte(GSM_MODULE_ADDRESS, sim_module_version);
-	// 	EEPROM.commit();
-	// }
+	if(EEPROM.readByte(GSM_MODULE_ADDRESS) != sim_module_version)
+	{
+		Serial.println("written module type");
+		EEPROM.writeByte(GSM_MODULE_ADDRESS, sim_module_version);
+		EEPROM.commit();
+	}
 
-	// }
-	// else if(sim_module_version == 0)
-		// Serial1.begin(115200, SERIAL_8N1, 17, 16);
-	// else if(sim_module_version == 1)
-		// Serial1.begin(9600, SERIAL_8N1, 17, 16);
+	if(sim_module_version == 1)
+	{
+		Serial1.begin(9600, SERIAL_8N1, 17, 16);
+		micGain = 15;
+	}
+	else if(sim_module_version == 0)
+		micGain = 8;
 	Serial.print("MODULE TYPE: ");
 	Serial.println(sim_module_version);
 
@@ -225,17 +226,33 @@ void MAKERphone::begin(bool splash) {
 	{
 		Serial1.print(F("AT+CMIC=0,"));
 		Serial1.println(micGain);
+		delay(5);
 		// updateTimeGSM();
 		Serial1.println(F("AT+CMEE=2"));
+		delay(5);
 		Serial1.println(F("AT+CLVL=100"));
+		delay(5);
 		Serial1.println(F("AT+CRSL=100"));
+		delay(5);
 		Serial1.println(F("AT+CMGF=1"));
+		delay(5);
 		Serial1.println(F("AT+CNMI=1,2,0,0,0"));
+		delay(5);
 		Serial1.println(F("AT+CLTS=1")); //Enable local Timestamp mode (used for syncrhonising RTC with GSM time
+		delay(5);
 		Serial1.println(F("AT+CPMS=\"SM\",\"SM\",\"SM\""));
+		delay(15);
 		Serial1.println(F("AT+CLCC=1"));
+		delay(5);
 		Serial1.println(F("AT+CSCLK=1"));
+		delay(5);
+		if(sim_module_version == 0)
+		{
+			Serial1.println("AT+CVHU=0");
+			delay(5);
+		}
 		Serial1.println(F("AT&W"));
+		delay(5);
 		Serial.println("Serial1 up and running...");
 	}
 
@@ -397,7 +414,8 @@ bool MAKERphone::update() {
 		if (Serial1.available())
 		{
 			c = Serial1.read();
-			updateBuffer += c;
+			if((uint8_t)c != 255)
+				updateBuffer += c;
 			Serial.println("--------------");
 			Serial.println(updateBuffer);
 			
@@ -992,7 +1010,8 @@ void MAKERphone::incomingCall(String _serialData) //TODO
 		if (Serial1.available())
 		{
 			c = (char)Serial1.read();
-			buffer += c;
+			if((uint8_t)c != 255)
+				buffer += c;
 			// Serial.println(buffer);
 		}
 		if(buffer.indexOf("CLCC:") != -1 && buffer.indexOf("\r", buffer.indexOf("CLCC:")) != -1)
@@ -1022,7 +1041,8 @@ void MAKERphone::incomingCall(String _serialData) //TODO
 			Serial.println("ENDED");
 			if(localBuffer.indexOf(",1,6,") == -1)
 			{
-				Serial1.println("ATH");
+				if(sim_module_version == 1)
+					Serial1.println("ATH");
 				long long curr_millis = millis();
 				while (Serial1.readString().indexOf(",0,6,") == -1 && millis() - curr_millis < 2000){
 					Serial1.println("ATH");
@@ -1117,7 +1137,8 @@ void MAKERphone::incomingCall(String _serialData) //TODO
 		if (Serial1.available())
 		{
 			c = Serial1.read();
-			buffer += c;
+			if((uint8_t)c != 255)
+				buffer += c;
 		}
 		if(buffer.indexOf("CLCC:") != -1 && buffer.indexOf("\r", buffer.indexOf("CLCC:")) != -1)
 		{
@@ -1278,10 +1299,14 @@ void MAKERphone::incomingCall(String _serialData) //TODO
 			delay(1000);
 			break;
 		}
-		if(buttons.released(BTN_UP) && micGain < 15 && (localBuffer.indexOf(",1,0,0,0") != -1 || localBuffer.indexOf("AT+CMIC") != -1))
+		if(buttons.released(BTN_UP) && ((micGain < 15 && sim_module_version == 1) || (micGain < 8 && sim_module_version == 0))
+		&& (localBuffer.indexOf(",1,0,0,0") != -1 || localBuffer.indexOf("AT+CMIC") != -1))
 		{
 			micGain++;
-			Serial1.printf("AT+CMIC=0,%d\r", micGain);
+			if(sim_module_version == 1)
+				Serial1.printf("AT+CMIC=0,%d\r", micGain);
+			else if(sim_module_version == 0)
+				Serial.printf("AT+CMICGAIN=%d\r\n", micGain);
 			written = -1;
 			tft.fillRect(61, 111, 20, 15, TFT_RED); 
 			tft.setCursor(62, 109);
@@ -1290,7 +1315,10 @@ void MAKERphone::incomingCall(String _serialData) //TODO
 		if(buttons.released(BTN_DOWN) && micGain > 0 && (localBuffer.indexOf(",1,0,0,0") != -1 || localBuffer.indexOf("AT+CMIC") != -1))
 		{
 			micGain--;
-			Serial1.printf("AT+CMIC=0,%d\r", micGain);
+			if(sim_module_version == 1)
+				Serial1.printf("AT+CMIC=0,%d\r", micGain);
+			else if(sim_module_version == 0)
+				Serial.printf("AT+CMICGAIN=%d\r\n", micGain);
 			written = -1;
 			tft.fillRect(61, 111, 20, 15, TFT_RED); 
 			tft.setCursor(62, 109);

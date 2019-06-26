@@ -313,7 +313,7 @@ class MAKERphone:public Buttons, public DateTime
 	bool inCall = 0;
 	uint8_t micGain = 15;
 	uint16_t simVoltage = 3900;
-	uint8_t sim_module_version = 0;
+	uint8_t sim_module_version = 255; // 0 - SIM7600, 1 - SIM800
 
 	private:
 		MPTrack* ringtone = nullptr;
