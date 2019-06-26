@@ -31,7 +31,6 @@ void Task1code( void * pvParameters ){
 	while (true)
 		updateWav();
 }
-
 void ADCmeasuring(void *parameters)
 {
 	while(1)
@@ -304,8 +303,9 @@ bool MAKERphone::update() {
 	{
 		if (millis() - sleepTimer >= sleepTimeActual * 1000)
 		{
-			sleep();
+			buttons.update();
 			sleepTimer = millis();
+			sleep();
 		}
 	}
 	else if((buttonsPressed || !digitalRead(BTN_INT) || inCall || inAlarmPopup) && sleepTime)
@@ -451,7 +451,6 @@ bool MAKERphone::update() {
 	}
 	if(alarmCleared && millis() - alarmMillis > 60000)
 		alarmCleared = 0;
-
 	if(!digitalRead(SIM_INT) && !inCall)
 	{
 		String temp = "";
@@ -683,10 +682,11 @@ void MAKERphone::sleep() {
 			digitalWrite(OFF_PIN, 1);
 		}
 		
-		
 		buttons.activateInterrupt();
 		esp_light_sleep_start();
 	}
+	sleepTimer = millis();
+	Serial.println("buttons wakuep");
 	if(simInserted)
 		digitalWrite(SIM800_DTR, 0);
 	voltage = batteryVoltage;
@@ -708,6 +708,7 @@ void MAKERphone::sleep() {
 	}
 	while(!update());
 	tft.writecommand(17);
+	delay(5);
 	display.pushSprite(0,0);
 	initWavLib();
 	
@@ -1136,7 +1137,10 @@ void MAKERphone::incomingCall(String _serialData) //TODO
 
 				updateTimeRTC();
 				if(SDinsertedFlag)
+				{
 					addCall(number, RTC.now().unixtime(), tmp_time, 2);
+					saveSettings();
+				}
 
 				delay(1000);
 				break;
@@ -1209,7 +1213,10 @@ void MAKERphone::incomingCall(String _serialData) //TODO
 
 			updateTimeRTC();
 			if(SDinsertedFlag)
+			{
 				addCall(number, RTC.now().unixtime(), tmp_time, 2);
+				saveSettings();
+			}
 
 			delay(1000);
 			break;
@@ -1982,8 +1989,10 @@ void MAKERphone::saveSettings(bool debug)
 	const char * path = "/.core/settings.json";
 	Serial.println("");
 	SD.remove(path);
+	jb.clear();
 	JsonObject& settings = jb.createObject();
-
+	Serial.print("MIC GAIN: ");
+	Serial.println(micGain);
 	if (settings.success()) {
 		if(debug){
 			// Serial.print("wifi: ");
