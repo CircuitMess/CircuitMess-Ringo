@@ -31,7 +31,6 @@ void Task1code( void * pvParameters ){
 	while (true)
 		updateWav();
 }
-
 void ADCmeasuring(void *parameters)
 {
 	while(1)
@@ -304,8 +303,9 @@ bool MAKERphone::update() {
 	{
 		if (millis() - sleepTimer >= sleepTimeActual * 1000)
 		{
-			sleep();
+			buttons.update();
 			sleepTimer = millis();
+			sleep();
 		}
 	}
 	else if((buttonsPressed || !digitalRead(BTN_INT) || inCall || inAlarmPopup) && sleepTime)
@@ -341,14 +341,16 @@ bool MAKERphone::update() {
 		{
 			c = Serial1.read();
 			updateBuffer += c;
-			// Serial.println("--------------");
-			// Serial.println(updateBuffer);
+			Serial.println("--------------");
+			Serial.println(updateBuffer);
 			
 			if (simInserted && !airplaneMode)
 			{
 				if (carrierName == "" && updateBuffer.indexOf("\n", updateBuffer.indexOf("+CSPN:")) != -1)
-					carrierName = updateBuffer.substring(updateBuffer.indexOf("\"", updateBuffer.indexOf("+CSPN:")) + 1,
-					updateBuffer.indexOf("\"", updateBuffer.indexOf("\"", updateBuffer.indexOf("+CSPN:")) + 1));
+				{
+					uint16_t helper = updateBuffer.indexOf("\"", updateBuffer.indexOf("+CSPN:")) + 1;
+					carrierName = updateBuffer.substring(helper, updateBuffer.indexOf("\"", helper));
+				}
 						
 				if (updateBuffer.indexOf("\n", updateBuffer.indexOf("+CSQ:")) != -1)
 					signalStrength = updateBuffer.substring(updateBuffer.indexOf(" ", updateBuffer.indexOf("+CSQ:")) + 1, updateBuffer.indexOf(",", updateBuffer.indexOf(" ", updateBuffer.indexOf("+CSQ:")))).toInt();
@@ -414,7 +416,7 @@ bool MAKERphone::update() {
 	}
 	mp.batteryVoltage = voltage;
 
-	if(batteryVoltage <= 3580)
+	if(batteryVoltage <= 3580 || simVoltage <= 3600)
 	{
 		tft.setTextColor(TFT_BLACK);
 		tft.setTextSize(1);
@@ -466,7 +468,6 @@ bool MAKERphone::update() {
 	}
 	if(alarmCleared && millis() - alarmMillis > 60000)
 		alarmCleared = 0;
-
 	if(!digitalRead(SIM_INT) && !inCall)
 	{
 		String temp = "";
@@ -711,10 +712,11 @@ void MAKERphone::sleep() {
 			ESP.deepSleep(0);
 		}
 		
-		
 		buttons.activateInterrupt();
 		esp_light_sleep_start();
 	}
+	sleepTimer = millis();
+	Serial.println("buttons wakuep");
 	if(simInserted)
 		digitalWrite(SIM800_DTR, 0);
 	voltage = batteryVoltage;
@@ -736,6 +738,7 @@ void MAKERphone::sleep() {
 	}
 	while(!update());
 	tft.writecommand(17);
+	delay(5);
 	display.pushSprite(0,0);
 	initWavLib();
 	
@@ -987,7 +990,7 @@ void MAKERphone::incomingCall(String _serialData) //TODO
 			if(localBuffer.indexOf(",1,6,") == -1)
 			{
 				Serial1.println("ATH");
-				long long curr_millis = millis();
+				uint32_t curr_millis = millis();
 				while (Serial1.readString().indexOf(",0,6,") == -1 && millis() - curr_millis < 2000){
 					Serial1.println("ATH");
 				}
@@ -1164,7 +1167,10 @@ void MAKERphone::incomingCall(String _serialData) //TODO
 
 				updateTimeRTC();
 				if(SDinsertedFlag)
+				{
 					addCall(number, RTC.now().unixtime(), tmp_time, 2);
+					saveSettings();
+				}
 
 				delay(1000);
 				break;
@@ -1237,7 +1243,10 @@ void MAKERphone::incomingCall(String _serialData) //TODO
 
 			updateTimeRTC();
 			if(SDinsertedFlag)
+			{
 				addCall(number, RTC.now().unixtime(), tmp_time, 2);
+				saveSettings();
+			}
 
 			delay(1000);
 			break;
@@ -2010,8 +2019,10 @@ void MAKERphone::saveSettings(bool debug)
 	const char * path = "/.core/settings.json";
 	Serial.println("");
 	SD.remove(path);
+	jb.clear();
 	JsonObject& settings = jb.createObject();
-
+	Serial.print("MIC GAIN: ");
+	Serial.println(micGain);
 	if (settings.success()) {
 		if(debug){
 			// Serial.print("wifi: ");
