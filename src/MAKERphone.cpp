@@ -341,14 +341,16 @@ bool MAKERphone::update() {
 		{
 			c = Serial1.read();
 			updateBuffer += c;
-			// Serial.println("--------------");
-			// Serial.println(updateBuffer);
+			Serial.println("--------------");
+			Serial.println(updateBuffer);
 			
 			if (simInserted && !airplaneMode)
 			{
 				if (carrierName == "" && updateBuffer.indexOf("\n", updateBuffer.indexOf("+CSPN:")) != -1)
-					carrierName = updateBuffer.substring(updateBuffer.indexOf("\"", updateBuffer.indexOf("+CSPN:")) + 1,
-					updateBuffer.indexOf("\"", updateBuffer.indexOf("\"", updateBuffer.indexOf("+CSPN:")) + 1));
+				{
+					uint16_t helper = updateBuffer.indexOf("\"", updateBuffer.indexOf("+CSPN:")) + 1;
+					carrierName = updateBuffer.substring(helper, updateBuffer.indexOf("\"", helper));
+				}
 						
 				if (updateBuffer.indexOf("\n", updateBuffer.indexOf("+CSQ:")) != -1)
 					signalStrength = updateBuffer.substring(updateBuffer.indexOf(" ", updateBuffer.indexOf("+CSQ:")) + 1, updateBuffer.indexOf(",", updateBuffer.indexOf(" ", updateBuffer.indexOf("+CSQ:")))).toInt();
@@ -414,7 +416,7 @@ bool MAKERphone::update() {
 	}
 	mp.batteryVoltage = voltage;
 
-	if(batteryVoltage <= 3580)
+	if(batteryVoltage <= 3580 || simVoltage <= 3600)
 	{
 		tft.setTextColor(TFT_BLACK);
 		tft.setTextSize(1);
@@ -960,7 +962,7 @@ void MAKERphone::incomingCall(String _serialData) //TODO
 			if(localBuffer.indexOf(",1,6,") == -1)
 			{
 				Serial1.println("ATH");
-				long long curr_millis = millis();
+				uint32_t curr_millis = millis();
 				while (Serial1.readString().indexOf(",0,6,") == -1 && millis() - curr_millis < 2000){
 					Serial1.println("ATH");
 				}
