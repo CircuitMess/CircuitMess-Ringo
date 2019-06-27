@@ -362,6 +362,6 @@ class MAKERphone:public Buttons, public DateTime
 		char c;
 		bool buttonsPressed = 0;
 		bool wokeWithPWRBTN = 0;
-		uint8_t alternatingRefresh = 0;
+		uint8_t alternatingRefresh = 1;
 };
 #endif
