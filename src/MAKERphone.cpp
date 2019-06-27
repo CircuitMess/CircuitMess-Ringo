@@ -404,8 +404,9 @@ bool MAKERphone::update() {
 	{
 		if (millis() - sleepTimer >= sleepTimeActual * 1000)
 		{
-			sleep();
+			buttons.update();
 			sleepTimer = millis();
+			sleep();
 		}
 	}
 	else if((buttonsPressed || !digitalRead(BTN_INT) || inCall || inAlarmPopup) && sleepTime)
@@ -503,8 +504,10 @@ bool MAKERphone::update() {
 			if (simInserted && !airplaneMode)
 			{
 				if (carrierName == "" && updateBuffer.indexOf("\n", updateBuffer.indexOf("+CSPN:")) != -1)
-					carrierName = updateBuffer.substring(updateBuffer.indexOf("\"", updateBuffer.indexOf("+CSPN:")) + 1,
-					updateBuffer.indexOf("\"", updateBuffer.indexOf("\"", updateBuffer.indexOf("+CSPN:")) + 1));
+				{
+					uint16_t helper = updateBuffer.indexOf("\"", updateBuffer.indexOf("+CSPN:")) + 1;
+					carrierName = updateBuffer.substring(helper, updateBuffer.indexOf("\"", helper));
+				}
 						
 				if (updateBuffer.indexOf("\n", updateBuffer.indexOf("+CSQ:")) != -1)
 					signalStrength = updateBuffer.substring(updateBuffer.indexOf(" ", updateBuffer.indexOf("+CSQ:")) + 1, updateBuffer.indexOf(",", updateBuffer.indexOf(" ", updateBuffer.indexOf("+CSQ:")))).toInt();
@@ -567,10 +570,9 @@ bool MAKERphone::update() {
 			}
 		}
 	}
-	updateNotificationSound();
 	mp.batteryVoltage = voltage;
 
-	if(batteryVoltage <= 3580)
+	if(batteryVoltage <= 3580 || simVoltage <= 3600)
 	{
 		tft.setTextColor(TFT_BLACK);
 		tft.setTextSize(1);
@@ -581,15 +583,29 @@ bool MAKERphone::update() {
 		tft.setCursor(40, 61);
 		tft.print("Turning off...");
 		delay(1500);
+
+
+		Serial1.println("AT+CFUN=4");
+		Serial1.println("AT+CSCLK=2");
+
+		delay(750);
 		Serial.println("TURN OFF");
+		digitalWrite(SIM800_DTR, 1);
 		FastLED.clear(1);
 		ledcDetachPin(LCD_BL_PIN);
 		pinMode(LCD_BL_PIN, OUTPUT);
 		digitalWrite(LCD_BL_PIN, 1);
-		Serial1.println("AT+CFUN=4");
-		digitalWrite(SIM800_DTR, 1);
-
 		digitalWrite(OFF_PIN, 1);
+		
+		rtc_gpio_isolate(GPIO_NUM_16);
+		rtc_gpio_isolate(GPIO_NUM_17);
+		rtc_gpio_isolate(GPIO_NUM_33);
+		rtc_gpio_isolate(GPIO_NUM_34);
+		rtc_gpio_isolate(GPIO_NUM_36);
+		rtc_gpio_isolate(GPIO_NUM_39);
+		
+		digitalWrite(OFF_PIN, 1);
+		ESP.deepSleep(0);
 	}
 
 	if(!digitalRead(RTC_INT) && !inAlarmPopup && !alarmCleared)
@@ -638,13 +654,8 @@ bool MAKERphone::update() {
 		}
 	}
 	updateNotificationSound();
-	if(millis() - buttonsRefreshMillis > 200)
-	{
-		buttons.currentKey = buttons.kpd.getKey();
-		buttonsRefreshMillis = millis();
-	}
 
-	buttons.update();
+		buttons.update();
 	
 	if(HOME_POPUP_ENABLE && !inHomePopup && !inShutdownPopup)
 	{
@@ -669,6 +680,7 @@ bool MAKERphone::update() {
 	}
 	if(wokeWithPWRBTN && buttons.released(14))
 		wokeWithPWRBTN = 0;
+
 	if (millis() - lastFrameCount >= frameSpeed) {
 		lastFrameCount = millis();
 
@@ -683,7 +695,6 @@ bool MAKERphone::update() {
 		FastLED.show();
 		delay(1);
 		FastLED.clear();
-
 		return true;
 	}
 	else
@@ -840,20 +851,34 @@ void MAKERphone::sleep() {
 		delay(50);
 		if(batteryVoltage <= 3580)
 		{
+			Serial1.println("AT+CFUN=4");
+			Serial1.println("AT+CSCLK=2");
+
+			delay(750);
+			Serial.println("TURN OFF");
+			digitalWrite(SIM800_DTR, 1);
+			FastLED.clear(1);
 			ledcDetachPin(LCD_BL_PIN);
 			pinMode(LCD_BL_PIN, OUTPUT);
 			digitalWrite(LCD_BL_PIN, 1);
-			FastLED.clear(1);
-			Serial1.println("AT+CFUN=4");
-			digitalWrite(SIM800_DTR, 1);
-
 			digitalWrite(OFF_PIN, 1);
+			
+			rtc_gpio_isolate(GPIO_NUM_16);
+			rtc_gpio_isolate(GPIO_NUM_17);
+			rtc_gpio_isolate(GPIO_NUM_33);
+			rtc_gpio_isolate(GPIO_NUM_34);
+			rtc_gpio_isolate(GPIO_NUM_36);
+			rtc_gpio_isolate(GPIO_NUM_39);
+			
+			digitalWrite(OFF_PIN, 1);
+			ESP.deepSleep(0);
 		}
-		
 		
 		buttons.activateInterrupt();
 		esp_light_sleep_start();
 	}
+	sleepTimer = millis();
+	Serial.println("buttons wakuep");
 	if(simInserted)
 		digitalWrite(SIM800_DTR, 0);
 	voltage = batteryVoltage;
@@ -875,6 +900,7 @@ void MAKERphone::sleep() {
 	}
 	while(!update());
 	tft.writecommand(17);
+	delay(5);
 	display.pushSprite(0,0);
 	initWavLib();
 	
@@ -1126,9 +1152,8 @@ void MAKERphone::incomingCall(String _serialData) //TODO
 			Serial.println("ENDED");
 			if(localBuffer.indexOf(",1,6,") == -1)
 			{
-				if(sim_module_version == 1)
-					Serial1.println("ATH");
-				long long curr_millis = millis();
+				Serial1.println("ATH");
+				uint32_t curr_millis = millis();
 				while (Serial1.readString().indexOf(",0,6,") == -1 && millis() - curr_millis < 2000){
 					Serial1.println("ATH");
 				}
@@ -1306,7 +1331,10 @@ void MAKERphone::incomingCall(String _serialData) //TODO
 
 				updateTimeRTC();
 				if(SDinsertedFlag)
+				{
 					addCall(number, RTC.now().unixtime(), tmp_time, 2);
+					saveSettings();
+				}
 
 				delay(1000);
 				break;
@@ -1379,7 +1407,10 @@ void MAKERphone::incomingCall(String _serialData) //TODO
 
 			updateTimeRTC();
 			if(SDinsertedFlag)
+			{
 				addCall(number, RTC.now().unixtime(), tmp_time, 2);
+				saveSettings();
+			}
 
 			delay(1000);
 			break;
@@ -2167,8 +2198,10 @@ void MAKERphone::saveSettings(bool debug)
 	const char * path = "/.core/settings.json";
 	Serial.println("");
 	SD.remove(path);
+	jb.clear();
 	JsonObject& settings = jb.createObject();
-
+	Serial.print("MIC GAIN: ");
+	Serial.println(micGain);
 	if (settings.success()) {
 		if(debug){
 			// Serial.print("wifi: ");
@@ -3381,6 +3414,7 @@ void MAKERphone::shutdownPopup(bool animation)
 				tft.print("Turning off...");
 				// Serial1.println("AT+CFUN=1,1");
 				Serial1.println("AT+CFUN=4");
+				Serial1.println("AT+CSCLK=2");
 
 				delay(750);
 				Serial.println("TURN OFF");
@@ -3389,8 +3423,17 @@ void MAKERphone::shutdownPopup(bool animation)
 				ledcDetachPin(LCD_BL_PIN);
 				pinMode(LCD_BL_PIN, OUTPUT);
 				digitalWrite(LCD_BL_PIN, 1);
+				// digitalWrite(OFF_PIN, 1);
+				
+				rtc_gpio_isolate(GPIO_NUM_16);
+				rtc_gpio_isolate(GPIO_NUM_17);
+				rtc_gpio_isolate(GPIO_NUM_33);
+				rtc_gpio_isolate(GPIO_NUM_34);
+				rtc_gpio_isolate(GPIO_NUM_36);
+				rtc_gpio_isolate(GPIO_NUM_39);
+				
 				digitalWrite(OFF_PIN, 1);
-				// ESP.deepSleep(0);
+				ESP.deepSleep(0);
 				
 			}
 		}
