@@ -1031,7 +1031,7 @@ void MAKERphone::incomingCall(String _serialData) //TODO
 				addTrack(ringtone);
 			}
 			Serial.println("PLAYED");
-			ringtone->setVolume(map(volume, 0, 14, 100, 300));
+			ringtone->setVolume(map(ringVolume, 0, 14, 100, 300));
 			ringtone->setRepeat(1);
 			ringtone->play();
 			played = 1;
@@ -2047,7 +2047,8 @@ void MAKERphone::saveSettings(bool debug)
 		settings["background_color"] = backgroundIndex;
 		settings["notification"] = notification;
 		settings["ringtone"] = ringtone_path.c_str();
-		settings["volume"] = volume;
+		settings["ringVolume"] = ringVolume;
+		settings["mediaVolume"] = mediaVolume;
 		settings["micGain"] = micGain;
 		File file1 = SD.open(path, "w");
 		settings.prettyPrintTo(file1);
@@ -2103,7 +2104,8 @@ void MAKERphone::loadSettings(bool debug)
 		backgroundIndex = settings["background_color"];
 		notification = settings["notification"];
 		ringtone_path = String(settings["ringtone"].as<char*>());
-		volume = settings["volume"];
+		ringVolume = settings["ringVolume"];
+		mediaVolume = settings["mediaVolume"];
 		micGain = settings["micGain"];
 		         
 	} else {
@@ -2161,7 +2163,7 @@ void MAKERphone::applySettings()
 		sleepTimeActual = 1800;
 		break;
 	}
-	osc->setVolume(oscillatorVolumeList[volume]);
+	osc->setVolume(oscillatorVolumeList[mediaVolume]);
 	if(SDinsertedFlag)
 	{
 		if(ringtone == nullptr)
@@ -2169,7 +2171,7 @@ void MAKERphone::applySettings()
 		else
 			ringtone->reloadFile(((char*)ringtone_path.c_str()));
 
-		ringtone->setVolume(map(volume, 0, 14, 100, 300));
+		ringtone->setVolume(map(ringVolume, 0, 14, 100, 300));
 	}
 	if(simInserted)
 	{
@@ -2563,7 +2565,7 @@ void MAKERphone::homePopup(bool animation)
 			display.drawBitmap(scale, scale, airplaneModeIcon, TFT_BLACK, scale);
 			helper += 10;
 		}
-		if (volume == 0)
+		if (ringVolume == 0)
 		{
 			display.drawBitmap(helper*scale, 1*scale, silentmode, TFT_BLACK, scale);
 			helper += 10;
@@ -2725,21 +2727,21 @@ void MAKERphone::homePopup(bool animation)
 						display.fillRect(15, 51, 132, 26, 0x9FFE);
 						display.drawRect(37, 59, 86, 10, TFT_BLACK);
 						display.drawRect(36, 58, 88, 12, TFT_BLACK);
-						display.fillRect(38, 60, volume * 6, 8, TFT_BLACK);
+						display.fillRect(38, 60, ringVolume * 6, 8, TFT_BLACK);
 						display.drawBitmap(18, 56, noSound, TFT_BLACK, 2);
 						display.drawBitmap(126, 56, fullSound, TFT_BLACK, 2);
-						if(buttons.released(BTN_LEFT) && volume > 0)
+						if(buttons.released(BTN_LEFT) && ringVolume > 0)
 						{
-							volume--;
-							osc->setVolume(oscillatorVolumeList[volume]);
+							ringVolume--;
+							osc->setVolume(oscillatorVolumeList[ringVolume]);
 							osc->note(75, 0.05);
 							osc->play();
 							while(!update());
 						}
-						if(buttons.released(BTN_RIGHT) && volume < 14)
+						if(buttons.released(BTN_RIGHT) && ringVolume < 14)
 						{
-							volume++;
-							osc->setVolume(oscillatorVolumeList[volume]);
+							ringVolume++;
+							osc->setVolume(oscillatorVolumeList[ringVolume]);
 							osc->note(75, 0.05);
 							osc->play();
 							while(!update());
@@ -2949,7 +2951,7 @@ void MAKERphone::playNotificationSound(uint8_t _notification)
 	notification = _notification;
 	osc->stop();
 	osc->setADSR(10,20,0.8,10);
-	osc->setVolume(oscillatorVolumeList[volume]);
+	osc->setVolume(oscillatorVolumeList[ringVolume]);
 	osc->setWaveform(SINE);
 	notificationMillis = 0;
 	playingNotification = 1;
@@ -3332,7 +3334,7 @@ void MAKERphone::alarmPopup(bool animation)
 			addTrack(ringtone);
 		}
 		Serial.println(ringtone_path);
-		ringtone->setVolume(map(volume, 0, 14, 100, 300));
+		ringtone->setVolume(map(ringVolume, 0, 14, 100, 300));
 		ringtone->setRepeat(1);
 		ringtone->play();
 
