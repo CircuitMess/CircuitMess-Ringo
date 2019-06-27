@@ -41,8 +41,8 @@ void MPTrack::closeFile()
 
 void MPTrack::setVolume(float vol)
 {
-    if(vol>256)
-        vol=256;
+    if(vol>300)
+        vol=300;
     if(vol<0)
         vol=0;
     volume=vol;

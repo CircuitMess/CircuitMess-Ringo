@@ -1031,7 +1031,7 @@ void MAKERphone::incomingCall(String _serialData) //TODO
 				addTrack(ringtone);
 			}
 			Serial.println("PLAYED");
-			ringtone->setVolume(256 * volume / 14);
+			ringtone->setVolume(map(volume, 0, 14, 100, 300));
 			ringtone->setRepeat(1);
 			ringtone->play();
 			played = 1;
@@ -2161,7 +2161,7 @@ void MAKERphone::applySettings()
 		sleepTimeActual = 1800;
 		break;
 	}
-	osc->setVolume(256 * volume / 14);
+	osc->setVolume(oscillatorVolumeList[volume]);
 	if(SDinsertedFlag)
 	{
 		if(ringtone == nullptr)
@@ -2169,7 +2169,7 @@ void MAKERphone::applySettings()
 		else
 			ringtone->reloadFile(((char*)ringtone_path.c_str()));
 
-		ringtone->setVolume(256 * volume / 14);
+		ringtone->setVolume(map(volume, 0, 14, 100, 300));
 	}
 	if(simInserted)
 	{
@@ -2731,7 +2731,7 @@ void MAKERphone::homePopup(bool animation)
 						if(buttons.released(BTN_LEFT) && volume > 0)
 						{
 							volume--;
-							osc->setVolume(256 * volume / 14);
+							osc->setVolume(oscillatorVolumeList[volume]);
 							osc->note(75, 0.05);
 							osc->play();
 							while(!update());
@@ -2739,7 +2739,7 @@ void MAKERphone::homePopup(bool animation)
 						if(buttons.released(BTN_RIGHT) && volume < 14)
 						{
 							volume++;
-							osc->setVolume(256 * volume / 14);
+							osc->setVolume(oscillatorVolumeList[volume]);
 							osc->note(75, 0.05);
 							osc->play();
 							while(!update());
@@ -2949,7 +2949,7 @@ void MAKERphone::playNotificationSound(uint8_t _notification)
 	notification = _notification;
 	osc->stop();
 	osc->setADSR(10,20,0.8,10);
-	osc->setVolume(256 * volume / 14);
+	osc->setVolume(oscillatorVolumeList[volume]);
 	osc->setWaveform(SINE);
 	notificationMillis = 0;
 	playingNotification = 1;
@@ -3332,7 +3332,7 @@ void MAKERphone::alarmPopup(bool animation)
 			addTrack(ringtone);
 		}
 		Serial.println(ringtone_path);
-		ringtone->setVolume(256 * volume / 14);
+		ringtone->setVolume(map(volume, 0, 14, 100, 300));
 		ringtone->setRepeat(1);
 		ringtone->play();
 

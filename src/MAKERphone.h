@@ -312,6 +312,7 @@ class MAKERphone:public Buttons, public DateTime
 	bool inCall = 0;
 	uint8_t micGain = 15;
 	uint16_t simVoltage = 3900;
+	uint8_t oscillatorVolumeList[15] = {0,33,37,47,57,62,65,69,72,75,79,84,90,95,100};
 
 	private:
 		MPTrack* ringtone = nullptr;
@@ -360,5 +361,6 @@ class MAKERphone:public Buttons, public DateTime
 		char c;
 		bool buttonsPressed = 0;
 		bool wokeWithPWRBTN = 0;
+		// uint8_t oscillatorVolumeList[14] = {0,10,15,20,35,50,60,80,100,120,150,200,220,255};
 };
 #endif
