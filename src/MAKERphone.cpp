@@ -2507,6 +2507,27 @@ void MAKERphone::updatePopup() {
 }
 void MAKERphone::homePopup(bool animation)
 {
+	bool tempArray[4];
+	for(uint8_t i = 0 ; i < 4;i++)
+	{
+		if(tracks[i] != nullptr)
+		{
+			if(tracks[i]->isPlaying())
+			{
+				tracks[i]->pause();
+				tempArray[i] = 1;
+			}
+			else
+				tempArray[i] = 0;
+		}
+		else
+			tempArray[i] = 0;
+	}
+	// for(uint8_t i = 0 ; i < 4;i++)
+	// {
+	// 	if(oscs[i] != nullptr)
+	// 		oscs[i]->stop();
+	// }
 	if(animation)
 	{
 		for (int i = 0; i < display.height(); i++)
@@ -2727,21 +2748,45 @@ void MAKERphone::homePopup(bool animation)
 						display.fillRect(15, 51, 132, 26, 0x9FFE);
 						display.drawRect(37, 59, 86, 10, TFT_BLACK);
 						display.drawRect(36, 58, 88, 12, TFT_BLACK);
-						display.fillRect(38, 60, ringVolume * 6, 8, TFT_BLACK);
+						display.fillRect(38, 60, mediaVolume * 6, 8, TFT_BLACK);
 						display.drawBitmap(18, 56, noSound, TFT_BLACK, 2);
 						display.drawBitmap(126, 56, fullSound, TFT_BLACK, 2);
-						if(buttons.released(BTN_LEFT) && ringVolume > 0)
+						if(buttons.released(BTN_LEFT) && mediaVolume > 0)
 						{
-							ringVolume--;
-							osc->setVolume(oscillatorVolumeList[ringVolume]);
+							mediaVolume--;
+							for(uint8_t i = 0 ; i < 4;i++)
+							{
+								if(tracks[i] != nullptr)
+									if(tracks[i]->isPlaying())
+										tracks[i]->setVolume(map(mediaVolume, 0, 14, 100, 300));
+							}
+							for(uint8_t i = 0 ; i < 4;i++)
+							{
+								if(oscs[i] != nullptr)
+									if(oscs[i]->isPlaying())
+										oscs[i]->setVolume(oscillatorVolumeList[mediaVolume]);
+							}
+							osc->setVolume(oscillatorVolumeList[mediaVolume]);
 							osc->note(75, 0.05);
 							osc->play();
 							while(!update());
 						}
-						if(buttons.released(BTN_RIGHT) && ringVolume < 14)
+						if(buttons.released(BTN_RIGHT) && mediaVolume < 14)
 						{
-							ringVolume++;
-							osc->setVolume(oscillatorVolumeList[ringVolume]);
+							mediaVolume++;
+							for(uint8_t i = 0 ; i < 4;i++)
+							{
+								if(tracks[i] != nullptr)
+									if(tracks[i]->isPlaying())
+										tracks[i]->setVolume(map(mediaVolume, 0, 14, 100, 300));
+							}
+							for(uint8_t i = 0 ; i < 4;i++)
+							{
+								if(oscs[i] != nullptr)
+									if(oscs[i]->isPlaying())
+										oscs[i]->setVolume(oscillatorVolumeList[mediaVolume]);
+							}
+							osc->setVolume(oscillatorVolumeList[mediaVolume]);
 							osc->note(75, 0.05);
 							osc->play();
 							while(!update());
@@ -2900,6 +2945,20 @@ void MAKERphone::homePopup(bool animation)
 		}
 		update();
 	}
+	// if(SDinsertedFlag)
+		// saveSettings();
+	applySettings();
+	for(uint8_t i = 0 ; i < 4;i++)
+	{
+		if(tracks[i] != nullptr && tempArray[i])
+			tracks[i]->resume();
+	}
+	// for(uint8_t i = 0 ; i < 4;i++)
+	// {
+	// 	if(oscs[i] != nullptr)
+	// 		oscs[i]->play();
+	// }
+	dataRefreshFlag = 0;
 	while(!update());
 }
 void MAKERphone::drawNotificationWindow(uint8_t y, uint8_t index) {

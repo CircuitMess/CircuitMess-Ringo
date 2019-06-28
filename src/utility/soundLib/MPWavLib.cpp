@@ -17,11 +17,6 @@ MPTrack::~MPTrack()
 
 bool MPTrack::openFile()
 {
-    if(!SD.begin(5, SPI, 8000000))
-    {
-        Serial.println("SD ERROR");
-        return false; 
-    }
     trackFile=SD.open(trackPath);
     if(trackFile)
     {
@@ -154,11 +149,48 @@ int MPTrack::fetchSample()
     }
     return sample;
 }
-
+uint32_t failCounter = 0;
 bool MPTrack::loadSamples()
 {
-    trackFile.readBytes(data, sizeof(data));
-    loaded=(trackFile.position()-0x2C)/2;
+   
+    reload=trackFile.readBytes(data, sizeof(data));
+
+    if(trackFile.position()>this->size||reload==0)
+    {
+        while(reloadCo)
+            vTaskDelay(100);
+        reloadCo++;
+        Serial.println("BRICK");
+        do
+        {
+            failCounter++;
+            trackFile.close();
+            if(!(trackFile = SD.open(this->trackPath, "r")))
+            {
+                SD.end();           
+                //reload=reloadCo;
+                vTaskDelay(10);
+                while(!SD.begin(5, SPI, 8000000))
+                {
+                    vTaskDelay(10);
+                    Serial.println("errorb");
+                }
+                
+                while(!(trackFile = SD.open(this->trackPath, "r")))
+                {
+                    vTaskDelay(10);
+                    Serial.println("error");
+                }
+            }
+            trackFile.seek(readBytes);
+            Serial.println(failCounter);
+        
+        } while (!trackFile.readBytes(data, sizeof(data)));
+        reloadCo--;
+    }
+    readBytes = trackFile.position();
+    // Serial.println(read);
+    loaded=(readBytes-0x2C)/2;
     return true;
 }
 

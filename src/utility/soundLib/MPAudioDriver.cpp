@@ -13,6 +13,7 @@ unsigned char trackCount;
 char dout[1600];
 short adcbuf[1600]={0};
 short adcWr=0, adcRd=800;
+uint8_t reloadCo = 0;
 hw_timer_t * timert = NULL;
 
 
@@ -64,7 +65,7 @@ void adc_read_task(void* arg)
 
 void initWavLib()
 {
-    masterVolume=300;
+    masterVolume=7000;
     trackCount=0;
     for(unsigned char i=0;i<MAX_TRACKS;i++)
         tracks[i]=nullptr;
@@ -158,7 +159,7 @@ void setVolume(float vol)
 {
     if(vol<0)
         vol=0;
-    if(vol>255)
-        vol=255;
+    if(vol>1000)
+        vol=1000;
     masterVolume=vol;
 }
