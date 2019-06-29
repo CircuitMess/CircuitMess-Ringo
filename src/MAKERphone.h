@@ -227,7 +227,7 @@ class MAKERphone:public Buttons, public DateTime
 	String ringtone_path = "/Ringtones/Default ringtone.wav";
 	String alarm_path = "/Ringtones/Default ringtone.wav";
 	uint8_t notification = 0;
-	uint16_t firmware_version = 1;
+	uint16_t firmware_version = 2;
 	//Settings app
 
 	void applySettings();
