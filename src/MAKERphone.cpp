@@ -493,7 +493,6 @@ bool MAKERphone::update() {
 	}
 	updateNotificationSound();
 
-		buttons.update();
 	
 	if(HOME_POPUP_ENABLE && !inHomePopup && !inShutdownPopup)
 	{
@@ -529,6 +528,7 @@ bool MAKERphone::update() {
 			else
 				display.pushSprite(0, 0);
 		}
+		buttons.update();
 		FastLED.setBrightness(255/5 * pixelsBrightness);
 		FastLED.show();
 		delay(1);
@@ -762,7 +762,7 @@ void MAKERphone::loader()
 	display.setTextFont(2);
 	display.setTextSize(1);
 	display.printCenter("LOADING...");
-	mp.update();
+	while(!update());
 	const esp_partition_t* partition;
 	partition = esp_ota_get_running_partition();
 	const esp_partition_t* partition2;
