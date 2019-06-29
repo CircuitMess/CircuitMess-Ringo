@@ -451,8 +451,7 @@ bool MAKERphone::update() {
 		digitalWrite(OFF_PIN, 1);
 		ESP.deepSleep(0);
 	}
-
-	if(!digitalRead(RTC_INT) && !inAlarmPopup && !alarmCleared)
+	if(!digitalRead(RTC_INT) && !inAlarmPopup && !alarmCleared && currentAlarm != 99)
 	{
 		inAlarmPopup = 1;
 		alarmPopup();
