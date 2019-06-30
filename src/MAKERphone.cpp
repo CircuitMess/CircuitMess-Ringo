@@ -452,7 +452,7 @@ bool MAKERphone::update() {
 		ESP.deepSleep(0);
 	}
 
-	if(!digitalRead(RTC_INT) && !inAlarmPopup && !alarmCleared)
+	if(!digitalRead(RTC_INT) && !inAlarmPopup && !alarmCleared && currentAlarm != 99)
 	{
 		inAlarmPopup = 1;
 		alarmPopup();
@@ -2757,14 +2757,12 @@ void MAKERphone::homePopup(bool animation)
 							for(uint8_t i = 0 ; i < 4;i++)
 							{
 								if(tracks[i] != nullptr)
-									if(tracks[i]->isPlaying())
-										tracks[i]->setVolume(map(mediaVolume, 0, 14, 100, 300));
+									tracks[i]->setVolume(map(mediaVolume, 0, 14, 100, 300));
 							}
 							for(uint8_t i = 0 ; i < 4;i++)
 							{
 								if(oscs[i] != nullptr)
-									if(oscs[i]->isPlaying())
-										oscs[i]->setVolume(oscillatorVolumeList[mediaVolume]);
+									oscs[i]->setVolume(oscillatorVolumeList[mediaVolume]);
 							}
 							osc->setVolume(oscillatorVolumeList[mediaVolume]);
 							osc->note(75, 0.05);
@@ -2777,14 +2775,12 @@ void MAKERphone::homePopup(bool animation)
 							for(uint8_t i = 0 ; i < 4;i++)
 							{
 								if(tracks[i] != nullptr)
-									if(tracks[i]->isPlaying())
-										tracks[i]->setVolume(map(mediaVolume, 0, 14, 100, 300));
+									tracks[i]->setVolume(map(mediaVolume, 0, 14, 100, 300));
 							}
 							for(uint8_t i = 0 ; i < 4;i++)
 							{
 								if(oscs[i] != nullptr)
-									if(oscs[i]->isPlaying())
-										oscs[i]->setVolume(oscillatorVolumeList[mediaVolume]);
+									oscs[i]->setVolume(oscillatorVolumeList[mediaVolume]);
 							}
 							osc->setVolume(oscillatorVolumeList[mediaVolume]);
 							osc->note(75, 0.05);
