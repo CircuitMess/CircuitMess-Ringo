@@ -1438,7 +1438,7 @@ void MAKERphone::checkSim()
 	uint32_t timeoutMillis = millis();
 	Serial1.println(F("AT+CPIN?"));
 
-	while (input.indexOf("+CPIN:") == -1 && input.indexOf("ERROR", input.indexOf("+CPIN")) == -1) {
+	while (input.indexOf("+CPIN:") == -1 && input.indexOf("NOT INSERTED", input.indexOf("+CPIN")) == -1) {
 		if(millis() - timeoutMillis >= 2500)
 		{
 			simInserted = 0;
