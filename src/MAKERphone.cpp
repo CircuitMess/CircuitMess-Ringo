@@ -214,7 +214,6 @@ void MAKERphone::begin(bool splash) {
 	checkAlarms();
 
 	
-	// osc->setADSR(10,20,0.8,10);
 	sleepTimer = millis();
 }
 
@@ -503,6 +502,7 @@ bool MAKERphone::update() {
 			inHomePopup = 0;
 		}
 	}
+	buttons.update();
 
 	if(SHUTDOWN_POPUP_ENABLE && buttons.released(14) && !wokeWithPWRBTN)
 	{
@@ -528,7 +528,6 @@ bool MAKERphone::update() {
 			else
 				display.pushSprite(0, 0);
 		}
-		buttons.update();
 		FastLED.setBrightness(255/5 * pixelsBrightness);
 		FastLED.show();
 		delay(1);
@@ -1293,6 +1292,7 @@ void MAKERphone::incomingCall(String _serialData) //TODO
 		buttons.update();
 	}
 	digitalWrite(soundSwitchPin, 0);
+	osc->setVolume(oscillatorVolumeList[ringVolume]);
 }
 void MAKERphone::incomingMessage(String _serialData)
 {
@@ -1377,6 +1377,8 @@ void MAKERphone::incomingMessage(String _serialData)
 		buttons.update();
 	}
 	newMessage = 1;
+	osc->setVolume(oscillatorVolumeList[mediaVolume]);
+
 	// +CMT: "+385921488476","","19/06/03,20:14:58+08"
 	// Wjd
 
@@ -3009,8 +3011,6 @@ void MAKERphone::playNotificationSound(uint8_t _notification)
 {
 	notification = _notification;
 	osc->stop();
-	osc->setADSR(10,20,0.8,10);
-	osc->setVolume(oscillatorVolumeList[ringVolume]);
 	osc->setWaveform(SINE);
 	notificationMillis = 0;
 	playingNotification = 1;
@@ -3022,6 +3022,7 @@ void MAKERphone::updateNotificationSound()
 {
 	if(playingNotification && millis() - notificationMillis >= notificationSoundDuration*1000 +  125)
 	{
+		osc->setVolume(oscillatorVolumeList[ringVolume]);
 		notificationSoundDuration = notificationNotesDuration[notification][notesIndex];
 		notificationSoundNote = notificationNotes[notification][notesIndex];
 		if(notificationSoundDuration == 0 || notesIndex == 5)
