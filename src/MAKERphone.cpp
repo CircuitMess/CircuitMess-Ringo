@@ -2960,38 +2960,42 @@ void MAKERphone::homePopup(bool animation)
 void MAKERphone::drawNotificationWindow(uint8_t y, uint8_t index) {
 	display.setTextFont(2);
 	display.setTextSize(1);
-	display.setCursor(27, y + 2);
+	display.setCursor(22, y + 2);
 	display.fillRoundRect(2, y + 2, 154, 20, 2, TFT_DARKGREY);
 	display.fillRoundRect(4, y, 154, 20, 2, TFT_WHITE);
 	display.print(notificationDescriptionList[index]);
 	switch (notificationTypeList[index])
 	{
 		case 1:
-			display.drawBitmap(7, y + 2, missedCallIcon, TFT_RED, 2);
+			display.drawBitmap(5, y + 2, missedCallIcon, TFT_RED, 2);
 			break;
 		case 2:
-			display.drawBitmap(7, y + 2, newMessageIcon, TFT_BLACK, 2);
+			display.drawBitmap(5, y + 2, newMessageIcon, TFT_BLACK, 2);
 			break;
 		case 3:
-			display.drawBitmap(7, y + 2, systemNotification, TFT_RED, 2);
+			display.drawBitmap(5, y + 2, systemNotification, TFT_RED, 2);
 			break;
 	}
 	display.setTextFont(1);
-	display.setCursor(120, y + 2);
+	display.setCursor(129, y + 2);
 	String temp = "";
 	DateTime now = notificationTimeList[index];
 	if (now.hour() < 10)
 		temp.concat("0");
 	temp.concat(now.hour());
-	temp.concat(":");
+	display.print(temp);
+	display.setCursor(display.cursor_x - 2, display.cursor_y);
+	display.print(":");
+	display.setCursor(display.cursor_x - 2, display.cursor_y);
+	temp = "";
 	if (now.minute() < 10)
 		temp.concat("0");
 	temp.concat(now.minute());
 	display.print(temp);
-	display.setCursor(119, y + 11);
+	display.setCursor(125, y + 11);
 	temp = "";
-	temp.concat(monthsList[now.month() - 1]);
-	temp.concat(" ");
+	display.print(monthsList[now.month() - 1]);
+	display.setCursor(display.cursor_x + 2, display.cursor_y);
 	if (now.day() < 10)
 		temp.concat("0");
 	temp.concat(now.day());
