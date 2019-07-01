@@ -1616,22 +1616,24 @@ void MAKERphone::saveMessage(String text, String number, bool isRead, bool direc
 void MAKERphone::checkSim()
 {
 	String input = "";
-	uint32_t timeoutMillis = millis();
 	Serial1.println(F("AT+CPIN?"));
-	input = waitForOK();
-	while (input.indexOf("+CPIN:") == -1 && input.indexOf("NOT INSERTED", input.indexOf("+CPIN")) == -1) {
+	// input = waitForOK();
+	uint32_t timeoutMillis = millis();
+
+	while (input.indexOf("+CPIN:") == -1 && input.indexOf("NOT INSERTED", input.indexOf("+CPIN")) == -1
+	&& input.indexOf("not inserted", input.indexOf("+CPIN")) == -1) {
 		if(millis() - timeoutMillis >= 2500)
 		{
 			simInserted = 0;
 			return;
 		}
 		// input = Serial1.readString();
-		Serial.println(input);
 		Serial1.println(F("AT+CPIN?"));
 		input = waitForOK();
+		Serial.println(input);
 	}
 	if (input.indexOf("NOT READY", input.indexOf("+CPIN:")) != -1 || (input.indexOf("ERROR") != -1 && input.indexOf("+CPIN:") == -1)
-		|| input.indexOf("NOT INSERTED") != -1)
+		|| input.indexOf("NOT INSERTED") != -1 || input.indexOf("not inserted", input.indexOf("+CPIN")) != -1)
 		simInserted = 0;
 	else
 	{
