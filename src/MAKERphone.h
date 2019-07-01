@@ -213,7 +213,8 @@ class MAKERphone:public Buttons, public DateTime
 	uint8_t actualBrightness = 0; //value from 0 (brightest) to 255 (backlight off)
 	uint16_t sleepTimeActual = 0; //in seconds
 	uint8_t backgroundIndex = 0;
-	uint8_t volume = 3; //volume 0-14
+	uint8_t ringVolume = 10; //volume 0-14
+	uint8_t mediaVolume = 10; //volume 0-14
 	uint8_t pixelsBrightness = 5; //0-5
 	bool pinLock;
 	uint16_t pinNumber = 1234;
@@ -227,7 +228,7 @@ class MAKERphone:public Buttons, public DateTime
 	String ringtone_path = "/Ringtones/Default ringtone.wav";
 	String alarm_path = "/Ringtones/Default ringtone.wav";
 	uint8_t notification = 0;
-	uint16_t firmware_version = 1;
+	uint16_t firmware_version = 2;
 	//Settings app
 
 	void applySettings();
@@ -314,6 +315,7 @@ class MAKERphone:public Buttons, public DateTime
 	uint8_t micGain = 15;
 	uint16_t simVoltage = 3900;
 	uint8_t sim_module_version = 255; // 0 - SIM7600, 1 - SIM800
+	uint8_t oscillatorVolumeList[15] = {0,33,37,47,57,62,65,69,72,75,79,84,90,95,100};
 
 	private:
 		MPTrack* ringtone = nullptr;
@@ -363,5 +365,6 @@ class MAKERphone:public Buttons, public DateTime
 		bool buttonsPressed = 0;
 		bool wokeWithPWRBTN = 0;
 		uint8_t alternatingRefresh = 1;
+		// uint8_t oscillatorVolumeList[14] = {0,10,15,20,35,50,60,80,100,120,150,200,220,255};
 };
 #endif

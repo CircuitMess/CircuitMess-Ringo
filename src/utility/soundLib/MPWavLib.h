@@ -44,6 +44,7 @@ public:
 
 private:
     File trackFile;
+    uint8_t reload = 0;
     char trackPath[32];
     float volume=2;
     bool playing=false;
@@ -53,6 +54,7 @@ private:
     float speed=1;
     double pos=0;
     unsigned int loaded=0;
+    uint32_t readBytes = 0;
     bool repeat=false;
 };
 

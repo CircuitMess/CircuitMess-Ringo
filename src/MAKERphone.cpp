@@ -315,7 +315,6 @@ void MAKERphone::begin(bool splash) {
 	checkAlarms();
 
 	
-	// osc->setADSR(10,20,0.8,10);
 	sleepTimer = millis();
 }
 
@@ -607,8 +606,7 @@ bool MAKERphone::update() {
 		digitalWrite(OFF_PIN, 1);
 		ESP.deepSleep(0);
 	}
-
-	if(!digitalRead(RTC_INT) && !inAlarmPopup && !alarmCleared)
+	if(!digitalRead(RTC_INT) && !inAlarmPopup && !alarmCleared && currentAlarm != 99)
 	{
 		inAlarmPopup = 1;
 		alarmPopup();
@@ -655,7 +653,6 @@ bool MAKERphone::update() {
 	}
 	updateNotificationSound();
 
-		buttons.update();
 	
 	if(HOME_POPUP_ENABLE && !inHomePopup && !inShutdownPopup)
 	{
@@ -666,6 +663,7 @@ bool MAKERphone::update() {
 			inHomePopup = 0;
 		}
 	}
+	buttons.update();
 
 	if(SHUTDOWN_POPUP_ENABLE && buttons.released(14) && !wokeWithPWRBTN)
 	{
@@ -691,6 +689,7 @@ bool MAKERphone::update() {
 			else
 				display.pushSprite(0, 0);
 		}
+		// buttons.update();
 		FastLED.setBrightness(255/5 * pixelsBrightness);
 		FastLED.show();
 		delay(1);
@@ -924,7 +923,7 @@ void MAKERphone::loader()
 	display.setTextFont(2);
 	display.setTextSize(1);
 	display.printCenter("LOADING...");
-	mp.update();
+	while(!update());
 	const esp_partition_t* partition;
 	partition = esp_ota_get_running_partition();
 	const esp_partition_t* partition2;
@@ -1194,7 +1193,7 @@ void MAKERphone::incomingCall(String _serialData) //TODO
 				addTrack(ringtone);
 			}
 			Serial.println("PLAYED");
-			ringtone->setVolume(256 * volume / 14);
+			ringtone->setVolume(map(ringVolume, 0, 14, 100, 300));
 			ringtone->setRepeat(1);
 			ringtone->play();
 			played = 1;
@@ -1474,6 +1473,7 @@ void MAKERphone::incomingCall(String _serialData) //TODO
 		buttons.update();
 	}
 	digitalWrite(soundSwitchPin, 0);
+	osc->setVolume(oscillatorVolumeList[ringVolume]);
 }
 void MAKERphone::incomingMessage(String _serialData)
 {
@@ -1558,6 +1558,8 @@ void MAKERphone::incomingMessage(String _serialData)
 		buttons.update();
 	}
 	newMessage = 1;
+	osc->setVolume(oscillatorVolumeList[mediaVolume]);
+
 	// +CMT: "+385921488476","","19/06/03,20:14:58+08"
 	// Wjd
 
@@ -1617,7 +1619,7 @@ void MAKERphone::checkSim()
 	uint32_t timeoutMillis = millis();
 	Serial1.println(F("AT+CPIN?"));
 	input = waitForOK();
-	while (input.indexOf("+CPIN:") == -1 && input.indexOf("ERROR", input.indexOf("+CPIN")) == -1) {
+	while (input.indexOf("+CPIN:") == -1 && input.indexOf("NOT INSERTED", input.indexOf("+CPIN")) == -1) {
 		if(millis() - timeoutMillis >= 2500)
 		{
 			simInserted = 0;
@@ -2226,7 +2228,8 @@ void MAKERphone::saveSettings(bool debug)
 		settings["background_color"] = backgroundIndex;
 		settings["notification"] = notification;
 		settings["ringtone"] = ringtone_path.c_str();
-		settings["volume"] = volume;
+		settings["ringVolume"] = ringVolume;
+		settings["mediaVolume"] = mediaVolume;
 		settings["micGain"] = micGain;
 		File file1 = SD.open(path, "w");
 		settings.prettyPrintTo(file1);
@@ -2282,7 +2285,8 @@ void MAKERphone::loadSettings(bool debug)
 		backgroundIndex = settings["background_color"];
 		notification = settings["notification"];
 		ringtone_path = String(settings["ringtone"].as<char*>());
-		volume = settings["volume"];
+		ringVolume = settings["ringVolume"];
+		mediaVolume = settings["mediaVolume"];
 		micGain = settings["micGain"];
 		         
 	} else {
@@ -2337,7 +2341,7 @@ void MAKERphone::applySettings()
 		sleepTimeActual = 1800;
 		break;
 	}
-	osc->setVolume(256 * volume / 14);
+	osc->setVolume(oscillatorVolumeList[mediaVolume]);
 	if(SDinsertedFlag)
 	{
 		if(ringtone == nullptr)
@@ -2345,7 +2349,7 @@ void MAKERphone::applySettings()
 		else
 			ringtone->reloadFile(((char*)ringtone_path.c_str()));
 
-		ringtone->setVolume(256 * volume / 14);
+		ringtone->setVolume(map(ringVolume, 0, 14, 100, 300));
 	}
 	if(simInserted)
 	{
@@ -2696,6 +2700,27 @@ void MAKERphone::updatePopup() {
 }
 void MAKERphone::homePopup(bool animation)
 {
+	bool tempArray[4];
+	for(uint8_t i = 0 ; i < 4;i++)
+	{
+		if(tracks[i] != nullptr)
+		{
+			if(tracks[i]->isPlaying())
+			{
+				tracks[i]->pause();
+				tempArray[i] = 1;
+			}
+			else
+				tempArray[i] = 0;
+		}
+		else
+			tempArray[i] = 0;
+	}
+	// for(uint8_t i = 0 ; i < 4;i++)
+	// {
+	// 	if(oscs[i] != nullptr)
+	// 		oscs[i]->stop();
+	// }
 	if(animation)
 	{
 		for (int i = 0; i < display.height(); i++)
@@ -2754,7 +2779,7 @@ void MAKERphone::homePopup(bool animation)
 			display.drawBitmap(scale, scale, airplaneModeIcon, TFT_BLACK, scale);
 			helper += 10;
 		}
-		if (volume == 0)
+		if (ringVolume == 0)
 		{
 			display.drawBitmap(helper*scale, 1*scale, silentmode, TFT_BLACK, scale);
 			helper += 10;
@@ -2916,21 +2941,41 @@ void MAKERphone::homePopup(bool animation)
 						display.fillRect(15, 51, 132, 26, 0x9FFE);
 						display.drawRect(37, 59, 86, 10, TFT_BLACK);
 						display.drawRect(36, 58, 88, 12, TFT_BLACK);
-						display.fillRect(38, 60, volume * 6, 8, TFT_BLACK);
+						display.fillRect(38, 60, mediaVolume * 6, 8, TFT_BLACK);
 						display.drawBitmap(18, 56, noSound, TFT_BLACK, 2);
 						display.drawBitmap(126, 56, fullSound, TFT_BLACK, 2);
-						if(buttons.released(BTN_LEFT) && volume > 0)
+						if(buttons.released(BTN_LEFT) && mediaVolume > 0)
 						{
-							volume--;
-							osc->setVolume(256 * volume / 14);
+							mediaVolume--;
+							for(uint8_t i = 0 ; i < 4;i++)
+							{
+								if(tracks[i] != nullptr)
+									tracks[i]->setVolume(map(mediaVolume, 0, 14, 100, 300));
+							}
+							for(uint8_t i = 0 ; i < 4;i++)
+							{
+								if(oscs[i] != nullptr)
+									oscs[i]->setVolume(oscillatorVolumeList[mediaVolume]);
+							}
+							osc->setVolume(oscillatorVolumeList[mediaVolume]);
 							osc->note(75, 0.05);
 							osc->play();
 							while(!update());
 						}
-						if(buttons.released(BTN_RIGHT) && volume < 14)
+						if(buttons.released(BTN_RIGHT) && mediaVolume < 14)
 						{
-							volume++;
-							osc->setVolume(256 * volume / 14);
+							mediaVolume++;
+							for(uint8_t i = 0 ; i < 4;i++)
+							{
+								if(tracks[i] != nullptr)
+									tracks[i]->setVolume(map(mediaVolume, 0, 14, 100, 300));
+							}
+							for(uint8_t i = 0 ; i < 4;i++)
+							{
+								if(oscs[i] != nullptr)
+									oscs[i]->setVolume(oscillatorVolumeList[mediaVolume]);
+							}
+							osc->setVolume(oscillatorVolumeList[mediaVolume]);
 							osc->note(75, 0.05);
 							osc->play();
 							while(!update());
@@ -3089,43 +3134,61 @@ void MAKERphone::homePopup(bool animation)
 		}
 		update();
 	}
+	// if(SDinsertedFlag)
+		// saveSettings();
+	applySettings();
+	for(uint8_t i = 0 ; i < 4;i++)
+	{
+		if(tracks[i] != nullptr && tempArray[i])
+			tracks[i]->resume();
+	}
+	// for(uint8_t i = 0 ; i < 4;i++)
+	// {
+	// 	if(oscs[i] != nullptr)
+	// 		oscs[i]->play();
+	// }
+	dataRefreshFlag = 0;
 	while(!update());
 }
 void MAKERphone::drawNotificationWindow(uint8_t y, uint8_t index) {
 	display.setTextFont(2);
 	display.setTextSize(1);
-	display.setCursor(27, y + 2);
+	display.setCursor(22, y + 2);
 	display.fillRoundRect(2, y + 2, 154, 20, 2, TFT_DARKGREY);
 	display.fillRoundRect(4, y, 154, 20, 2, TFT_WHITE);
 	display.print(notificationDescriptionList[index]);
 	switch (notificationTypeList[index])
 	{
 		case 1:
-			display.drawBitmap(7, y + 2, missedCallIcon, TFT_RED, 2);
+			display.drawBitmap(5, y + 2, missedCallIcon, TFT_RED, 2);
 			break;
 		case 2:
-			display.drawBitmap(7, y + 2, newMessageIcon, TFT_BLACK, 2);
+			display.drawBitmap(5, y + 2, newMessageIcon, TFT_BLACK, 2);
 			break;
 		case 3:
-			display.drawBitmap(7, y + 2, systemNotification, TFT_RED, 2);
+			display.drawBitmap(5, y + 2, systemNotification, TFT_RED, 2);
 			break;
 	}
 	display.setTextFont(1);
-	display.setCursor(120, y + 2);
+	display.setCursor(129, y + 2);
 	String temp = "";
 	DateTime now = notificationTimeList[index];
 	if (now.hour() < 10)
 		temp.concat("0");
 	temp.concat(now.hour());
-	temp.concat(":");
+	display.print(temp);
+	display.setCursor(display.cursor_x - 2, display.cursor_y);
+	display.print(":");
+	display.setCursor(display.cursor_x - 2, display.cursor_y);
+	temp = "";
 	if (now.minute() < 10)
 		temp.concat("0");
 	temp.concat(now.minute());
 	display.print(temp);
-	display.setCursor(119, y + 11);
+	display.setCursor(125, y + 11);
 	temp = "";
-	temp.concat(monthsList[now.month() - 1]);
-	temp.concat(" ");
+	display.print(monthsList[now.month() - 1]);
+	display.setCursor(display.cursor_x + 2, display.cursor_y);
 	if (now.day() < 10)
 		temp.concat("0");
 	temp.concat(now.day());
@@ -3139,8 +3202,6 @@ void MAKERphone::playNotificationSound(uint8_t _notification)
 {
 	notification = _notification;
 	osc->stop();
-	osc->setADSR(10,20,0.8,10);
-	osc->setVolume(256 * volume / 14);
 	osc->setWaveform(SINE);
 	notificationMillis = 0;
 	playingNotification = 1;
@@ -3152,6 +3213,7 @@ void MAKERphone::updateNotificationSound()
 {
 	if(playingNotification && millis() - notificationMillis >= notificationSoundDuration*1000 +  125)
 	{
+		osc->setVolume(oscillatorVolumeList[ringVolume]);
 		notificationSoundDuration = notificationNotesDuration[notification][notesIndex];
 		notificationSoundNote = notificationNotes[notification][notesIndex];
 		if(notificationSoundDuration == 0 || notesIndex == 5)
@@ -3523,7 +3585,7 @@ void MAKERphone::alarmPopup(bool animation)
 			addTrack(ringtone);
 		}
 		Serial.println(ringtone_path);
-		ringtone->setVolume(256 * volume / 14);
+		ringtone->setVolume(map(ringVolume, 0, 14, 100, 300));
 		ringtone->setRepeat(1);
 		ringtone->play();
 

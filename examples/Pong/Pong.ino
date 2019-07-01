@@ -49,94 +49,111 @@ const byte title[] PROGMEM = {56,20,
   B11100000,B00000001,B11111000,B00001100,B00110000,B00011111,B10000000,
   B11100000,B00000000,B11110000,B00001100,B00110000,B00001111,B00000000,
 };
-
+Oscillator* ping;
+Oscillator* pong;
+Oscillator* score;
 void setup() {
 	mp.begin(0);
-  // mp.setResolution(0);
-  mp.display.setTextFont(2); //change the font to the large one
+ 	// mp.setResolution(0);
+  	mp.display.setTextFont(2); //change the font to the large one
 	randomSeed(micros() * micros()); // can't use analogRad(0) as we have a speaker attached there
-	
+	ping = new Oscillator(SQUARE);
+	pong = new Oscillator(SQUARE);
+	score = new Oscillator(SAW);
+	ping->setVolume(mp.oscillatorVolumeList[mp.mediaVolume]);
+	pong->setVolume(mp.oscillatorVolumeList[mp.mediaVolume]);
+	score->setVolume(mp.oscillatorVolumeList[mp.mediaVolume]);
+	addOscillator(ping);
+	addOscillator(pong);
+	addOscillator(score);
 }
 
 void loop()
 {
-  if(!gameState)
-  {
-    bool cursor = 0;
-    bool blinkState = 0;
-    uint32_t blinkMillis = millis();
-    while(!mp.buttons.released(BTN_A))
-    {
-      mp.display.fillScreen(TFT_BLACK);
-      mp.display.drawBitmap(30, 14, title, TFT_WHITE, 2);
-      mp.display.setTextSize(1);
-      mp.display.setTextFont(2);
-      mp.display.setCursor(32, 72);
-      mp.display.setTextColor(TFT_WHITE);
-      mp.display.printCenter("1 PLAYER");
-      mp.display.setCursor(46, 96);
-      mp.display.setTextColor(TFT_DARKGREY);
-      mp.display.printCenter("2 PLAYER");
-      if(!cursor)
-      {
-        mp.display.drawRect(30, 69, 100, 22, blinkState ? TFT_RED : TFT_BLACK);
-        mp.display.drawRect(31, 70, 98, 20, blinkState ? TFT_RED : TFT_BLACK);
-      }
-      if(millis()-blinkMillis >= 200)
-      {
-        blinkState = !blinkState;
-        blinkMillis = millis();
-      }
-      if(mp.buttons.released(BTN_B))
-        mp.loader();
-      mp.update();
-    }
-		//Starting game - setting all values to defaults
-    gameState = 1;
-    mp.display.setTextColor(TFT_WHITE);
-    playerScore = 0;
-    playerX = 5;
-		playerY = (mp.display.width() - playerHeight) / 2;
-    playerSpeedY = 4;
-    //oponent variables
-    opponentScore = 0;
-    opponentX = mp.display.width() - opponentWidth - 5;
-    opponentY = (mp.display.height() - opponentHeight) / 2;
-    opponentSpeedY = 4;
-    //ball variables
-    ballX = mp.display.width() - ballSize - opponentWidth - 1;
-    ballY = (mp.display.height() - ballSize) / 2;
-    ballSpeedX = 6;
-    ballSpeedY = 6;
-  }
-  if (mp.update()) {
-		if (mp.buttons.released(BTN_B))
+	if(!gameState)
+	{
+		bool cursor = 0;
+		bool blinkState = 0;
+		uint32_t blinkMillis = millis();
+		while(!mp.buttons.released(BTN_A))
 		{
 			mp.display.fillScreen(TFT_BLACK);
-			mp.display.setCursor(0, mp.display.height()/2 - 30);
-			mp.display.setTextFont(2);
-			mp.display.setTextSize(2);
-			mp.display.printCenter("Paused");
-      mp.display.setCursor(4, 110);
+			mp.display.drawBitmap(30, 14, title, TFT_WHITE, 2);
 			mp.display.setTextSize(1);
-      mp.display.printCenter("A: resume         B: quit");
-      mp.update();
-			while (!mp.buttons.released(BTN_A)) {
-				if (mp.buttons.released(BTN_B))
-        {
-          gameState = 0;
-          mp.update();
-          break;
-        }
-        mp.update();
-      }
-				
-			mp.display.setTextFont(1);
-			mp.display.setTextSize(2);
+			mp.display.setTextFont(2);
+			mp.display.setCursor(32, 72);
+			mp.display.setTextColor(TFT_WHITE);
+			mp.display.printCenter("1 PLAYER");
+			mp.display.setCursor(46, 96);
+			mp.display.setTextColor(TFT_DARKGREY);
+			mp.display.printCenter("2 PLAYER");
+			if(!cursor)
+			{
+			mp.display.drawRect(30, 69, 100, 22, blinkState ? TFT_RED : TFT_BLACK);
+			mp.display.drawRect(31, 70, 98, 20, blinkState ? TFT_RED : TFT_BLACK);
+			}
+			if(millis()-blinkMillis >= 200)
+			{
+			blinkState = !blinkState;
+			blinkMillis = millis();
+			}
+			if(mp.buttons.released(BTN_B))
+			mp.loader();
+			mp.update();
 		}
-    mp.display.setTextSize(5);
-    mp.display.setTextFont(1);
-    mp.display.fillScreen(TFT_BLACK);
+		gameState = 1;
+		mp.display.setTextColor(TFT_WHITE);
+		playerScore = 0;
+		playerX = 5;
+			playerY = (mp.display.width() - playerHeight) / 2;
+		playerSpeedY = 4;
+		//oponent variables
+		opponentScore = 0;
+		opponentX = mp.display.width() - opponentWidth - 5;
+		opponentY = (mp.display.height() - opponentHeight) / 2;
+		opponentSpeedY = 4;
+		//ball variables
+		ballX = mp.display.width() - ballSize - opponentWidth - 1;
+		ballY = (mp.display.height() - ballSize) / 2;
+		ballSpeedX = 6;
+		ballSpeedY = 6;
+	}
+  	if (mp.update()) {
+		if (mp.buttons.released(BTN_B))
+		{
+			while(!mp.update());
+			while(1)
+			{	
+				mp.display.setTextFont(1);
+				mp.display.setTextSize(2);
+				mp.display.setTextColor(TFT_WHITE);
+				mp.display.fillScreen(TFT_BLACK);
+				mp.display.setCursor(0, mp.display.height()/2 - 30);
+				mp.display.setTextFont(2);
+				mp.display.setTextSize(2);
+				mp.display.printCenter("Paused");
+				mp.display.setCursor(4, 110);
+				mp.display.setTextSize(1);
+				mp.display.printCenter("A: resume         B: quit");
+				mp.update();
+				if(mp.buttons.released(BTN_A))
+				{
+					while(!mp.update());
+					break;
+				}
+				if(mp.buttons.released(BTN_B))
+				{
+					while(!mp.update());
+					gameState = 0;
+					break;
+				}
+			}
+		
+		}
+		mp.display.setTextSize(5);
+		mp.display.setTextFont(1);
+		mp.display.setTextColor(TFT_WHITE);
+		mp.display.fillScreen(TFT_BLACK);
 		//move the player
 		if (mp.buttons.repeat(BTN_UP, 1)) {
 			playerY = max(0, playerY - playerSpeedY);
@@ -154,24 +171,28 @@ void loop()
 		if (ballY < 0) {
 			ballY = 0;
 			ballSpeedY = -ballSpeedY;
+			ping->note(80, 0.05);
 			//mp.sound.playTick();
 		}
 		//collision with the bottom border
 		if ((ballY + ballSize) > mp.display.height()) {
 			ballY = mp.display.height() - ballSize;
 			ballSpeedY = -ballSpeedY;
+			ping->note(80, 0.05);
 			//mp.sound.playTick();
 		}
 		//collision with the player
 		if (mp.collideRectRect(ballX, ballY, ballSize, ballSize, playerX, playerY, playerWidth, playerHeight)) {
 			ballX = playerX + playerWidth;
 			ballSpeedX = -ballSpeedX;
+			pong->note(70, 0.05);
 			//mp.sound.playTick();
 		}
 		//collision with the oponent
 		if (mp.collideRectRect(ballX, ballY, ballSize, ballSize, opponentX, opponentY, opponentWidth, opponentHeight)) {
 			ballX = opponentX - ballSize;
 			ballSpeedX = -ballSpeedX;
+			pong->note(70, 0.05);
 			//mp.sound.playTick();
 		}
 		//collision with the left side
@@ -181,6 +202,13 @@ void loop()
 			ballX = mp.display.width() - ballSize - opponentWidth - 1;
 			ballSpeedX = -abs(ballSpeedX);
 			ballY = random(0, mp.display.height() - ballSize);
+			ping->stop();
+			pong->stop();
+			score->note(55, 0.05);
+			for (uint8_t i = 0; i < 4; i++)
+			{
+				mp.leds[i] = CRGB(0,0,255);
+			}
 		}
 		//collision with the right side
 		if ((ballX + ballSize) > mp.display.width()) {
@@ -189,10 +217,29 @@ void loop()
 			ballX = mp.display.width() - ballSize - opponentWidth - 16; //place the ball on the oponent side
 			ballSpeedX = -abs(ballSpeedX);
 			ballY = random(0, mp.display.height() - ballSize);
-
+			ping->stop();
+			pong->stop();
+			score->note(55, 0.05);
+			for (uint8_t i = 4; i < 8; i++)
+			{
+				mp.leds[i] = CRGB(0,0,255);
+			}
 		}
 		//reset score when 10 is reached
 		if ((playerScore == 10) || (opponentScore == 10)) {
+			mp.display.fillScreen(TFT_BLACK);
+			mp.display.setTextFont(2);
+			mp.display.setTextColor(TFT_WHITE);
+			mp.display.setTextSize(2);
+			mp.display.setCursor(60, 30);
+			if(playerScore > 9)
+				mp.display.printCenter("PLAYER 1");
+			else if(opponentScore > 9)
+				mp.display.printCenter("PLAYER 2");
+			mp.display.setCursor(60,60);
+			mp.display.printCenter("WINS");
+			while(!mp.update());
+			delay(2000);
 			playerScore = 0;
 			opponentScore = 0;
 		}
@@ -206,8 +253,6 @@ void loop()
 			opponentY = opponentY - opponentSpeedY; //move up
 			opponentY = max(0, opponentY); //don't go out of the screen
 		}
-
-
 
 		//draw the score
 		mp.display.setTextSize(4);
