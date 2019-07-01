@@ -527,7 +527,7 @@ bool MAKERphone::update() {
 			else
 				display.pushSprite(0, 0);
 		}
-		buttons.update();
+		// buttons.update();
 		FastLED.setBrightness(255/5 * pixelsBrightness);
 		FastLED.show();
 		delay(1);
