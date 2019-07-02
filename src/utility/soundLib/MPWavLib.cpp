@@ -50,6 +50,18 @@ bool MPTrack::isFinished()
 
 void MPTrack::play()
 {
+    // const TickType_t xDelay = 1 / portTICK_PERIOD_MS;
+    // uint16_t stepsNumber = 200;
+    // float step = volume / stepsNumber;
+    // volume = 0;
+    // vTaskDelay(xDelay);
+
+    // for(uint16_t i = 0; i < stepsNumber;i++)
+    // {
+    //     vTaskDelay(xDelay);
+    //     volume += step;
+    // }
+    // volume = step*stepsNumber;
     if(finished)
         rewind();
     playing=true;
@@ -58,6 +70,17 @@ void MPTrack::play()
 
 void MPTrack::stop()
 {
+    // uint16_t stepsNumber = 200;
+    // const TickType_t xDelay = 1 / portTICK_PERIOD_MS;
+    // float step = volume / stepsNumber;
+    // vTaskDelay(xDelay);
+
+    // for(uint16_t i = 0; i < stepsNumber;i++)s
+    // {
+    //     vTaskDelay(xDelay);
+    //     volume -= step;
+    // }
+    // volume = step*stepsNumber;
     playing=false;
     finished=false;
     trackFile.seek(0x2C);
@@ -138,6 +161,8 @@ int MPTrack::fetchSample()
     pos+=speed;
     if(pos>=((size-0x2C)>>1))
     {
+        // float temp = volume;
+        // volume = 0;
         if(repeat)   
             rewind();
         else
@@ -146,6 +171,9 @@ int MPTrack::fetchSample()
             finished=true;
             playing=false;
         }
+        // updateWav();
+        // vTaskDelay(1000 / portTICK_PERIOD_MS);
+        // volume = temp;
     }
     return sample;
 }

@@ -1030,7 +1030,10 @@ void MAKERphone::incomingCall(String _serialData) //TODO
 				addTrack(ringtone);
 			}
 			Serial.println("PLAYED");
-			ringtone->setVolume(map(ringVolume, 0, 14, 100, 300));
+			if(ringVolume == 0)
+				ringtone->setVolume(0);
+			else
+				ringtone->setVolume(map(ringVolume, 0, 14, 100, 300));
 			ringtone->setRepeat(1);
 			ringtone->play();
 			played = 1;
@@ -2172,8 +2175,10 @@ void MAKERphone::applySettings()
 			ringtone = new MPTrack((char*)ringtone_path.c_str());
 		else
 			ringtone->reloadFile(((char*)ringtone_path.c_str()));
-
-		ringtone->setVolume(map(ringVolume, 0, 14, 100, 300));
+		if(ringVolume == 0)
+			ringtone->setVolume(0);
+		else
+			ringtone->setVolume(map(ringVolume, 0, 14, 100, 300));
 	}
 	if(simInserted)
 	{
@@ -2759,7 +2764,12 @@ void MAKERphone::homePopup(bool animation)
 							for(uint8_t i = 0 ; i < 4;i++)
 							{
 								if(tracks[i] != nullptr)
-									tracks[i]->setVolume(map(mediaVolume, 0, 14, 100, 300));
+								{
+									if(mediaVolume == 0)
+										tracks[i]->setVolume(0);
+									else
+										tracks[i]->setVolume(map(mediaVolume, 0, 14, 100, 300));
+								}
 							}
 							for(uint8_t i = 0 ; i < 4;i++)
 							{
@@ -2776,7 +2786,9 @@ void MAKERphone::homePopup(bool animation)
 							mediaVolume++;
 							for(uint8_t i = 0 ; i < 4;i++)
 							{
-								if(tracks[i] != nullptr)
+								if(mediaVolume == 0)
+									tracks[i]->setVolume(0);
+								else
 									tracks[i]->setVolume(map(mediaVolume, 0, 14, 100, 300));
 							}
 							for(uint8_t i = 0 ; i < 4;i++)
@@ -3394,7 +3406,10 @@ void MAKERphone::alarmPopup(bool animation)
 			addTrack(ringtone);
 		}
 		Serial.println(ringtone_path);
-		ringtone->setVolume(map(ringVolume, 0, 14, 100, 300));
+		if(ringVolume == 0)
+			ringtone->setVolume(0);
+		else
+			ringtone->setVolume(map(ringVolume, 0, 14, 100, 300));
 		ringtone->setRepeat(1);
 		ringtone->play();
 
