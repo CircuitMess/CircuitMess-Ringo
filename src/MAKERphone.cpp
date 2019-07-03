@@ -409,7 +409,9 @@ bool MAKERphone::update() {
 			{
 				uint16_t helper = updateBuffer.indexOf(",", updateBuffer.indexOf("+CBC:"));
 				helper = updateBuffer.indexOf(",", helper + 1) + 1;
-				simVoltage = updateBuffer.substring(helper, updateBuffer.indexOf("\n", helper)).toInt();
+				uint16_t tempVoltage = updateBuffer.substring(helper, updateBuffer.indexOf("\n", helper)).toInt();
+				if(tempVoltage > 3000 && tempVoltage < 5000)
+					simVoltage = tempVoltage;
 			}
 		}
 	}
@@ -2387,10 +2389,10 @@ void MAKERphone::takeScreenshot()
 	file.write(bmpFileHeader, sizeof(bmpFileHeader));    // write file header
 	file.write(bmpInfoHeader, sizeof(bmpInfoHeader));    // " info header
 
-	for (int i=h; i>=0; i--) 			  // iterate image array
+	for (int i = h - 1; i >= 0; i--) 			  // iterate image array
 	{
 		// memset(img,0,sizeof(img));        // not sure if I really need this; runs fine without...
-		for (int x=0; x<w; x++)
+		for (int x = 0; x < w; x++)
 		{
 			// uint8_t rgb[3];
 			uint16_t rgb = display.readPixelRGB(x, i);
@@ -2676,7 +2678,8 @@ void MAKERphone::homePopup(bool animation)
 			temp.concat("0");
 		temp.concat(clockMonth);
 		display.printCenter(temp);
-
+		display.setTextSize(1);
+		display.setTextFont(2);
 
 
 		if(buttons.released(BTN_UP))
