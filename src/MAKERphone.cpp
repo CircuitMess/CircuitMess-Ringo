@@ -31,7 +31,7 @@ void Task1code( void * pvParameters ){
 	while (true)
 		updateWav();
 }
-String waitForOK()
+String MAKERphone::waitForOK()
 {
 	String buffer = "";
 	char c;
@@ -1241,6 +1241,12 @@ void MAKERphone::incomingCall(String _serialData) //TODO
 	int8_t written = -1;
 	uint16_t prevTime = 0;
 	// localBuffer = "";
+	if(sim_module_version)
+	{
+		Serial1.println("AT+CECH=0x0000");
+		Serial.println(waitForOK());
+	}
+	
 	while (1)
 	{
 		if (Serial1.available())
