@@ -20,7 +20,28 @@ bool MPTrack::openFile()
     trackFile=SD.open(trackPath);
     if(trackFile)
     {
+        
         size=trackFile.size();
+        // Serial.println(size);
+        // char temp[4];
+        findLIST();
+        Serial.print("Calculated diff: ");
+        Serial.println(trackFile.size() - size);
+        // for(uint32_t i = 0; i < trackFile.size();i++)
+        // {
+        //     trackFile.seek(i);
+        //     trackFile.readBytes(temp, 4);
+        //     if(temp == "LIST");
+        //     {
+        //         size = i;
+        //         break;
+        //     }
+        // }
+        // trackFile.seek(0x04);
+        // trackFile.readBytes((char*)&size,4);
+        // Serial.println(size);
+        // Serial.println("---------");
+        // size-=44;
         trackFile.seek(0x2C);
         pos=0;
         return true;
@@ -61,7 +82,7 @@ void MPTrack::play()
     //     vTaskDelay(xDelay);
     //     volume += step;
     // }
-    // volume = step*stepsNumber;
+   // volume = step*fade;
     if(finished)
         rewind();
     playing=true;
@@ -74,18 +95,16 @@ void MPTrack::stop()
     // const TickType_t xDelay = 1 / portTICK_PERIOD_MS;
     // float step = volume / stepsNumber;
     // vTaskDelay(xDelay);
-
     // for(uint16_t i = 0; i < stepsNumber;i++)s
-    // {
-    //     vTaskDelay(xDelay);
-    //     volume -= step;
-    // }
+    // vTaskDelay(xDelay);
+    // for(uint16_t i = 0; i < fade;i++)
     // volume = step*stepsNumber;
+
     playing=false;
     finished=false;
-    trackFile.seek(0x2C);
     loaded=0;
     pos=0;
+    // volume = step*fade;
 }
 
 void MPTrack::pause()
@@ -145,7 +164,6 @@ int MPTrack::loadSample(unsigned short i)
     sample*=volume;
     return sample;
 }
-
 int MPTrack::fetchSample()
 {
     int p, sample;
@@ -159,6 +177,65 @@ int MPTrack::fetchSample()
     sample=(*((short*)(&data[p<<1])));
     sample*=volume;
     pos+=speed;
+    // if(listco)
+    //  Serial.println((int)listco);
+    // switch (listco) 
+    // {
+    //     case 0:
+    //         if(data[p]=='L'||data[p+1]=='L')
+    //             listco++;
+    //         else
+    //             listco = 0;
+                
+    //         break;
+
+    //     case 1:
+    //         if(data[p]=='I'||data[p+1]=='I')
+    //              {
+    //             listco++;
+    //             Serial.println(data);
+    //         }
+    //         else
+    //             listco = 0;
+    //         break;
+
+    //     case 2:
+    //         if(data[p]=='S'||data[p+1]=='S')
+    //         {
+    //             listco++;
+    //             Serial.println(data);
+    //         }
+    //         else
+    //             listco = 0;
+    //         break;
+
+    //     case 3:
+    //         if(data[p]=='T'||data[p+1]=='T')
+    //         {
+    //             listco++;
+    //             Serial.println("LIST FOUND");
+    //             listco = 0;
+    //             return false;
+    //         }
+    //         else
+    //         {
+    //              listco = 0;
+    //         }
+            
+    //         break;
+        
+    //     default:
+    //         break;
+    // }
+    // if((pos)>(((size)>>1))-2000)
+    //     Serial.println(sample);
+    // if((pos+22)>(((size)>>1))-fade)
+    // {
+    //     sample*=(((size-0x2C)>>1)-pos)/fade;
+    //     //Serial.println((float)(((size-0x2C)>>1)-pos)/fade);
+    // }
+    //if(data[p] == 'L' || data[p] == 'I' || data[p] == 'S' || data[p ] == 'T')
+    
     if(pos>=((size-0x2C)>>1))
     {
         // float temp = volume;
@@ -170,7 +247,9 @@ int MPTrack::fetchSample()
             loaded=0;
             finished=true;
             playing=false;
+            
         }
+        return 0;
         // updateWav();
         // vTaskDelay(1000 / portTICK_PERIOD_MS);
         // volume = temp;
@@ -219,9 +298,21 @@ bool MPTrack::loadSamples()
     readBytes = trackFile.position();
     // Serial.println(read);
     loaded=(readBytes-0x2C)/2;
+    
+    // if(strstr(data,"LIST"))
+    // {
+    //     Serial.println("LIST FOUND");
+    //     Serial.println((char*)strstr(data,"LIST"));
+    //     return false;
+    // }
+    
+
     return true;
 }
-
+void MPTrack::setFade(uint16_t fadeSteps)
+{
+    fade = fadeSteps;
+}
 int MPTrack::getSize()
 {
     return size;
@@ -257,7 +348,13 @@ bool MPTrack::reloadFile(char path[])
     trackFile=SD.open(trackPath);
     if(trackFile)
     {
+        
         size=trackFile.size();
+        // Serial.println(size);
+        // char temp[4];
+        findLIST();
+        Serial.print("Calculated diff: ");
+        Serial.println(trackFile.size() - size);
         trackFile.seek(0x2C);
         loaded=0;
         pos=0;
@@ -267,7 +364,56 @@ bool MPTrack::reloadFile(char path[])
 	else
 		return false;
 }
-
+void MPTrack::findLIST()
+{
+    uint32_t temp = 0;
+    Serial.print("File Size: ");
+    Serial.println(trackFile.size());
+    for(int i = 0; i < 500; i++)
+    {
+        trackFile.seek(trackFile.size() - 4 - i);
+        if(trackFile.read() == 'L')
+        {
+            temp = trackFile.size() - 4 - i;
+            // Serial.println("L FOUND");
+            if(trackFile.read() == 'I')
+            {
+                // Serial.println("I FOUND");
+                if(trackFile.read() == 'S')
+                {
+                    // Serial.println("S FOUND");
+                    if(trackFile.read() == 'T')
+                    {
+                        Serial.println("LIST FOUND");
+                        size = temp;
+                        break;
+                    }
+                }
+            }
+        }
+    }
+    // for(int i = 0; i < 200; i++)
+    // {
+    //     trackFile.seek(trackFile.size() - 190*i + 2000);
+    //     Serial.print("Position: ");
+    //     Serial.println(trackFile.position());
+    //     trackFile.readBytes(buffer, 200);
+    //     Serial.println(buffer);
+    //     Serial.println("---------------------------");
+    //     if(strstr(buffer, "LIST"))
+    //     {
+    //         Serial.println("LIST FOUND");
+    //         uint16_t temperino = strstr(buffer, "LIST") - buffer;
+    //         Serial.println(temperino);
+    //         size = trackFile.size() - 200 - 190*i + temperino;
+    //         Serial.print("Calculated:");
+    //         Serial.println(size);
+    //         Serial.print("Actual:");
+    //         Serial.println(trackFile.size());
+    //         break;
+    //     }
+    // }
+}
 // ------------------------- OSC --------------------------------
 
 Oscillator::Oscillator()

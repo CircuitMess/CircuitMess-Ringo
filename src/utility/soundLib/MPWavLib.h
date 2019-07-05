@@ -40,6 +40,7 @@ public:
     void setRepeat(bool r);
     bool openFile();
     void closeFile();
+    void setFade(uint16_t fadeSteps = 1000);
     bool reloadFile(char path[]);
 
 private:
@@ -55,7 +56,10 @@ private:
     double pos=0;
     unsigned int loaded=0;
     uint32_t readBytes = 0;
+    uint16_t fade = 1000;
+    char listco=0;
     bool repeat=false;
+    void findLIST();
 };
 
 class Oscillator
@@ -80,6 +84,7 @@ public:
 
 private:
     char waveform=0;
+    uint16_t fade = 0;
     double period=0.001;
     float volume=2, notelen, duty=0.5;
     bool playing=false, wait=false;
