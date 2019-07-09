@@ -257,27 +257,19 @@ void MAKERphone::begin(bool splash) {
 			Serial1.println("AT+CVHU=0");
 			waitForOK();
 		}
-		// delay(50);
 		waitForOK();
 		Serial1.println(F("AT+CMGF=1"));
-		// delay(50);
 		waitForOK();
 		Serial1.println(F("AT+CNMI=1,2,0,0,0"));
-		// delay(50);
 		waitForOK();
-		// delay(50);
 		waitForOK();
 		Serial1.println(F("AT+CPMS=\"SM\",\"SM\",\"SM\""));
-		// delay(150);
 		waitForOK();
 		Serial1.println(F("AT+CLCC=1"));
-		// delay(50);
 		waitForOK();
 		Serial1.println(F("AT+CSCLK=1"));
-		// delay(50);
 		waitForOK();
 		Serial1.println(F("AT&W"));
-		// delay(50);
 		waitForOK();
 		Serial.println("Serial1 up and running...");
 	}
@@ -1151,10 +1143,12 @@ void MAKERphone::incomingCall(String _serialData) //TODO
 			Serial.println("ENDED");
 			if(localBuffer.indexOf(",1,6,") == -1)
 			{
-				Serial1.println("ATH");
 				uint32_t curr_millis = millis();
-				while (Serial1.readString().indexOf(",0,6,") == -1 && millis() - curr_millis < 2000){
-					Serial1.println("ATH");
+				buffer = "";
+				Serial1.println("ATH");
+				while (buffer.indexOf(",0,6,") == -1 && millis() - curr_millis < 2000){
+					// Serial1.println("ATH");
+					buffer+=(char)Serial.read();
 				}
 			}
 			
