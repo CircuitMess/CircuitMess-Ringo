@@ -2589,7 +2589,7 @@ void MAKERphone::homePopup(bool animation)
 				display.drawBitmap(1*scale, 1*scale, signalErrorIcon, TFT_BLACK, scale);
 		}
 		else if(!simInserted && !airplaneMode)
-			display.drawBitmap(1*scale, 1*scale, signalErrorIcon, TFT_BLACK, scale);
+			display.drawBitmap(1*scale, 1*scale, noSimIcon, TFT_BLACK, scale);
 		if(airplaneMode)
 		{
 			display.drawBitmap(scale, scale, airplaneModeIcon, TFT_BLACK, scale);

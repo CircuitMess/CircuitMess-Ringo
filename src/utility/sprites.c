@@ -1023,6 +1023,16 @@ const byte arrowDown[] PROGMEM = {8,7,
 	B00111000,
 	B00010000,
 };
+const byte noSimIcon[] PROGMEM = {8,8,
+	B11110000,
+	B10001001,
+	B10100101,
+	B10110101,
+	B10110101,
+	B10110101,
+	B10000100,
+	B11111101,
+};
 //media app
 const unsigned short mediaPhotoIcon[0x240] PROGMEM ={
     0xFC92, 0xFC92, 0xFC92, 0xFC92, 0xFC92, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000,   // 0x0010 (16)
