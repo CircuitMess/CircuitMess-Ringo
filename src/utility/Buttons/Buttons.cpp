@@ -25,10 +25,10 @@ void Buttons::update() {
 	delay(1);
 	button_b = ads.readADC_SingleEnded(2);
 
-	bitWrite(buttonsData, 18, !(joystick_y < 100 && joystick_x > 300 && joystick_x < 800)); //BTN_UP
-	bitWrite(buttonsData, 19, !(joystick_y > 1000 && joystick_x > 300 && joystick_x < 800)); //BTN_DOWN
-	bitWrite(buttonsData, 20, !(joystick_x > 1000 && joystick_y > 300 && joystick_y < 800)); //BTN_LEFT
-	bitWrite(buttonsData, 21, !(joystick_x < 100 && joystick_y > 300 && joystick_y < 800)); //BTN_RIGHT
+	bitWrite(buttonsData, 18, !(joystick_y < 100)); //BTN_UP
+	bitWrite(buttonsData, 19, !(joystick_y > 1000)); //BTN_DOWN
+	bitWrite(buttonsData, 20, !(joystick_x > 1000)); //BTN_LEFT
+	bitWrite(buttonsData, 21, !(joystick_x < 100)); //BTN_RIGHT
 	bitWrite(buttonsData, 16, !(button_a < 1));
 	bitWrite(buttonsData, 17, !(button_b < 1));
 
@@ -105,23 +105,18 @@ char Buttons::getKey() {
 				switch(i) {
 					case 12:
 						return 'A';
-						Serial.println("asdasd");
 						break;
 					case 13:
 						return 'B';
-						Serial.println("asdasd");
 						break;
 					case 14:
 						return 'C';
-						Serial.println("asdasd");
 						break;
 					case 15:
 						return 'D';
-						Serial.println("asdasd");
 						break;
 					default:
 						return NO_KEY;
-						Serial.println("asdasd");
 						break;
 				}
 			}

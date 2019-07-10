@@ -3498,7 +3498,10 @@ void MAKERphone::shutdownPopup(bool animation)
 				tft.setCursor(40, 51);
 				tft.print("Restarting...");
 				Serial1.println("AT+CFUN=1,1");
-				delay(1000);
+				if(sim_module_version == 1)
+					delay(1500);
+				else if(sim_module_version == 0)
+					delay(4000);
 				ESP.restart();
 			}
 			else
