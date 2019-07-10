@@ -2607,17 +2607,21 @@ void MAKERphone::homePopup(bool animation)
 			display.drawBitmap(helper*scale, 1*scale, noSDIcon, TFT_BLACK, scale);
 			helper+=10;
 		}
+		display.setTextFont(2);
+		display.setTextSize(1);
+		display.setCursor(helper*2, 4);
 		if(carrierName != "")
 		{
-			// mp.display.setFreeFont(TT1);
-			// mp.display.setTextSize(2);
-			// mp.display.setCursor(helper*2, 15);
+			// display.setFreeFont(TT1);
+			// display.setTextSize(2);
+			// display.setCursor(helper*2, 15);
 
-			display.setTextFont(2);
-			display.setTextSize(1);
-			display.setCursor(helper*2, 4);
+			
 			display.print(carrierName);
 		}
+		else if(carrierName == "" && simInserted && !airplaneMode)
+			display.print("loading...");
+
 		if (batteryVoltage > 4100)
 			display.drawBitmap(74*scale, 1*scale, batteryCharging, TFT_BLACK, scale);
 		else if (batteryVoltage <= 4100 && batteryVoltage >= 3850)
