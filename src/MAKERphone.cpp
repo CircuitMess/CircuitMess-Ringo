@@ -2823,6 +2823,8 @@ void MAKERphone::homePopup(bool animation)
 		}
 		else if(carrierName == "" && simInserted && !airplaneMode)
 			display.print("loading...");
+		else if(carrierName == "" && !simInserted && sim_module_version == 255)
+			display.print("No module");	
 
 		if (batteryVoltage > 4100)
 			display.drawBitmap(74*scale, 1*scale, batteryCharging, TFT_BLACK, scale);
