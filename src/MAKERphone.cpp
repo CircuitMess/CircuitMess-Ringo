@@ -73,7 +73,7 @@ void MAKERphone::begin(bool splash) {
 	pinMode(BTN_INT, INPUT_PULLUP);
 	pinMode(SIM_INT, INPUT_PULLUP);
 	pinMode(SD_INT, INPUT_PULLUP);
-	pinMode(RTC_INT, INPUT_PULLUP);
+	pinMode(CHRG_INT, INPUT_PULLUP);
 	pinMode(OFF_PIN, OUTPUT);
 	digitalWrite(OFF_PIN, 0);
 	esp_sleep_enable_ext0_wakeup(GPIO_NUM_36, 0);
@@ -247,7 +247,7 @@ void MAKERphone::begin(bool splash) {
 		if(sim_module_version == 1)
 		{
 			Serial1.println(F("AT+CRSL=100"));
-			Serial1.println(F("AT+CLVL=100"));
+			Serial1.println(F("AT+CLVL=10"));
 			Serial1.println(F("AT+CLTS=1")); //Enable local Timestamp mode (used for syncrhonising RTC with GSM time
 		}
 		else if(sim_module_version == 0)
@@ -609,20 +609,6 @@ bool MAKERphone::update() {
 		digitalWrite(OFF_PIN, 1);
 		ESP.deepSleep(0);
 	}
-	if(!digitalRead(RTC_INT) && !inAlarmPopup && !alarmCleared && currentAlarm != 99)
-	{
-		inAlarmPopup = 1;
-		alarmPopup();
-		if(alarmRepeat[currentAlarm] == 0)
-			alarmEnabled[currentAlarm] = 0;
-		saveAlarms();
-		if(ringtone->isPlaying())
-			ringtone->stop();
-
-		alarmCleared = 1;
-		alarmMillis = millis();
-		inAlarmPopup = 0;
-	}
 	if(alarmCleared && millis() - alarmMillis > 60000)
 		alarmCleared = 0;
 	if(!digitalRead(SIM_INT) && !inCall)
@@ -653,6 +639,21 @@ bool MAKERphone::update() {
 			playNotificationSound(notification);
 			incomingMessage(temp);
 		}
+		else if(!inAlarmPopup && !alarmCleared && currentAlarm != 99)
+		{
+			inAlarmPopup = 1;
+			alarmPopup();
+			if(alarmRepeat[currentAlarm] == 0)
+				alarmEnabled[currentAlarm] = 0;
+			saveAlarms();
+			if(ringtone->isPlaying())
+				ringtone->stop();
+
+			alarmCleared = 1;
+			alarmMillis = millis();
+			inAlarmPopup = 0;
+		}
+		
 	}
 	updateNotificationSound();
 

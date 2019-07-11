@@ -51,8 +51,6 @@ extern HardwareSerial Serial1;
 #include "utility/soundLib/MPAudioDriver.h"
 #include "utility/soundLib/MPWavLib.h"
 
-//Buttons defines
-// 14, 13
 #define BTN_1 0
 #define BTN_2 1
 #define BTN_3 2
@@ -78,8 +76,9 @@ extern HardwareSerial Serial1;
 #define SIM800_DTR 26
 #define BTN_INT 36
 #define RTC_INT 34
-#define SIM_INT 39
+#define SIM_INT 34
 #define SD_INT 33
+#define CHRG_INT 39
 
 #define OFF_PIN 25
 #define INTERRUPT_PIN 36
