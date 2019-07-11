@@ -114,61 +114,157 @@ void MAKERphone::begin(bool splash) {
 	}
 	firmware_version = EEPROM.readUInt(FIRMWARE_VERSION_ADDRESS);
 	sim_module_version = EEPROM.readByte(GSM_MODULE_ADDRESS);
+	Serial.print("Read sim value: ");
+	Serial.println(sim_module_version);
 	uint32_t temp = millis();
 	String buffer = "";
-	Serial1.begin(115200, SERIAL_8N1, 17, 16);
-	Serial1.println("AT");
-	while(buffer.indexOf("OK") == -1 && millis() - temp < 1500)
+	bool temperino = 1;
+	Serial1.flush();
+	if(sim_module_version == 0)
 	{
-		if(Serial1.available())
-		{
-			buffer+=(char)Serial1.read();
-			Serial.println(buffer);
-		}
-	}
-	if(buffer.indexOf("OK") == -1)
-	{
-		Serial1.end();
-		temp = millis();
-		buffer = "";
-		Serial1.begin(9600, SERIAL_8N1, 17, 16);
+		Serial1.begin(115200, SERIAL_8N1, 17, 16);
+		delay(100);
 		Serial1.println("AT");
+		temperino = 1;
 		while(buffer.indexOf("OK") == -1 && millis() - temp < 1500)
 		{
-
+			if(temperino && millis() - temp > 1000)
+			{
+				Serial1.println("AT");
+				temperino = 0;
+			}
 			if(Serial1.available())
 			{
 				buffer+=(char)Serial1.read();
 				Serial.println(buffer);
 			}
 		}
-		if(buffer.indexOf("OK") != -1)
-			sim_module_version = 1; //SIM800
-		else
+		if(buffer.indexOf("OK") == -1)
 		{
+			Serial.println("not sim7600");
 			Serial1.end();
-			sim_module_version = 255; //NO SIM MODULE
+			temp = millis();
+			buffer = "";
+			Serial1.begin(9600, SERIAL_8N1, 17, 16);
+			delay(100);
+			Serial1.println("AT");
+			temperino = 1;
+			while(buffer.indexOf("OK") == -1 && millis() - temp < 1500)
+			{
+				if(temperino && millis() - temp > 1000)
+				{
+					Serial1.println("AT");
+					temperino = 0;
+				}
+				if(Serial1.available())
+				{
+					buffer+=(char)Serial1.read();
+					Serial.println(buffer);
+				}
+			}
+			if(buffer.indexOf("OK") != -1)
+				sim_module_version = 1; //SIM800
+			else
+			{
+				Serial.println("not sim800");
+				sim_module_version = 255; //NO SIM MODULE
+			}
+			
 		}
-		
+		else
+			sim_module_version = 0; //SIM7600
 	}
 	else
-		sim_module_version = 0; //SIM7600
-
-	if(EEPROM.readByte(GSM_MODULE_ADDRESS) != sim_module_version)
 	{
-		Serial.println("written module type");
-		EEPROM.writeByte(GSM_MODULE_ADDRESS, sim_module_version);
-		EEPROM.commit();
-	}
+		Serial1.begin(9600, SERIAL_8N1, 17, 16);
+		delay(100);
+		Serial1.println("AT");
+		temperino = 1;
+		while(buffer.indexOf("OK") == -1 && millis() - temp < 1500)
+		{
+			if(temperino && millis() - temp > 1000)
+			{
+				Serial1.println("AT");
+				temperino = 0;
+			}
+			if(Serial1.available())
+			{
+				buffer+=(char)Serial1.read();
+				Serial.println(buffer);
+			}
+		}
+		if(buffer.indexOf("OK") == -1)
+		{
+			Serial.println("not sim800");
+			Serial1.end();
+			temp = millis();
+			buffer = "";
+			Serial1.begin(115200, SERIAL_8N1, 17, 16);
+			delay(100);
+			Serial1.println("AT");
+			temperino = 1;
+			while(buffer.indexOf("OK") == -1 && millis() - temp < 1500)
+			{
+				if(temperino && millis() - temp > 1000)
+				{
+					Serial1.println("AT");
+					temperino = 0;
+				}
+				if(Serial1.available())
+				{
+					buffer+=(char)Serial1.read();
+					Serial.println(buffer);
+				}
+			}
+			if(buffer.indexOf("OK") != -1)
+				sim_module_version = 0; //SIM7600
+			else
+			{
+				Serial.println("not sim7600");
 
+				sim_module_version = 255; //NO SIM MODULE
+			}
+		}
+		else
+			sim_module_version = 1; //SIM800
+	}
+	
+	
+	Serial1.end();
 	if(sim_module_version == 1)
 	{
 		Serial1.begin(9600, SERIAL_8N1, 17, 16);
 		micGain = 15;
 	}
 	else if(sim_module_version == 0)
+	{
+		Serial1.begin(115200, SERIAL_8N1, 17, 16);
 		micGain = 8;
-		
+	}
+	if(sim_module_version != 255)
+	{
+		Serial1.println("ATI");
+		String temp = waitForOK();
+		Serial.println(temp);
+		if(temp.indexOf("SIM800") != -1)
+		{
+			if(sim_module_version == 0)
+			{
+				Serial1.println("AT+IPR=9600");
+				Serial1.end();
+				Serial1.begin(9600, SERIAL_8N1, 17, 16);
+			}
+			sim_module_version = 1;
+		}
+		else if(temp.indexOf("SIM7600") != -1)
+			sim_module_version = 0;
+	}
+	if(EEPROM.readByte(GSM_MODULE_ADDRESS) != sim_module_version)
+	{
+		Serial.println("written module type");
+		EEPROM.writeByte(GSM_MODULE_ADDRESS, sim_module_version);
+		EEPROM.commit();
+	}
 	Serial.print("MODULE TYPE: ");
 	Serial.println(sim_module_version);
 
@@ -249,6 +345,7 @@ void MAKERphone::begin(bool splash) {
 			Serial1.println(F("AT+CRSL=100"));
 			Serial1.println(F("AT+CLVL=100"));
 			Serial1.println(F("AT+CLTS=1")); //Enable local Timestamp mode (used for syncrhonising RTC with GSM time
+			Serial1.println(F("AT+IPR=9600"));
 		}
 		else if(sim_module_version == 0)
 		{
