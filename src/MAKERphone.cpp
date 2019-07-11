@@ -3554,7 +3554,7 @@ void MAKERphone::alarmPopup(bool animation)
 	// 		// delayMicroseconds(750);
 	// 	}
 	// }
-	MPTrack *temp;
+	MPTrack *temp = nullptr;
 	updateTimeRTC();
 	DateTime now = RTC.now();
 	char buf[100];
