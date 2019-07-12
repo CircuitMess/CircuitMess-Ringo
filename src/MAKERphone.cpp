@@ -727,8 +727,8 @@ bool MAKERphone::update() {
 		String temp = "";
 		long long curr_millis = millis();
 
-		while ((temp.indexOf("\r", temp.indexOf("+CLCC:")) == -1 || temp.indexOf("\r", temp.indexOf("+CMT:") == -1)
-		|| temp.indexOf("\r", temp.indexOf("1,4,0,0,")) == -1 ) && millis() - curr_millis < 500)
+		while((temp.indexOf("\r", temp.indexOf("+CMT:") == -1) || temp.indexOf("\r", temp.indexOf("1,4,0,0,")) == -1)
+		 && millis() - curr_millis < 500)
 		{
 			if(Serial1.available())
 			{
@@ -3598,7 +3598,7 @@ void MAKERphone::shutdownPopup(bool animation)
 				if(sim_module_version == 1)
 					delay(1500);
 				else if(sim_module_version == 0)
-					delay(4000);
+					delay(22000);
 				ESP.restart();
 			}
 			else
