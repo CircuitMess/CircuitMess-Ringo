@@ -27,6 +27,7 @@ uint32_t voltageSum = 0;
 uint16_t voltageSample = 0;
 volatile double voltage = 3700;
 uint16_t measuringCounter = 0;
+bool clockFallback = 1;
 void Task1code( void * pvParameters ){
 	while (true)
 		updateWav();
@@ -36,7 +37,7 @@ String MAKERphone::waitForOK()
 	String buffer = "";
 	char c;
 	uint32_t temp = millis();
-	while(buffer.indexOf("OK") == -1 && millis() - temp < 2000)
+	while(buffer.indexOf("OK") == -1 && buffer.indexOf("ERROR") == -1 && millis() - temp < 2000)
 		if(Serial1.available())
 		{
 			c = Serial1.read();
@@ -353,6 +354,8 @@ void MAKERphone::begin(bool splash) {
 			waitForOK();
 			Serial1.println("AT+CVHU=0");
 			waitForOK();
+			Serial1.println("AT+CTZU=1");
+			waitForOK();
 		}
 		waitForOK();
 		Serial1.println(F("AT+CMGF=1"));
@@ -558,7 +561,20 @@ bool MAKERphone::update() {
 					{
 						if (clockYear%100 == 4 || clockYear%100 == 80 || clockMonth == 0 || clockMonth > 12 ||
 						clockHour > 24 || clockMinute >= 60)
+						{
+							// Serial1.println("AT+CNETSTOP");
+							// waitForOK();
+							if(clockFallback)
+							{
+								Serial1.println("AT+CNMP=13");
+								waitForOK();
+								Serial1.println("AT+CNETSTART");
+								waitForOK();
+							}
+							clockFallback = 0;
 							Serial1.println("AT+CCLK?");
+							// waitForOK();
+						}
 						else
 							refreshMillis = millis() + 2000;
 					}
@@ -588,6 +604,8 @@ bool MAKERphone::update() {
 			updateBuffer += c;
 			Serial.println("--------------");
 			Serial.println(updateBuffer);
+			if(updateBuffer.indexOf("\r", updateBuffer.indexOf("OK")) != -1)
+				updateBuffer = "";
 			
 			if (simInserted && !airplaneMode)
 			{
@@ -647,7 +665,13 @@ bool MAKERphone::update() {
 						DateTime now = DateTime(clockYear, clockMonth, clockDay,
 						clockHour, clockMinute, clockSecond);
 						RTC.adjust(now);
-						// Serial.println(F("\nRTC TIME UPDATE OVER GSM DONE!"));
+						if (clockYear%100 != 4 && clockYear%100 != 80 && clockMonth != 0 && clockMonth < 13 &&
+						clockHour < 25 && clockMinute < 60)
+						{
+							Serial1.println("AT+CNMP=2");
+							clockFallback = 1;
+						}
+						Serial.println(F("\nRTC TIME UPDATE OVER GSM DONE!"));
 					}
 
 			}
@@ -1032,6 +1056,12 @@ void MAKERphone::loader()
 	ESP.restart();
 }
 void MAKERphone::updateTimeGSM() {
+	if(sim_module_version == 0)
+	{
+		Serial1.println("AT+CNETSTOP");
+		Serial1.println("AT+CNMP=13");
+		Serial1.println("AT+CNETSTART");
+	}
 	Serial1.write("AT+CCLK?\r");
 	//Serial1.flush();
 	//delay(500);
