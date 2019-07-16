@@ -117,6 +117,7 @@ void MAKERphone::begin(bool splash) {
 	uint32_t temp = millis();
 	String buffer = "";
 	Serial1.begin(115200, SERIAL_8N1, 17, 16);
+	pinMode(17,INPUT_PULLUP);
 	Serial1.println("AT");
 	while(buffer.indexOf("OK") == -1 && millis() - temp < 1500)
 	{
@@ -132,6 +133,7 @@ void MAKERphone::begin(bool splash) {
 		temp = millis();
 		buffer = "";
 		Serial1.begin(9600, SERIAL_8N1, 17, 16);
+		pinMode(17,INPUT_PULLUP);
 		Serial1.println("AT");
 		while(buffer.indexOf("OK") == -1 && millis() - temp < 1500)
 		{
@@ -164,6 +166,7 @@ void MAKERphone::begin(bool splash) {
 	if(sim_module_version == 1)
 	{
 		Serial1.begin(9600, SERIAL_8N1, 17, 16);
+		pinMode(17,INPUT_PULLUP);
 		micGain = 15;
 	}
 	else if(sim_module_version == 0)
@@ -760,10 +763,12 @@ void MAKERphone::ledcAnalogWrite(uint8_t channel, uint32_t value, uint32_t value
 	ledcWrite(channel, duty);
 }
 void MAKERphone::sleep() {
-	if(simInserted)
-	{
-		digitalWrite(SIM800_DTR, 1);
-	}
+	// if(simInserted)
+	// {
+	// 	digitalWrite(SIM800_DTR, 1);
+	// }   
+
+	digitalWrite(SIM800_DTR, 1);
 
 	FastLED.clear(1);
 	ledcAnalogWrite(LEDC_CHANNEL, 255);
