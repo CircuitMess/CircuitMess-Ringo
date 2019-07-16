@@ -44,8 +44,6 @@ String MAKERphone::waitForOK()
 			buffer+=c;
 		}
 	return buffer;
-		
-
 }
 void ADCmeasuring(void *parameters)
 {
@@ -118,7 +116,11 @@ void MAKERphone::begin(bool splash) {
 	Serial.print("Read sim value: ");
 	Serial.println(sim_module_version);
 	uint32_t temp = millis();
-	String buffer = "";
+	bool found = 0;
+	char myBuffer[200];
+	memset(myBuffer, 0, sizeof(myBuffer));
+	bool temperino = 1;
+	Serial1.flush();
 	if(sim_module_version == 0)
 	{
 		Serial1.begin(115200, SERIAL_8N1, 17, 16);
@@ -126,7 +128,7 @@ void MAKERphone::begin(bool splash) {
 		delay(100);
 		Serial1.println("AT");
 		temperino = 1;
-		while(buffer.indexOf("OK") == -1 && millis() - temp < 1500)
+		while(!found && millis() - temp < 1500)
 		{
 			if(temperino && millis() - temp > 1000)
 			{
@@ -135,21 +137,29 @@ void MAKERphone::begin(bool splash) {
 			}
 			if(Serial1.available())
 			{
-				buffer+=(char)Serial1.read();
-				Serial.println(buffer);
+				// buffer+=(char)Serial1.read();
+				char testArray[1];
+				testArray[0] = (char)Serial1.read();
+				strcat(myBuffer, testArray);
+				Serial.println(myBuffer);
+				// Serial.println(buffer);
+				Serial.println("-------------");
 			}
+			if(strstr(myBuffer, "OK") != nullptr)
+				found = 1;
 		}
-		if(buffer.indexOf("OK") == -1)
+		if(!found)
 		{
 			Serial.println("not sim7600");
 			Serial1.end();
 			temp = millis();
-			buffer = "";
+			memset(myBuffer, 0, sizeof(myBuffer));
 			Serial1.begin(9600, SERIAL_8N1, 17, 16);
+			pinMode(17,INPUT_PULLUP);
 			delay(100);
 			Serial1.println("AT");
 			temperino = 1;
-			while(buffer.indexOf("OK") == -1 && millis() - temp < 1500)
+			while(!found && millis() - temp < 1500)
 			{
 				if(temperino && millis() - temp > 1000)
 				{
@@ -158,11 +168,18 @@ void MAKERphone::begin(bool splash) {
 				}
 				if(Serial1.available())
 				{
-					buffer+=(char)Serial1.read();
-					Serial.println(buffer);
+					// buffer+=(char)Serial1.read();
+					char testArray[1];
+					testArray[0] = (char)Serial1.read();
+					strcat(myBuffer, testArray);
+					Serial.println(myBuffer);
+					// Serial.println(buffer);
+					Serial.println("-------------");
 				}
+				if(strstr(myBuffer, "OK") != nullptr)
+					found = 1;
 			}
-			if(buffer.indexOf("OK") != -1)
+			if(found)
 				sim_module_version = 1; //SIM800
 			else
 			{
@@ -181,7 +198,7 @@ void MAKERphone::begin(bool splash) {
 		delay(100);
 		Serial1.println("AT");
 		temperino = 1;
-		while(buffer.indexOf("OK") == -1 && millis() - temp < 1500)
+		while(!found && millis() - temp < 1500)
 		{
 			if(temperino && millis() - temp > 1000)
 			{
@@ -190,21 +207,29 @@ void MAKERphone::begin(bool splash) {
 			}
 			if(Serial1.available())
 			{
-				buffer+=(char)Serial1.read();
-				Serial.println(buffer);
+				// buffer+=(char)Serial1.read();
+				char testArray[1];
+				testArray[0] = (char)Serial1.read();
+				strcat(myBuffer, testArray);
+				Serial.println(myBuffer);
+				// Serial.println(buffer);
+				Serial.println("-------------");
 			}
+			if(strstr(myBuffer, "OK") != nullptr)
+				found = 1;
 		}
-		if(buffer.indexOf("OK") == -1)
+		if(!found)
 		{
 			Serial.println("not sim800");
 			Serial1.end();
 			temp = millis();
-			buffer = "";
+			memset(myBuffer, 0, sizeof(myBuffer));
 			Serial1.begin(115200, SERIAL_8N1, 17, 16);
+			pinMode(17,INPUT_PULLUP);
 			delay(100);
 			Serial1.println("AT");
 			temperino = 1;
-			while(buffer.indexOf("OK") == -1 && millis() - temp < 1500)
+			while(!found && millis() - temp < 1500)
 			{
 				if(temperino && millis() - temp > 1000)
 				{
@@ -213,11 +238,18 @@ void MAKERphone::begin(bool splash) {
 				}
 				if(Serial1.available())
 				{
-					buffer+=(char)Serial1.read();
-					Serial.println(buffer);
+					// buffer+=(char)Serial1.read();
+					char testArray[1];
+					testArray[0] = (char)Serial1.read();
+					strcat(myBuffer, testArray);
+					Serial.println(myBuffer);
+					// Serial.println(buffer);
+					Serial.println("-------------");
 				}
+				if(strstr(myBuffer, "OK") != nullptr)
+					found = 1;
 			}
-			if(buffer.indexOf("OK") != -1)
+			if(found)
 				sim_module_version = 0; //SIM7600
 			else
 			{
@@ -241,6 +273,7 @@ void MAKERphone::begin(bool splash) {
 	else if(sim_module_version == 0)
 	{
 		Serial1.begin(115200, SERIAL_8N1, 17, 16);
+		pinMode(17,INPUT_PULLUP);
 		micGain = 8;
 	}
 	if(sim_module_version != 255)
@@ -255,6 +288,7 @@ void MAKERphone::begin(bool splash) {
 				Serial1.println("AT+IPR=9600");
 				Serial1.end();
 				Serial1.begin(9600, SERIAL_8N1, 17, 16);
+				pinMode(17,INPUT_PULLUP);
 			}
 			sim_module_version = 1;
 		}
