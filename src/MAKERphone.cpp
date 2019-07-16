@@ -27,6 +27,7 @@ uint32_t voltageSum = 0;
 uint16_t voltageSample = 0;
 volatile double voltage = 3700;
 uint16_t measuringCounter = 0;
+bool clockFallback = 1;
 void Task1code( void * pvParameters ){
 	while (true)
 		updateWav();
@@ -36,7 +37,7 @@ String MAKERphone::waitForOK()
 	String buffer = "";
 	char c;
 	uint32_t temp = millis();
-	while(buffer.indexOf("OK") == -1 && millis() - temp < 2000)
+	while(buffer.indexOf("OK") == -1 && buffer.indexOf("ERROR") == -1 && millis() - temp < 2000)
 		if(Serial1.available())
 		{
 			c = Serial1.read();
@@ -114,55 +115,123 @@ void MAKERphone::begin(bool splash) {
 	}
 	firmware_version = EEPROM.readUInt(FIRMWARE_VERSION_ADDRESS);
 	sim_module_version = EEPROM.readByte(GSM_MODULE_ADDRESS);
+	Serial.print("Read sim value: ");
+	Serial.println(sim_module_version);
 	uint32_t temp = millis();
 	String buffer = "";
-	Serial1.begin(115200, SERIAL_8N1, 17, 16);
-	pinMode(17,INPUT_PULLUP);
-	Serial1.println("AT");
-	while(buffer.indexOf("OK") == -1 && millis() - temp < 1500)
+	if(sim_module_version == 0)
 	{
-		if(Serial1.available())
-		{
-			buffer+=(char)Serial1.read();
-			Serial.println(buffer);
-		}
-	}
-	if(buffer.indexOf("OK") == -1)
-	{
-		Serial1.end();
-		temp = millis();
-		buffer = "";
-		Serial1.begin(9600, SERIAL_8N1, 17, 16);
+		Serial1.begin(115200, SERIAL_8N1, 17, 16);
 		pinMode(17,INPUT_PULLUP);
+		delay(100);
 		Serial1.println("AT");
+		temperino = 1;
 		while(buffer.indexOf("OK") == -1 && millis() - temp < 1500)
 		{
-
+			if(temperino && millis() - temp > 1000)
+			{
+				Serial1.println("AT");
+				temperino = 0;
+			}
 			if(Serial1.available())
 			{
 				buffer+=(char)Serial1.read();
 				Serial.println(buffer);
 			}
 		}
-		if(buffer.indexOf("OK") != -1)
-			sim_module_version = 1; //SIM800
-		else
+		if(buffer.indexOf("OK") == -1)
 		{
+			Serial.println("not sim7600");
 			Serial1.end();
-			sim_module_version = 255; //NO SIM MODULE
+			temp = millis();
+			buffer = "";
+			Serial1.begin(9600, SERIAL_8N1, 17, 16);
+			delay(100);
+			Serial1.println("AT");
+			temperino = 1;
+			while(buffer.indexOf("OK") == -1 && millis() - temp < 1500)
+			{
+				if(temperino && millis() - temp > 1000)
+				{
+					Serial1.println("AT");
+					temperino = 0;
+				}
+				if(Serial1.available())
+				{
+					buffer+=(char)Serial1.read();
+					Serial.println(buffer);
+				}
+			}
+			if(buffer.indexOf("OK") != -1)
+				sim_module_version = 1; //SIM800
+			else
+			{
+				Serial.println("not sim800");
+				sim_module_version = 255; //NO SIM MODULE
+			}
+			
 		}
-		
+		else
+			sim_module_version = 0; //SIM7600
 	}
 	else
-		sim_module_version = 0; //SIM7600
-
-	if(EEPROM.readByte(GSM_MODULE_ADDRESS) != sim_module_version)
 	{
-		Serial.println("written module type");
-		EEPROM.writeByte(GSM_MODULE_ADDRESS, sim_module_version);
-		EEPROM.commit();
-	}
+		Serial1.begin(9600, SERIAL_8N1, 17, 16);
+		pinMode(17,INPUT_PULLUP);
+		delay(100);
+		Serial1.println("AT");
+		temperino = 1;
+		while(buffer.indexOf("OK") == -1 && millis() - temp < 1500)
+		{
+			if(temperino && millis() - temp > 1000)
+			{
+				Serial1.println("AT");
+				temperino = 0;
+			}
+			if(Serial1.available())
+			{
+				buffer+=(char)Serial1.read();
+				Serial.println(buffer);
+			}
+		}
+		if(buffer.indexOf("OK") == -1)
+		{
+			Serial.println("not sim800");
+			Serial1.end();
+			temp = millis();
+			buffer = "";
+			Serial1.begin(115200, SERIAL_8N1, 17, 16);
+			delay(100);
+			Serial1.println("AT");
+			temperino = 1;
+			while(buffer.indexOf("OK") == -1 && millis() - temp < 1500)
+			{
+				if(temperino && millis() - temp > 1000)
+				{
+					Serial1.println("AT");
+					temperino = 0;
+				}
+				if(Serial1.available())
+				{
+					buffer+=(char)Serial1.read();
+					Serial.println(buffer);
+				}
+			}
+			if(buffer.indexOf("OK") != -1)
+				sim_module_version = 0; //SIM7600
+			else
+			{
+				Serial.println("not sim7600");
 
+				sim_module_version = 255; //NO SIM MODULE
+			}
+		}
+		else
+			sim_module_version = 1; //SIM800
+	}
+	
+	
+	Serial1.end();
 	if(sim_module_version == 1)
 	{
 		Serial1.begin(9600, SERIAL_8N1, 17, 16);
@@ -170,8 +239,34 @@ void MAKERphone::begin(bool splash) {
 		micGain = 15;
 	}
 	else if(sim_module_version == 0)
+	{
+		Serial1.begin(115200, SERIAL_8N1, 17, 16);
 		micGain = 8;
-		
+	}
+	if(sim_module_version != 255)
+	{
+		Serial1.println("ATI");
+		String temp = waitForOK();
+		Serial.println(temp);
+		if(temp.indexOf("SIM800") != -1)
+		{
+			if(sim_module_version == 0)
+			{
+				Serial1.println("AT+IPR=9600");
+				Serial1.end();
+				Serial1.begin(9600, SERIAL_8N1, 17, 16);
+			}
+			sim_module_version = 1;
+		}
+		else if(temp.indexOf("SIM7600") != -1)
+			sim_module_version = 0;
+	}
+	if(EEPROM.readByte(GSM_MODULE_ADDRESS) != sim_module_version)
+	{
+		Serial.println("written module type");
+		EEPROM.writeByte(GSM_MODULE_ADDRESS, sim_module_version);
+		EEPROM.commit();
+	}
 	Serial.print("MODULE TYPE: ");
 	Serial.println(sim_module_version);
 
@@ -252,12 +347,15 @@ void MAKERphone::begin(bool splash) {
 			Serial1.println(F("AT+CRSL=100"));
 			Serial1.println(F("AT+CLVL=10"));
 			Serial1.println(F("AT+CLTS=1")); //Enable local Timestamp mode (used for syncrhonising RTC with GSM time
+			Serial1.println(F("AT+IPR=9600"));
 		}
 		else if(sim_module_version == 0)
 		{
 			Serial1.println("AT+COUTGAIN=8");
 			waitForOK();
 			Serial1.println("AT+CVHU=0");
+			waitForOK();
+			Serial1.println("AT+CTZU=1");
 			waitForOK();
 		}
 		waitForOK();
@@ -464,7 +562,20 @@ bool MAKERphone::update() {
 					{
 						if (clockYear%100 == 4 || clockYear%100 == 80 || clockMonth == 0 || clockMonth > 12 ||
 						clockHour > 24 || clockMinute >= 60)
+						{
+							// Serial1.println("AT+CNETSTOP");
+							// waitForOK();
+							if(clockFallback)
+							{
+								Serial1.println("AT+CNMP=13");
+								waitForOK();
+								Serial1.println("AT+CNETSTART");
+								waitForOK();
+							}
+							clockFallback = 0;
 							Serial1.println("AT+CCLK?");
+							// waitForOK();
+						}
 						else
 							refreshMillis = millis() + 2000;
 					}
@@ -494,6 +605,8 @@ bool MAKERphone::update() {
 			updateBuffer += c;
 			Serial.println("--------------");
 			Serial.println(updateBuffer);
+			if(updateBuffer.indexOf("\r", updateBuffer.indexOf("OK")) != -1)
+				updateBuffer = "";
 			
 			if (simInserted && !airplaneMode)
 			{
@@ -553,7 +666,13 @@ bool MAKERphone::update() {
 						DateTime now = DateTime(clockYear, clockMonth, clockDay,
 						clockHour, clockMinute, clockSecond);
 						RTC.adjust(now);
-						// Serial.println(F("\nRTC TIME UPDATE OVER GSM DONE!"));
+						if (clockYear%100 != 4 && clockYear%100 != 80 && clockMonth != 0 && clockMonth < 13 &&
+						clockHour < 25 && clockMinute < 60)
+						{
+							Serial1.println("AT+CNMP=2");
+							clockFallback = 1;
+						}
+						Serial.println(F("\nRTC TIME UPDATE OVER GSM DONE!"));
 					}
 
 			}
@@ -619,8 +738,8 @@ bool MAKERphone::update() {
 		String temp = "";
 		long long curr_millis = millis();
 
-		while ((temp.indexOf("\r", temp.indexOf("+CLCC:")) == -1 || temp.indexOf("\r", temp.indexOf("+CMT:") == -1)
-		|| temp.indexOf("\r", temp.indexOf("1,4,0,0,")) == -1 ) && millis() - curr_millis < 500)
+		while((temp.indexOf("\r", temp.indexOf("+CMT:") == -1) || temp.indexOf("\r", temp.indexOf("1,4,0,0,")) == -1)
+		 && millis() - curr_millis < 500)
 		{
 			if(Serial1.available())
 			{
@@ -941,6 +1060,12 @@ void MAKERphone::loader()
 	ESP.restart();
 }
 void MAKERphone::updateTimeGSM() {
+	if(sim_module_version == 0)
+	{
+		Serial1.println("AT+CNETSTOP");
+		Serial1.println("AT+CNMP=13");
+		Serial1.println("AT+CNETSTART");
+	}
 	Serial1.write("AT+CCLK?\r");
 	//Serial1.flush();
 	//delay(500);
@@ -3507,7 +3632,7 @@ void MAKERphone::shutdownPopup(bool animation)
 				if(sim_module_version == 1)
 					delay(1500);
 				else if(sim_module_version == 0)
-					delay(4000);
+					delay(22000);
 				ESP.restart();
 			}
 			else
@@ -3560,7 +3685,7 @@ void MAKERphone::alarmPopup(bool animation)
 	// 		// delayMicroseconds(750);
 	// 	}
 	// }
-	MPTrack *temp;
+	MPTrack *temp = nullptr;
 	updateTimeRTC();
 	DateTime now = RTC.now();
 	char buf[100];
