@@ -370,7 +370,7 @@ void MAKERphone::begin(bool splash) {
 	}
 	updateTimeRTC();
 	
-	if(simInserted)
+	if(sim_module_version != 255)
 	{
 		Serial.println("INSERTED");
 		// updateTimeGSM();
@@ -1040,8 +1040,7 @@ void MAKERphone::sleep() {
 	}
 	sleepTimer = millis();
 	Serial.println("buttons wakuep");
-	if(simInserted)
-		digitalWrite(SIM800_DTR, 0);
+	digitalWrite(SIM800_DTR, 0);
 	voltage = batteryVoltage;
 	measuringCounter = 0;
 	voltageSum = 0;
