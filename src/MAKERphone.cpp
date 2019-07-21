@@ -335,9 +335,9 @@ void MAKERphone::begin(bool splash) {
 	}
 	updateTimeRTC();
 	
-	if(simInserted)
+	if(sim_module_version != 255)
 	{
-		Serial.println("INSERTED");
+		Serial.println("module inserted");
 		// updateTimeGSM();
 		Serial1.println(F("AT+CMEE=2"));
 		waitForOK();
@@ -880,7 +880,7 @@ void MAKERphone::ledcAnalogWrite(uint8_t channel, uint32_t value, uint32_t value
 	ledcWrite(channel, duty);
 }
 void MAKERphone::sleep() {
-	if(simInserted)
+	if(sim_module_version != 255)
 	{
 		digitalWrite(SIM800_DTR, 1);
 	}
@@ -1002,7 +1002,7 @@ void MAKERphone::sleep() {
 	}
 	sleepTimer = millis();
 	Serial.println("buttons wakuep");
-	if(simInserted)
+	if(sim_module_inserted != 255)
 		digitalWrite(SIM800_DTR, 0);
 	voltage = batteryVoltage;
 	measuringCounter = 0;
@@ -1758,11 +1758,11 @@ void MAKERphone::checkSim()
 {
 	String input = "";
 	Serial1.println(F("AT+CPIN?"));
-	// input = waitForOK();
+	input = waitForOK();
 	uint32_t timeoutMillis = millis();
 
-	while (input.indexOf("+CPIN:") == -1 && input.indexOf("NOT INSERTED", input.indexOf("+CPIN")) == -1
-	&& input.indexOf("not inserted", input.indexOf("+CPIN")) == -1) {
+	while (input.indexOf("+CPIN:") == -1 && input.indexOf("NOT INSERTED") == -1
+	&& input.indexOf("not inserted") == -1) {
 		if(millis() - timeoutMillis >= 2500)
 		{
 			simInserted = 0;
@@ -2496,7 +2496,7 @@ void MAKERphone::applySettings()
 		else
 			ringtone->setVolume(map(ringVolume, 0, 14, 100, 300));
 	}
-	if(simInserted)
+	if(sim_module_version != 255)
 	{
 		if(sim_module_version == 1)
 		{
@@ -2513,7 +2513,7 @@ void MAKERphone::applySettings()
 		
 		if(airplaneMode)
 			Serial1.println("AT+CFUN=4");
-		else if(simInserted)
+		else
 			Serial1.println("AT+CFUN=1");
 	}
 }
