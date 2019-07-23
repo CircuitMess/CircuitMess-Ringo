@@ -1002,7 +1002,7 @@ void MAKERphone::sleep() {
 	}
 	sleepTimer = millis();
 	Serial.println("buttons wakuep");
-	if(sim_module_inserted != 255)
+	if(sim_module_version != 255)
 		digitalWrite(SIM800_DTR, 0);
 	voltage = batteryVoltage;
 	measuringCounter = 0;
