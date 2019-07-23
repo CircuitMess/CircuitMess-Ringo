@@ -37,11 +37,12 @@ String MAKERphone::waitForOK()
 	String buffer = "";
 	char c;
 	uint32_t temp = millis();
-	while(buffer.indexOf("OK") == -1 && buffer.indexOf("ERROR") == -1 && millis() - temp < 2000)
+	while(buffer.indexOf("OK") == -1 && millis() - temp < 2000)
 		if(Serial1.available())
 		{
 			c = Serial1.read();
 			buffer+=c;
+			// Serial.println(buffer);
 		}
 	return buffer;
 		
@@ -338,6 +339,11 @@ void MAKERphone::begin(bool splash) {
 	if(sim_module_version != 255)
 	{
 		Serial.println("module inserted");
+		if(simInserted)
+			Serial.println("SIM INSERTED");
+		else
+			Serial.println("SIM NOT INSERTED");
+
 		// updateTimeGSM();
 		Serial1.println(F("AT+CMEE=2"));
 		waitForOK();
@@ -564,14 +570,14 @@ bool MAKERphone::update() {
 						{
 							// Serial1.println("AT+CNETSTOP");
 							// waitForOK();
-							if(clockFallback)
-							{
-								Serial1.println("AT+CNMP=13");
-								waitForOK();
-								Serial1.println("AT+CNETSTART");
-								waitForOK();
-							}
-							clockFallback = 0;
+							// if(clockFallback)
+							// {
+							// 	Serial1.println("AT+CNMP=13");
+							// 	waitForOK();
+							// 	Serial1.println("AT+CNETSTART");
+							// 	waitForOK();
+							// }
+							// clockFallback = 0;
 							Serial1.println("AT+CCLK?");
 							// waitForOK();
 						}
@@ -668,7 +674,7 @@ bool MAKERphone::update() {
 						if (clockYear%100 != 4 && clockYear%100 != 80 && clockMonth != 0 && clockMonth < 13 &&
 						clockHour < 25 && clockMinute < 60)
 						{
-							Serial1.println("AT+CNMP=2");
+							// Serial1.println("AT+CNMP=2");
 							clockFallback = 1;
 						}
 						Serial.println(F("\nRTC TIME UPDATE OVER GSM DONE!"));
@@ -1056,12 +1062,12 @@ void MAKERphone::loader()
 	ESP.restart();
 }
 void MAKERphone::updateTimeGSM() {
-	if(sim_module_version == 0)
-	{
-		Serial1.println("AT+CNETSTOP");
-		Serial1.println("AT+CNMP=13");
-		Serial1.println("AT+CNETSTART");
-	}
+	// if(sim_module_version == 0)
+	// {
+	// 	Serial1.println("AT+CNETSTOP");
+	// 	Serial1.println("AT+CNMP=13");
+	// 	Serial1.println("AT+CNETSTART");
+	// }
 	Serial1.write("AT+CCLK?\r");
 	//Serial1.flush();
 	//delay(500);
@@ -1759,10 +1765,11 @@ void MAKERphone::checkSim()
 	String input = "";
 	Serial1.println(F("AT+CPIN?"));
 	input = waitForOK();
+	Serial.println(input);
 	uint32_t timeoutMillis = millis();
 
 	while (input.indexOf("+CPIN:") == -1 && input.indexOf("NOT INSERTED") == -1
-	&& input.indexOf("not inserted") == -1) {
+	&& input.indexOf("not inserted") == -1 && input.indexOf("ERROR") == -1) {
 		if(millis() - timeoutMillis >= 2500)
 		{
 			simInserted = 0;
@@ -1774,7 +1781,8 @@ void MAKERphone::checkSim()
 		Serial.println(input);
 	}
 	if (input.indexOf("NOT READY", input.indexOf("+CPIN:")) != -1 || (input.indexOf("ERROR") != -1 && input.indexOf("+CPIN:") == -1)
-		|| input.indexOf("NOT INSERTED") != -1 || input.indexOf("not inserted", input.indexOf("+CPIN")) != -1)
+		|| input.indexOf("NOT INSERTED") != -1 || input.indexOf("not inserted", input.indexOf("+CPIN")) != -1
+		|| input.indexOf("failure") != -1)
 		simInserted = 0;
 	else
 	{
