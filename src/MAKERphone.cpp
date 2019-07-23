@@ -1403,6 +1403,8 @@ void MAKERphone::incomingCall(String _serialData) //TODO
 		}
 		if(buffer.indexOf("OK", buffer.indexOf("AT+CMIC=")) != -1)
 			buffer = "";
+		if(buffer.indexOf("\r") != -1)
+			buffer = "";
 		Serial.println("----------");
 		Serial.println(buffer);
 		delay(1);
