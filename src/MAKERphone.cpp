@@ -1290,7 +1290,7 @@ void MAKERphone::incomingCall(String _serialData) //TODO
 				uint32_t curr_millis = millis();
 				buffer = "";
 				Serial1.println("ATH");
-				while (buffer.indexOf(",0,6,") == -1 && millis() - curr_millis < 2000){
+				while (buffer.indexOf(",1,6,") == -1 && millis() - curr_millis < 2000){
 					// Serial1.println("ATH");
 					buffer+=(char)Serial.read();
 				}
@@ -1719,7 +1719,7 @@ void MAKERphone::addCall(String number, uint32_t dateTime, int duration, uint8_t
 	Serial.print("Direction of call: "); Serial.println(direction);
 	if(file.size() < 2){
 		file.close();
-		jb.clear();
+		// jb.clear();
 		JsonArray& jarr = jb.createArray();
 		delay(10);
 		File file1 = SD.open("/.core/call_log.json", "w");
@@ -1732,7 +1732,7 @@ void MAKERphone::addCall(String number, uint32_t dateTime, int duration, uint8_t
 		}
 	}
 
-	jb.clear();
+	// jb.clear();
 	JsonArray& jarr = jb.parseArray(file);
 	file.close();
 
@@ -3454,7 +3454,7 @@ void MAKERphone::saveNotifications(bool debug)
 	const char * path = "/.core/notifications.json";
 	Serial.println("");
 	SD.remove(path);
-	jb.clear();
+	// jb.clear();
 	JsonArray& notifications = jb.createArray();
 	
 	if (notifications.success()) {
