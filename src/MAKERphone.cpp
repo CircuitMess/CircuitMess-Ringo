@@ -34,17 +34,19 @@ void Task1code( void * pvParameters ){
 }
 String MAKERphone::waitForOK()
 {
-	String buffer = "";
+	char buffer[200];
+	memset(buffer, 0, sizeof(buffer));
 	char c;
 	uint32_t temp = millis();
-	while(buffer.indexOf("OK") == -1 && millis() - temp < 2000)
+	while(strstr(buffer, "OK") == nullptr && strstr(buffer, "ERROR") == nullptr && millis() - temp < 2000)
 		if(Serial1.available())
 		{
 			c = Serial1.read();
-			buffer+=c;
-			// Serial.println(buffer);
+			// buffer+=c;
+			strncat(buffer, &c, 1);
+			Serial.println(buffer);
 		}
-	return buffer;
+	return String(buffer);
 		
 
 }
@@ -122,13 +124,13 @@ void MAKERphone::begin(bool splash) {
 	String buffer = "";
 	bool temperino = 1;
 	Serial1.flush();
-	if(sim_module_version == 0)
+	if(sim_module_version == 0) //SIM7600
 	{
 		Serial1.begin(115200, SERIAL_8N1, 17, 16);
 		delay(100);
 		Serial1.println("AT");
 		temperino = 1;
-		while(buffer.indexOf("OK") == -1 && millis() - temp < 1500)
+		while(buffer.indexOf("OK") == -1 && buffer.indexOf("RDY") == -1 && millis() - temp < 1500)
 		{
 			if(temperino && millis() - temp > 1000)
 			{
@@ -141,7 +143,7 @@ void MAKERphone::begin(bool splash) {
 				Serial.println(buffer);
 			}
 		}
-		if(buffer.indexOf("OK") == -1)
+		if(buffer.indexOf("OK") == -1 && buffer.indexOf("RDY") == -1)
 		{
 			Serial.println("not sim7600");
 			Serial1.end();
@@ -205,7 +207,7 @@ void MAKERphone::begin(bool splash) {
 			delay(100);
 			Serial1.println("AT");
 			temperino = 1;
-			while(buffer.indexOf("OK") == -1 && millis() - temp < 1500)
+			while(buffer.indexOf("OK") == -1 && buffer.indexOf("RDY") == -1 && millis() - temp < 1500)
 			{
 				if(temperino && millis() - temp > 1000)
 				{
@@ -218,7 +220,7 @@ void MAKERphone::begin(bool splash) {
 					Serial.println(buffer);
 				}
 			}
-			if(buffer.indexOf("OK") != -1)
+			if(buffer.indexOf("OK") != -1 || buffer.indexOf("RDY") != -1 )
 				sim_module_version = 0; //SIM7600
 			else
 			{
@@ -1215,7 +1217,7 @@ void MAKERphone::updateFromFS(String FilePath) {
 		Serial.println("Could not load update.bin from sd root");
 	}
 }
-void MAKERphone::incomingCall(String _serialData) //TODO
+void MAKERphone::incomingCall(String _serialData)
 {
   	bool state = 0;
 	String number = "";
@@ -1291,10 +1293,13 @@ void MAKERphone::incomingCall(String _serialData) //TODO
 				buffer = "";
 				Serial1.println("ATH");
 				buffer = waitForOK();
-				while (buffer.indexOf(",1,6,") == -1 && millis() - curr_millis < 2000){
-					// Serial1.println("ATH");
-					buffer+=(char)Serial.read();
-				}
+				Serial.println(buffer);
+				// while (buffer.indexOf(",1,6,") == -1 && millis() - curr_millis < 2000){
+				// 	Serial1.println("ATH");
+				// 	buffer = waitForOK();
+				// 	Serial.println(buffer);
+				// 	// buffer+=(char)Serial.read();
+				// }
 			}
 			
 			// update();
@@ -1517,11 +1522,12 @@ void MAKERphone::incomingCall(String _serialData) //TODO
 		{
 			Serial.println("B PRESSED");
 			Serial1.println("ATH");
-			waitForOK();
-			long long curr_millis = millis();
-			while (Serial1.readString().indexOf(",1,6,") == -1 && millis() - curr_millis < 2000){
-				Serial1.println("ATH");
-			}
+			buffer = waitForOK();
+			Serial.println(buffer);
+			// long long curr_millis = millis();
+			// while (Serial1.readString().indexOf(",1,6,") == -1 && millis() - curr_millis < 2000){
+			// 	Serial1.println("ATH");
+			// }
 			tft.fillRect(0,0,160,128,TFT_WHITE);
 			tft.setCursor(55, 9);
 			if (timeOffset == 0)
@@ -2521,6 +2527,7 @@ void MAKERphone::applySettings()
 				micGain = 8;
 			Serial1.print(F("AT+CMICGAIN="));
 			Serial1.println(micGain);
+			waitForOK();
 		}
 		
 		if(airplaneMode)
@@ -3637,10 +3644,29 @@ void MAKERphone::shutdownPopup(bool animation)
 				tft.setCursor(40, 51);
 				tft.print("Restarting...");
 				Serial1.println("AT+CFUN=1,1");
-				if(sim_module_version == 1)
-					delay(1500);
-				else if(sim_module_version == 0)
-					delay(22000);
+				char buffer[200];
+				bool found = 0;
+				memset(buffer, 0, sizeof(buffer));
+				Serial1.flush();
+				// if(sim_module_version == 1)
+				delay(1500);
+				if(sim_module_version == 0)
+				{
+					while(!found)
+					{
+						if(Serial1.available())
+						{
+
+							char test = (char)Serial1.read();
+							strncat(buffer, &test, 1);
+							Serial.println(buffer);
+						}
+
+						if(strstr(buffer, "RDY") != nullptr)
+							found = 1;
+					}
+					// delay(22000);
+				}
 				ESP.restart();
 			}
 			else
