@@ -25,6 +25,16 @@ void Buttons::update() {
 	delay(1);
 	button_b = ads.readADC_SingleEnded(2);
 
+	// Serial.print("Joystick X");
+	// Serial.println(joystick_x);
+	// Serial.print("Joystick Y");
+	// Serial.println(joystick_y);
+	// Serial.print("button a");
+	// Serial.println(button_a);
+	// Serial.print("Button B");
+	// Serial.println(button_b);
+	
+
 	bitWrite(buttonsData, 18, !(joystick_y < 100)); //BTN_UP
 	bitWrite(buttonsData, 19, !(joystick_y > 1000)); //BTN_DOWN
 	bitWrite(buttonsData, 20, !(joystick_x > 1000)); //BTN_LEFT

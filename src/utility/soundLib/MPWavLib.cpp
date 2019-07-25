@@ -148,6 +148,8 @@ int MPTrack::loadSample(unsigned short i)
 
 int MPTrack::fetchSample()
 {
+    if(digitalRead(33))
+        return 0;
     int p, sample;
     if(!playing)
         return 0;
@@ -185,6 +187,8 @@ bool MPTrack::loadSamples()
 
     if(trackFile.position()>this->size||reload==0)
     {
+        if(digitalRead(33))
+            return 0;
         while(reloadCo)
             vTaskDelay(100);
         reloadCo++;
@@ -198,11 +202,14 @@ bool MPTrack::loadSamples()
                 SD.end();           
                 //reload=reloadCo;
                 vTaskDelay(10);
-                while(!SD.begin(5, SPI, 8000000))
+                do
                 {
+                    if(digitalRead(33))
+                        return 0;
                     vTaskDelay(10);
                     Serial.println("errorb");
-                }
+
+                }while(!SD.begin(5, SPI, 8000000));
                 
                 while(!(trackFile = SD.open(this->trackPath, "r")))
                 {

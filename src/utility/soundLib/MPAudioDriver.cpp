@@ -89,7 +89,7 @@ void updateWav()
         (*((int*)(&dout[i*2])))=0;
         //(*((int*)(&dout[i*2])))=((*((int*)(&i2s_read_buff[i*2])))*2)/3;
         for(unsigned char tr=0;tr<MAX_TRACKS;tr++)
-        {    
+        {
             if(tracks[tr] != nullptr)
                 if(tracks[tr]->isPlaying())
                     (*((int*)(&dout[i*2])))+=(int)(tracks[tr]->fetchSample()*masterVolume);

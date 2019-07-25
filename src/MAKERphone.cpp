@@ -437,9 +437,9 @@ bool MAKERphone::update() {
 			removeTrack(ringtone);
 			ringtone = nullptr;
 		}
+		SD.end();
 
 		SDremovedPopup();
-		SD.end();
 		// initWavLib();
 	}
 	else if(!digitalRead(SD_INT) && !SDinsertedFlag && !SDerror)
@@ -760,7 +760,7 @@ bool MAKERphone::update() {
 		long long curr_millis = millis();
 
 		while((temp.indexOf("\r", temp.indexOf("+CMT:") == -1) || temp.indexOf("\r", temp.indexOf("1,4,0,0,")) == -1
-		|| temp.indexOf("RING") != -1) && millis() - curr_millis < 500)
+		|| temp.indexOf("RING") == -1) && millis() - curr_millis < 500)
 		{
 			if(Serial1.available())
 			{
@@ -769,7 +769,6 @@ bool MAKERphone::update() {
 				Serial.println(temp);
 				Serial.println("-----------------");
 			}
-
 		}
 		if(temp.indexOf("\r", temp.indexOf("1,4,0,0,")) != -1 || temp.indexOf("RING") != -1)
 		{
@@ -1294,6 +1293,9 @@ void MAKERphone::incomingCall(String _serialData)
 				Serial1.println("ATH");
 				buffer = waitForOK();
 				Serial.println(buffer);
+				while(!digitalRead(SIM_INT))
+					if(Serial1.available())
+						Serial1.read();
 				// while (buffer.indexOf(",1,6,") == -1 && millis() - curr_millis < 2000){
 				// 	Serial1.println("ATH");
 				// 	buffer = waitForOK();
@@ -1308,8 +1310,7 @@ void MAKERphone::incomingCall(String _serialData)
 				addCall(number, RTC.now().unixtime(), tmp_time, 0);
 			if(localBuffer.indexOf(",1,6,") != -1)
 				addNotification(1, number, RTC.now());
-
-			delay(1000);
+			// delay(1000);
 			return;
 		}
 
