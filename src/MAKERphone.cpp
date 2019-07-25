@@ -757,8 +757,8 @@ bool MAKERphone::update() {
 		String temp = "";
 		long long curr_millis = millis();
 
-		while((temp.indexOf("\r", temp.indexOf("+CMT:") == -1) || temp.indexOf("\r", temp.indexOf("1,4,0,0,")) == -1)
-		 && millis() - curr_millis < 500)
+		while((temp.indexOf("\r", temp.indexOf("+CMT:") == -1) || temp.indexOf("\r", temp.indexOf("1,4,0,0,")) == -1
+		|| temp.indexOf("RING") != -1) && millis() - curr_millis < 500)
 		{
 			if(Serial1.available())
 			{
@@ -769,7 +769,7 @@ bool MAKERphone::update() {
 			}
 
 		}
-		if(temp.indexOf("+CLCC:") != -1 || temp.indexOf("RING") != -1)
+		if(temp.indexOf("\r", temp.indexOf("1,4,0,0,")) != -1 || temp.indexOf("RING") != -1)
 		{
 			inCall = 1;
 			incomingCall(temp);
@@ -1290,6 +1290,7 @@ void MAKERphone::incomingCall(String _serialData) //TODO
 				uint32_t curr_millis = millis();
 				buffer = "";
 				Serial1.println("ATH");
+				buffer = waitForOK();
 				while (buffer.indexOf(",1,6,") == -1 && millis() - curr_millis < 2000){
 					// Serial1.println("ATH");
 					buffer+=(char)Serial.read();
@@ -1516,6 +1517,7 @@ void MAKERphone::incomingCall(String _serialData) //TODO
 		{
 			Serial.println("B PRESSED");
 			Serial1.println("ATH");
+			waitForOK();
 			long long curr_millis = millis();
 			while (Serial1.readString().indexOf(",1,6,") == -1 && millis() - curr_millis < 2000){
 				Serial1.println("ATH");
