@@ -111,8 +111,8 @@ extern HardwareSerial Serial1;
 #define LEDC_BASE_FREQ  5000 // use 5000 Hz as a LEDC base frequencyF
 
 // capacity = JSON_ARRAY_SIZE(number_of_contacts) + number_of_contacts*JSON_OBJECT_SIZE(2);
-// The following size is calculated of 100 contracts and the formula is ^
-#define capacity 5208
+// The following size is calculated of 100 contacts and the formula is ^
+#define capacity 8000
 #define number_of_contacts 100
 
 #define FIRMWARE_VERSION_ADDRESS 0

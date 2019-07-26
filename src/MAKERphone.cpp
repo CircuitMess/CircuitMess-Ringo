@@ -42,9 +42,8 @@ String MAKERphone::waitForOK()
 		if(Serial1.available())
 		{
 			c = Serial1.read();
-			// buffer+=c;
 			strncat(buffer, &c, 1);
-			Serial.println(buffer);
+			// Serial.println(buffer);
 		}
 	return String(buffer);
 }
@@ -778,17 +777,22 @@ bool MAKERphone::update() {
 	if(!digitalRead(SIM_INT) && !inCall)
 	{
 		String temp = "";
-		long long curr_millis = millis();
-
-		while((temp.indexOf("\r", temp.indexOf("+CMT:") == -1) || temp.indexOf("\r", temp.indexOf("1,4,0,0,")) == -1
-		|| temp.indexOf("RING") == -1) && millis() - curr_millis < 500)
+		uint32_t curr_millis = millis();
+		int32_t helper = -1;
+		while((temp.indexOf("\r", temp.indexOf("\r", helper + 1) + 1) == -1
+		|| temp.indexOf("\r", helper + 1) == -1 || helper == -1)
+		&& temp.indexOf("\r", temp.indexOf("1,4,0,0,")) == -1
+		&& temp.indexOf("RING") == -1 && millis() - curr_millis < 500)
 		{
 			if(Serial1.available())
 			{
+				curr_millis = millis();
 				char c = Serial1.read();
 				temp += c;
 				Serial.println(temp);
 				Serial.println("-----------------");
+				helper = temp.indexOf("+CMT:");
+				Serial.println(helper);
 			}
 		}
 		if(temp.indexOf("\r", temp.indexOf("1,4,0,0,")) != -1 || temp.indexOf("RING") != -1)
@@ -1677,6 +1681,8 @@ void MAKERphone::incomingMessage(String _serialData)
 	helper+=number.length() + 1;
 	helper = _serialData.indexOf("\"\r", helper);
 	String text = _serialData.substring(helper + 3, _serialData.indexOf("\r", helper + 2));
+	JsonArray& jarr = jb.createArray();
+	bool fullStack = 0;
 	if(SDinsertedFlag)
 	{
 		File file = SD.open("/.core/messages.json", "r");
@@ -1693,6 +1699,7 @@ void MAKERphone::incomingMessage(String _serialData)
 			file = SD.open("/.core/messages.json", "r");
 			while(!file)
 				Serial.println("Messages ERROR");
+			jb.clear();
 		}
 		jb.clear();
 		JsonArray& jarr = jb.parseArray(file);
@@ -1705,10 +1712,11 @@ void MAKERphone::incomingMessage(String _serialData)
 		}
 		else
 		{
+			if(jarr.size() > 34)
+				fullStack = 1;
 			saveMessage(text, number, 0, 1, &jarr);
 			addNotification(2, number, RTC.now());
 		}
-
 		file.close();
 	}
 	
@@ -1747,7 +1755,103 @@ void MAKERphone::incomingMessage(String _serialData)
 	while(!buttons.released(BTN_A))
 	{
 		updateNotificationSound();
+		if(!digitalRead(SIM_INT) && !inCall)
+		{
+			String temp = "";
+			long long curr_millis = millis();
+
+			while((temp.indexOf("\r", temp.indexOf("\r", helper + 1) + 1) == -1
+			|| temp.indexOf("\r", helper + 1) == -1 || helper == -1)
+			&& temp.indexOf("\r", temp.indexOf("1,4,0,0,")) == -1
+			&& millis() - curr_millis < 500)
+			{ 
+				if(Serial1.available())
+				{
+					curr_millis = millis();
+					char c = Serial1.read();
+					temp += c;
+					Serial.println(temp);
+					Serial.println("-----------------");
+					helper = temp.indexOf("+CMT:");
+					Serial.println(helper);
+				}
+			}
+			if(temp.indexOf("\r", temp.indexOf("1,4,0,0,")) != -1)
+			{
+				inCall = 1;
+				incomingCall(temp);
+				inCall = 0;
+				break;
+			}
+			else if(temp.indexOf("+CMT:") != -1)
+			{
+				playNotificationSound(notification);
+				incomingMessage(temp);
+				break;
+			}
+		}
 		buttons.update();
+	}
+	if(fullStack)
+	{
+		tft.setTextColor(TFT_BLACK);
+		tft.fillRect(0,0,160,128,TFT_WHITE);
+		tft.setTextFont(2);
+		tft.setTextSize(1);
+		tft.setCursor(10, 30);
+		tft.print("Couldn't save message!");
+		tft.setCursor(35,50);
+		tft.print("No more space");
+		tft.setCursor(10, 70);
+		tft.print("Deleting oldest SMS...");
+		uint32_t tempMillis = millis();
+		while(millis() < tempMillis + 2000)
+		{
+			buttons.update();
+			if(buttons.pressed(BTN_A) || buttons.pressed(BTN_B))
+			{
+				while(!buttons.released(BTN_A) && !buttons.released(BTN_B))
+				{
+					if(!digitalRead(SIM_INT) && !inCall)
+					{
+						String temp = "";
+						long long curr_millis = millis();
+
+						while((temp.indexOf("\r", temp.indexOf("\r", helper + 1) + 1) == -1
+						|| temp.indexOf("\r", helper + 1) == -1 || helper == -1)
+						&& temp.indexOf("\r", temp.indexOf("1,4,0,0,")) == -1
+						&& millis() - curr_millis < 500)
+						{ 
+							if(Serial1.available())
+							{
+								curr_millis = millis();
+								char c = Serial1.read();
+								temp += c;
+								Serial.println(temp);
+								Serial.println("-----------------");
+								helper = temp.indexOf("+CMT:");
+								Serial.println(helper);
+							}
+						}
+						if(temp.indexOf("\r", temp.indexOf("1,4,0,0,")) != -1)
+						{
+							inCall = 1;
+							incomingCall(temp);
+							inCall = 0;
+							break;
+						}
+						else if(temp.indexOf("+CMT:") != -1)
+						{
+							playNotificationSound(notification);
+							incomingMessage(temp);
+							break;
+						}
+					}
+					buttons.update();
+				}
+				break;
+			}
+		}
 	}
 	newMessage = 1;
 	osc->setVolume(oscillatorVolumeList[mediaVolume]);
@@ -1791,6 +1895,13 @@ void MAKERphone::addCall(String number, uint32_t dateTime, int duration, uint8_t
 	file1.close();
 }
 void MAKERphone::saveMessage(String text, String number, bool isRead, bool direction, JsonArray *messages){
+	if(messages->size() > 34)
+	{
+		messages->remove(0);
+		File file = SD.open("/.core/messages.json", "w");
+		messages->prettyPrintTo(file);
+		file.close();
+	}
 	JsonObject& new_item = jb.createObject();
 	updateTimeRTC();
 	new_item["number"] = number;
@@ -3498,7 +3609,7 @@ void MAKERphone::saveNotifications(bool debug)
 	const char * path = "/.core/notifications.json";
 	Serial.println("");
 	SD.remove(path);
-	// jb.clear();
+	jb.clear();
 	JsonArray& notifications = jb.createArray();
 	
 	if (notifications.success()) {
@@ -3678,30 +3789,33 @@ void MAKERphone::shutdownPopup(bool animation)
 				tft.fillRect(12, 36, 138, 56, TFT_WHITE);
 				tft.setCursor(40, 51);
 				tft.print("Restarting...");
+				while(Serial1.available())
+					Serial1.read();
 				Serial1.println("AT+CFUN=1,1");
-				char buffer[200];
+				char buffer[300];
 				bool found = 0;
 				memset(buffer, 0, sizeof(buffer));
 				Serial1.flush();
-				// if(sim_module_version == 1)
+				// if(sim_module_version == 0)
+				uint32_t timer = millis();
 				delay(1500);
-				if(sim_module_version == 0)
+				// if(sim_module_version == 0)
+				// {
+				while(!found)
 				{
-					while(!found)
+					if(Serial1.available())
 					{
-						if(Serial1.available())
-						{
 
-							char test = (char)Serial1.read();
-							strncat(buffer, &test, 1);
-							Serial.println(buffer);
-						}
-
-						if(strstr(buffer, "RDY") != nullptr)
-							found = 1;
+						char test = (char)Serial1.read();
+						strncat(buffer, &test, 1);
+						Serial.println(buffer);
 					}
-					// delay(22000);
+
+					if(strstr(buffer, "RDY") != nullptr)
+						found = 1;
 				}
+					// delay(22000);
+				// }
 				ESP.restart();
 			}
 			else
