@@ -11,6 +11,7 @@ void Buttons::begin() {
 	for(int i = 0;i<16;i++) {
 		kpd.pin_mode(i, INPUT);
 	}
+	kpd.pin_write(14, 1);
 }
 
 void Buttons::update() {
@@ -46,13 +47,14 @@ void Buttons::update() {
 
 	for (uint8_t i = 0; i < NUM_BTN; i++) {
 		bool pressed;
-		if(i < 16) {
+		if(i == 14)
+			pressed = bitRead(tmp_value, i);
+		else if(i < 16)
 			pressed = !bitRead(tmp_value, i);
-		} else {
+		else
 			pressed = (buttonsData & (1 << i)) == 0;
-		}
-
-		if (pressed) { //if button pressed
+		if (pressed) //if button pressed
+		{
 			if (states[i] < 0xFFFE) { // we want 0xFFFE to be max value for the counter
 				states[i]++; //increase button hold time
 			}
@@ -60,7 +62,8 @@ void Buttons::update() {
 				states[i] = 1;
 			}
 		}
-		else {
+		else
+		{
 			if (states[i] == 0) { //button idle
 				continue;
 			}
