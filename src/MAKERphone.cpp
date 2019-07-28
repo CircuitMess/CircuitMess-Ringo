@@ -86,22 +86,22 @@ void MAKERphone::begin(bool splash) {
 	//Serial1.println(F("AT+CFUN=1,1"));
 	//Serial1.println("AT+CMEE=2");
 	//Serial1.println(F("AT+CPIN?"));
-	if (splash == 1) {
-		for (uint8_t i = 0; i < NUMPIXELS; i++) {
-			for (uint8_t x = 0; x <= 128; x += 2) {
-				leds[i] = CRGB(x, 0, 0);
-				delay(1);
-				FastLED.show();
-			}
-		}
-		for (uint8_t i = 0; i < NUMPIXELS; i++) {
-			for (int16_t x = 128; x >= 0; x -= 2) {
-				leds[i] = CRGB(x, 0, 0);
-				delay(1);
-				FastLED.show();
-			}
-		}
-	}
+	// if (splash == 1) {
+	// 	for (uint8_t i = 0; i < NUMPIXELS; i++) {
+	// 		for (uint8_t x = 0; x <= 128; x += 2) {
+	// 			leds[i] = CRGB(x, 0, 0);
+	// 			delay(1);
+	// 			FastLED.show();
+	// 		}
+	// 	}
+	// 	for (uint8_t i = 0; i < NUMPIXELS; i++) {
+	// 		for (int16_t x = 128; x >= 0; x -= 2) {
+	// 			leds[i] = CRGB(x, 0, 0);
+	// 			delay(1);
+	// 			FastLED.show();
+	// 		}
+	// 	}
+	// }
 	FastLED.clear();
 	buttons.begin();
 	RTC.begin();
@@ -323,17 +323,8 @@ void MAKERphone::begin(bool splash) {
 
 	
 
-	if (splash == 1)
-	{
-		display.fillScreen(TFT_RED);
-		display.pushSprite(0,0);
-		// while (!update());
-	}
-	else {
-		display.fillScreen(TFT_BLACK);
-		display.pushSprite(0,0);
-		// while (!update());
-	}
+	display.fillScreen(TFT_BLACK);
+	display.pushSprite(0,0);
 	//PWM SETUP FOR ESP32
 	delay(30);
 	ledcSetup(0, 2000, 8);
@@ -365,11 +356,10 @@ void MAKERphone::begin(bool splash) {
 
 	if (splash == 1)
 		splashScreen(); //Show the main splash screen
-	else if(sim_module_version != 255)
-	{
+	else
 		delay(500);
+	if(sim_module_version != 255)
 		checkSim();
-	}
 	updateTimeRTC();
 	
 	if(sim_module_version != 255)
@@ -833,13 +823,17 @@ bool MAKERphone::update() {
 	updateNotificationSound();
 
 	
-	if(HOME_POPUP_ENABLE && !inHomePopup && !inShutdownPopup)
+	if(buttons.released(13) && !inShutdownPopup)
 	{
-		if(buttons.released(13)) //BUTTONSREFRESH
+		if(HOME_POPUP_ENABLE && !inHomePopup)
 		{
 			inHomePopup = 1;
 			homePopup();
 			inHomePopup = 0;
+		}
+		else if(!HOME_POPUP_ENABLE)
+		{
+			homeButtonPressed = 1;
 		}
 	}
 	buttons.update();
@@ -885,44 +879,20 @@ bool MAKERphone::update() {
 
 }
 void MAKERphone::splashScreen() {
-	display.setFreeFont(TT1);
-	Serial1.println(F("AT+CPIN?"));
-	String input;
-	for (int y = -49; y < 1; y++)
+	for (int y = -35; y < -10; y++)
 	{
-		display.fillScreen(TFT_RED);
+		display.drawBitmap(0, y-1, splashScreenLogo, TFT_BLACK);
 		display.drawBitmap(0, y, splashScreenLogo, TFT_WHITE);
-		update();
-		while (Serial1.available())
-			input += (char)Serial1.read();
-
-		delay(20);
+		while(!update());
 	}
-	Serial.println(input);
-	delay(500);
+	delay(100);
 	display.setTextColor(TFT_WHITE);
-	display.setCursor(19, 54);
-	display.print("CircuitMess");
-	while (!update());
-	while (input.indexOf("+CPIN:") == -1 && input.indexOf("ERROR") == -1)
-	{
-		Serial1.println(F("AT+CPIN?"));
-		input = Serial1.readString();
-	}
-	Serial.println(input);
-	delay(5);
+	display.setTextFont(2);
+	display.setCursor(0,100);
+	display.printCenter("Loading...");
+	while(!update());
+	delay(750);
 
-	if (input.indexOf("NOT READY", input.indexOf("+CPIN:")) != -1 || input.indexOf("ERROR") != -1
-		|| input.indexOf("NOT INSERTED") != -1 )
-	{
-		simInserted = 0;
-	}
-	else
-	{
-		simInserted = 1;
-		if (input.indexOf("SIM PIN") != -1)
-			enterPin();
-	}
 }
 void MAKERphone::setResolution(bool res){
 	mp.resolutionMode=res;
@@ -956,57 +926,6 @@ void MAKERphone::sleep() {
 	tft.writecommand(16);//send 16 for sleep in, 17 for sleep out
 	esp_sleep_enable_timer_wakeup(SLEEP_WAKEUP_TIME * 1000000);
 
-	//Pinmodes to prevent current leakage
-	{
-		// pinMode(GPIO_NUM_33, INPUT);
-		// pinMode(GPIO_NUM_35, INPUT);
-		// pinMode(GPIO_NUM_5, INPUT);
-		// pinMode(GPIO_NUM_32, INPUT);
-		// pinMode(GPIO_NUM_27, INPUT);
-		// pinMode(GPIO_NUM_26, INPUT);
-		// pinMode(GPIO_NUM_0, INPUT);
-		// pinMode(GPIO_NUM_2, INPUT);
-		// pinMode(GPIO_NUM_4, INPUT);
-		// pinMode(GPIO_NUM_12, INPUT);
-		// pinMode(GPIO_NUM_13, INPUT);
-		// pinMode(GPIO_NUM_14, INPUT);
-		// pinMode(GPIO_NUM_15, INPUT);
-		// pinMode(GPIO_NUM_16, INPUT);
-		// pinMode(GPIO_NUM_17, INPUT);
-		// pinMode(GPIO_NUM_18, INPUT);
-		// pinMode(GPIO_NUM_19, INPUT);
-		// pinMode(GPIO_NUM_21, INPUT);
-		// pinMode(GPIO_NUM_22, INPUT);
-		// pinMode(GPIO_NUM_23, INPUT);
-		// pinMode(GPIO_NUM_36, INPUT);
-		// pinMode(GPIO_NUM_39, INPUT);
-		// pinMode(GPIO_NUM_34, INPUT);
-		// pinMode(GPIO_NUM_25, INPUT);
-		// rtc_gpio_isolate(GPIO_NUM_33);
-		// rtc_gpio_isolate(GPIO_NUM_35);
-		// rtc_gpio_isolate(GPIO_NUM_5);
-		// rtc_gpio_isolate(GPIO_NUM_32);
-		// rtc_gpio_isolate(GPIO_NUM_27);
-		// rtc_gpio_isolate(GPIO_NUM_26);
-		// rtc_gpio_isolate(GPIO_NUM_0);
-		// rtc_gpio_isolate(GPIO_NUM_2);
-		// rtc_gpio_isolate(GPIO_NUM_4);
-		// rtc_gpio_isolate(GPIO_NUM_12);
-		// rtc_gpio_isolate(GPIO_NUM_13);
-		// rtc_gpio_isolate(GPIO_NUM_14);
-		// rtc_gpio_isolate(GPIO_NUM_15);
-		// rtc_gpio_isolate(GPIO_NUM_16);
-		// rtc_gpio_isolate(GPIO_NUM_17);
-		// rtc_gpio_isolate(GPIO_NUM_18);
-		// rtc_gpio_isolate(GPIO_NUM_19);
-		// rtc_gpio_isolate(GPIO_NUM_21);
-		// rtc_gpio_isolate(GPIO_NUM_22);
-		// rtc_gpio_isolate(GPIO_NUM_23);
-		// rtc_gpio_isolate(GPIO_NUM_36);
-		// rtc_gpio_isolate(GPIO_NUM_39);
-		// rtc_gpio_isolate(GPIO_NUM_34);
-		// rtc_gpio_isolate(GPIO_NUM_25);
-	}
 	buttons.activateInterrupt();
 	uint8_t reason = 4;
 	vTaskSuspend(MeasuringTask);
