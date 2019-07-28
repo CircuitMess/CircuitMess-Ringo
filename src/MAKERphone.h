@@ -159,7 +159,7 @@ class MAKERphone:public Buttons, public DateTime
 	uint32_t textPointer = 0;
 	bool textLimitFlag = 0;
 	void loader();
-
+	void lockscreen();
 	void updateFromFS(String FilePath);
   	void performUpdate(Stream &updateSource, size_t updateSize);
 
@@ -316,7 +316,7 @@ class MAKERphone:public Buttons, public DateTime
 	uint8_t sim_module_version = 255; // 0 - SIM7600, 1 - SIM800
 	uint8_t oscillatorVolumeList[15] = {0,33,37,47,57,62,65,69,72,75,79,84,90,95,100};
 	String waitForOK();
-
+	bool exitedLockscreen = 0;
 
 	private:
 		MPTrack* ringtone = nullptr;
@@ -366,6 +366,7 @@ class MAKERphone:public Buttons, public DateTime
 		bool buttonsPressed = 0;
 		bool wokeWithPWRBTN = 0;
 		uint8_t alternatingRefresh = 1;
+		bool inLockScreen = 0;
 		// uint8_t oscillatorVolumeList[14] = {0,10,15,20,35,50,60,80,100,120,150,200,220,255};
 };
 #endif

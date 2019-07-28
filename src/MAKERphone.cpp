@@ -398,6 +398,8 @@ void MAKERphone::begin(bool splash) {
 			waitForOK();
 			Serial1.println("AT+CTZU=1");
 			waitForOK();
+			Serial1.println("AT+CNMP=2");
+			waitForOK();
 		}
 		waitForOK();
 		Serial1.println(F("AT+CMGF=1"));
@@ -454,6 +456,7 @@ void MAKERphone::begin(bool splash) {
 
 bool MAKERphone::update() {
 	newMessage = 0;
+	exitedLockscreen = 0;
 	if(digitalRead(SD_INT) && (SDinsertedFlag || (!SDinsertedFlag && SDerror)))
 	{
 		SDinsertedFlag = 0;
@@ -540,6 +543,11 @@ bool MAKERphone::update() {
 			buttons.update();
 			sleepTimer = millis();
 			sleep();
+			if(!inLockScreen)
+			{
+				lockscreen();
+				exitedLockscreen = 1;
+			}
 		}
 	}
 	else if((buttonsPressed || !digitalRead(BTN_INT) || inCall || inAlarmPopup) && sleepTime)
@@ -840,6 +848,11 @@ bool MAKERphone::update() {
 	{
 		buttons.update();
 		sleep();
+		if(!inLockScreen)
+		{
+			lockscreen();
+			exitedLockscreen = 1;
+		}
 	}
 	if(buttons.held(14, 40) && !inShutdownPopup && SHUTDOWN_POPUP_ENABLE && !wokeWithPWRBTN)
 	{
@@ -1069,6 +1082,177 @@ void MAKERphone::sleep() {
 	while(!update());
 	tft.writecommand(17);
 	delay(5);
+	if(!inLockScreen)
+	{
+		display.fillScreen(backgroundColors[backgroundIndex]);
+
+		display.setFreeFont(TT1);
+		display.setTextSize(6);
+		//Hour shadow
+		display.setTextColor(TFT_DARKGREY);
+		if (clockHour == 11)
+			display.setCursor(10*2, 28*2);
+		else if (clockHour % 10 == 1 || (int)clockHour / 10 == 1)
+			display.setCursor(7*2, 28*2);
+		else
+			display.setCursor(4*2, 28*2);
+		if (clockHour < 10)
+			display.print("0");
+		display.print(clockHour);
+
+		//minute shadow
+		display.setCursor(36*2, 28*2);
+		if (clockMinute < 10)
+			display.print("0");
+		display.print(clockMinute);
+
+		//Hour black
+		display.setTextColor(TFT_BLACK);
+		if (clockHour == 11)
+			display.setCursor(9*2, 27*2);
+		else if (clockHour % 10 == 1 || (int)clockHour / 10 == 1)
+			display.setCursor(6*2, 27*2);
+		else
+			display.setCursor(3*2, 27*2);
+		if (clockHour < 10)
+			display.print("0");
+		display.print(clockHour);
+
+		//Minute black
+		display.setCursor(35*2, 27*2);
+		if (clockMinute < 10)
+			display.print("0");
+		display.print(clockMinute);
+
+		display.setTextSize(1*2);
+		display.setCursor(60*2, 19*2);
+		display.setTextWrap(false);
+		if (clockDay < 10)
+			display.print("0");
+		display.print(clockDay);
+		display.print("/");
+		if (clockMonth < 10)
+			display.print("0");
+		display.print(clockMonth);
+		display.setCursor(62*2, 25*2);
+		display.print(clockYear);
+		/*display.setTextSize(2);
+		display.setCursor(10, 50);
+		display.print("12:00");*/
+		uint8_t helper = 11;
+		if(sim_module_version == 255)
+			helper = 1;
+		if (simInserted && !airplaneMode && sim_module_version != 255)
+		{
+			if (signalStrength <= 3)
+				display.drawBitmap(2, 2, noSignalIcon, TFT_BLACK, 2);
+			else if (signalStrength > 3 && signalStrength <= 10)
+				display.drawBitmap(2, 2, signalLowIcon, TFT_BLACK, 2);
+			else if (signalStrength > 10 && signalStrength <= 20)
+				display.drawBitmap(2, 2, signalHighIcon, TFT_BLACK, 2);
+			else if (signalStrength > 20 && signalStrength <= 31)
+				display.drawBitmap(2, 2, signalFullIcon, TFT_BLACK, 2);
+			else if (signalStrength == 99)
+				display.drawBitmap(2, 2, signalErrorIcon, TFT_BLACK, 2);
+		}
+		else if(!simInserted && !airplaneMode && sim_module_version != 255)
+			display.drawBitmap(2, 2, noSimIcon, TFT_BLACK, 2);
+		else if(airplaneMode)
+		{
+			display.drawBitmap(2, 2, airplaneModeIcon, TFT_BLACK, 2);
+		}
+		if (ringVolume == 0)
+		{
+			display.drawBitmap(helper*2, 2, silentModeIcon, TFT_BLACK, 2);
+			helper += 10;
+		}
+		//display.drawBitmap(31, 1, missedcall);
+		//display.drawBitmap(41, 1, newtext);
+		// if (!airplaneMode)
+		// {
+		// 	if (wifi == 1)
+		// 		display.drawBitmap(helper * 2, 2, wifiOnIcon, TFT_BLACK, 2);
+		// 	else
+		// 		display.drawBitmap(helper * 2, 2, wifiOffIcon, TFT_BLACK, 2);
+		// 	helper += 10;
+		// 	if (bt)
+		// 		display.drawBitmap(helper * 2, 2, BTonIcon, TFT_BLACK, 2);
+		// 	else
+		// 		display.drawBitmap(helper * 2, 2, BToffIcon, TFT_BLACK, 2);
+		// 	helper += 10;
+		// }
+		
+
+		if(!SDinsertedFlag)
+		{
+			display.drawBitmap(helper * 2, 2, noSDIcon, TFT_BLACK, 2);
+			helper+=10;
+		}
+		display.setTextFont(2);
+		display.setTextSize(1);
+		display.setCursor(helper*2, 4);
+		if(carrierName != "")
+		{
+			// display.setFreeFont(TT1);
+			// display.setTextSize(2);
+			// display.setCursor(helper*2, 15);
+
+			
+			display.print(carrierName);
+		}
+		else if(carrierName == "" && simInserted && !airplaneMode)
+			display.print("loading...");
+		else if(carrierName == "" && !simInserted && sim_module_version == 255)
+			display.print("No module");	
+
+		if (batteryVoltage > 4100)
+			display.drawBitmap(148, 2, batteryChargingIcon, TFT_BLACK, 2);
+			
+		else if (batteryVoltage <= 4100 && batteryVoltage >= 3850)
+			display.drawBitmap(148, 2, batteryFullIcon, TFT_BLACK, 2);
+
+		else if (batteryVoltage < 3850 && batteryVoltage >= 3750)
+			display.drawBitmap(148, 2, batteryHighIcon, TFT_BLACK, 2);
+
+		else if (batteryVoltage < 3750 && batteryVoltage >= 3650)
+			display.drawBitmap(148, 2, batteryMidIcon, TFT_BLACK, 2);
+
+		else if (batteryVoltage < 3650 && batteryVoltage >= 3600)
+			display.drawBitmap(148, 2, batteryLowIcon, TFT_BLACK, 2);
+
+		else if (batteryVoltage < 3600)
+			display.drawBitmap(148, 2, batteryEmptyIcon, TFT_BLACK, 2);
+
+		uint8_t temp = 0;
+		for(int i = 0; i< sizeof(notificationTypeList);i++)
+		{
+			if(notificationTypeList[i] == 0)
+			{
+				temp = i;
+				break;
+			}
+		}
+		if(temp > 0)
+			drawNotificationWindow(64,temp-1);
+		if(temp > 1)
+			drawNotificationWindow(88,temp-2);
+		display.setFreeFont(TT1);
+		display.setTextSize(4);
+		display.setCursor(2, 111);
+		display.setTextFont(2);
+		display.setTextSize(1);
+		display.setTextColor(TFT_BLACK);
+		display.print("Hold \"A\" to unlock");
+		display.setTextSize(6);
+		display.setTextColor(TFT_DARKGREY);
+		display.setFreeFont(TT1);
+		display.setCursor(58, 56);
+		display.print(":");
+		display.setTextColor(TFT_BLACK);
+		display.setCursor(56, 54);
+		display.print(":");
+		update();
+	}
 	display.pushSprite(0,0);
 	initWavLib();
 	
@@ -2357,7 +2541,274 @@ int MAKERphone::multi_tap(byte key)
 	}
 	return 0;
 }
+void MAKERphone::lockscreen() {
+	dataRefreshFlag = 1;
+    bool blinkState = 0;
+    // bool goOut = 0;
+	uint32_t elapsedMillis = millis();
+    uint32_t buttonHeld;
+	// FastLED.clear();
+	inLockScreen = 1;
+	while (1)
+	{
+		display.fillScreen(backgroundColors[backgroundIndex]);
 
+		display.setFreeFont(TT1);
+		display.setTextSize(6);
+		//Hour shadow
+		display.setTextColor(TFT_DARKGREY);
+		if (clockHour == 11)
+			display.setCursor(10*2, 28*2);
+		else if (clockHour % 10 == 1 || (int)clockHour / 10 == 1)
+			display.setCursor(7*2, 28*2);
+		else
+			display.setCursor(4*2, 28*2);
+		if (clockHour < 10)
+			display.print("0");
+		display.print(clockHour);
+
+		//minute shadow
+		display.setCursor(36*2, 28*2);
+		if (clockMinute < 10)
+			display.print("0");
+		display.print(clockMinute);
+
+		//Hour black
+		display.setTextColor(TFT_BLACK);
+		if (clockHour == 11)
+			display.setCursor(9*2, 27*2);
+		else if (clockHour % 10 == 1 || (int)clockHour / 10 == 1)
+			display.setCursor(6*2, 27*2);
+		else
+			display.setCursor(3*2, 27*2);
+		if (clockHour < 10)
+			display.print("0");
+		display.print(clockHour);
+
+		//Minute black
+		display.setCursor(35*2, 27*2);
+		if (clockMinute < 10)
+			display.print("0");
+		display.print(clockMinute);
+
+		display.setTextSize(1*2);
+		display.setCursor(60*2, 19*2);
+		display.setTextWrap(false);
+		if (clockDay < 10)
+			display.print("0");
+		display.print(clockDay);
+		display.print("/");
+		if (clockMonth < 10)
+			display.print("0");
+		display.print(clockMonth);
+		display.setCursor(62*2, 25*2);
+		display.print(clockYear);
+		/*display.setTextSize(2);
+		display.setCursor(10, 50);
+		display.print("12:00");*/
+		uint8_t helper = 11;
+		if(sim_module_version == 255)
+			helper = 1;
+		if (simInserted && !airplaneMode && sim_module_version != 255)
+		{
+			if (signalStrength <= 3)
+				display.drawBitmap(2, 2, noSignalIcon, TFT_BLACK, 2);
+			else if (signalStrength > 3 && signalStrength <= 10)
+				display.drawBitmap(2, 2, signalLowIcon, TFT_BLACK, 2);
+			else if (signalStrength > 10 && signalStrength <= 20)
+				display.drawBitmap(2, 2, signalHighIcon, TFT_BLACK, 2);
+			else if (signalStrength > 20 && signalStrength <= 31)
+				display.drawBitmap(2, 2, signalFullIcon, TFT_BLACK, 2);
+			else if (signalStrength == 99)
+				display.drawBitmap(2, 2, signalErrorIcon, TFT_BLACK, 2);
+		}
+		else if(!simInserted && !airplaneMode && sim_module_version != 255)
+			display.drawBitmap(2, 2, noSimIcon, TFT_BLACK, 2);
+		else if(airplaneMode)
+		{
+			display.drawBitmap(2, 2, airplaneModeIcon, TFT_BLACK, 2);
+		}
+		if (ringVolume == 0)
+		{
+			display.drawBitmap(helper*2, 2, silentModeIcon, TFT_BLACK, 2);
+			helper += 10;
+		}
+		//display.drawBitmap(31, 1, missedcall);
+		//display.drawBitmap(41, 1, newtext);
+		// if (!airplaneMode)
+		// {
+		// 	if (wifi == 1)
+		// 		display.drawBitmap(helper * 2, 2, wifiOnIcon, TFT_BLACK, 2);
+		// 	else
+		// 		display.drawBitmap(helper * 2, 2, wifiOffIcon, TFT_BLACK, 2);
+		// 	helper += 10;
+		// 	if (bt)
+		// 		display.drawBitmap(helper * 2, 2, BTonIcon, TFT_BLACK, 2);
+		// 	else
+		// 		display.drawBitmap(helper * 2, 2, BToffIcon, TFT_BLACK, 2);
+		// 	helper += 10;
+		// }
+		
+
+		if(!SDinsertedFlag)
+		{
+			display.drawBitmap(helper * 2, 2, noSDIcon, TFT_BLACK, 2);
+			helper+=10;
+		}
+		display.setTextFont(2);
+		display.setTextSize(1);
+		display.setCursor(helper*2, 4);
+		if(carrierName != "")
+		{
+			// display.setFreeFont(TT1);
+			// display.setTextSize(2);
+			// display.setCursor(helper*2, 15);
+
+			
+			display.print(carrierName);
+		}
+		else if(carrierName == "" && simInserted && !airplaneMode)
+			display.print("loading...");
+		else if(carrierName == "" && !simInserted && sim_module_version == 255)
+			display.print("No module");	
+
+		if (batteryVoltage > 4100)
+			display.drawBitmap(148, 2, batteryChargingIcon, TFT_BLACK, 2);
+			
+		else if (batteryVoltage <= 4100 && batteryVoltage >= 3850)
+			display.drawBitmap(148, 2, batteryFullIcon, TFT_BLACK, 2);
+
+		else if (batteryVoltage < 3850 && batteryVoltage >= 3750)
+			display.drawBitmap(148, 2, batteryHighIcon, TFT_BLACK, 2);
+
+		else if (batteryVoltage < 3750 && batteryVoltage >= 3650)
+			display.drawBitmap(148, 2, batteryMidIcon, TFT_BLACK, 2);
+
+		else if (batteryVoltage < 3650 && batteryVoltage >= 3600)
+			display.drawBitmap(148, 2, batteryLowIcon, TFT_BLACK, 2);
+
+		else if (batteryVoltage < 3600)
+			display.drawBitmap(148, 2, batteryEmptyIcon, TFT_BLACK, 2);
+
+		uint8_t temp = 0;
+		for(int i = 0; i< sizeof(notificationTypeList);i++)
+		{
+			if(notificationTypeList[i] == 0)
+			{
+				temp = i;
+				break;
+			}
+		}
+		if(temp > 0)
+			drawNotificationWindow(64,temp-1);
+		if(temp > 1)
+			drawNotificationWindow(88,temp-2);
+		display.setFreeFont(TT1);
+		display.setTextSize(4);
+		if (millis() - elapsedMillis >= 500) {
+			elapsedMillis = millis();
+			blinkState = !blinkState;
+			if (clockYear%100 != 4 && clockYear%100 != 80)
+				updateTimeRTC();
+		}
+		if (blinkState == 1)
+		{
+			display.setCursor(2, 111);
+			display.setTextFont(2);
+			display.setTextSize(1);
+			display.setTextColor(TFT_BLACK);
+			display.print("Hold \"A\" to unlock");
+			display.setTextSize(6);
+			display.setTextColor(TFT_DARKGREY);
+			display.setFreeFont(TT1);
+			display.setCursor(58, 56);
+			display.print(":");
+			display.setTextColor(TFT_BLACK);
+			display.setCursor(56, 54);
+			display.print(":");
+		}
+		update();
+
+		display.setTextSize(2);
+
+		if (buttons.pressed(BTN_A)) {
+			display.setTextSize(1);
+
+			display.fillRect(0, 112, display.width(), 14, backgroundColors[backgroundIndex]);
+			display.setCursor(2, 111);
+			display.setTextFont(2);
+			display.print("Unlocking");
+			buttonHeld = millis();
+			while (!buttons.released(BTN_A))
+			{
+
+				if (buttons.timeHeld(BTN_A) > 5 && buttons.timeHeld(BTN_A) < 12) {
+					display.fillRect(0, 114, display.width(), 14, backgroundColors[backgroundIndex]);
+					display.setCursor(2, 111);
+					display.setTextFont(2);
+					display.print("Unlocking *");
+
+					leds[0] = CRGB::Red;
+					leds[7] = CRGB::Red;
+					// FastLED.show();
+				}
+				else if (buttons.timeHeld(BTN_A) >= 12 && buttons.timeHeld(BTN_A) < 18)
+				{
+					display.fillRect(0, 114, display.width(), 14, backgroundColors[backgroundIndex]);
+					display.setCursor(2, 111);
+					display.setTextFont(2);
+					display.print("Unlocking * *");
+					leds[0] = CRGB::Red;
+					leds[7] = CRGB::Red;
+					leds[1] = CRGB::Red;
+					leds[6] = CRGB::Red;
+					// FastLED.show();
+				}
+				else if (buttons.timeHeld(BTN_A) >= 18 && buttons.timeHeld(BTN_A) < 24)
+				{
+					display.fillRect(0, 114, display.width(), 14, backgroundColors[backgroundIndex]);
+					display.setCursor(2, 111);
+					display.setTextFont(2);
+					display.print("Unlocking * * *");
+					leds[0] = CRGB::Red;
+					leds[7] = CRGB::Red;
+					leds[1] = CRGB::Red;
+					leds[6] = CRGB::Red;
+					leds[2] = CRGB::Red;
+					leds[5] = CRGB::Red;
+					// FastLED.show();
+				}
+				else if (buttons.timeHeld(BTN_A) >= 24)
+				{
+					display.fillRect(0, 114, display.width(), 14, backgroundColors[backgroundIndex]);
+					display.setCursor(2, 111);
+					display.setTextFont(2);
+					display.print("Unlocking * * * *");
+
+					// FastLED.show();
+					while(!buttons.released(BTN_A))
+					{
+						leds[0] = CRGB::Red;
+						leds[7] = CRGB::Red;
+						leds[1] = CRGB::Red;
+						leds[6] = CRGB::Red;
+						leds[2] = CRGB::Red;
+						leds[5] = CRGB::Red;
+						leds[3] = CRGB::Red;
+						leds[4] = CRGB::Red;
+						// while(!update());
+						update();
+					}
+					while(!update());
+					Serial.println(millis() - buttonHeld);
+					inLockScreen = 0;
+					return;
+				}
+				update();
+			}
+		}
+	}
+}
 
 //JPEG drawing
 void MAKERphone::drawJpeg(String filename, int xpos, int ypos) {
@@ -3091,7 +3542,7 @@ void MAKERphone::homePopup(bool animation)
 		}
 		if (ringVolume == 0)
 		{
-			display.drawBitmap(helper*scale, 1*scale, silentmode, TFT_BLACK, scale);
+			display.drawBitmap(helper*scale, 1*scale, silentModeIcon, TFT_BLACK, scale);
 			helper += 10;
 		}
 
@@ -3119,17 +3570,17 @@ void MAKERphone::homePopup(bool animation)
 			display.print("No module");	
 
 		if (batteryVoltage > 4100)
-			display.drawBitmap(74*scale, 1*scale, batteryCharging, TFT_BLACK, scale);
+			display.drawBitmap(74*scale, 1*scale, batteryChargingIcon, TFT_BLACK, scale);
 		else if (batteryVoltage <= 4100 && batteryVoltage >= 3850)
-			display.drawBitmap(74*scale, 1*scale, batteryFull, TFT_BLACK, scale);
+			display.drawBitmap(74*scale, 1*scale, batteryFullIcon, TFT_BLACK, scale);
 		else if (batteryVoltage < 3850 && batteryVoltage >= 3750)
-			display.drawBitmap(74*scale, 1*scale, batteryMid, TFT_BLACK, scale);
+			display.drawBitmap(74*scale, 1*scale, batteryHighIcon, TFT_BLACK, scale);
 		else if (batteryVoltage < 3750 && batteryVoltage >= 3650)
-			display.drawBitmap(74*scale, 1*scale, batteryMidLow, TFT_BLACK, scale);
+			display.drawBitmap(74*scale, 1*scale, batteryMidIcon, TFT_BLACK, scale);
 		else if (batteryVoltage < 3650 && batteryVoltage >= 3600)
-			display.drawBitmap(74*scale, 1*scale, batteryLow, TFT_BLACK, scale);
+			display.drawBitmap(74*scale, 1*scale, batteryLowIcon, TFT_BLACK, scale);
 		else if (batteryVoltage < 3600)
-			display.drawBitmap(74*scale, 1*scale, batteryEmpty, TFT_BLACK, scale);
+			display.drawBitmap(74*scale, 1*scale, batteryEmptyIcon, TFT_BLACK, scale);
 
 
 		if (millis() - blinkMillis >= 250) {
@@ -3711,7 +4162,6 @@ String MAKERphone::currentDateTime(){
 
 void MAKERphone::shutdownPopup(bool animation)
 {
-
 	if(animation)
 	{
 		for (int i = 2; i < 75; i++)
@@ -3789,33 +4239,32 @@ void MAKERphone::shutdownPopup(bool animation)
 				tft.fillRect(12, 36, 138, 56, TFT_WHITE);
 				tft.setCursor(40, 51);
 				tft.print("Restarting...");
-				while(Serial1.available())
-					Serial1.read();
-				Serial1.println("AT+CFUN=1,1");
-				char buffer[300];
-				bool found = 0;
-				memset(buffer, 0, sizeof(buffer));
-				Serial1.flush();
-				// if(sim_module_version == 0)
-				uint32_t timer = millis();
-				delay(1500);
-				// if(sim_module_version == 0)
-				// {
-				while(!found)
+				if(sim_module_version == 255)
+					delay(1500);
+				else
 				{
-					if(Serial1.available())
+					while(Serial1.available())
+						Serial1.read();
+					Serial1.println("AT+CFUN=1,1");
+					char buffer[300];
+					bool found = 0;
+					memset(buffer, 0, sizeof(buffer));
+					Serial1.flush();
+					uint32_t timer = millis();
+					while(!found)
 					{
+						if(Serial1.available())
+						{
 
-						char test = (char)Serial1.read();
-						strncat(buffer, &test, 1);
-						Serial.println(buffer);
+							char test = (char)Serial1.read();
+							strncat(buffer, &test, 1);
+							Serial.println(buffer);
+						}
+
+						if(strstr(buffer, "RDY") != nullptr)
+							found = 1;
 					}
-
-					if(strstr(buffer, "RDY") != nullptr)
-						found = 1;
 				}
-					// delay(22000);
-				// }
 				ESP.restart();
 			}
 			else
@@ -3848,7 +4297,6 @@ void MAKERphone::shutdownPopup(bool animation)
 				
 			}
 		}
-		// update();
 		buttons.update();
 	}
 	while(!update());
