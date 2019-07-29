@@ -1142,7 +1142,7 @@ void MAKERphone::sleep() {
 		else if (batteryVoltage < 3600)
 			display.drawBitmap(148, 2, batteryEmptyIcon, TFT_BLACK, 2);
 
-		uint8_t temp = 0;
+		uint8_t temp = sizeof(notificationTypeList);
 		for(int i = 0; i< sizeof(notificationTypeList);i++)
 		{
 			if(notificationTypeList[i] == 0)
@@ -2016,7 +2016,7 @@ void MAKERphone::saveMessage(String text, String number, bool isRead, bool direc
 	messages->add(new_item);
 	File file1 = SD.open("/.core/messages.json", "w");
 	messages->prettyPrintTo(file1);
-	messages->prettyPrintTo(Serial);
+	// messages->prettyPrintTo(Serial);
 	file1.close();
 }
 void MAKERphone::checkSim()
@@ -2609,7 +2609,7 @@ void MAKERphone::lockscreen() {
 		else if (batteryVoltage < 3600)
 			display.drawBitmap(148, 2, batteryEmptyIcon, TFT_BLACK, 2);
 
-		uint8_t temp = 0;
+		uint8_t temp = sizeof(notificationTypeList);
 		for(int i = 0; i< sizeof(notificationTypeList);i++)
 		{
 			if(notificationTypeList[i] == 0)
@@ -3961,6 +3961,7 @@ void MAKERphone::loadNotifications(bool debug)
 
 	if (notifications.success()) {
 		int i = 0;
+		// notifications.prettyPrintTo(Serial);
 		for(JsonObject& tempNotification:notifications)
 		{
 			notificationTypeList[i] = tempNotification["Type"];
@@ -3969,7 +3970,6 @@ void MAKERphone::loadNotifications(bool debug)
 			i++;
 		}
 	}
-
 	else {
 		saveNotifications();
 		Serial.println("Error loading new notifications");
