@@ -3659,17 +3659,20 @@ void MAKERphone::homePopup(bool animation)
 							mediaVolume++;
 							for(uint8_t i = 0 ; i < 4;i++)
 							{
-								if(mediaVolume == 0)
-									tracks[i]->setVolume(0);
-								else
-									tracks[i]->setVolume(map(mediaVolume, 0, 14, 100, 300));
+								if(tracks[i] != nullptr)
+								{
+									if(mediaVolume == 0)
+										tracks[i]->setVolume(0);
+									else
+										tracks[i]->setVolume(map(mediaVolume, 0, 14, 100, 300));
+								}
 							}
 							for(uint8_t i = 0 ; i < 4;i++)
 							{
 								if(oscs[i] != nullptr)
 									oscs[i]->setVolume(oscillatorVolumeList[mediaVolume]);
 							}
-							osc->setVolume(oscillatorVolumeList[mediaVolume]);
+							// osc->setVolume(oscillatorVolumeList[mediaVolume]);
 							osc->note(75, 0.05);
 							osc->play();
 							while(!update());
