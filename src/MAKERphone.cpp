@@ -38,12 +38,17 @@ String MAKERphone::waitForOK()
 	memset(buffer, 0, sizeof(buffer));
 	char c;
 	uint32_t temp = millis();
-	while(strstr(buffer, "OK") == nullptr && strstr(buffer, "ERROR") == nullptr && millis() - temp < 2000)
+	while(strstr(buffer, "OK") == nullptr && millis() - temp < 2000)
 		if(Serial1.available())
 		{
 			c = Serial1.read();
 			strncat(buffer, &c, 1);
 			// Serial.println(buffer);
+			if(strstr(buffer, "ERROR") != nullptr)
+			{
+				if(strstr(strstr(buffer, "ERROR"), "\r") != nullptr)
+					break;
+			}
 		}
 	return String(buffer);
 }
@@ -106,6 +111,60 @@ void MAKERphone::begin(bool splash) {
 	buttons.begin();
 	RTC.begin();
 
+	
+
+	
+
+	//display initialization
+	tft.init();
+	tft.invertDisplay(0);
+	tft.setRotation(3);
+	display.setColorDepth(8); // Set colour depth of Sprite to 8 (or 16) bits
+	display.createSprite(160, 128);
+	display.setRotation(1);
+
+	// popupSprite.setColorDepth(8); // Set colour depth of Sprite to 8 (or 16) bits
+	// popupSprite.createSprite(160, 18);
+	// buf.createSprite(BUF2WIDTH, BUF2HEIGHT); // Create the sprite and clear background to black
+	// buf.setTextSize(1);
+
+	
+
+	display.fillScreen(TFT_BLACK);
+	display.pushSprite(0,0);
+	//PWM SETUP FOR ESP32
+	delay(30);
+	ledcSetup(0, 2000, 8);
+	ledcSetup(LEDC_CHANNEL, LEDC_BASE_FREQ, LEDC_TIMER);
+	ledcAttachPin(LCD_BL_PIN, LEDC_CHANNEL);
+	ledcAnalogWrite(LEDC_CHANNEL, 255);
+	for (uint8_t i = 255; i > actualBrightness; i--) {
+		ledcAnalogWrite(LEDC_CHANNEL, i);
+		delay(2);
+	}
+
+	ledcAnalogWrite(LEDC_CHANNEL, 0);
+
+	//SD startup
+	uint32_t tempMillis = millis();
+	if(!digitalRead(SD_INT))
+	{
+		SDinsertedFlag = 1;
+		while (!SD.begin(5, SPI, 8000000))
+		{
+			Serial.println("SD ERROR");
+			if(millis()-tempMillis > 5)
+			{
+				SDinsertedFlag = 0;
+				break;
+			}
+		}
+	}
+
+	if (splash == 1)
+		splashScreen(); //Show the main splash screen
+	else
+		delay(500);
 	//EEPROM setup for firmware_version
 	EEPROM.begin(256);
 	if(EEPROM.readUInt(FIRMWARE_VERSION_ADDRESS) > 999)
@@ -263,8 +322,6 @@ void MAKERphone::begin(bool splash) {
 		else
 			sim_module_version = 1; //SIM800
 	}
-	
-	
 	Serial1.end();
 	if(sim_module_version == 1)
 	{
@@ -296,6 +353,7 @@ void MAKERphone::begin(bool splash) {
 		}
 		else if(temp.indexOf("SIM7600") != -1)
 			sim_module_version = 0;
+		checkSim();
 	}
 	if(EEPROM.readByte(GSM_MODULE_ADDRESS) != sim_module_version)
 	{
@@ -303,63 +361,7 @@ void MAKERphone::begin(bool splash) {
 		EEPROM.writeByte(GSM_MODULE_ADDRESS, sim_module_version);
 		EEPROM.commit();
 	}
-	Serial.print("MODULE TYPE: ");
-	Serial.println(sim_module_version);
 
-	
-
-	//display initialization
-	tft.init();
-	tft.invertDisplay(0);
-	tft.setRotation(3);
-	display.setColorDepth(8); // Set colour depth of Sprite to 8 (or 16) bits
-	display.createSprite(160, 128);
-	display.setRotation(1);
-
-	// popupSprite.setColorDepth(8); // Set colour depth of Sprite to 8 (or 16) bits
-	// popupSprite.createSprite(160, 18);
-	// buf.createSprite(BUF2WIDTH, BUF2HEIGHT); // Create the sprite and clear background to black
-	// buf.setTextSize(1);
-
-	
-
-	display.fillScreen(TFT_BLACK);
-	display.pushSprite(0,0);
-	//PWM SETUP FOR ESP32
-	delay(30);
-	ledcSetup(0, 2000, 8);
-	ledcSetup(LEDC_CHANNEL, LEDC_BASE_FREQ, LEDC_TIMER);
-	ledcAttachPin(LCD_BL_PIN, LEDC_CHANNEL);
-	ledcAnalogWrite(LEDC_CHANNEL, 255);
-	for (uint8_t i = 255; i > actualBrightness; i--) {
-		ledcAnalogWrite(LEDC_CHANNEL, i);
-		delay(2);
-	}
-
-	ledcAnalogWrite(LEDC_CHANNEL, 0);
-
-	//SD startup
-	uint32_t tempMillis = millis();
-	if(!digitalRead(SD_INT))
-	{
-		SDinsertedFlag = 1;
-		while (!SD.begin(5, SPI, 8000000))
-		{
-			Serial.println("SD ERROR");
-			if(millis()-tempMillis > 5)
-			{
-				SDinsertedFlag = 0;
-				break;
-			}
-		}
-	}
-
-	if (splash == 1)
-		splashScreen(); //Show the main splash screen
-	else
-		delay(500);
-	if(sim_module_version != 255)
-		checkSim();
 	updateTimeRTC();
 	
 	if(sim_module_version != 255)
@@ -891,7 +893,7 @@ void MAKERphone::splashScreen() {
 	display.setCursor(0,100);
 	display.printCenter("Loading...");
 	while(!update());
-	delay(750);
+	delay(2000);
 
 }
 void MAKERphone::setResolution(bool res){
@@ -4185,6 +4187,9 @@ void MAKERphone::shutdownPopup(bool animation)
 
 						if(strstr(buffer, "RDY") != nullptr)
 							found = 1;
+						if((millis() - timer > 3000 && sim_module_version == 1) ||
+						(millis() - timer > 28000 && sim_module_version == 0))
+							break;
 					}
 				}
 				ESP.restart();
