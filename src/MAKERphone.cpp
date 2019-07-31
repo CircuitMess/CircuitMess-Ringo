@@ -856,7 +856,7 @@ bool MAKERphone::update() {
 	if(wokeWithPWRBTN && buttons.released(14))
 		wokeWithPWRBTN = 0;
 
-	if (millis() - lastFrameCount >= frameSpeed) {
+	if (millis() - lastFrameCount >= frameSpeed || screenshotFlag) {
 		lastFrameCount = millis();
 
 		if(resolutionMode == 0) //native res mode
@@ -2806,6 +2806,7 @@ void MAKERphone::drawJpeg(String filename, int xpos, int ypos) {
   //boolean decoded = JpegDec.decodeFsFile(jpegFile); // Pass a SPIFFS file handle to the decoder,
   //boolean decoded = JpegDec.decodeSdFile(jpegFile); // or pass the SD file handle to the decoder,
   boolean decoded = JpegDec.decodeSdFile(jpegFile);  // or pass the filename (leading / distinguishes SPIFFS files)
+  jpegFile.close();
   // Note: the filename can be a String or character array type
   if (decoded) {
     // print information about the image to the serial port
@@ -2971,6 +2972,7 @@ void MAKERphone::saveSettings(bool debug)
 	} else {
 		Serial.println("Error saving new settings");
 	}
+
 }
 void MAKERphone::loadSettings(bool debug)
 {
@@ -3108,6 +3110,18 @@ void MAKERphone::applySettings()
 		else
 			Serial1.println("AT+CFUN=1");
 	}
+	for(int i = 0; i < 4;i++)
+	{
+		if(tracks[i] != nullptr)
+		{
+			if(mediaVolume == 0)
+				tracks[i]->setVolume(0);
+			else
+				tracks[i]->setVolume(map(mediaVolume, 0, 14, 100, 300));
+		}
+		if(oscs[i] != nullptr)
+			oscs[i]->setVolume(oscillatorVolumeList[mediaVolume]);
+	}
 }
 
 //save manipulation
@@ -3205,6 +3219,30 @@ String MAKERphone::readFile(const char * path) {
 }
 void MAKERphone::takeScreenshot()
 {
+	Serial.println("HERE");
+	for(int i = 0; i < 4; i++)
+	{
+		if(tracks[i] != nullptr)
+		{
+			Serial.printf("%d track is playing: %d\n", i, tracks[i]->isPlaying());
+			if(tracks[i]->isPlaying())
+			{
+				currTracks[i] = tracks[i];
+				currTracks[i]->seek(tracks[i]->getSamplePos());
+				Serial.print("PLAYING:");
+				Serial.println(i);
+				pausedTracks[i] = 1;
+				tracks[i]->pause();
+				removeTrack(tracks[i]);
+			}
+			else
+			{
+				currTracks[i] = tracks[i];
+				currTracks[i]->seek(tracks[i]->getSamplePos());
+				removeTrack(tracks[i]);
+			}
+		}
+	}
 	// display.setTextColor(TFT_BLACK);
 	// display.setTextSize(1);
 	// display.setTextFont(2);
@@ -3373,9 +3411,6 @@ void MAKERphone::takeScreenshot()
 	}
 	file.close();
 	free(img);
-	if (debugPrint) {
-	Serial.println("\n---");
-	}
 	display.setTextColor(TFT_BLACK);
 	display.setTextSize(1);
 	display.setTextFont(2);
@@ -3398,7 +3433,17 @@ void MAKERphone::takeScreenshot()
 		}
 	}
 	while(!update());
-
+	for(int i = 0; i < 4; i++)
+	{
+		if(currTracks[i] != nullptr)
+		{
+			addTrack(currTracks[i]);
+			if(pausedTracks[i])
+				currTracks[i]->play();
+		}
+		currTracks[i] = nullptr;
+		pausedTracks[i] = 0;
+	}
 }
 
 //Popups
@@ -3438,21 +3483,45 @@ void MAKERphone::updatePopup() {
 void MAKERphone::homePopup(bool animation)
 {
 	bool tempArray[4];
-	for(uint8_t i = 0 ; i < 4;i++)
+	Serial.println("HERE");
+	for(int i = 0; i < 4; i++)
 	{
 		if(tracks[i] != nullptr)
 		{
+			Serial.printf("%d track is playing: %d\n", i, tracks[i]->isPlaying());
 			if(tracks[i]->isPlaying())
 			{
+				currTracks[i] = tracks[i];
+				currTracks[i]->seek(tracks[i]->getSamplePos());
+				Serial.print("PLAYING:");
+				Serial.println(i);
+				pausedTracks[i] = 1;
 				tracks[i]->pause();
-				tempArray[i] = 1;
+				removeTrack(tracks[i]);
 			}
 			else
-				tempArray[i] = 0;
+			{
+				currTracks[i] = tracks[i];
+				currTracks[i]->seek(tracks[i]->getSamplePos());
+				removeTrack(tracks[i]);
+			}
 		}
-		else
-			tempArray[i] = 0;
 	}
+	// for(uint8_t i = 0 ; i < 4;i++)
+	// {
+	// 	if(tracks[i] != nullptr)
+	// 	{
+	// 		if(tracks[i]->isPlaying())
+	// 		{
+	// 			tracks[i]->pause();
+	// 			tempArray[i] = 1;
+	// 		}
+	// 		else
+	// 			tempArray[i] = 0;
+	// 	}
+	// 	else
+	// 		tempArray[i] = 0;
+	// }
 	// for(uint8_t i = 0 ; i < 4;i++)
 	// {
 	// 	if(oscs[i] != nullptr)
@@ -3733,6 +3802,7 @@ void MAKERphone::homePopup(bool animation)
 							osc->note(75, 0.05);
 							osc->play();
 							while(!update());
+							
 						}
 						update();
 					}
@@ -3888,14 +3958,25 @@ void MAKERphone::homePopup(bool animation)
 		}
 		update();
 	}
-	// if(SDinsertedFlag)
-		// saveSettings();
-	applySettings();
-	for(uint8_t i = 0 ; i < 4;i++)
+	if(SDinsertedFlag)
+		saveSettings();
+	for(int i = 0; i < 4; i++)
 	{
-		if(tracks[i] != nullptr && tempArray[i])
-			tracks[i]->resume();
+		if(currTracks[i] != nullptr)
+		{
+			addTrack(currTracks[i]);
+			if(pausedTracks[i])
+				currTracks[i]->play();
+		}
+		currTracks[i] = nullptr;
+		pausedTracks[i] = 0;
 	}
+	applySettings();
+	// for(uint8_t i = 0 ; i < 4;i++)
+	// {
+	// 	if(tracks[i] != nullptr && tempArray[i])
+	// 		tracks[i]->resume();
+	// }
 	// for(uint8_t i = 0 ; i < 4;i++)
 	// {
 	// 	if(oscs[i] != nullptr)
