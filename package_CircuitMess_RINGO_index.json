@@ -11,15 +11,15 @@
       "platforms": [
           {
              "category": "ESP32",
-              "name": "RINGO",
-              "url": "https://github.com/CircuitMess/MAKERphone/blob/boardArduino/Ringo1.0.0.zip?raw=true",
-              "checksum": "SHA-256:0003a4c4ab36bcceec278de28119ed4d7c9fbc78a8e80cc8fbab3d0fff8a2737",
+              "name": "ringo esp 32",
+              "url": "https://github.com/CircuitMess/MAKERphone/blob/boardArduino/RINGO1.zip?raw=true",
+              "checksum": "SHA-256:62d31009e36d36cb7b823520f3b7996a3f047115945dc9428214921ec2bc4bc7",
               "version": "1.0.0",
               "help": {
                 "online": ""
                }, 
                "architecture": "esp32",
-               "archiveFileName": "Ringo1.0.0.zip",
+               "archiveFileName": "RINGO1.zip",
                "boards": [
                    {
                      "name": "RINGO"
@@ -42,7 +42,7 @@
                   "name": "mkspiffs"
                   }
             ], 
-            "size": "31226859"
+            "size": "31228413"
         } 
                     ],   
 "tools": [
