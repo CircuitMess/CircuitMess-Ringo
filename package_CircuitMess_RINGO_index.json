@@ -12,14 +12,14 @@
           {
              "category": "ESP32",
               "name": "ringo esp 32",
-              "url": "https://github.com/CircuitMess/MAKERphone/blob/boardArduino/RINGO%201.0.0.zip",
-              "checksum": "SHA-256:2067ce746101d38595a0b1c26b9d2a239c196bff95930719c6964f1402a4ba2b",
+              "url": "https://github.com/CircuitMess/MAKERphone/blob/boardArduino/RINGO1.0.0.tar.gz",
+              "checksum": "SHA-256:e46328902ca98c3aded6dfe36b7aebc6267adda27a8c29062caaa5b90eaf23e3",
               "version": "1.0.0",
               "help": {
                 "online": ""
                }, 
                "architecture": "esp32",
-               "archiveFileName": "RINGO 1.0.0.zip",
+               "archiveFileName": "RINGO1.0.0.tar.gz",
                "boards": [
                    {
                      "name": "RINGO"
