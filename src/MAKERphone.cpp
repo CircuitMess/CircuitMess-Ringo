@@ -842,13 +842,10 @@ bool MAKERphone::update() {
 
 	if(SHUTDOWN_POPUP_ENABLE && buttons.released(14) && !wokeWithPWRBTN)
 	{
+		
 		buttons.update();
 		sleep();
-		if(!inLockScreen)
-		{
-			lockscreen();
-			exitedLockscreen = 1;
-		}
+		
 	}
 	if(buttons.held(14, 40) && !inShutdownPopup && SHUTDOWN_POPUP_ENABLE && !wokeWithPWRBTN)
 	{
@@ -931,7 +928,35 @@ void MAKERphone::sleep() {
 	buttons.activateInterrupt();
 	uint8_t reason = 4;
 	vTaskSuspend(MeasuringTask);
-
+	
+	MPTrack *currTracks[4] = {nullptr,nullptr,nullptr,nullptr};
+	bool pausedTracks[4] = {0,0,0,0};
+	Serial.println("HERE");
+	for(int i = 0; i < 4; i++)
+	{
+		if(tracks[i] != nullptr)
+		{
+			Serial.printf("%d track is playing: %d\n", i, tracks[i]->isPlaying());
+			if(tracks[i]->isPlaying())
+			{
+				currTracks[i] = tracks[i];
+				currTracks[i]->seek(tracks[i]->getSamplePos());
+				Serial.print("PLAYING:");
+				Serial.println(i);
+				pausedTracks[i] = 1;
+				tracks[i]->pause();
+				removeTrack(tracks[i]);
+			}
+			else
+			{
+				currTracks[i] = tracks[i];
+				currTracks[i]->seek(tracks[i]->getSamplePos());
+			}
+		}
+	}
+	updateWav();
+	
+	vTaskSuspend(Task1);
 	esp_light_sleep_start();
 	reason = esp_sleep_get_wakeup_cause();
 	while(reason == 4)
@@ -988,12 +1013,21 @@ void MAKERphone::sleep() {
 	voltageSum = 0;
 	voltageSample = 0;
 	vTaskResume(MeasuringTask);
+	vTaskResume(Task1);
 	buttons.update();
 	if(buttons.pressed(14))
 		wokeWithPWRBTN = 1;
 	if(!digitalRead(SIM_INT))
 	{
 		initWavLib();
+		for(int i = 0; i < 4; i++)
+		{
+			if(currTracks[i] != nullptr)
+			{
+				addTrack(currTracks[i]);
+				// currTracks[i]->play();
+			}
+		}
 		ledcAttachPin(LCD_BL_PIN, LEDC_CHANNEL);
 		ledcAnalogWrite(LEDC_CHANNEL, actualBrightness);
 		tft.writecommand(17);
@@ -1176,6 +1210,14 @@ void MAKERphone::sleep() {
 	}
 	display.pushSprite(0,0);
 	initWavLib();
+	for(int i = 0; i < 4; i++)
+	{
+		if(currTracks[i] != nullptr)
+		{
+			addTrack(currTracks[i]);
+			// currTracks[i]->play();
+		}
+	}
 	
 	ledcAttachPin(LCD_BL_PIN, LEDC_CHANNEL);
 	ledcAnalogWrite(LEDC_CHANNEL, 255);
@@ -1188,6 +1230,19 @@ void MAKERphone::sleep() {
 	updateTimeRTC();
 	while(!update());
 
+	if(!inLockScreen)
+	{
+		lockscreen();
+		exitedLockscreen = 1;
+	}
+	for(int i = 0; i < 4; i++)
+	{
+		if(pausedTracks[i])
+		{
+			Serial.printf("%d was playing\n", i);
+			tracks[i]->play();
+		}
+	}
 }
 void MAKERphone::loader()
 {
