@@ -10,14 +10,14 @@
         {
           "category": "CM", 
           "name": "Ringo", 
-          "url": "https://github.com/CircuitMess/MAKERphone/blob/boardArduino/Ringo-1.0.0.zip?raw=true", 
-          "checksum": "SHA-256:abefa927368f6c0ce8a9b2ea7afe271aa5bf147e167525c84fc5efd46122d50e", 
+          "url": "https://github.com/CircuitMess/MAKERphone/blob/boardArduino/Ringo-1.0.00.zip?raw=true", 
+          "checksum": "SHA-256:1e7d432b6ff14c9e9288a6147a499b5891f4e4d4a00eef1bf915b6bb2dced2ea", 
           "help": {
             "online": ""
           }, 
           "version": "1.0.0", 
           "architecture": "cm", 
-          "archiveFileName": "Ringo-1.0.0.zip", 
+          "archiveFileName": "Ringo-1.0.00.zip", 
           "boards": [
             {
               "name": "Ringo by CircuitMess"
@@ -40,7 +40,7 @@
               "name": "mkspiffs"
             }
           ], 
-          "size": "31255519"
+          "size": "31260627"
         }
       ], 
       "tools": [
