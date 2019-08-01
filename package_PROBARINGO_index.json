@@ -11,7 +11,7 @@
           "category": "ESP32", 
           "name": "RINGO", 
           "url": "https://github.com/CircuitMess/MAKERphone/blob/boardArduino/esp32-1.0.2.zip?raw=true", 
-          "checksum": "SHA-256:264496bab9521fccdfe3c8c3374b717421b5698bf9adfd655395d6ac65a9ff40", 
+          "checksum": "SHA-256:9d6e7a07ce5778fa1a9def058bf150a5545953386cff1384845873800ca20107", 
           "help": {
             "online": ""
           }, 
@@ -40,7 +40,7 @@
               "name": "mkspiffs"
             }
           ], 
-          "size": "31298025"
+          "size": "31297717"
         }
       ], 
       "tools": [
