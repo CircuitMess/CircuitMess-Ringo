@@ -1,11 +1,11 @@
 {
   "packages": [
     {
-      "maintainer": "Espressif Systems", 
+      "maintainer": "MAKERhpone", 
       "help": {
-        "online": "http://esp32.com"
+        "online": "https://www.circuitmess.com/"
       }, 
-      "websiteURL": "https://github.com/espressif/arduino-esp32", 
+      "websiteURL": "https://github.com/CircuitMess/MAKERphone", 
       "platforms": [
         {
           "category": "ESP32", 
