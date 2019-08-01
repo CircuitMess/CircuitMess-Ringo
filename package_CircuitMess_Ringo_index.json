@@ -1,51 +1,49 @@
 {
   "packages": [
     {
-      "name": "Ringo",
-      "maintainer": "Circuitmess",
-      "websiteURL": "https://github.com/CircuitMess/MAKERphone",
-      "email": "robert@circuitmess.com",
+      "maintainer": "CircuitMess", 
       "help": {
         "online": "https://www.circuitmess.com/"
       }, 
+      "websiteURL": "https://github.com/CircuitMess/MAKERphone", 
       "platforms": [
-          {
-             "category": "ESP32",
-              "name": "ringo esp 32",
-              "url": "https://github.com/CircuitMess/MAKERphone/blob/boardArduino/RINGO1.zip?raw=true",
-              "checksum": "SHA-256:62d31009e36d36cb7b823520f3b7996a3f047115945dc9428214921ec2bc4bc7",
-              "version": "1.0.0",
-              "help": {
-                "online": ""
-               }, 
-               "architecture": "esp32",
-               "archiveFileName": "RINGO1.zip",
-               "boards": [
-                   {
-                     "name": "RINGO"
-                    }
-               ],
-               "toolDependencies": [
-              {
-                 "packager": "esp32", 
-                  "version": "1.22.0-80-g6c4433a-5.2.0", 
-                  "name": "xtensa-esp32-elf-gcc"
-                  }, 
-              {
-                  "packager": "esp32", 
-                  "version": "2.6.1", 
-                  "name": "esptool_py"
-                 }, 
-              {
-                  "packager": "esp32", 
-                  "version": "0.2.3", 
-                  "name": "mkspiffs"
-                  }
-            ], 
-            "size": "31228413"
-        } 
-                    ],   
-"tools": [
+        {
+          "category": "ESP32", 
+          "name": "Ringo", 
+          "url": "https://github.com/CircuitMess/MAKERphone/blob/boardArduino/Ringo-1.0.0.zip?raw=true", 
+          "checksum": "SHA-256:abefa927368f6c0ce8a9b2ea7afe271aa5bf147e167525c84fc5efd46122d50e", 
+          "help": {
+            "online": ""
+          }, 
+          "version": "1.0.0", 
+          "architecture": "esp32", 
+          "archiveFileName": "Ringo-1.0.0.zip", 
+          "boards": [
+            {
+              "name": "Ringo by CircuitMess"
+            }
+          ], 
+          "toolsDependencies": [
+            {
+              "packager": "esp32", 
+              "version": "1.22.0-80-g6c4433a-5.2.0", 
+              "name": "xtensa-esp32-elf-gcc"
+            }, 
+            {
+              "packager": "esp32", 
+              "version": "2.6.1", 
+              "name": "esptool_py"
+            }, 
+            {
+              "packager": "esp32", 
+              "version": "0.2.3", 
+              "name": "mkspiffs"
+            }
+          ], 
+          "size": "31255519"
+        }
+      ], 
+      "tools": [
         {
           "version": "2.6.1", 
           "name": "esptool_py", 
@@ -251,8 +249,9 @@
             }
           ]
         }
-      ]
-        }
-    ]
+      ], 
+      "email": "rober@circuitmess.com", 
+      "name": "esp32"
+    }
+  ]
 }
-
