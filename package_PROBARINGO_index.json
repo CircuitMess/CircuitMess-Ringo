@@ -1,7 +1,7 @@
 {
   "packages": [
     {
-      "maintainer": "MAKERhpone", 
+      "maintainer": "CircuitMess", 
       "help": {
         "online": "https://www.circuitmess.com/"
       }, 
@@ -9,18 +9,18 @@
       "platforms": [
         {
           "category": "ESP32", 
-          "name": "RINGO", 
-          "url": "https://github.com/CircuitMess/MAKERphone/blob/boardArduino/esp32-1.0.2.zip?raw=true", 
-          "checksum": "SHA-256:c615ce6e84de6e4180fadd4d07cb16decac70e9d5dcfff3494269726b71de6b5", 
+          "name": "Ringo", 
+          "url": "https://github.com/CircuitMess/MAKERphone/blob/boardArduino/Ringo-1.0.0.zip?raw=true", 
+          "checksum": "SHA-256:a8d6da5fd6654e957d25561c1eb4332bf3a3aa4de418e01a906676022cbea8bf", 
           "help": {
             "online": ""
           }, 
-          "version": "1.0.2", 
+          "version": "1.0.0", 
           "architecture": "esp32", 
-          "archiveFileName": "esp32-1.0.2.zip", 
+          "archiveFileName": "Ringo-1.0.0.zip", 
           "boards": [
             {
-              "name": "RINGO"
+              "name": "Ringo by CircuitMess"
             }
           ], 
           "toolsDependencies": [
@@ -40,7 +40,7 @@
               "name": "mkspiffs"
             }
           ], 
-          "size": "31297751"
+          "size": "31255511"
         }
       ], 
       "tools": [
@@ -250,7 +250,7 @@
           ]
         }
       ], 
-      "email": "hristo@espressif.com", 
+      "email": "rober@circuitmess.com", 
       "name": "esp32"
     }
   ]
