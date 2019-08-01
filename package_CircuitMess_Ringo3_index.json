@@ -16,7 +16,7 @@
             "online": ""
           }, 
           "version": "1.0.0", 
-          "architecture": "esp32", 
+          "architecture": "cm", 
           "archiveFileName": "Ringo-1.0.0000.zip", 
           "boards": [
             {
