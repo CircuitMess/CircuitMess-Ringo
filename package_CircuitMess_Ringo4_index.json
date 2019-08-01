@@ -10,14 +10,14 @@
         {
           "category": "CM", 
           "name": "Ringo", 
-          "url": "https://github.com/CircuitMess/MAKERphone/blob/boardArduino/Ringo-1.0.0000.zip?raw=true", 
+          "url": "https://github.com/CircuitMess/MAKERphone/blob/boardArduino/Ringo-1.0.00.zip?raw=true", 
           "checksum": "SHA-256:f45a38ca0db100b8192c203fe4fd1e96a94a29d9206f26676546097256c302d2", 
           "help": {
             "online": ""
           }, 
           "version": "1.0.0", 
           "architecture": "cm", 
-          "archiveFileName": "Ringo-1.0.0000.zip", 
+          "archiveFileName": "Ringo-1.0.00.zip", 
           "boards": [
             {
               "name": "Ringo by CircuitMess"
