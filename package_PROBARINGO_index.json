@@ -54,10 +54,7 @@
           "archiveFileName": "esp32-1.0.1.zip", 
           "boards": [
             {
-              "name": "ESP32 Dev Module"
-            }, 
-            {
-              "name": "WEMOS LoLin32"
+              "name": "RINGO"
             }
           ], 
           "size": "31273425", 
@@ -92,10 +89,7 @@
           "archiveFileName": "esp32-1.0.0.zip", 
           "boards": [
             {
-              "name": "ESP32 Dev Module"
-            }, 
-            {
-              "name": "WEMOS LoLin32"
+              "name": "RINGO"
             }
           ], 
           "size": "26381887", 
