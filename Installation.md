@@ -89,4 +89,4 @@ There will be one result found called **'Ringo by CircuitMess**. Click on the **
 ![alt text](https://www.circuitmess.com/wp-content/uploads/Pic16.png)
 
 
-Congrats! You have successfully set up Ringo phone. Now let's get to business and star creating some cool apps and games!
+Congrats! You have successfully set up Ringo phone. Now let's get to business and start creating some cool apps and games!
