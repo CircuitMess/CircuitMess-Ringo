@@ -45,6 +45,8 @@ There are 5 seperate scheme files each representing a different board:
 
 ## Features
 
+We tried to fir CircuitMess Ringo with as many features as possible. Time spend using the phone and programming it's new features surely won't be boring with all of these: 
+
 * A color screen
 * Python programming language compatibility
 * Scratch programming language compatibility
@@ -55,7 +57,6 @@ There are 5 seperate scheme files each representing a different board:
 * Wi-Fi, Bluetooth, RTC (real-time clock)
 * 2G (SIM800) or 4G (SIM7600) chipset
 * SD Memory Card expanded storage
-
 
 
  <br/>
