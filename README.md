@@ -1,5 +1,5 @@
 
-# CircuitMess Ringo - an educational DIY mobile
+# CircuitMess Ringo - an educational DIY mobile phone
 
 **This is the main CircuitMess Ringo GitHub repository.**
 
