@@ -853,8 +853,12 @@ bool MAKERphone::update() {
 		shutdownPopup();
 		inShutdownPopup = 0;
 	}
-	if(wokeWithPWRBTN && buttons.released(14))
-		wokeWithPWRBTN = 0;
+	if(wokeWithPWRBTN)
+	{
+		buttons.update();
+		if(buttons.released(14))
+			wokeWithPWRBTN = 0;
+	}
 
 	if (millis() - lastFrameCount >= frameSpeed || screenshotFlag) {
 		lastFrameCount = millis();
