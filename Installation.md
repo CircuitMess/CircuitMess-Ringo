@@ -12,7 +12,7 @@ You will find this screen there:
 
 Download the installation file according to the OS you own. If you have Windows 8.1 or later, you can also download Arduino IDE over Microsoft Store. That version of the software will be considered to be a completely different program than the regular version by your system so keep in mind that your libraries will not be in sync. Other than that, these two versions work the same.
 
-Now when you have installed Arduino we can go to the next step!
+Now when you have installed Arduino we can go to the next step.
 
 ## Installing Ringo Add-On in Arduino IDE
 
@@ -49,7 +49,7 @@ There will be one result found called **'Ringo by CircuitMess'**. Click on the *
 
 ![alt text](https://www.circuitmess.com/wp-content/uploads/Pic9.png)
 
-6. When it all finished it will write out **'INSTALLED'** next to the version mark. Click on the **Close** button and move on.
+6. When it's all finished it will write out **'INSTALLED'** next to the version mark. Click on the **Close** button and move on.
 
 ![alt text](https://www.circuitmess.com/wp-content/uploads/Pic10.png)
 
@@ -61,9 +61,9 @@ There will be one result found called **'Ringo by CircuitMess'**. Click on the *
 
 ![alt text](https://www.circuitmess.com/wp-content/uploads/Pic13.png)
 
-**NOTE**: If **Port** is greyed out it means the phone is not correctly connected. Change port and/or check your cable.
+**NOTE**: If **Port** is greyed out it means the phone is not correctly connected. Change USB port and/or check your cable.
 
-9. Now it's all set to write your first program! In the **void setup()** section write the following line:  
+9. Now it's all set up to write your first program! In the **void setup()** section write the following line:  
    
     ```cpp
     Serial.begin(115200);
