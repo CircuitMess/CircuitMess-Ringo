@@ -16,7 +16,8 @@ Now when you have installed Arduino we can go to the next step.
 
 ## Installing Ringo Add-On in Arduino IDE
 
-These instructions work on every OS since Arduino automatically downloads tools depending on detected system. So just follow these steps and you will be fine!
+These instructions work on every OS since Arduino automatically downloads tools depending on detected system.  
+So just follow these steps and you will be fine!
 
 1. Open Arduino IDE
 
@@ -41,7 +42,7 @@ These instructions work on every OS since Arduino automatically downloads tools 
 
 <img src="https://www.circuitmess.com/wp-content/uploads/Pic7.png" alt="drawing" width="700"/>
 
-5. Type **'Ringo'** into the bar on top of the pop-up window.
+5. Type **'Ringo'** into the bar on top of the pop-up window.  
 There will be one result found called **'Ringo by CircuitMess'**.   
 Click on the **Install** button.
 
