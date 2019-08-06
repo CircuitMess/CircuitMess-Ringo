@@ -147,10 +147,10 @@ class MAKERphone:public Buttons, public DateTime
 	void splashScreen();
 	void sleep();
 	void incomingCall(String _serialData);
-	void addCall(String number, uint32_t dateTime, int duration, uint8_t direction);
+	void addCall(String number, String contact, uint32_t dateTime, int duration, uint8_t direction);
 	void incomingMessage(String _serialData);
 	bool newMessage = 0;
-	void saveMessage(String text, String number, bool isRead, bool direction, JsonArray *messages);
+	void saveMessage(String text, String contact, String number, bool isRead, bool direction, JsonArray *messages);
 	void checkSim();
 	void enterPin();
 	void enterPUK();
@@ -318,6 +318,8 @@ class MAKERphone:public Buttons, public DateTime
 	String waitForOK();
 	bool exitedLockscreen = 0;
 	bool homeButtonPressed = 0;
+	String checkContact(String contactNumber);
+
 	private:
 		MPTrack* ringtone = nullptr;
 		int multi_tap(byte key);
