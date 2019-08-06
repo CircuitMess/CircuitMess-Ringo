@@ -1164,24 +1164,23 @@ void MAKERphone::sleep() {
 		else if(carrierName == "" && !simInserted && sim_module_version == 255)
 			display.print("No module");	
 
-		if (batteryVoltage > 4100)
+		if(!digitalRead(CHRG_INT))
 			display.drawBitmap(148, 2, batteryChargingIcon, TFT_BLACK, 2);
-			
-		else if (batteryVoltage <= 4100 && batteryVoltage >= 3850)
-			display.drawBitmap(148, 2, batteryFullIcon, TFT_BLACK, 2);
-
-		else if (batteryVoltage < 3850 && batteryVoltage >= 3750)
-			display.drawBitmap(148, 2, batteryHighIcon, TFT_BLACK, 2);
-
-		else if (batteryVoltage < 3750 && batteryVoltage >= 3650)
-			display.drawBitmap(148, 2, batteryMidIcon, TFT_BLACK, 2);
-
-		else if (batteryVoltage < 3650 && batteryVoltage >= 3600)
-			display.drawBitmap(148, 2, batteryLowIcon, TFT_BLACK, 2);
-
-		else if (batteryVoltage < 3600)
-			display.drawBitmap(148, 2, batteryEmptyIcon, TFT_BLACK, 2);
-
+		else
+		{
+			// if (batteryVoltage > 4100)
+			// 	display.drawBitmap(148, 2, batteryChargingIcon, TFT_BLACK, 2);
+			if (batteryVoltage >= 3850)
+				display.drawBitmap(148, 2, batteryFullIcon, TFT_BLACK, 2);
+			else if (batteryVoltage < 3850 && batteryVoltage >= 3750)
+				display.drawBitmap(148, 2, batteryHighIcon, TFT_BLACK, 2);
+			else if (batteryVoltage < 3750 && batteryVoltage >= 3650)
+				display.drawBitmap(148, 2, batteryMidIcon, TFT_BLACK, 2);
+			else if (batteryVoltage < 3650 && batteryVoltage >= 3600)
+				display.drawBitmap(148, 2, batteryLowIcon, TFT_BLACK, 2);
+			else if (batteryVoltage < 3600)
+				display.drawBitmap(148, 2, batteryEmptyIcon, TFT_BLACK, 2);
+		}
 		uint8_t temp = sizeof(notificationTypeList);
 		for(int i = 0; i< sizeof(notificationTypeList);i++)
 		{
@@ -2671,25 +2670,23 @@ void MAKERphone::lockscreen() {
 			display.print("loading...");
 		else if(carrierName == "" && !simInserted && sim_module_version == 255)
 			display.print("No module");	
-
-		if (batteryVoltage > 4100)
+		if(!digitalRead(CHRG_INT))
 			display.drawBitmap(148, 2, batteryChargingIcon, TFT_BLACK, 2);
-			
-		else if (batteryVoltage <= 4100 && batteryVoltage >= 3850)
-			display.drawBitmap(148, 2, batteryFullIcon, TFT_BLACK, 2);
-
-		else if (batteryVoltage < 3850 && batteryVoltage >= 3750)
-			display.drawBitmap(148, 2, batteryHighIcon, TFT_BLACK, 2);
-
-		else if (batteryVoltage < 3750 && batteryVoltage >= 3650)
-			display.drawBitmap(148, 2, batteryMidIcon, TFT_BLACK, 2);
-
-		else if (batteryVoltage < 3650 && batteryVoltage >= 3600)
-			display.drawBitmap(148, 2, batteryLowIcon, TFT_BLACK, 2);
-
-		else if (batteryVoltage < 3600)
-			display.drawBitmap(148, 2, batteryEmptyIcon, TFT_BLACK, 2);
-
+		else
+		{
+			// if (batteryVoltage > 4100)
+			// 	display.drawBitmap(148, 2, batteryChargingIcon, TFT_BLACK, 2);
+			if (batteryVoltage >= 3850)
+				display.drawBitmap(148, 2, batteryFullIcon, TFT_BLACK, 2);
+			else if (batteryVoltage < 3850 && batteryVoltage >= 3750)
+				display.drawBitmap(148, 2, batteryHighIcon, TFT_BLACK, 2);
+			else if (batteryVoltage < 3750 && batteryVoltage >= 3650)
+				display.drawBitmap(148, 2, batteryMidIcon, TFT_BLACK, 2);
+			else if (batteryVoltage < 3650 && batteryVoltage >= 3600)
+				display.drawBitmap(148, 2, batteryLowIcon, TFT_BLACK, 2);
+			else if (batteryVoltage < 3600)
+				display.drawBitmap(148, 2, batteryEmptyIcon, TFT_BLACK, 2);
+		}
 		uint8_t temp = sizeof(notificationTypeList);
 		for(int i = 0; i< sizeof(notificationTypeList);i++)
 		{
@@ -3638,19 +3635,23 @@ void MAKERphone::homePopup(bool animation)
 		else if(carrierName == "" && !simInserted && sim_module_version == 255)
 			display.print("No module");	
 
-		if (batteryVoltage > 4100)
-			display.drawBitmap(74*scale, 1*scale, batteryChargingIcon, TFT_BLACK, scale);
-		else if (batteryVoltage <= 4100 && batteryVoltage >= 3850)
-			display.drawBitmap(74*scale, 1*scale, batteryFullIcon, TFT_BLACK, scale);
-		else if (batteryVoltage < 3850 && batteryVoltage >= 3750)
-			display.drawBitmap(74*scale, 1*scale, batteryHighIcon, TFT_BLACK, scale);
-		else if (batteryVoltage < 3750 && batteryVoltage >= 3650)
-			display.drawBitmap(74*scale, 1*scale, batteryMidIcon, TFT_BLACK, scale);
-		else if (batteryVoltage < 3650 && batteryVoltage >= 3600)
-			display.drawBitmap(74*scale, 1*scale, batteryLowIcon, TFT_BLACK, scale);
-		else if (batteryVoltage < 3600)
-			display.drawBitmap(74*scale, 1*scale, batteryEmptyIcon, TFT_BLACK, scale);
-
+		if(!digitalRead(CHRG_INT))
+			display.drawBitmap(148, 2, batteryChargingIcon, TFT_BLACK, 2);
+		else
+		{
+			// if (batteryVoltage > 4100)
+			// 	display.drawBitmap(148, 2, batteryChargingIcon, TFT_BLACK, 2);
+			if (batteryVoltage >= 3850)
+				display.drawBitmap(148, 2, batteryFullIcon, TFT_BLACK, 2);
+			else if (batteryVoltage < 3850 && batteryVoltage >= 3750)
+				display.drawBitmap(148, 2, batteryHighIcon, TFT_BLACK, 2);
+			else if (batteryVoltage < 3750 && batteryVoltage >= 3650)
+				display.drawBitmap(148, 2, batteryMidIcon, TFT_BLACK, 2);
+			else if (batteryVoltage < 3650 && batteryVoltage >= 3600)
+				display.drawBitmap(148, 2, batteryLowIcon, TFT_BLACK, 2);
+			else if (batteryVoltage < 3600)
+				display.drawBitmap(148, 2, batteryEmptyIcon, TFT_BLACK, 2);
+		}
 
 		if (millis() - blinkMillis >= 250) {
 			blinkMillis = millis();
