@@ -10,7 +10,7 @@ You will find this screen there:
 
 ![alt text](https://www.circuitmess.com/wp-content/uploads/Arduino.png)
 
-Download the installation file according to the OS you own. If you have Windows 8.1 or later, you can also download Arduino IDE over Microsoft Store, which will be considered to be completely different program than regular version by your software so keep in mind that your libraries will not be in sync.
+Download the installation file according to the OS you own. If you have Windows 8.1 or later, you can also download Arduino IDE over Microsoft Store. That version of the software will be considered to be a completely different program than the regular version by your system so keep in mind that your libraries will not be in sync. Other than that, these two versions work the same.
 
 Now when you have installed Arduino we can go to the next step!
 
