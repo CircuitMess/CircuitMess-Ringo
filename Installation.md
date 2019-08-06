@@ -41,7 +41,7 @@ These instructions work on every OS since Arduino automatically downloads tools 
 ![alt text](https://www.circuitmess.com/wp-content/uploads/Pic7.png)
 
 5. Type **'Ringo'** into the bar on top of the pop-up window.
-There will be one result found called **'Ringo by CircuitMess**. Click on the **Install** button.
+There will be one result found called **'Ringo by CircuitMess'**. Click on the **Install** button.
 
 ![alt text](https://www.circuitmess.com/wp-content/uploads/Pic8.png)
 
@@ -53,7 +53,7 @@ There will be one result found called **'Ringo by CircuitMess**. Click on the **
 
 ![alt text](https://www.circuitmess.com/wp-content/uploads/Pic10.png)
 
-7. Now it's time to select the installed board. Again go to **Tools** -> **Board** and in the dropdown menu under category **ESP32 Arduino** find **Ringo by CircuitMess**. It should be somewhere at the bottom. Select the board.
+7. Now it's time to select the installed board. Again go to **Tools** -> **Board** and in the dropdown menu under category **'ESP32 Arduino'** find **'Ringo by CircuitMess'**. It should be somewhere at the bottom. Select the board.
 
 ![alt text](https://www.circuitmess.com/wp-content/uploads/Pic11.png)
 
@@ -84,7 +84,7 @@ There will be one result found called **'Ringo by CircuitMess**. Click on the **
 
 ![alt text](https://www.circuitmess.com/wp-content/uploads/Pic15-1.png)
 
-11. On a newly opened window, from a drop down menu, select **'115200' baud**. That is the speed that the software writes at in the **Serial Monitor**. If the text says the line that you wrote in the **print** function, then everything works!  
+11. On a newly opened window, from a drop down menu, select **'115200 baud'**. That is the speed that the software writes at in the **Serial Monitor**. If the text says the line that you wrote in the **print** function, then everything works!  
 
 ![alt text](https://www.circuitmess.com/wp-content/uploads/Pic16.png)
 
