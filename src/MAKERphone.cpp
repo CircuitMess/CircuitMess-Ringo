@@ -840,14 +840,14 @@ bool MAKERphone::update() {
 	}
 	buttons.update();
 
-	if(SHUTDOWN_POPUP_ENABLE && buttons.released(14) && !wokeWithPWRBTN)
+	if(SHUTDOWN_POPUP_ENABLE && buttons.released(14) && !wokeWithPWRBTN && !inCall)
 	{
 		
 		buttons.update();
 		sleep();
 		
 	}
-	if(buttons.held(14, 40) && !inShutdownPopup && SHUTDOWN_POPUP_ENABLE && !wokeWithPWRBTN)
+	if(buttons.held(14, 40) && !inShutdownPopup && SHUTDOWN_POPUP_ENABLE && !wokeWithPWRBTN && !inCall)
 	{
 		inShutdownPopup = 1;
 		shutdownPopup();
@@ -1505,9 +1505,15 @@ void MAKERphone::incomingCall(String _serialData)
 			// update();
 			updateTimeRTC();
 			if(SDinsertedFlag)
-				addCall(number, RTC.now().unixtime(), tmp_time, 0);
+				addCall(number, checkContact(number), RTC.now().unixtime(), tmp_time, 0);
 			if(localBuffer.indexOf(",1,6,") != -1)
-				addNotification(1, number, RTC.now());
+			{
+				String temp = checkContact(number);
+				if(temp == "")
+					addNotification(1, number, RTC.now());
+				else
+					addNotification(1, temp, RTC.now());
+			}
 			// delay(1000);
 			return;
 		}
@@ -1685,7 +1691,7 @@ void MAKERphone::incomingCall(String _serialData)
 				updateTimeRTC();
 				if(SDinsertedFlag)
 				{
-					addCall(number, RTC.now().unixtime(), tmp_time, 2);
+					addCall(number, checkContact(number), RTC.now().unixtime(), tmp_time, 2);
 					saveSettings();
 				}
 
@@ -1763,7 +1769,7 @@ void MAKERphone::incomingCall(String _serialData)
 			updateTimeRTC();
 			if(SDinsertedFlag)
 			{
-				addCall(number, RTC.now().unixtime(), tmp_time, 2);
+				addCall(number, checkContact(number), RTC.now().unixtime(), tmp_time, 2);
 				saveSettings();
 			}
 
@@ -1864,6 +1870,7 @@ void MAKERphone::incomingMessage(String _serialData)
 		jb.clear();
 		JsonArray& jarr = jb.parseArray(file);
 		updateTimeRTC();
+		file.close();
 
 		if(!jarr.success())
 		{
@@ -1874,10 +1881,19 @@ void MAKERphone::incomingMessage(String _serialData)
 		{
 			if(jarr.size() > 34)
 				fullStack = 1;
-			saveMessage(text, number, 0, 1, &jarr);
-			addNotification(2, number, RTC.now());
+			String temp = checkContact(number);
+			if(temp == "")
+			{
+				saveMessage(text, "", number, 0, 1, &jarr);
+				addNotification(2, number, RTC.now());
+			}
+			else
+			{
+				saveMessage(text, temp, number, 0, 1, &jarr);
+				addNotification(2, temp, RTC.now());
+			}
+			
 		}
-		file.close();
 	}
 	
 	// popup(String(number + ": " + text), 50);
@@ -2021,7 +2037,7 @@ void MAKERphone::incomingMessage(String _serialData)
 
 
 }
-void MAKERphone::addCall(String number, uint32_t dateTime, int duration, uint8_t direction){
+void MAKERphone::addCall(String number, String contact, uint32_t dateTime, int duration, uint8_t direction){
 	File file = SD.open("/.core/call_log.json", "r");
 	Serial.print("Direction of call: "); Serial.println(direction);
 	if(file.size() < 2){
@@ -2045,6 +2061,7 @@ void MAKERphone::addCall(String number, uint32_t dateTime, int duration, uint8_t
 
 	JsonObject& new_item = jb.createObject();
 	new_item["number"] = number.c_str();
+	new_item["contact"] = contact.c_str();
 	new_item["dateTime"] = dateTime;
 	new_item["duration"] = duration;
 	new_item["direction"] = direction; //0 - missed, 1 - outgoing, 2 - incoming
@@ -2054,7 +2071,7 @@ void MAKERphone::addCall(String number, uint32_t dateTime, int duration, uint8_t
 	jarr.prettyPrintTo(file1);
 	file1.close();
 }
-void MAKERphone::saveMessage(String text, String number, bool isRead, bool direction, JsonArray *messages){
+void MAKERphone::saveMessage(String text, String contact, String number, bool isRead, bool direction, JsonArray *messages){
 	if(messages->size() > 34)
 	{
 		messages->remove(0);
@@ -2065,6 +2082,7 @@ void MAKERphone::saveMessage(String text, String number, bool isRead, bool direc
 	JsonObject& new_item = jb.createObject();
 	updateTimeRTC();
 	new_item["number"] = number;
+	new_item["contact"] = contact;
 	new_item["text"] = text;
 	new_item["dateTime"] = RTC.now().unixtime();
 	new_item["read"] = isRead;
@@ -2096,6 +2114,8 @@ void MAKERphone::checkSim()
 		input = waitForOK();
 		Serial.println(input);
 	}
+	// if(input.indexOf("busy") != -1)
+		// checkSim();
 	if (input.indexOf("NOT READY", input.indexOf("+CPIN:")) != -1 || (input.indexOf("ERROR") != -1 && input.indexOf("+CPIN:") == -1)
 		|| input.indexOf("NOT INSERTED") != -1 || input.indexOf("not inserted", input.indexOf("+CPIN")) != -1
 		|| input.indexOf("failure") != -1)
@@ -4665,4 +4685,42 @@ void MAKERphone::reallocateAudio()
 			1,						/* priority of the task */
 			&Task1,
 			0);				/* Task handle to keep track of created task */
+}
+String MAKERphone::checkContact(String contactNumber)
+{
+	File file = SD.open("/.core/contacts.json", "r");
+
+	if(file.size() < 2){ // empty -> FILL
+		Serial.println("Override");
+		file.close();
+		jb.clear();
+		JsonArray& jarr = jb.createArray();
+		delay(10);
+		File file1 = SD.open("/.core/contacts.json", "w");
+		jarr.prettyPrintTo(file1);
+		file1.close();
+		file = SD.open("/.core/contacts.json", "r");
+		if(!file)
+			Serial.println("CONTACTS ERROR");
+	}
+	jb.clear();
+	JsonArray& jarr = jb.parseArray(file);
+	file.close();
+
+	if(!jarr.success())
+		Serial.println("Error loading contacts");
+	else
+	{
+		Serial.println("Read from .json");
+		jarr.prettyPrintTo(Serial);
+		
+		for (JsonObject& elem : jarr) {
+			char * tempNumber = (char*)elem["number"].as<char*>();
+			Serial.println(elem["name"].as<char*>());
+			Serial.println(elem["number"].as<char*>());
+			if(contactNumber == String(tempNumber))
+				return String(elem["name"].as<char*>());
+		}
+	}
+	return "";
 }
