@@ -83,7 +83,7 @@ Change USB port and/or check your cable.
 
 
     ```cpp
-    Serial.print("My first Arduino program for MAKERphone...");
+    Serial.print("My first Arduino program for CircuitMess Ringo! ");
      ```
 
      Now click on the little **Upload** arrow in the upper left corner.
@@ -94,7 +94,7 @@ Change USB port and/or check your cable.
 Now only thing left to do is to check if everything is working properly.  
  Click the magnifier icon in the upper right corner of the screen.
 
-<img src="https://www.circuitmess.com/wp-content/uploads/Pic15-1.png" alt="drawing" width="700"/>
+<img src="https://www.circuitmess.com/wp-content/uploads/Pic15-2.png" alt="drawing" width="700"/>
 
 11. On a newly opened window, from a drop down menu, select **'115200 baud'**.  
  That is the speed that the software writes at in the **Serial Monitor**.   
