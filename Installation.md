@@ -2,7 +2,7 @@
 
 ## 0. Arduino IDE
 
-To start programming your own things on MAKERbuino you're going to need a software called **Arduino**. If you already have it installed on your computer, you can skip this step. 
+To start programming your own things on Ringo phone you're going to need a software called **Arduino**. If you already have it installed on your computer, you can skip this step. 
 
 Go to the adress: https://www.arduino.cc/en/Main/Software .
 
