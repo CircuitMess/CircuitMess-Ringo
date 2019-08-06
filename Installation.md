@@ -88,19 +88,19 @@ Change USB port and/or check your cable.
 
      Now click on the little **Upload** arrow in the upper left corner.
 
-<img src="https://www.circuitmess.com/wp-content/uploads/Pic14.png" alt="drawing" width="700"/>
+<img src="https://www.circuitmess.com/wp-content/uploads/Pic14-1.png" alt="drawing" width="700"/>
 
 10. After a few moments, the text should say **'Done uploading'**.   
 Now only thing left to do is to check if everything is working properly.  
  Click the magnifier icon in the upper right corner of the screen.
 
-<img src="https://www.circuitmess.com/wp-content/uploads/Pic15.png" alt="drawing" width="700"/>
+<img src="https://www.circuitmess.com/wp-content/uploads/Pic15-1.png" alt="drawing" width="700"/>
 
 11. On a newly opened window, from a drop down menu, select **'115200 baud'**.  
  That is the speed that the software writes at in the **Serial Monitor**.   
  If the text says the line that you wrote in the **print** function, then everything works!  
 
-<img src="https://www.circuitmess.com/wp-content/uploads/Pic16.png" alt="drawing" width="700"/>
+<img src="https://www.circuitmess.com/wp-content/uploads/Pic16-1.png" alt="drawing" width="700"/>
 
 
 **Congrats! You have successfully set up Ringo phone.  
