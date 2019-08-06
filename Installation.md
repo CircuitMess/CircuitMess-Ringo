@@ -22,7 +22,7 @@ These instructions work on every OS since Arduino automatically downloads tools 
 
 ![alt text](https://www.circuitmess.com/wp-content/uploads/Pic1.png)
 
-If this is your first time meeting Arduino IDE - get familliar, you're going to use it a lot.
+**NOTE**: If this is your first time meeting Arduino IDE - get familliar, you're going to use it a lot.
 
 2. Go to **File** -> **Preferences**
 
