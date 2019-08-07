@@ -795,10 +795,10 @@ bool MAKERphone::update() {
 				curr_millis = millis();
 				char c = Serial1.read();
 				temp += c;
-				Serial.println(temp);
-				Serial.println("-----------------");
+				// Serial.println(temp);
+				// Serial.println("-----------------");
 				helper = temp.indexOf("+CMT:");
-				Serial.println(helper);
+				// Serial.println(helper);
 			}
 		}
 		if(temp.indexOf("\r", temp.indexOf("1,4,0,0,")) != -1 || temp.indexOf("RING") != -1)
@@ -1888,17 +1888,18 @@ void MAKERphone::incomingMessage(String _serialData)
 		}
 		else
 		{
+			jarr.prettyPrintTo(Serial);
 			if(jarr.size() > 34)
 				fullStack = 1;
 			String temp = checkContact(number);
 			if(temp == "")
 			{
-				saveMessage(text, "", number, 0, 1, &jarr);
+				saveMessage(text, "", number, 0, 1);
 				addNotification(2, number, RTC.now());
 			}
 			else
 			{
-				saveMessage(text, temp, number, 0, 1, &jarr);
+				saveMessage(text, temp, number, 0, 1);
 				addNotification(2, temp, RTC.now());
 			}
 			
@@ -2080,14 +2081,24 @@ void MAKERphone::addCall(String number, String contact, uint32_t dateTime, int d
 	jarr.prettyPrintTo(file1);
 	file1.close();
 }
-void MAKERphone::saveMessage(String text, String contact, String number, bool isRead, bool direction, JsonArray *messages){
-	if(messages->size() > 34)
+void MAKERphone::saveMessage(String text, String contact, String number, bool isRead, bool direction){
+	File file = SD.open("/.core/messages.json", "r");
+	file = SD.open("/.core/messages.json", "r");
+	while(!file)
+		Serial.println("Messages ERROR");
+	jb.clear();
+	JsonArray& messages = jb.parseArray(file);
+	file.close();
+	if(messages.size() > 34)
 	{
-		messages->remove(0);
+		Serial.println("SMS limit reached");
+		messages.remove(0);
 		File file = SD.open("/.core/messages.json", "w");
-		messages->prettyPrintTo(file);
+		messages.prettyPrintTo(file);
 		file.close();
 	}
+	messages.prettyPrintTo(Serial);
+	delay(1);
 	JsonObject& new_item = jb.createObject();
 	updateTimeRTC();
 	new_item["number"] = number;
@@ -2097,10 +2108,11 @@ void MAKERphone::saveMessage(String text, String contact, String number, bool is
 	new_item["read"] = isRead;
 	new_item["direction"] = direction; //0 - outgoing, 1 - incoming
 
-	messages->add(new_item);
+	messages.add(new_item);
+
 	File file1 = SD.open("/.core/messages.json", "w");
-	messages->prettyPrintTo(file1);
-	// messages->prettyPrintTo(Serial);
+	messages.prettyPrintTo(file1);
+	messages.prettyPrintTo(Serial);
 	file1.close();
 }
 void MAKERphone::checkSim()
@@ -4354,7 +4366,7 @@ void MAKERphone::shutdownPopup(bool animation)
 
 						if(strstr(buffer, "RDY") != nullptr)
 							found = 1;
-						if((millis() - timer > 3000 && sim_module_version == 1) ||
+						if((millis() - timer > 5000 && sim_module_version == 1) ||
 						(millis() - timer > 28000 && sim_module_version == 0))
 							break;
 					}
@@ -4722,13 +4734,8 @@ String MAKERphone::checkContact(String contactNumber)
 		Serial.println("Error loading contacts");
 	else
 	{
-		Serial.println("Read from .json");
-		jarr.prettyPrintTo(Serial);
-		
 		for (JsonObject& elem : jarr) {
 			char * tempNumber = (char*)elem["number"].as<char*>();
-			Serial.println(elem["name"].as<char*>());
-			Serial.println(elem["number"].as<char*>());
 			if(contactNumber == String(tempNumber))
 				return String(elem["name"].as<char*>());
 		}
