@@ -38,7 +38,7 @@ String MAKERphone::waitForOK()
 	memset(buffer, 0, sizeof(buffer));
 	char c;
 	uint32_t temp = millis();
-	while(strstr(buffer, "OK") == nullptr && millis() - temp < 2000)
+	while(strstr(buffer, "OK") == nullptr && millis() - temp < 10000)
 		if(Serial1.available())
 		{
 			c = Serial1.read();
@@ -369,7 +369,38 @@ void MAKERphone::begin(bool splash) {
 	}
 
 	updateTimeRTC();
+	//Audio
+	initWavLib();
+	xTaskCreatePinnedToCore(
+				Task1code,				/* Task function. */
+				"Task1",				/* name of task. */
+				10000,					/* Stack size of task */
+				NULL,					/* parameter of the task */
+				1,						/* priority of the task */
+				&Task1,
+				0);				/* Task handle to keep track of created task */
+	addOscillator(osc);
+	xTaskCreatePinnedToCore(
+				ADCmeasuring,				/* Task function. */
+				"MeasuringTask",				/* name of task. */
+				10000,					/* Stack size of task */
+				NULL,					/* parameter of the task */
+				1,						/* priority of the task */
+				&MeasuringTask,
+				0);				/* Task handle to keep track of created task */
 	
+
+	ringtone = nullptr;
+	if(SDinsertedFlag)
+	{
+		loadSettings(1);
+		loadAlarms();
+		loadNotifications();
+		ringtone = new MPTrack((char*)ringtone_path.c_str());
+	}
+	applySettings();
+	checkAlarms();
+
 	if(sim_module_version != 255)
 	{
 		Serial.println("module inserted");
@@ -415,39 +446,6 @@ void MAKERphone::begin(bool splash) {
 		waitForOK();
 		Serial.println("Serial1 up and running...");
 	}
-
-	//Audio
-	initWavLib();
-	xTaskCreatePinnedToCore(
-				Task1code,				/* Task function. */
-				"Task1",				/* name of task. */
-				10000,					/* Stack size of task */
-				NULL,					/* parameter of the task */
-				1,						/* priority of the task */
-				&Task1,
-				0);				/* Task handle to keep track of created task */
-	addOscillator(osc);
-	xTaskCreatePinnedToCore(
-				ADCmeasuring,				/* Task function. */
-				"MeasuringTask",				/* name of task. */
-				10000,					/* Stack size of task */
-				NULL,					/* parameter of the task */
-				1,						/* priority of the task */
-				&MeasuringTask,
-				0);				/* Task handle to keep track of created task */
-	
-
-	ringtone = nullptr;
-	if(SDinsertedFlag)
-	{
-		loadSettings(1);
-		loadAlarms();
-		loadNotifications();
-		ringtone = new MPTrack((char*)ringtone_path.c_str());
-	}
-	applySettings();
-	checkAlarms();
-
 	
 	sleepTimer = millis();
 }
@@ -3143,10 +3141,14 @@ void MAKERphone::applySettings()
 			Serial1.println(micGain);
 			waitForOK();
 		}
-		
-		if(airplaneMode)
+
+		Serial1.println("AT+CFUN?");
+		String readOutput = "";
+		while(readOutput.indexOf("+CFUN:") == -1)
+			readOutput = waitForOK();
+		if(airplaneMode && readOutput.indexOf("+CFUN: 4") == -1)
 			Serial1.println("AT+CFUN=4");
-		else
+		else if(!airplaneMode && readOutput.indexOf("+CFUN: 1") == -1)
 			Serial1.println("AT+CFUN=1");
 	}
 	for(int i = 0; i < 4;i++)
