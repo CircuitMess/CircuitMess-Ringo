@@ -384,7 +384,7 @@ void MAKERphone::begin(bool splash) {
 		if(sim_module_version == 1)
 		{
 			Serial1.println(F("AT+CRSL=100"));
-			Serial1.println(F("AT+CLVL=10"));
+			Serial1.println(F("AT+CLVL=100"));
 			Serial1.println(F("AT+CLTS=1")); //Enable local Timestamp mode (used for syncrhonising RTC with GSM time
 			Serial1.println(F("AT+IPR=9600"));
 		}
