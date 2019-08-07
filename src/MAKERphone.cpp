@@ -70,7 +70,6 @@ void ADCmeasuring(void *parameters)
 
 //core
 void MAKERphone::begin(bool splash) {
-
 	String input="";
 	pinMode(soundSwitchPin, OUTPUT);
 	digitalWrite(soundSwitchPin, LOW);
@@ -180,6 +179,10 @@ void MAKERphone::begin(bool splash) {
 	bool found = 0;
 	char myBuffer[200];
 	memset(myBuffer, 0, sizeof(myBuffer));
+	for(uint8_t i = 0; i< 200;i++)
+		myBuffer[i] = 0;
+	Serial.print("myBuffer: ");
+	Serial.println(myBuffer);
 	bool temperino = 1;
 	Serial1.flush();
 	if(sim_module_version == 0) //SIM7600
@@ -199,9 +202,10 @@ void MAKERphone::begin(bool splash) {
 			if(Serial1.available())
 			{
 				// buffer+=(char)Serial1.read();
-				char testArray[1];
-				testArray[0] = (char)Serial1.read();
-				strcat(myBuffer, testArray);
+				char c = Serial1.read();
+				// testArray[0] = (char)Serial1.read();
+				// strcat(myBuffer, testArray);
+				strncat(myBuffer, &c, 1);
 				Serial.println(myBuffer);
 				// Serial.println(buffer);
 				Serial.println("-------------");
@@ -230,9 +234,10 @@ void MAKERphone::begin(bool splash) {
 				if(Serial1.available())
 				{
 					// buffer+=(char)Serial1.read();
-					char testArray[1];
-					testArray[0] = (char)Serial1.read();
-					strcat(myBuffer, testArray);
+					char c = Serial1.read();
+					// testArray[0] = (char)Serial1.read();
+					// strcat(myBuffer, testArray);
+					strncat(myBuffer, &c, 1);
 					Serial.println(myBuffer);
 					// Serial.println(buffer);
 					Serial.println("-------------");
@@ -269,11 +274,11 @@ void MAKERphone::begin(bool splash) {
 			if(Serial1.available())
 			{
 				// buffer+=(char)Serial1.read();
-				char testArray[1];
-				testArray[0] = (char)Serial1.read();
-				strcat(myBuffer, testArray);
+				char c = Serial1.read();
+				// testArray[0] = (char)Serial1.read();
+				// strcat(myBuffer, testArray);
+				strncat(myBuffer, &c, 1);
 				Serial.println(myBuffer);
-				// Serial.println(buffer);
 				Serial.println("-------------");
 			}
 			if(strstr(myBuffer, "OK") != nullptr)
@@ -300,9 +305,10 @@ void MAKERphone::begin(bool splash) {
 				if(Serial1.available())
 				{
 					// buffer+=(char)Serial1.read();
-					char testArray[1];
-					testArray[0] = (char)Serial1.read();
-					strcat(myBuffer, testArray);
+					char c = Serial1.read();
+					// testArray[0] = (char)Serial1.read();
+					// strcat(myBuffer, testArray);
+					strncat(myBuffer, &c, 1);
 					Serial.println(myBuffer);
 					// Serial.println(buffer);
 					Serial.println("-------------");
