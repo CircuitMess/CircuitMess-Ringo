@@ -2133,8 +2133,11 @@ void MAKERphone::checkSim()
 		input = waitForOK();
 		Serial.println(input);
 	}
-	// if(input.indexOf("busy") != -1)
-		// checkSim();
+	if(input.indexOf("busy") != -1)
+	{
+		checkSim();
+		return;
+	}
 	if (input.indexOf("NOT READY", input.indexOf("+CPIN:")) != -1 || (input.indexOf("ERROR") != -1 && input.indexOf("+CPIN:") == -1)
 		|| input.indexOf("NOT INSERTED") != -1 || input.indexOf("not inserted", input.indexOf("+CPIN")) != -1
 		|| input.indexOf("failure") != -1)
