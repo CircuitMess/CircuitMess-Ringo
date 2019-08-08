@@ -8,7 +8,7 @@
       "websiteURL": "https://github.com/CircuitMess/MAKERphone", 
       "platforms": [
         {
-          "category": "CM", 
+          "category": "ESP32", 
           "name": "Ringo", 
           "url": "https://github.com/CircuitMess/MAKERphone/blob/boardArduino/Ringo-1.0.0.zip?raw=true", 
           "checksum": "SHA-256:48af52e02bc1bcd0568d8da8531eac624d9e7a1c0696f145fe9709a9cfd629ab", 
@@ -251,7 +251,7 @@
         }
       ], 
       "email": "rober@circuitmess.com", 
-      "name": "esp32"
+      "name": "cm"
     }
   ]
 }
