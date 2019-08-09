@@ -1172,6 +1172,18 @@ void MAKERphone::sleep() {
 			display.drawBitmap(148, 2, batteryChargingIcon, TFT_BLACK, 2);
 		else
 		{
+			display.setTextFont(2);
+			display.setTextSize(1);
+			display.setTextColor(TFT_BLACK);
+			display.setCursor(120, 2);
+			//y = -1378200 + 1110033*x - 298000*x^2 + 26666.67*x^3
+			//y - percentage(%), x - voltage(V)
+			double percentage = -1378200 + (1110.033*batteryVoltage) - (0.298*batteryVoltage*batteryVoltage) + (0.00002666667*batteryVoltage*batteryVoltage*batteryVoltage);
+			if(percentage < 101)
+			{
+				display.printf("%d", (int)percentage);
+				display.print("%");
+			}
 			// if (batteryVoltage > 4100)
 			// 	display.drawBitmap(148, 2, batteryChargingIcon, TFT_BLACK, 2);
 			if (batteryVoltage >= 3850)
@@ -2693,6 +2705,18 @@ void MAKERphone::lockscreen() {
 			display.drawBitmap(148, 2, batteryChargingIcon, TFT_BLACK, 2);
 		else
 		{
+			display.setTextFont(2);
+			display.setTextSize(1);
+			display.setTextColor(TFT_BLACK);
+			display.setCursor(120, 2);
+			//y = -1378200 + 1110033*x - 298000*x^2 + 26666.67*x^3
+			//y - percentage(%), x - voltage(V)
+			double percentage = -1378200 + (1110.033*batteryVoltage) - (0.298*batteryVoltage*batteryVoltage) + (0.00002666667*batteryVoltage*batteryVoltage*batteryVoltage);
+			if(percentage < 101)
+			{
+				display.printf("%d", (int)percentage);
+				display.print("%");
+			}
 			// if (batteryVoltage > 4100)
 			// 	display.drawBitmap(148, 2, batteryChargingIcon, TFT_BLACK, 2);
 			if (batteryVoltage >= 3850)
@@ -2706,6 +2730,7 @@ void MAKERphone::lockscreen() {
 			else if (batteryVoltage < 3600)
 				display.drawBitmap(148, 2, batteryEmptyIcon, TFT_BLACK, 2);
 		}
+		
 		uint8_t temp = sizeof(notificationTypeList);
 		for(int i = 0; i< sizeof(notificationTypeList);i++)
 		{
@@ -3662,6 +3687,18 @@ void MAKERphone::homePopup(bool animation)
 			display.drawBitmap(148, 2, batteryChargingIcon, TFT_BLACK, 2);
 		else
 		{
+			display.setTextFont(2);
+			display.setTextSize(1);
+			display.setTextColor(TFT_BLACK);
+			display.setCursor(120, 2);
+			//y = -1378200 + 1110033*x - 298000*x^2 + 26666.67*x^3
+			//y - percentage(%), x - voltage(V)
+			double percentage = -1378200 + (1110.033*batteryVoltage) - (0.298*batteryVoltage*batteryVoltage) + (0.00002666667*batteryVoltage*batteryVoltage*batteryVoltage);
+			if(percentage < 101)
+			{
+				display.printf("%d", (int)percentage);
+				display.print("%");
+			}
 			// if (batteryVoltage > 4100)
 			// 	display.drawBitmap(148, 2, batteryChargingIcon, TFT_BLACK, 2);
 			if (batteryVoltage >= 3850)
@@ -3680,10 +3717,7 @@ void MAKERphone::homePopup(bool animation)
 			blinkMillis = millis();
 			cursorState = !cursorState;
 		}
-		display.setTextFont(2);
-		display.setTextSize(1);
-		display.setCursor(0,112);
-		display.setTextColor(TFT_BLACK);
+		
 		if(millis() - notificationMillis >= 2000)
 			notificationMillis = millis();
 
