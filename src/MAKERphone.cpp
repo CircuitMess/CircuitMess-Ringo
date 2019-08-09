@@ -2849,11 +2849,9 @@ void MAKERphone::drawJpeg(String filename, int xpos, int ypos) {
   Serial.println(F("==========================="));
   Serial.print(F("Drawing file: ")); Serial.println(filename);
   Serial.println(F("==========================="));
-
   // Open the named file (the Jpeg decoder library will close it after rendering image)
   File jpegFile = SD.open( filename);    // File handle reference for SPIFFS
   //  File jpegFile = SD.open( filename, FILE_READ);  // or, file handle reference for SD library
-
   if ( !jpegFile ) {
     Serial.print(F("ERROR: File \"")); Serial.print(filename); Serial.println ("\" not found!");
     return;
@@ -2863,7 +2861,6 @@ void MAKERphone::drawJpeg(String filename, int xpos, int ypos) {
   //boolean decoded = JpegDec.decodeFsFile(jpegFile); // Pass a SPIFFS file handle to the decoder,
   //boolean decoded = JpegDec.decodeSdFile(jpegFile); // or pass the SD file handle to the decoder,
   boolean decoded = JpegDec.decodeSdFile(jpegFile);  // or pass the filename (leading / distinguishes SPIFFS files)
-  jpegFile.close();
   // Note: the filename can be a String or character array type
   if (decoded) {
     // print information about the image to the serial port
@@ -2875,6 +2872,7 @@ void MAKERphone::drawJpeg(String filename, int xpos, int ypos) {
   else {
     Serial.println(F("Jpeg file format not supported!"));
   }
+  jpegFile.close();
 }
 void MAKERphone::jpegRender(int xpos, int ypos) {
 	Serial.println("JPEG render");
