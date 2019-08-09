@@ -96,7 +96,18 @@ bool Buttons::pressed(uint8_t button) {
 }
 
 bool Buttons::released(uint8_t button) {
-	return states[(uint8_t)button] == 0xFFFF;
+	if(states[(uint8_t)button] == 0xFFFF)
+	{
+		if(holdForUnlock)
+		{
+			holdForUnlock = 0;
+			return 0;
+		}
+		else
+			return 1;
+	}
+	else
+		return 0;
 }
 
 bool Buttons::held(uint8_t button, uint16_t time) {

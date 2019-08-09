@@ -2836,6 +2836,7 @@ void MAKERphone::lockscreen() {
 		else if(buttons.timeHeld(BTN_A) >= 30)
 		{
 			// while(!update());
+			buttons.holdForUnlock = 1;
 			inLockScreen = 0;
 			return;
 		}
