@@ -1039,12 +1039,12 @@ void MAKERphone::sleep() {
 		ledcAttachPin(LCD_BL_PIN, LEDC_CHANNEL);
 		ledcAnalogWrite(LEDC_CHANNEL, actualBrightness);
 		tft.writecommand(17);
+		delay(50);
 		while(!update());
 		return;
 	}
 	while(!update());
-	tft.writecommand(17);
-	delay(5);
+	// delay(1000);
 	if(!inLockScreen)
 	{
 		display.fillScreen(backgroundColors[backgroundIndex]);
@@ -1213,8 +1213,10 @@ void MAKERphone::sleep() {
 		display.setTextColor(TFT_BLACK);
 		display.setCursor(56, 54);
 		display.print(":");
-		update();
+		while(!update());
 	}
+	tft.writecommand(17);
+	delay(50);
 	display.pushSprite(0,0);
 	initWavLib();
 	for(int i = 0; i < 4; i++)
