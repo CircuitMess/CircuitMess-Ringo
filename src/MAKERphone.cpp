@@ -67,7 +67,24 @@ void ADCmeasuring(void *parameters)
 		voltageSample = 0;
 	}
 }
-
+char* subchar(char* str, uint16_t start, uint16_t length)
+{
+    char* ret = new char[length + 1];
+    for (short i = start; i < start + length; i++)
+        ret[i - start] = str[i];
+    ret[length] = '\0';
+    return ret;
+}
+char* charReverse(char *str) {
+  size_t len = strlen(str);
+  size_t i = 0;
+  while (len > i) {
+    char tmp = str[--len];
+    str[len] = str[i];
+    str[i++] = tmp;
+  }
+  return str;
+}
 //core
 void MAKERphone::begin(bool splash) {
 	String input="";
@@ -431,7 +448,7 @@ void MAKERphone::begin(bool splash) {
 			waitForOK();
 		}
 		waitForOK();
-		Serial1.println(F("AT+CMGF=1"));
+		Serial1.println(F("AT+CMGF=0"));
 		waitForOK();
 		Serial1.println(F("AT+CNMI=1,2,0,0,0"));
 		waitForOK();
@@ -1886,7 +1903,7 @@ void MAKERphone::incomingMessage(String _serialData)
 		}
 		else
 		{
-			jarr.prettyPrintTo(Serial);
+			// jarr.prettyPrintTo(Serial);
 			if(jarr.size() > 34)
 				fullStack = 1;
 			String temp = checkContact(number);
@@ -2095,7 +2112,7 @@ void MAKERphone::saveMessage(String text, String contact, String number, bool is
 		messages.prettyPrintTo(file);
 		file.close();
 	}
-	messages.prettyPrintTo(Serial);
+	// messages.prettyPrintTo(Serial);
 	delay(1);
 	JsonObject& new_item = jb.createObject();
 	updateTimeRTC();
@@ -2110,7 +2127,7 @@ void MAKERphone::saveMessage(String text, String contact, String number, bool is
 
 	File file1 = SD.open("/.core/messages.json", "w");
 	messages.prettyPrintTo(file1);
-	messages.prettyPrintTo(Serial);
+	// messages.prettyPrintTo(Serial);
 	file1.close();
 }
 void MAKERphone::checkSim()
@@ -4746,4 +4763,34 @@ String MAKERphone::checkContact(String contactNumber)
 		}
 	}
 	return "";
+}
+void MAKERphone::pduDecode(char* PDU)
+{
+	uint16_t cursor = 0;
+	// +CMT: "",25
+	//07 91 83 95 15 00 10 00 04 0C9183953577164500009180906190928006325ACD76C301
+	/*
+	07 - length of SMSC info
+	91 - type of address (91 international)
+
+	 */
+	uint8_t SMSC_length = atoi(subchar(PDU, cursor,2));
+	cursor+=4; //one octet for SMSC length, one for type-of-address
+	Serial.println(SMSC_length);
+	if(SMSC_length > 1)
+		SMSC_length--;
+	char phoneNumber[16];
+	memset(phoneNumber, 0, 16);
+	Serial.println("here");
+	delay(5);
+	for(int i = 0; i < SMSC_length; i++)
+	{
+		Serial.println("here");
+		delay(5);
+		strncat(phoneNumber, charReverse(subchar(PDU, cursor, 2)), 2);
+		cursor+=2;
+		Serial.println("here");
+		delay(5);
+	}
+	Serial.println(phoneNumber);
 }
