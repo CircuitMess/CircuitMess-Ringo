@@ -2745,86 +2745,76 @@ void MAKERphone::lockscreen() {
 			display.setCursor(56, 54);
 			display.print(":");
 		}
-		update();
 
-		display.setTextSize(2);
 
-		if (buttons.pressed(BTN_A)) {
+		if(buttons.timeHeld(BTN_A) < 5 && buttons.timeHeld(BTN_A) > 0)
+		{ 
+			display.setTextFont(2);
 			display.setTextSize(1);
-
-			display.fillRect(0, 112, display.width(), 14, backgroundColors[backgroundIndex]);
+			display.fillRect(0, 112, display.width(), 16, backgroundColors[backgroundIndex]);
+			display.setCursor(2, 111);
+			display.print("Unlocking");
+		}
+		if (buttons.timeHeld(BTN_A) >= 5 && buttons.timeHeld(BTN_A) < 12) {
+			display.fillRect(0, 112, display.width(), 16, backgroundColors[backgroundIndex]);
 			display.setCursor(2, 111);
 			display.setTextFont(2);
-			display.print("Unlocking");
-			buttonHeld = millis();
-			while (!buttons.released(BTN_A))
-			{
+			display.setTextSize(1);
+			display.print("Unlocking *");
 
-				if (buttons.timeHeld(BTN_A) > 5 && buttons.timeHeld(BTN_A) < 12) {
-					display.fillRect(0, 114, display.width(), 14, backgroundColors[backgroundIndex]);
-					display.setCursor(2, 111);
-					display.setTextFont(2);
-					display.print("Unlocking *");
-
-					leds[0] = CRGB::Red;
-					leds[7] = CRGB::Red;
-					// FastLED.show();
-				}
-				else if (buttons.timeHeld(BTN_A) >= 12 && buttons.timeHeld(BTN_A) < 18)
-				{
-					display.fillRect(0, 114, display.width(), 14, backgroundColors[backgroundIndex]);
-					display.setCursor(2, 111);
-					display.setTextFont(2);
-					display.print("Unlocking * *");
-					leds[0] = CRGB::Red;
-					leds[7] = CRGB::Red;
-					leds[1] = CRGB::Red;
-					leds[6] = CRGB::Red;
-					// FastLED.show();
-				}
-				else if (buttons.timeHeld(BTN_A) >= 18 && buttons.timeHeld(BTN_A) < 24)
-				{
-					display.fillRect(0, 114, display.width(), 14, backgroundColors[backgroundIndex]);
-					display.setCursor(2, 111);
-					display.setTextFont(2);
-					display.print("Unlocking * * *");
-					leds[0] = CRGB::Red;
-					leds[7] = CRGB::Red;
-					leds[1] = CRGB::Red;
-					leds[6] = CRGB::Red;
-					leds[2] = CRGB::Red;
-					leds[5] = CRGB::Red;
-					// FastLED.show();
-				}
-				else if (buttons.timeHeld(BTN_A) >= 24)
-				{
-					display.fillRect(0, 114, display.width(), 14, backgroundColors[backgroundIndex]);
-					display.setCursor(2, 111);
-					display.setTextFont(2);
-					display.print("Unlocking * * * *");
-
-					// FastLED.show();
-					while(!buttons.released(BTN_A))
-					{
-						leds[0] = CRGB::Red;
-						leds[7] = CRGB::Red;
-						leds[1] = CRGB::Red;
-						leds[6] = CRGB::Red;
-						leds[2] = CRGB::Red;
-						leds[5] = CRGB::Red;
-						leds[3] = CRGB::Red;
-						leds[4] = CRGB::Red;
-						// while(!update());
-						update();
-					}
-					while(!update());
-					Serial.println(millis() - buttonHeld);
-					inLockScreen = 0;
-					return;
-				}
-				update();
-			}
+			leds[0] = CRGB::Red;
+			leds[7] = CRGB::Red;
+			// FastLED.show();
 		}
+		else if (buttons.timeHeld(BTN_A) >= 12 && buttons.timeHeld(BTN_A) < 18)
+		{
+			display.fillRect(0, 112, display.width(), 16, backgroundColors[backgroundIndex]);
+			display.setCursor(2, 111);
+			display.setTextFont(2);
+			display.setTextSize(1);
+			display.print("Unlocking * *");
+			leds[0] = CRGB::Red;
+			leds[7] = CRGB::Red;
+			leds[1] = CRGB::Red;
+			leds[6] = CRGB::Red;
+		}
+		else if (buttons.timeHeld(BTN_A) >= 18 && buttons.timeHeld(BTN_A) < 24)
+		{
+			display.fillRect(0, 112, display.width(), 16, backgroundColors[backgroundIndex]);
+			display.setCursor(2, 111);
+			display.setTextFont(2);
+			display.setTextSize(1);
+			display.print("Unlocking * * *");
+			leds[0] = CRGB::Red;
+			leds[7] = CRGB::Red;
+			leds[1] = CRGB::Red;
+			leds[6] = CRGB::Red;
+			leds[2] = CRGB::Red;
+			leds[5] = CRGB::Red;
+		}
+		else if (buttons.timeHeld(BTN_A) >= 24 && buttons.timeHeld(BTN_A) < 30)
+		{
+			display.fillRect(0, 112, display.width(), 16, backgroundColors[backgroundIndex]);
+			display.setCursor(2, 111);
+			display.setTextFont(2);
+			display.setTextSize(1);
+			display.print("Unlocking * * * *");
+			leds[0] = CRGB::Red;
+			leds[7] = CRGB::Red;
+			leds[1] = CRGB::Red;
+			leds[6] = CRGB::Red;
+			leds[2] = CRGB::Red;
+			leds[5] = CRGB::Red;
+			leds[3] = CRGB::Red;
+			leds[4] = CRGB::Red;
+		}
+		else if(buttons.timeHeld(BTN_A) >= 30)
+		{
+			// while(!update());
+			inLockScreen = 0;
+			return;
+		}
+		update();
 	}
 }
 
