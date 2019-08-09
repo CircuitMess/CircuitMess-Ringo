@@ -570,8 +570,7 @@ bool MAKERphone::update() {
 						Serial1.println("AT+CSPN?");
 					Serial1.println("AT+CSQ");
 
-					if (clockYear%100 == 4 || clockYear%100 == 80 || clockMonth == 0 || clockMonth > 12 ||
-					clockHour > 24 || clockMinute >= 60)
+					if (clockYear % 100 < 19 || clockYear % 100 >= 40 || clockMonth < 1 || clockMonth > 12 || clockHour > 24 || clockMinute >= 60)
 						Serial1.println("AT+CCLK?");
 				}
 			}
@@ -605,8 +604,7 @@ bool MAKERphone::update() {
 				case 2:
 					if (simInserted && !airplaneMode)
 					{
-						if (clockYear%100 == 4 || clockYear%100 == 80 || clockMonth == 0 || clockMonth > 12 ||
-						clockHour > 24 || clockMinute >= 60)
+						if (clockYear % 100 < 19 || clockYear % 100 >= 40 || clockMonth < 1 || clockMonth > 12 || clockHour > 24 || clockMinute >= 60)
 						{
 							// Serial1.println("AT+CNETSTOP");
 							// waitForOK();
@@ -664,7 +662,7 @@ bool MAKERphone::update() {
 				if (updateBuffer.indexOf("\n", updateBuffer.indexOf("+CSQ:")) != -1)
 					signalStrength = updateBuffer.substring(updateBuffer.indexOf(" ", updateBuffer.indexOf("+CSQ:")) + 1, updateBuffer.indexOf(",", updateBuffer.indexOf(" ", updateBuffer.indexOf("+CSQ:")))).toInt();
 				
-				if (clockYear % 100 == 4 || clockYear % 100 == 80 || clockMonth == 0 || clockMonth > 12 || clockHour > 24 || clockMinute >= 60)
+				if (clockYear % 100 < 19 || clockYear % 100 >= 40 || clockMonth < 1 || clockMonth > 12 || clockHour > 24 || clockMinute >= 60)
 					if (updateBuffer.indexOf("\n", updateBuffer.indexOf("+CCLK:")) != -1)
 					{
 						uint16_t index = updateBuffer.indexOf(F("+CCLK: \""));
@@ -1292,6 +1290,7 @@ void MAKERphone::updateTimeGSM() {
 	//Serial1.flush();
 	//delay(500);
 	String reply;
+	uint16_t temp = 0;
 	while (!Serial1.available())
 		update();
 	while (Serial1.available()) {
@@ -1317,37 +1316,61 @@ void MAKERphone::updateTimeGSM() {
 	char c1, c2; //buffer for saving date and time numerals in form of characters
 	c1 = reply.charAt(index + 8);
 	c2 = reply.charAt(index + 9);
-	clockYear = 2000 + ((c1 - '0') * 10) + (c2 - '0');
+	temp = 2000 + ((c1 - '0') * 10) + (c2 - '0');
+	if(temp % 100 < 19 ||  temp % 100 >= 40)
+		return;
+	else
+		clockYear = temp;
 	Serial.println(F("CLOCK YEAR:"));
 	Serial.println(clockYear);
 
 	c1 = reply.charAt(index + 11);
 	c2 = reply.charAt(index + 12);
-	clockMonth = ((c1 - '0') * 10) + (c2 - '0');
+	temp = ((c1 - '0') * 10) + (c2 - '0');
+	if(temp < 1 ||  temp > 12)
+		return;
+	else
+		clockMonth = temp;
 	Serial.println(F("CLOCK MONTH:"));
 	Serial.println(clockMonth);
 
 	c1 = reply.charAt(index + 14);
 	c2 = reply.charAt(index + 15);
-	clockDay = ((c1 - '0') * 10) + (c2 - '0');
+	temp = ((c1 - '0') * 10) + (c2 - '0');
+	if(temp < 1 || temp > 31)
+		return;
+	else
+		clockDay = temp;
 	Serial.println(F("CLOCK DAY:"));
 	Serial.println(clockDay);
 
 	c1 = reply.charAt(index + 17);
 	c2 = reply.charAt(index + 18);
-	clockHour = ((c1 - '0') * 10) + (c2 - '0');
+	temp = ((c1 - '0') * 10) + (c2 - '0');
+	if(temp > 24)
+		return;
+	else
+		clockHour = temp;
 	Serial.println(F("CLOCK HOUR:"));
 	Serial.println(clockHour);
 
 	c1 = reply.charAt(index + 20);
 	c2 = reply.charAt(index + 21);
-	clockMinute = ((c1 - '0') * 10) + (c2 - '0');
+	temp = ((c1 - '0') * 10) + (c2 - '0');
+	if(temp > 59)
+		return;
+	else
+		clockMinute = temp;
 	Serial.println(F("CLOCK MINUTE:"));
 	Serial.println(clockMinute);
 
 	c1 = reply.charAt(index + 23);
 	c2 = reply.charAt(index + 24);
-	clockSecond = ((c1 - '0') * 10) + (c2 - '0');
+	temp = ((c1 - '0') * 10) + (c2 - '0');
+	if(temp > 59)
+		return;
+	else
+		clockSecond = temp;
 	Serial.println(F("CLOCK SECOND:"));
 	Serial.println(clockSecond);
 
