@@ -2871,6 +2871,8 @@ void MAKERphone::lockscreen() {
 			// while(!update());
 			buttons.holdForUnlock = 1;
 			inLockScreen = 0;
+			display.setTextSize(1);
+			display.setTextFont(2);
 			return;
 		}
 		update();
@@ -4294,35 +4296,35 @@ void MAKERphone::notificationView()
 	while(!update());
 }
 String MAKERphone::currentDateTime(){
-	mp.updateTimeRTC();
+	updateTimeRTC();
 	// 2019-04-18 12:00:00
-	String dateTime = String(mp.clockYear);
+	String dateTime = String(clockYear);
 	dateTime += "-";
-	if(mp.clockMonth < 10){
+	if(clockMonth < 10){
 		dateTime += "0";
 	}
-	dateTime += String(mp.clockMonth);
+	dateTime += String(clockMonth);
 	dateTime += "-";
-	if(mp.clockDay < 10){
+	if(clockDay < 10){
 		dateTime += "0";
 	}
-	dateTime += String(mp.clockDay);
+	dateTime += String(clockDay);
 	dateTime += " ";
 
-	if(mp.clockHour < 10){
+	if(clockHour < 10){
 		dateTime += "0";
 	}
-	dateTime += String(mp.clockHour);
+	dateTime += String(clockHour);
 	dateTime += ":";
-	if(mp.clockMinute < 10){
+	if(clockMinute < 10){
 		dateTime += "0";
 	}
-	dateTime += String(mp.clockMinute);
+	dateTime += String(clockMinute);
 	dateTime += ":";
-	if(mp.clockSecond < 10){
+	if(clockSecond < 10){
 		dateTime += "0";
 	}
-	dateTime += String(mp.clockSecond);
+	dateTime += String(clockSecond);
 	return dateTime;
 }
 
@@ -4356,9 +4358,9 @@ void MAKERphone::shutdownPopup(bool animation)
 	tft.setTextSize(1);
 	// tft.setCursor(55, 44);
 	// tft.print("Turn off?");
-	// mp.tft.print("YES");
-	// mp.tft.setCursor(98, 61);
-	// mp.tft.print("NO");
+	// tft.print("YES");
+	// tft.setCursor(98, 61);
+	// tft.print("NO");
 	tft.setCursor(18, 68);
 	tft.print("Power off");
 	tft.setCursor(95, 68);

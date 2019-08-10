@@ -75,6 +75,12 @@ void Buttons::update() {
 			}
 		}
 	}
+	if(holdForUnlock && states[(uint8_t)16] == 0xFFFF)
+	{
+		Serial.println("Release ignored");
+		holdForUnlock = 0;
+		Buttons::update();
+	}
 }
 
 bool Buttons::repeat(uint8_t button, uint16_t period) {
@@ -96,18 +102,7 @@ bool Buttons::pressed(uint8_t button) {
 }
 
 bool Buttons::released(uint8_t button) {
-	if(states[(uint8_t)button] == 0xFFFF)
-	{
-		if(holdForUnlock)
-		{
-			holdForUnlock = 0;
-			return 0;
-		}
-		else
-			return 1;
-	}
-	else
-		return 0;
+	return states[(uint8_t)button] == 0xFFFF;
 }
 
 bool Buttons::held(uint8_t button, uint16_t time) {
