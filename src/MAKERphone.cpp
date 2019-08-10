@@ -915,8 +915,8 @@ void MAKERphone::ledcAnalogWrite(uint8_t channel, uint32_t value, uint32_t value
 	ledcWrite(channel, duty);
 }
 void MAKERphone::sleep() {
-	if(sim_module_version != 255)
-		digitalWrite(SIM800_DTR, 1);
+	// if(sim_module_version != 255)
+	digitalWrite(SIM800_DTR, 1);
 
 	FastLED.clear(1);
 	ledcAnalogWrite(LEDC_CHANNEL, 255);
@@ -1012,8 +1012,8 @@ void MAKERphone::sleep() {
 	}
 	sleepTimer = millis();
 	Serial.println("buttons wakuep");
-	if(sim_module_version != 255)
-		digitalWrite(SIM800_DTR, 0);
+	// if(sim_module_version != 255)
+	digitalWrite(SIM800_DTR, 0);
 	voltage = batteryVoltage;
 	measuringCounter = 0;
 	voltageSum = 0;
