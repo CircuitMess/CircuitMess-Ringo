@@ -844,10 +844,8 @@ bool MAKERphone::update() {
 
 	if(SHUTDOWN_POPUP_ENABLE && buttons.released(14) && !wokeWithPWRBTN && !inCall)
 	{
-		
 		buttons.update();
 		sleep();
-		
 	}
 	if(buttons.held(14, 40) && !inShutdownPopup && SHUTDOWN_POPUP_ENABLE && !wokeWithPWRBTN && !inCall)
 	{
@@ -855,11 +853,11 @@ bool MAKERphone::update() {
 		shutdownPopup();
 		inShutdownPopup = 0;
 	}
-	if(wokeWithPWRBTN)
+	if(wokeWithPWRBTN && buttons.released(14))
 	{
-		buttons.update();
-		if(buttons.released(14))
-			wokeWithPWRBTN = 0;
+		// buttons.update();
+		// if()
+		wokeWithPWRBTN = 0;
 	}
 
 	if (millis() - lastFrameCount >= frameSpeed || screenshotFlag) {
