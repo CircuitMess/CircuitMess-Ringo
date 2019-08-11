@@ -28,6 +28,7 @@ uint16_t voltageSample = 0;
 volatile double voltage = 3700;
 uint16_t measuringCounter = 0;
 bool clockFallback = 1;
+static esp_adc_cal_characteristics_t *adc_chars;
 void Task1code( void * pvParameters ){
 	while (true)
 		updateWav();
@@ -59,10 +60,10 @@ void ADCmeasuring(void *parameters)
 		for(measuringCounter = 0; measuringCounter < 6000; measuringCounter++)
 		{
 			vTaskDelay(1);
-			voltageSum += analogRead(VOLTAGE_PIN);
+			voltageSum += esp_adc_cal_raw_to_voltage(adc1_get_raw(ADC1_CHANNEL_7), adc_chars)*2;
 			voltageSample++;
 		}
-		voltage = ((voltageSum )/(1150.0*3));
+		voltage = ((voltageSum )/(6000.0) + 158.0235417);
 		voltageSum = 0;
 		voltageSample = 0;
 	}
@@ -85,6 +86,18 @@ void MAKERphone::begin(bool splash) {
 	//Initialize and start with the NeoPixels
 	FastLED.addLeds<NEOPIXEL, PIXELPIN>(leds, 8);
 
+	adc_chars = (esp_adc_cal_characteristics_t*)calloc(1, sizeof(esp_adc_cal_characteristics_t)); 
+	int test = REG_GET_FIELD(EFUSE_BLK0_RDATA4_REG, EFUSE_RD_ADC_VREF);
+	if(test & 0x10)
+		test = -(test & 0x0F);
+	else
+		test = (test & 0x0F);
+	test*=7;
+	test+=1100;
+	Serial.print("Vref: ");
+	Serial.println(test);
+	esp_adc_cal_characterize(ADC_UNIT_1, ADC_ATTEN_11db, ADC_WIDTH_BIT_12, test, adc_chars);
+	
 
 
 	//Serial1.println(F("AT+CFUN=1,1"));
@@ -460,7 +473,6 @@ void MAKERphone::begin(bool splash) {
 		waitForOK();
 		Serial.println("Serial1 up and running...");
 	}
-	
 	sleepTimer = millis();
 }
 
@@ -2745,7 +2757,7 @@ void MAKERphone::lockscreen() {
 			//y = -316139 + 250.3763*x - 0.06612874*x^2 + 0.000005825959*x^3
 			//y - percentage(%), x - voltage(V)
 			double percentage = -316139 + (250.3763*batteryVoltage) - (0.06612874*batteryVoltage*batteryVoltage) + (0.000005825959*batteryVoltage*batteryVoltage*batteryVoltage);
-			// display.setCursor(80, 2);
+			// display.setCursor(60, 2);
 			// display.println(batteryVoltage);
 			if(percentage > 100)
 			{

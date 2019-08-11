@@ -50,7 +50,10 @@ extern HardwareSerial Serial1;
 #include "esp_system.h"
 #include "utility/soundLib/MPAudioDriver.h"
 #include "utility/soundLib/MPWavLib.h"
-
+#include <esp_efuse.h>
+#include <esp_adc_cal.h>
+#include <driver/adc.h>
+#include <driver/gpio.h>
 #define BTN_1 0
 #define BTN_2 1
 #define BTN_3 2
