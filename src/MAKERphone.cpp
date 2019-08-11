@@ -111,6 +111,8 @@ void MAKERphone::begin(bool splash) {
 	RTC.begin();
 
 	
+	// Serial.println(batteryVoltage);
+	// delay(50);
 
 	
 
@@ -380,6 +382,18 @@ void MAKERphone::begin(bool splash) {
 				&Task1,
 				0);				/* Task handle to keep track of created task */
 	addOscillator(osc);
+	voltageSum = 0;
+	voltageSample = 0;
+	for(int i = 0; i < 2000; i++)
+	{
+		delayMicroseconds(1);
+		voltageSum += analogRead(VOLTAGE_PIN);
+		voltageSample++;
+	}
+	batteryVoltage = ((voltageSum )/1150.0);
+	voltageSum = 0;
+	voltageSample = 0;
+	voltage = batteryVoltage;
 	xTaskCreatePinnedToCore(
 				ADCmeasuring,				/* Task function. */
 				"MeasuringTask",				/* name of task. */
@@ -2116,7 +2130,6 @@ void MAKERphone::addCall(String number, String contact, uint32_t dateTime, int d
 }
 void MAKERphone::saveMessage(String text, String contact, String number, bool isRead, bool direction){
 	File file = SD.open("/.core/messages.json", "r");
-	file = SD.open("/.core/messages.json", "r");
 	while(!file)
 		Serial.println("Messages ERROR");
 	jb.clear();
