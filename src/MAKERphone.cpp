@@ -521,7 +521,7 @@ void MAKERphone::begin(bool splash) {
 	sleepTimer = millis();
 }
 
-bool MAKERphone::update() {
+bool MAKERphone::update(bool altButtonsUpdate) {
 	newMessage = 0;
 	exitedLockscreen = 0;
 	if(digitalRead(SD_INT) && (SDinsertedFlag || (!SDinsertedFlag && SDerror)))
@@ -923,7 +923,8 @@ bool MAKERphone::update() {
 			homeButtonPressed = 1;
 		}
 	}
-	buttons.update();
+	if(!altButtonsUpdate)
+		buttons.update();
 
 	if(SHUTDOWN_POPUP_ENABLE && buttons.released(14) && !wokeWithPWRBTN && !inCall)
 	{
@@ -953,7 +954,8 @@ bool MAKERphone::update() {
 			else
 				display.pushSprite(0, 0);
 		}
-		// buttons.update();
+		if(altButtonsUpdate)
+			buttons.update();
 		FastLED.setBrightness(255/5 * pixelsBrightness);
 		FastLED.show();
 		delay(1);
