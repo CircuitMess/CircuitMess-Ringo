@@ -24,10 +24,12 @@ extern MAKERphone mp;
 TaskHandle_t Task1;
 TaskHandle_t MeasuringTask;
 uint32_t voltageSum = 0;
-uint16_t voltageSample = 0;
+uint32_t voltageSample = 0;
 volatile double voltage = 3700;
-uint16_t measuringCounter = 0;
+uint32_t measuringCounter = 0;
+uint32_t _timesMeasured = 0;
 bool clockFallback = 1;
+bool chargeDuringADCRead = 0;
 static esp_adc_cal_characteristics_t *adc_chars;
 void Task1code( void * pvParameters ){
 	while (true)
@@ -57,15 +59,43 @@ void ADCmeasuring(void *parameters)
 {
 	while(1)
 	{
-		for(measuringCounter = 0; measuringCounter < 6000; measuringCounter++)
+		if(digitalRead(CHRG_INT))//not charging
 		{
-			vTaskDelay(1);
-			voltageSum += esp_adc_cal_raw_to_voltage(adc1_get_raw(ADC1_CHANNEL_7), adc_chars)*2;
-			voltageSample++;
+			for(measuringCounter = 0; measuringCounter < 6000; measuringCounter++)
+			{
+				if(!digitalRead(CHRG_INT))//charging
+				{
+					voltageSum = 0;
+					voltageSample = 0;
+					chargeDuringADCRead = 1;
+					break;
+				}
+				else
+				{
+					chargeDuringADCRead = 0;
+					vTaskDelay(1);
+					voltageSum += esp_adc_cal_raw_to_voltage(adc1_get_raw(ADC1_CHANNEL_7), adc_chars)*2;
+					// uint32_t reading =  adc1_get_raw(ADC1_CHANNEL_7)*2;
+					// uint32_t tempVoltage = esp_adc_cal_raw_to_voltage(reading, adc_chars);
+					// voltageSum += tempVoltage;
+					voltageSample++;
+				}
+			}
+			if(!chargeDuringADCRead)
+			{
+				voltage = ((voltageSum )/(6000.0) + 158.0235417);
+				voltageSum = 0;
+				voltageSample = 0;
+				_timesMeasured++;
+			}
+			else
+				chargeDuringADCRead = 0;			
 		}
-		voltage = ((voltageSum )/(6000.0) + 158.0235417);
-		voltageSum = 0;
-		voltageSample = 0;
+		else
+		{
+			chargeDuringADCRead = 1;
+			vTaskDelay(1);
+		}
 	}
 }
 
@@ -87,16 +117,16 @@ void MAKERphone::begin(bool splash) {
 	FastLED.addLeds<NEOPIXEL, PIXELPIN>(leds, 8);
 
 	adc_chars = (esp_adc_cal_characteristics_t*)calloc(1, sizeof(esp_adc_cal_characteristics_t)); 
-	int test = REG_GET_FIELD(EFUSE_BLK0_RDATA4_REG, EFUSE_RD_ADC_VREF);
-	if(test & 0x10)
-		test = -(test & 0x0F);
+	int vRef = REG_GET_FIELD(EFUSE_BLK0_RDATA4_REG, EFUSE_RD_ADC_VREF);
+	if(vRef & 0x10)
+		vRef = -(vRef & 0x0F);
 	else
-		test = (test & 0x0F);
-	test*=7;
-	test+=1100;
+		vRef = (vRef & 0x0F);
+	vRef*=7;
+	vRef+=1100;
 	Serial.print("Vref: ");
-	Serial.println(test);
-	esp_adc_cal_characterize(ADC_UNIT_1, ADC_ATTEN_11db, ADC_WIDTH_BIT_12, test, adc_chars);
+	Serial.println(vRef);
+	esp_adc_cal_characterize(ADC_UNIT_1, ADC_ATTEN_11db, ADC_WIDTH_BIT_12, vRef, adc_chars);
 	
 
 
@@ -407,6 +437,18 @@ void MAKERphone::begin(bool splash) {
 	voltageSum = 0;
 	voltageSample = 0;
 	voltage = batteryVoltage;
+	// voltageSum = 0;
+	// voltageSample = 0;
+	// for(int i = 0; i < 6000; i++)
+	// {
+	// 	delayMicroseconds(1);
+	// 	voltageSum += esp_adc_cal_raw_to_voltage(adc1_get_raw(ADC1_CHANNEL_7), adc_chars)*2;
+	// 	voltageSample++;
+	// }
+	// voltage = ((voltageSum )/(6000.0) + 158.0235417);
+	// voltageSum = 0;
+	// voltageSample = 0;
+	// batteryVoltage = voltage;
 	xTaskCreatePinnedToCore(
 				ADCmeasuring,				/* Task function. */
 				"MeasuringTask",				/* name of task. */
@@ -765,41 +807,53 @@ bool MAKERphone::update() {
 	}
 	batteryVoltage = voltage;
 
-	if(batteryVoltage <= 3580 || simVoltage <= 3600)
+	if((batteryVoltage <= 3580 || simVoltage <= 3600) && digitalRead(CHRG_INT))
 	{
-		tft.setTextColor(TFT_BLACK);
-		tft.setTextSize(1);
-		tft.setTextFont(2);
-		tft.fillRect(12, 36, 138, 56, TFT_WHITE);
-		tft.setCursor(37, 45);
-		tft.print("Battery critical!");
-		tft.setCursor(40, 61);
-		tft.print("Turning off...");
-		delay(1500);
+		if(timesMeasured != _timesMeasured)
+			shutdownCounter++;
+		if(shutdownCounter > 2 && timesMeasured != _timesMeasured)
+		{
+			tft.setTextColor(TFT_BLACK);
+			tft.setTextSize(1);
+			tft.setTextFont(2);
+			tft.fillRect(12, 36, 138, 56, TFT_WHITE);
+			tft.setCursor(37, 45);
+			tft.print("Battery critical!");
+			tft.setCursor(40, 61);
+			tft.print("Turning off...");
+			Serial.print("battery: ");
+			Serial.println(batteryVoltage);
+			Serial.print("SIM: ");
+			Serial.println(simVoltage);
+			delay(1500);
 
 
-		Serial1.println("AT+CFUN=4");
-		Serial1.println("AT+CSCLK=2");
+			//Serial1.println("AT+CFUN=4");
+			//Serial1.println("AT+CSCLK=2");
 
-		delay(750);
-		Serial.println("TURN OFF");
-		digitalWrite(SIM800_DTR, 1);
-		FastLED.clear(1);
-		ledcDetachPin(LCD_BL_PIN);
-		pinMode(LCD_BL_PIN, OUTPUT);
-		digitalWrite(LCD_BL_PIN, 1);
-		digitalWrite(OFF_PIN, 1);
-		
-		rtc_gpio_isolate(GPIO_NUM_16);
-		rtc_gpio_isolate(GPIO_NUM_17);
-		rtc_gpio_isolate(GPIO_NUM_33);
-		rtc_gpio_isolate(GPIO_NUM_34);
-		rtc_gpio_isolate(GPIO_NUM_36);
-		rtc_gpio_isolate(GPIO_NUM_39);
-		
-		digitalWrite(OFF_PIN, 1);
-		ESP.deepSleep(0);
+			delay(750);
+			Serial.println("TURN OFF");
+			digitalWrite(SIM800_DTR, 1);
+			FastLED.clear(1);
+			ledcDetachPin(LCD_BL_PIN);
+			pinMode(LCD_BL_PIN, OUTPUT);
+			digitalWrite(LCD_BL_PIN, 1);
+			digitalWrite(OFF_PIN, 1);
+			
+			rtc_gpio_isolate(GPIO_NUM_16);
+			rtc_gpio_isolate(GPIO_NUM_17);
+			rtc_gpio_isolate(GPIO_NUM_33);
+			rtc_gpio_isolate(GPIO_NUM_34);
+			rtc_gpio_isolate(GPIO_NUM_36);
+			rtc_gpio_isolate(GPIO_NUM_39);
+			
+			digitalWrite(OFF_PIN, 1);
+			ESP.deepSleep(0);
+		}
+		timesMeasured = _timesMeasured;
 	}
+	else
+		shutdownCounter = 0;
 	if(alarmCleared && millis() - alarmMillis > 60000)
 		alarmCleared = 0;
 	if(!digitalRead(SIM_INT) && !inCall)
@@ -1008,8 +1062,8 @@ void MAKERphone::sleep() {
 		delay(50);
 		if(batteryVoltage <= 3580)
 		{
-			Serial1.println("AT+CFUN=4");
-			Serial1.println("AT+CSCLK=2");
+			//Serial1.println("AT+CFUN=4");
+			//Serial1.println("AT+CSCLK=2");
 
 			delay(750);
 			Serial.println("TURN OFF");
@@ -1206,6 +1260,8 @@ void MAKERphone::sleep() {
 				display.printf("%d", (int)percentage);
 				display.print("%");
 			}
+			if(percentage < 0)
+				percentage = 0;
 			// if (batteryVoltage > 4100)
 			// 	display.drawBitmap(148, 2, batteryChargingIcon, TFT_BLACK, 2);
 			if (batteryVoltage >= 3850)
@@ -2750,6 +2806,8 @@ void MAKERphone::lockscreen() {
 			display.print("loading...");
 		else if(carrierName == "" && !simInserted && sim_module_version == 255)
 			display.print("No module");	
+		// display.setCursor(60, 2);
+		// display.println(shutdownCounter);
 		if(!digitalRead(CHRG_INT))
 			display.drawBitmap(148, 2, batteryChargingIcon, TFT_BLACK, 2);
 		else
@@ -2757,14 +2815,15 @@ void MAKERphone::lockscreen() {
 			//y = -316139 + 250.3763*x - 0.06612874*x^2 + 0.000005825959*x^3
 			//y - percentage(%), x - voltage(V)
 			double percentage = -316139 + (250.3763*batteryVoltage) - (0.06612874*batteryVoltage*batteryVoltage) + (0.000005825959*batteryVoltage*batteryVoltage*batteryVoltage);
-			// display.setCursor(60, 2);
-			// display.println(batteryVoltage);
+			
 			if(percentage > 100)
 			{
 				// Serial.print("Voltage: ");
 				
 				percentage = 100;
 			}
+			if(percentage < 0)
+				percentage = 0;
 			display.setTextFont(2);
 			display.setTextSize(1);
 			display.setTextColor(TFT_BLACK);
@@ -3748,6 +3807,8 @@ void MAKERphone::homePopup(bool animation)
 				display.printf("%d", (int)percentage);
 				display.print("%");
 			}
+			if(percentage < 0)
+				percentage = 0;
 			// if (batteryVoltage > 4100)
 			// 	display.drawBitmap(148, 2, batteryChargingIcon, TFT_BLACK, 2);
 			if (batteryVoltage >= 3850)
@@ -4467,8 +4528,8 @@ void MAKERphone::shutdownPopup(bool animation)
 				tft.setCursor(40, 51);
 				tft.print("Turning off...");
 				// Serial1.println("AT+CFUN=1,1");
-				Serial1.println("AT+CFUN=4");
-				Serial1.println("AT+CSCLK=2");
+				// Serial1.println("AT+CFUN=4");
+				// Serial1.println("AT+CSCLK=2");
 
 				delay(750);
 				Serial.println("TURN OFF");

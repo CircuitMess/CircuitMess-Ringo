@@ -375,5 +375,7 @@ class MAKERphone:public Buttons, public DateTime
 		MPTrack *currTracks[4] = {nullptr,nullptr,nullptr,nullptr};
 		bool pausedTracks[4] = {0,0,0,0};
 		// uint8_t oscillatorVolumeList[14] = {0,10,15,20,35,50,60,80,100,120,150,200,220,255};
+		int shutdownCounter = 0;
+		int timesMeasured = 0;
 };
 #endif
