@@ -938,7 +938,7 @@ bool MAKERphone::update() {
 	}
 	if(wokeWithPWRBTN && buttons.released(14))
 	{
-		// buttons.update();
+		buttons.update();
 		// if()
 		wokeWithPWRBTN = 0;
 	}
@@ -3782,6 +3782,7 @@ void MAKERphone::homePopup(bool animation)
 		}
 		display.setTextFont(2);
 		display.setTextSize(1);
+		display.setTextColor(TFT_BLACK);
 		display.setCursor(helper*2, 4);
 		if(carrierName != "")
 		{
@@ -3836,7 +3837,7 @@ void MAKERphone::homePopup(bool animation)
 		
 		if(millis() - notificationMillis >= 2000)
 			notificationMillis = millis();
-
+		display.setCursor(2,112);
 		if(millis() - notificationMillis > 1000 && millis() - notificationMillis < 2000)
 		{
 			display.printCenter("Notifications   ");
@@ -4156,6 +4157,7 @@ void MAKERphone::homePopup(bool animation)
 		}
 		update();
 	}
+	while(!update());
 	if(SDinsertedFlag)
 		saveSettings();
 	for(int i = 0; i < 4; i++)
@@ -4181,7 +4183,6 @@ void MAKERphone::homePopup(bool animation)
 	// 		oscs[i]->play();
 	// }
 	dataRefreshFlag = 0;
-	while(!update());
 }
 void MAKERphone::drawNotificationWindow(uint8_t y, uint8_t index) {
 	display.setTextFont(2);
