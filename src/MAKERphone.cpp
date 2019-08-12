@@ -30,6 +30,7 @@ uint32_t measuringCounter = 0;
 uint32_t _timesMeasured = 0;
 bool clockFallback = 1;
 bool chargeDuringADCRead = 0;
+uint32_t simBusyCounter = 0;
 static esp_adc_cal_characteristics_t *adc_chars;
 void Task1code( void * pvParameters ){
 	while (true)
@@ -512,6 +513,8 @@ void MAKERphone::begin(bool splash) {
 		Serial1.println(F("AT+CSCLK=1"));
 		waitForOK();
 		Serial1.println(F("AT&W"));
+		waitForOK();
+		Serial1.println("AT+CREG=2");
 		waitForOK();
 		Serial.println("Serial1 up and running...");
 	}
@@ -2249,8 +2252,10 @@ void MAKERphone::checkSim()
 		input = waitForOK();
 		Serial.println(input);
 	}
-	if(input.indexOf("busy") != -1)
+	if(input.indexOf("busy") != -1 && simBusyCounter < 5)
 	{
+		simBusyCounter++;
+		delay(100);
 		checkSim();
 		return;
 	}
@@ -2266,6 +2271,7 @@ void MAKERphone::checkSim()
 		if(input.indexOf("SIM PUK") != -1)
 			enterPUK();
 	}
+	simBusyCounter = 0;
 }
 void MAKERphone::enterPin()
 {
