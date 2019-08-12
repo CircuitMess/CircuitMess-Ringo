@@ -1297,7 +1297,7 @@ void MAKERphone::sleep() {
 		display.setTextFont(2);
 		display.setTextSize(1);
 		display.setTextColor(TFT_BLACK);
-		display.print("Hold \"A\" to unlock");
+		display.print("Hold \"#\" to unlock");
 		display.setTextSize(6);
 		display.setTextColor(TFT_DARKGREY);
 		display.setFreeFont(TT1);
@@ -2881,7 +2881,7 @@ void MAKERphone::lockscreen() {
 			display.setTextFont(2);
 			display.setTextSize(1);
 			display.setTextColor(TFT_BLACK);
-			display.print("Hold \"A\" to unlock");
+			display.print("Hold \"#\" to unlock");
 			display.setTextSize(6);
 			display.setTextColor(TFT_DARKGREY);
 			display.setFreeFont(TT1);
@@ -2893,7 +2893,7 @@ void MAKERphone::lockscreen() {
 		}
 
 
-		if(buttons.timeHeld(BTN_A) < 5 && buttons.timeHeld(BTN_A) > 0)
+		if(buttons.timeHeld(BTN_HASHTAG) < 5 && buttons.timeHeld(BTN_HASHTAG) > 0)
 		{ 
 			display.setTextFont(2);
 			display.setTextSize(1);
@@ -2901,7 +2901,7 @@ void MAKERphone::lockscreen() {
 			display.setCursor(2, 111);
 			display.print("Unlocking");
 		}
-		if (buttons.timeHeld(BTN_A) >= 5 && buttons.timeHeld(BTN_A) < 12) {
+		if (buttons.timeHeld(BTN_HASHTAG) >= 5 && buttons.timeHeld(BTN_HASHTAG) < 12) {
 			display.fillRect(0, 112, display.width(), 16, backgroundColors[backgroundIndex]);
 			display.setCursor(2, 111);
 			display.setTextFont(2);
@@ -2912,7 +2912,7 @@ void MAKERphone::lockscreen() {
 			leds[7] = CRGB::Red;
 			// FastLED.show();
 		}
-		else if (buttons.timeHeld(BTN_A) >= 12 && buttons.timeHeld(BTN_A) < 18)
+		else if (buttons.timeHeld(BTN_HASHTAG) >= 12 && buttons.timeHeld(BTN_HASHTAG) < 18)
 		{
 			display.fillRect(0, 112, display.width(), 16, backgroundColors[backgroundIndex]);
 			display.setCursor(2, 111);
@@ -2924,7 +2924,7 @@ void MAKERphone::lockscreen() {
 			leds[1] = CRGB::Red;
 			leds[6] = CRGB::Red;
 		}
-		else if (buttons.timeHeld(BTN_A) >= 18 && buttons.timeHeld(BTN_A) < 24)
+		else if (buttons.timeHeld(BTN_HASHTAG) >= 18 && buttons.timeHeld(BTN_HASHTAG) < 24)
 		{
 			display.fillRect(0, 112, display.width(), 16, backgroundColors[backgroundIndex]);
 			display.setCursor(2, 111);
@@ -2938,7 +2938,7 @@ void MAKERphone::lockscreen() {
 			leds[2] = CRGB::Red;
 			leds[5] = CRGB::Red;
 		}
-		else if (buttons.timeHeld(BTN_A) >= 24 && buttons.timeHeld(BTN_A) < 30)
+		else if (buttons.timeHeld(BTN_HASHTAG) >= 24 && buttons.timeHeld(BTN_HASHTAG) < 30)
 		{
 			display.fillRect(0, 112, display.width(), 16, backgroundColors[backgroundIndex]);
 			display.setCursor(2, 111);
@@ -2954,7 +2954,7 @@ void MAKERphone::lockscreen() {
 			leds[3] = CRGB::Red;
 			leds[4] = CRGB::Red;
 		}
-		else if(buttons.timeHeld(BTN_A) >= 30)
+		else if(buttons.timeHeld(BTN_HASHTAG) >= 30)
 		{
 			// while(!update());
 			buttons.holdForUnlock = 1;
