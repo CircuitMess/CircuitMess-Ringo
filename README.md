@@ -5,7 +5,7 @@
 
 **Ringo** is an educational mobile phone that you make and code yourself. It comes in parts that have to be assembled and then leaves you with all the time in the world to build on the pre-loaded software.
 
-<img src="https://www.circuitmess.com/wp-content/uploads/Makerphone_crop_523x768-1.png" width="400"/>
+<img src="https://www.circuitmess.com/wp-content/uploads/Makerphone_crop_523x768-1.png" width="445"/> <img src="https://www.circuitmess.com/wp-content/uploads/DSC05978_1024x683crop-1.jpg" width="445"/>
 
 This is the page where you will find all the neccessary information about how to do your own programming on Ringo using **Arduino** platform.
 
