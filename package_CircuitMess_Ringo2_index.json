@@ -8,7 +8,7 @@
       "websiteURL": "https://github.com/CircuitMess/MAKERphone", 
       "platforms": [
         {
-          "category": "cm", 
+          "category": "CM", 
           "name": "Ringo", 
           "url": "https://github.com/CircuitMess/MAKERphone/blob/boardArduino/Ringo-1.0.0.zip?raw=true", 
           "checksum": "SHA-256:48af52e02bc1bcd0568d8da8531eac624d9e7a1c0696f145fe9709a9cfd629ab", 
@@ -16,7 +16,7 @@
             "online": ""
           }, 
           "version": "1.0.0", 
-          "architecture": "cm", 
+          "architecture": "esp32", 
           "archiveFileName": "Ringo-1.0.0.zip", 
           "boards": [
             {
@@ -25,17 +25,17 @@
           ], 
           "toolsDependencies": [
             {
-              "packager": "cm", 
+              "packager": "esp32", 
               "version": "1.22.0-80-g6c4433a-5.2.0", 
               "name": "xtensa-esp32-elf-gcc"
             }, 
             {
-              "packager": "cm", 
+              "packager": "esp32", 
               "version": "2.6.1", 
               "name": "esptool_py"
             }, 
             {
-              "packager": "cm", 
+              "packager": "esp32", 
               "version": "0.2.3", 
               "name": "mkspiffs"
             }
@@ -251,7 +251,7 @@
         }
       ], 
       "email": "rober@circuitmess.com", 
-      "name": "cm"
+      "name": "esp32"
     }
   ]
 }
