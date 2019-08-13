@@ -74,7 +74,7 @@ We are currently working on creating as many examples as possible. Don't worry, 
 
 ## Meta
 
-<img src="https://www.circuitmess.com/wp-content/uploads/Untitled-1.png" width="700"/>
+<img src="https://www.circuitmess.com/wp-content/uploads/Untitled-1.png" width="900"/>
 
 
 **CircuitMess** - https://www.circuitmess.com/ - @circuitmess.com
