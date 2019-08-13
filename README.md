@@ -29,8 +29,7 @@ https://raw.githubusercontent.com/CircuitMess/MAKERphone/boardArduino/package_Ci
 
 ## Schematics
 
-<img src="https://www.circuitmess.com/wp-content/uploads/DSC05443_1024x683-1.jpg" width="500"/>
-<img src="https://www.circuitmess.com/wp-content/uploads/DSC05437_1024x683-1.jpg" width="500"/>
+<img src="https://www.circuitmess.com/wp-content/uploads/DSC05443_1024x683-1.jpg" width="300"/> <img src="https://www.circuitmess.com/wp-content/uploads/DSC05437_1024x683-1.jpg" width="300"/>
 
 In the **master** branch you'll find subfolder [**schematics**](https://github.com/CircuitMess/MAKERphone/tree/master/schematics) which contains schemes for every part of the Ringo phone.
 
