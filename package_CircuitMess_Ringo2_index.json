@@ -16,7 +16,7 @@
             "online": ""
           }, 
           "version": "1.0.0", 
-          "architecture": "esp32", 
+          "architecture": "cm", 
           "archiveFileName": "Ringo-1.0.0.zip", 
           "boards": [
             {
@@ -250,8 +250,8 @@
           ]
         }
       ], 
-      "email": "rober@circuitmess.com", 
-      "name": "esp32"
+      "email": "robert@circuitmess.com", 
+      "name": "cm"
     }
   ]
 }
