@@ -25,17 +25,17 @@
           ], 
           "toolsDependencies": [
             {
-              "packager": "cm", 
+              "packager": "esp32", 
               "version": "1.22.0-80-g6c4433a-5.2.0", 
               "name": "xtensa-esp32-elf-gcc"
             }, 
             {
-              "packager": "cm", 
+              "packager": "esp32", 
               "version": "2.6.1", 
               "name": "esptool_py"
             }, 
             {
-              "packager": "cm", 
+              "packager": "esp32", 
               "version": "0.2.3", 
               "name": "mkspiffs"
             }
