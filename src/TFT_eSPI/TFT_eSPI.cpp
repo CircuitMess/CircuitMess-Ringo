@@ -5777,6 +5777,29 @@ void TFT_eSprite::scroll(int16_t dx, int16_t dy)
 	if (dy < 0) fillRect(_sx, _sy + _sh + dy, _sw, -dy, _scolor);
 }
 
+void TFT_eSprite::clear(){
+  {
+    uint32_t color = TFT_BLACK;
+	if (!_created) return;
+
+	// Use memset if possible as it is super fast
+	if (((uint8_t)color == (uint8_t)(color >> 8)) && _bpp == 16)
+		memset(_img, (uint8_t)color, _iwidth * _iheight * 2);
+	else if (_bpp == 8)
+	{
+		color = (color & 0xE000) >> 8 | (color & 0x0700) >> 6 | (color & 0x0018) >> 3;
+		memset(_img8, (uint8_t)color, _iwidth * _iheight);
+	}
+	else if (_bpp == 1)
+	{
+		if (color) memset(_img8, 0xFF, (_iwidth >> 3) * _iheight + 1);
+		else      memset(_img8, 0x00, (_iwidth >> 3) * _iheight + 1);
+	}
+
+	else fillRect(0, 0, _iwidth, _iheight, color);
+}
+}
+
 
 /***************************************************************************************
 ** Function name:           fillScreen
