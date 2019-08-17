@@ -74,8 +74,10 @@ We are currently working on creating as many examples as possible. Don't worry, 
 
 ## Meta
 
-<img src="https://www.circuitmess.com/wp-content/uploads/Untitled-1.png" width="900"/>
-
+<img src="https://www.circuitmess.com/wp-content/uploads/CM-Meta-White2.png">
+<img src="https://www.circuitmess.com/wp-content/uploads/CM-Meta-Black2.png">
+<img src="https://www.circuitmess.com/wp-content/uploads/CM-Meta-BW.png">
+<img src="https://www.circuitmess.com/wp-content/uploads/CM-Meta-WB.png">
 
 **CircuitMess** - https://www.circuitmess.com/ - @circuitmess.com
 
