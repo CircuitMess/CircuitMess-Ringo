@@ -76,8 +76,11 @@ We are currently working on creating as many examples as possible. Don't worry, 
 
 <img src="https://www.circuitmess.com/wp-content/uploads/CM-Meta-White2.png">
 <img src="https://www.circuitmess.com/wp-content/uploads/CM-Meta-Black2.png">
+<img src="https://www.circuitmess.com/wp-content/uploads/CM-Meta-BlackHQ.png">
 <img src="https://www.circuitmess.com/wp-content/uploads/CM-Meta-BW.png">
 <img src="https://www.circuitmess.com/wp-content/uploads/CM-Meta-WB.png">
+
+
 
 **CircuitMess** - https://www.circuitmess.com/ - @circuitmess.com
 
