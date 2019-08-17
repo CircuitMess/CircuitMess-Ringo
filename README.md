@@ -88,4 +88,10 @@ We are currently working on creating as many examples as possible. Don't worry, 
 
 **YouTube** - https://www.youtube.com/channel/UCVUvt1CeoZpCSnwg3oBMsOQ
 
+Copyright © 2019 CircuitMess
+
+Licensed under GPL-3.0
+
+
+
 
