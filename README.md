@@ -5,7 +5,7 @@
 
 **Ringo** is an educational mobile phone that you make and code yourself. It comes in parts that have to be assembled and then leaves you with all the time in the world to build on the pre-loaded software.
 
-<img src="https://ksr-ugc.imgix.net/assets/022/753/070/df154344fd878c21eedc03ce6947ee96_original.jpg?ixlib=rb-2.1.0&crop=faces&w=1552&h=873&fit=crop&v=1538493915&auto=format&frame=1&q=92&s=6d7fd74a3d5c95c1131004a99373178d" width="800"/>
+<img src="https://www.circuitmess.com/wp-content/uploads/Makerphone_crop_523x768-1.png" width="425"/> <img src="https://www.circuitmess.com/wp-content/uploads/DSC05978_1024x683crop-1.jpg" width="425"/>
 
 This is the page where you will find all the neccessary information about how to do your own programming on Ringo using **Arduino** platform.
 
@@ -29,7 +29,7 @@ https://raw.githubusercontent.com/CircuitMess/MAKERphone/boardArduino/package_Ci
 
 ## Schematics
 
-<img src="https://www.circuitmess.com/wp-content/uploads/Maker-Phone-phone-box-.jpg" width="500"/>
+<img src="https://www.circuitmess.com/wp-content/uploads/DSC05443_1024x683-1.jpg" width="400"/> <img src="https://www.circuitmess.com/wp-content/uploads/DSC05437_1024x683-1.jpg" width="400"/>
 
 In the **master** branch you'll find subfolder [**schematics**](https://github.com/CircuitMess/MAKERphone/tree/master/schematics) which contains schemes for every part of the Ringo phone.
 
@@ -74,7 +74,8 @@ We are currently working on creating as many examples as possible. Don't worry, 
 
 ## Meta
 
-<img src="https://www.circuitmess.com/wp-content/uploads/circuitmess.png" width="700"/>
+
+<img src="https://www.circuitmess.com/wp-content/uploads/CM-Meta-BlackHQ2.png">
 
 
 **CircuitMess** - https://www.circuitmess.com/ - @circuitmess.com
@@ -86,5 +87,11 @@ We are currently working on creating as many examples as possible. Don't worry, 
 **Twitter** - https://twitter.com/circuitmess 
 
 **YouTube** - https://www.youtube.com/channel/UCVUvt1CeoZpCSnwg3oBMsOQ
+
+Copyright © 2019 CircuitMess
+
+Licensed under [GPL-3.0](https://www.gnu.org/licenses/gpl-3.0.html)
+
+
 
 
