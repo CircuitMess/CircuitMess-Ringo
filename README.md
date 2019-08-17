@@ -90,7 +90,7 @@ We are currently working on creating as many examples as possible. Don't worry, 
 
 Copyright © 2019 CircuitMess
 
-Licensed under GPL-3.0
+Licensed under [GPL-3.0](https://www.gnu.org/licenses/gpl-3.0.html)
 
 
 
