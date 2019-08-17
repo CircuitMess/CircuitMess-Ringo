@@ -75,9 +75,7 @@ We are currently working on creating as many examples as possible. Don't worry, 
 ## Meta
 
 
-<img src="https://www.circuitmess.com/wp-content/uploads/CM-Meta-Black2.png">
 <img src="https://www.circuitmess.com/wp-content/uploads/CM-Meta-BlackHQ.png">
-<img src="https://www.circuitmess.com/wp-content/uploads/CM-Meta-White2.png">
 <img src="https://www.circuitmess.com/wp-content/uploads/CM-Meta-White-HQ2.png">
 
 
