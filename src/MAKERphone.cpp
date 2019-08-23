@@ -406,6 +406,26 @@ void MAKERphone::begin(bool splash) {
 		else if(temp.indexOf("SIM7600") != -1)
 			sim_module_version = 0;
 		checkSim();
+		Serial1.println("AT+CREG?");
+		uint32_t cregMillis = millis();
+		String cregString = "";
+		while(networkRegistered != 1 && networkRegistered != 5 && millis() - cregMillis < 1000)
+		{
+			if(cregString != "")
+			{
+				Serial.println(cregString);
+				if(cregString.indexOf("\n", cregString.indexOf("+CREG:")) != -1)
+				{
+					uint16_t helper = cregString.indexOf(",", cregString.indexOf("+CREG:"));
+					networkRegistered = cregString.substring(helper + 1,  helper + 2).toInt();
+				}
+			}
+			if(cregString != "" && networkRegistered != -1)
+			{
+				Serial1.println("AT+CREG?");
+			}
+			cregString = waitForOK();
+		}
 	}
 	if(EEPROM.readByte(GSM_MODULE_ADDRESS) != sim_module_version)
 	{
@@ -472,52 +492,7 @@ void MAKERphone::begin(bool splash) {
 	checkAlarms();
 
 	if(sim_module_version != 255)
-	{
-		Serial.println("module inserted");
-		if(simInserted)
-			Serial.println("SIM INSERTED");
-		else
-			Serial.println("SIM NOT INSERTED");
-
-		// updateTimeGSM();
-		Serial1.println(F("AT+CMEE=2"));
-		waitForOK();
-		if(sim_module_version == 1)
-		{
-			Serial1.println(F("AT+CRSL=100"));
-			Serial1.println(F("AT+CLVL=100"));
-			Serial1.println(F("AT+CLTS=1")); //Enable local Timestamp mode (used for syncrhonising RTC with GSM time
-			Serial1.println(F("AT+IPR=9600"));
-		}
-		else if(sim_module_version == 0)
-		{
-			Serial1.println("AT+COUTGAIN=8");
-			waitForOK();
-			Serial1.println("AT+CVHU=0");
-			waitForOK();
-			Serial1.println("AT+CTZU=1");
-			waitForOK();
-			Serial1.println("AT+CNMP=2");
-			waitForOK();
-		}
-		waitForOK();
-		Serial1.println(F("AT+CMGF=1"));
-		waitForOK();
-		Serial1.println(F("AT+CNMI=1,2,0,0,0"));
-		waitForOK();
-		waitForOK();
-		Serial1.println(F("AT+CPMS=\"SM\",\"SM\",\"SM\""));
-		waitForOK();
-		Serial1.println(F("AT+CLCC=1"));
-		waitForOK();
-		Serial1.println(F("AT+CSCLK=1"));
-		waitForOK();
-		Serial1.println(F("AT&W"));
-		waitForOK();
-		Serial1.println("AT+CREG=2");
-		waitForOK();
-		Serial.println("Serial1 up and running...");
-	}
+		networkModuleInit();
 	sleepTimer = millis();
 }
 
@@ -626,7 +601,7 @@ bool MAKERphone::update(bool altButtonsUpdate) {
 		simReady = 0;
 
 	//refreshing signal and battery info
-	if (dataRefreshFlag && simReady)
+	if (simReady && dataRefreshFlag)
 	{
 		if(sim_module_version == 1)
 		{
@@ -637,11 +612,15 @@ bool MAKERphone::update(bool altButtonsUpdate) {
 				Serial1.println("AT+CBC");
 				if (simInserted && !airplaneMode)
 				{
-					if (carrierName == "")
-						Serial1.println("AT+CSPN?");
-					Serial1.println("AT+CSQ");
-
-					if (clockYear % 100 < 19 || clockYear % 100 >= 40 || clockMonth < 1 || clockMonth > 12 || clockHour > 24 || clockMinute >= 60)
+					if(networkRegistered == 5 || networkRegistered == 1)
+					{
+						if (carrierName == "")
+							Serial1.println("AT+CSPN?");
+						Serial1.println("AT+CSQ");
+					}
+					Serial1.println("AT+CREG?");
+					if (clockYear % 100 < 19 || clockYear % 100 >= 40 || clockMonth < 1 || clockMonth > 12 ||
+					clockHour > 24 || clockMinute >= 60)
 						Serial1.println("AT+CCLK?");
 				}
 			}
@@ -731,9 +710,11 @@ bool MAKERphone::update(bool altButtonsUpdate) {
 				}
 						
 				if (updateBuffer.indexOf("\n", updateBuffer.indexOf("+CSQ:")) != -1)
-					signalStrength = updateBuffer.substring(updateBuffer.indexOf(" ", updateBuffer.indexOf("+CSQ:")) + 1, updateBuffer.indexOf(",", updateBuffer.indexOf(" ", updateBuffer.indexOf("+CSQ:")))).toInt();
+					signalStrength = updateBuffer.substring(updateBuffer.indexOf(" ", updateBuffer.indexOf("+CSQ:")) + 1,
+					 updateBuffer.indexOf(",", updateBuffer.indexOf(" ", updateBuffer.indexOf("+CSQ:")))).toInt();
 				
-				if (clockYear % 100 < 19 || clockYear % 100 >= 40 || clockMonth < 1 || clockMonth > 12 || clockHour > 24 || clockMinute >= 60)
+				if (clockYear % 100 < 19 || clockYear % 100 >= 40 || clockMonth < 1 || clockMonth > 12 ||
+				clockHour > 24 || clockMinute >= 60)
 					if (updateBuffer.indexOf("\n", updateBuffer.indexOf("+CCLK:")) != -1)
 					{
 						uint16_t index = updateBuffer.indexOf(F("+CCLK: \""));
@@ -806,6 +787,12 @@ bool MAKERphone::update(bool altButtonsUpdate) {
 					simVoltage = updateBuffer.substring(helper, updateBuffer.indexOf("V", helper)).toDouble() * 1000;
 				}
 			}
+			if(updateBuffer.indexOf("\n", updateBuffer.indexOf("+CREG:")) != -1)
+			{
+				uint16_t helper = updateBuffer.indexOf(",", updateBuffer.indexOf("+CREG:"));
+				networkRegistered = updateBuffer.substring(helper + 1,  helper + 2).toInt();
+			}
+
 		}
 	}
 	batteryVoltage = voltage;
@@ -940,9 +927,70 @@ bool MAKERphone::update(bool altButtonsUpdate) {
 	if(wokeWithPWRBTN && buttons.released(14))
 	{
 		buttons.update();
-		// if()
 		wokeWithPWRBTN = 0;
 	}
+	if(networkRegistered != 1 && networkRegistered != 5 && networkRegistered != -1 
+	&& millis() - networkDisconnectMillis > 20000 && networkDisconnectFlag && inLockScreen)
+	{
+		display.fillScreen(TFT_BLACK);
+		display.setTextColor(TFT_WHITE);
+		display.setTextSize(1);
+		display.setCursor(0, display.height()/2 - 20);
+		display.setTextFont(2);
+		display.printCenter(F("Registering to network"));
+		display.setCursor(0, display.height()/2);
+		display.printCenter(F("Please wait..."));
+		display.pushSprite(0,0);
+		while(Serial1.available())
+				Serial1.read();
+		Serial1.println("AT+CFUN=1,1");
+		char buffer[300];
+		bool found = 0;
+		memset(buffer, 0, sizeof(buffer));
+		Serial1.flush();
+		uint32_t timer = millis();
+		
+		while(!found)
+		{
+			if(Serial1.available())
+			{
+
+				char test = (char)Serial1.read();
+				strncat(buffer, &test, 1);
+				Serial.println(buffer);
+			}
+
+			if(strstr(buffer, "RDY") != nullptr)
+				found = 1;
+			if((millis() - timer > 5000 && sim_module_version == 1) ||
+			(millis() - timer > 28000 && sim_module_version == 0))
+				break;
+		}
+		delay(2000);
+		checkSim();
+		Serial1.println("AT+CREG?");
+		uint32_t cregMillis = millis();
+		String cregString = "";
+		while(networkRegistered == -1 && millis() - cregMillis < 1000)
+		{
+			if(millis() - cregMillis > 500)
+				Serial1.println("AT+CREG?");
+			if(cregString != "")
+			{
+				Serial.println(cregString);
+				if(cregString.indexOf("\n", cregString.indexOf("+CREG:")) != -1)
+				{
+					uint16_t helper = cregString.indexOf(",", cregString.indexOf("+CREG:"));
+					networkRegistered = cregString.substring(helper + 1,  helper + 2).toInt();
+				}
+			}
+			cregString = waitForOK();
+		}
+		networkModuleInit();
+		networkDisconnectFlag = 0;
+	}
+	else if(networkRegistered == 1 || networkRegistered == 5 || networkRegistered == -1 || !dataRefreshFlag)
+		networkDisconnectMillis = millis();
 
 	if (millis() - lastFrameCount >= frameSpeed || screenshotFlag) {
 		lastFrameCount = millis();
@@ -1235,7 +1283,7 @@ void MAKERphone::sleep() {
 		display.setTextFont(2);
 		display.setTextSize(1);
 		display.setCursor(helper*2, 4);
-		if(carrierName != "")
+		if(carrierName != "" && (networkRegistered == 1 || networkRegistered == 5))
 		{
 			// display.setFreeFont(TT1);
 			// display.setTextSize(2);
@@ -1244,7 +1292,7 @@ void MAKERphone::sleep() {
 			
 			display.print(carrierName);
 		}
-		else if(carrierName == "" && simInserted && !airplaneMode)
+		else if(simInserted && !airplaneMode && (carrierName == "" || !(networkRegistered == 1 || networkRegistered == 5)))
 			display.print("loading...");
 		else if(carrierName == "" && !simInserted && sim_module_version == 255)
 			display.print("No module");	
@@ -2752,17 +2800,23 @@ void MAKERphone::lockscreen() {
 		uint8_t helper = 11;
 		if(sim_module_version == 255)
 			helper = 1;
-		if (simInserted && !airplaneMode && sim_module_version != 255)
+		if (simInserted && !airplaneMode && sim_module_version != 255 )
 		{
-			if (signalStrength <= 3)
-				display.drawBitmap(2, 2, noSignalIcon, TFT_BLACK, 2);
-			else if (signalStrength > 3 && signalStrength <= 10)
-				display.drawBitmap(2, 2, signalLowIcon, TFT_BLACK, 2);
-			else if (signalStrength > 10 && signalStrength <= 20)
-				display.drawBitmap(2, 2, signalHighIcon, TFT_BLACK, 2);
-			else if (signalStrength > 20 && signalStrength <= 31)
-				display.drawBitmap(2, 2, signalFullIcon, TFT_BLACK, 2);
-			else if (signalStrength == 99)
+			if(networkRegistered == 1 || networkRegistered == 5)
+			{
+
+				if (signalStrength <= 3)
+					display.drawBitmap(2, 2, noSignalIcon, TFT_BLACK, 2);
+				else if (signalStrength > 3 && signalStrength <= 10)
+					display.drawBitmap(2, 2, signalLowIcon, TFT_BLACK, 2);
+				else if (signalStrength > 10 && signalStrength <= 20)
+					display.drawBitmap(2, 2, signalHighIcon, TFT_BLACK, 2);
+				else if (signalStrength > 20 && signalStrength <= 31)
+					display.drawBitmap(2, 2, signalFullIcon, TFT_BLACK, 2);
+				else if (signalStrength == 99)
+					display.drawBitmap(2, 2, signalErrorIcon, TFT_BLACK, 2);
+			}
+			else
 				display.drawBitmap(2, 2, signalErrorIcon, TFT_BLACK, 2);
 		}
 		else if(!simInserted && !airplaneMode && sim_module_version != 255)
@@ -2801,7 +2855,7 @@ void MAKERphone::lockscreen() {
 		display.setTextFont(2);
 		display.setTextSize(1);
 		display.setCursor(helper*2, 4);
-		if(carrierName != "")
+		if(carrierName != "" && (networkRegistered == 1 || networkRegistered == 5))
 		{
 			// display.setFreeFont(TT1);
 			// display.setTextSize(2);
@@ -2810,7 +2864,7 @@ void MAKERphone::lockscreen() {
 			
 			display.print(carrierName);
 		}
-		else if(carrierName == "" && simInserted && !airplaneMode)
+		else if(simInserted && !airplaneMode && (carrierName == "" || !(networkRegistered == 1 || networkRegistered == 5)))
 			display.print("loading...");
 		else if(carrierName == "" && !simInserted && sim_module_version == 255)
 			display.print("No module");	
@@ -2968,7 +3022,53 @@ void MAKERphone::lockscreen() {
 		update();
 	}
 }
+void MAKERphone::networkModuleInit()
+{
+	Serial.println("module inserted");
+	if(simInserted)
+		Serial.println("SIM INSERTED");
+	else
+		Serial.println("SIM NOT INSERTED");
 
+	// updateTimeGSM();
+	Serial1.println(F("AT+CMEE=2"));
+	waitForOK();
+	if(sim_module_version == 1)
+	{
+		Serial1.println(F("AT+CRSL=100"));
+		Serial1.println(F("AT+CLVL=100"));
+		Serial1.println(F("AT+CLTS=1")); //Enable local Timestamp mode (used for syncrhonising RTC with GSM time
+		Serial1.println(F("AT+IPR=9600"));
+	}
+	else if(sim_module_version == 0)
+	{
+		Serial1.println("AT+COUTGAIN=8");
+		waitForOK();
+		Serial1.println("AT+CVHU=0");
+		waitForOK();
+		Serial1.println("AT+CTZU=1");
+		waitForOK();
+		Serial1.println("AT+CNMP=2");
+		waitForOK();
+	}
+	waitForOK();
+	Serial1.println(F("AT+CMGF=1"));
+	waitForOK();
+	Serial1.println(F("AT+CNMI=1,2,0,0,0"));
+	waitForOK();
+	waitForOK();
+	Serial1.println(F("AT+CPMS=\"SM\",\"SM\",\"SM\""));
+	waitForOK();
+	Serial1.println(F("AT+CLCC=1"));
+	waitForOK();
+	Serial1.println(F("AT+CSCLK=1"));
+	waitForOK();
+	Serial1.println(F("AT&W"));
+	waitForOK();
+	Serial1.println(F("AT+CREG=0"));
+	waitForOK();
+	Serial.println("Serial1 up and running...");
+}
 //JPEG drawing
 void MAKERphone::drawJpeg(String filename, int xpos, int ypos) {
 
@@ -3750,7 +3850,7 @@ void MAKERphone::homePopup(bool animation)
 
 		//drawing the top icons
 		uint8_t helper = 11;
-		if (simInserted && !airplaneMode)
+		if (simInserted && !airplaneMode && (networkRegistered == 1 || networkRegistered == 5))
 		{
 			if (signalStrength <= 3)
 				display.drawBitmap(1*scale, 1*scale, noSignalIcon, TFT_BLACK, scale);
@@ -3786,7 +3886,7 @@ void MAKERphone::homePopup(bool animation)
 		display.setTextSize(1);
 		display.setTextColor(TFT_BLACK);
 		display.setCursor(helper*2, 4);
-		if(carrierName != "")
+		if(carrierName != "" && (networkRegistered == 1 || networkRegistered == 5))
 		{
 			// display.setFreeFont(TT1);
 			// display.setTextSize(2);
@@ -3795,7 +3895,7 @@ void MAKERphone::homePopup(bool animation)
 			
 			display.print(carrierName);
 		}
-		else if(carrierName == "" && simInserted && !airplaneMode)
+		else if((carrierName == "" && simInserted && !airplaneMode) || !(networkRegistered == 1 || networkRegistered == 5))
 			display.print("loading...");
 		else if(carrierName == "" && !simInserted && sim_module_version == 255)
 			display.print("No module");	

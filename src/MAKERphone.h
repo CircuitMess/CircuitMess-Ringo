@@ -322,7 +322,8 @@ class MAKERphone:public Buttons, public DateTime
 	bool exitedLockscreen = 0;
 	bool homeButtonPressed = 0;
 	String checkContact(String contactNumber);
-
+	int8_t networkRegistered = -1;
+	void networkModuleInit();
 	private:
 		MPTrack* ringtone = nullptr;
 		int multi_tap(byte key);
@@ -377,5 +378,7 @@ class MAKERphone:public Buttons, public DateTime
 		// uint8_t oscillatorVolumeList[14] = {0,10,15,20,35,50,60,80,100,120,150,200,220,255};
 		int shutdownCounter = 0;
 		int timesMeasured = 0;
+		uint32_t networkDisconnectMillis = millis();
+		bool networkDisconnectFlag = 1;
 };
 #endif
