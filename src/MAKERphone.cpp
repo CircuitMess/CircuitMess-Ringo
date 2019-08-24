@@ -406,7 +406,7 @@ void MAKERphone::begin(bool splash) {
 		else if(temp.indexOf("SIM7600") != -1)
 			sim_module_version = 0;
 		checkSim();
-		Serial1.println("AT+CREG?");
+		Serial1.println("AT+CCALR?");
 		uint32_t cregMillis = millis();
 		String cregString = "";
 		while(networkRegistered != 1 && networkRegistered != 5 && millis() - cregMillis < 1000)
@@ -414,15 +414,15 @@ void MAKERphone::begin(bool splash) {
 			if(cregString != "")
 			{
 				Serial.println(cregString);
-				if(cregString.indexOf("\n", cregString.indexOf("+CREG:")) != -1)
+				if(cregString.indexOf("\n", cregString.indexOf("+CCALR:")) != -1)
 				{
-					uint16_t helper = cregString.indexOf(",", cregString.indexOf("+CREG:"));
+					uint16_t helper = cregString.indexOf(" ", cregString.indexOf("+CCALR:"));
 					networkRegistered = cregString.substring(helper + 1,  helper + 2).toInt();
 				}
 			}
 			if(cregString != "" && networkRegistered != -1)
 			{
-				Serial1.println("AT+CREG?");
+				Serial1.println("AT+CCALR?");
 			}
 			cregString = waitForOK();
 		}
@@ -618,7 +618,7 @@ bool MAKERphone::update(bool altButtonsUpdate) {
 							Serial1.println("AT+CSPN?");
 						Serial1.println("AT+CSQ");
 					}
-					Serial1.println("AT+CREG?");
+					Serial1.println("AT+CCALR?");
 					if (clockYear % 100 < 19 || clockYear % 100 >= 40 || clockMonth < 1 || clockMonth > 12 ||
 					clockHour > 24 || clockMinute >= 60)
 						Serial1.println("AT+CCLK?");
@@ -787,9 +787,9 @@ bool MAKERphone::update(bool altButtonsUpdate) {
 					simVoltage = updateBuffer.substring(helper, updateBuffer.indexOf("V", helper)).toDouble() * 1000;
 				}
 			}
-			if(updateBuffer.indexOf("\n", updateBuffer.indexOf("+CREG:")) != -1)
+			if(updateBuffer.indexOf("\n", updateBuffer.indexOf("+CCALR:")) != -1)
 			{
-				uint16_t helper = updateBuffer.indexOf(",", updateBuffer.indexOf("+CREG:"));
+				uint16_t helper = updateBuffer.indexOf(" ", updateBuffer.indexOf("+CCALR:"));
 				networkRegistered = updateBuffer.substring(helper + 1,  helper + 2).toInt();
 			}
 
@@ -930,7 +930,7 @@ bool MAKERphone::update(bool altButtonsUpdate) {
 		wokeWithPWRBTN = 0;
 	}
 	if(networkRegistered != 1 && networkRegistered != 5 && networkRegistered != -1 
-	&& millis() - networkDisconnectMillis > 20000 && networkDisconnectFlag && inLockScreen)
+	&& millis() - networkDisconnectMillis > 30000 && networkDisconnectFlag && inLockScreen)
 	{
 		display.fillScreen(TFT_BLACK);
 		display.setTextColor(TFT_WHITE);
@@ -968,19 +968,19 @@ bool MAKERphone::update(bool altButtonsUpdate) {
 		}
 		delay(2000);
 		checkSim();
-		Serial1.println("AT+CREG?");
+		Serial1.println("AT+CCALR?");
 		uint32_t cregMillis = millis();
 		String cregString = "";
 		while(networkRegistered == -1 && millis() - cregMillis < 1000)
 		{
 			if(millis() - cregMillis > 500)
-				Serial1.println("AT+CREG?");
+				Serial1.println("AT+CCALR?");
 			if(cregString != "")
 			{
 				Serial.println(cregString);
-				if(cregString.indexOf("\n", cregString.indexOf("+CREG:")) != -1)
+				if(cregString.indexOf("\n", cregString.indexOf("+CCALR:")) != -1)
 				{
-					uint16_t helper = cregString.indexOf(",", cregString.indexOf("+CREG:"));
+					uint16_t helper = cregString.indexOf(" ", cregString.indexOf("+CCALR:"));
 					networkRegistered = cregString.substring(helper + 1,  helper + 2).toInt();
 				}
 			}
@@ -1099,6 +1099,8 @@ void MAKERphone::sleep() {
 	while(reason == 4)
 	{
 		reason = esp_sleep_get_wakeup_cause();
+		if(reason != 4)
+			break;
 		Serial.println("Timer wakeup");
 		voltageSum = 0;
 		voltageSample = 0;
@@ -1137,7 +1139,93 @@ void MAKERphone::sleep() {
 			digitalWrite(OFF_PIN, 1);
 			ESP.deepSleep(0);
 		}
-		
+		if(simInserted && sim_module_version != 255)
+		{
+			digitalWrite(SIM800_DTR, 0);
+			delay(100);
+			Serial1.end();
+			
+			if(sim_module_version == 1)
+				Serial1.begin(9600, SERIAL_8N1, 17, 16);
+			while(Serial1.available())
+				Serial1.read();
+			uint32_t cregMillis = millis();
+			String cregString = "";
+			int8_t tempReg = -1;
+			Serial1.println("AT+CCALR?");
+			while(tempReg == -1 && millis() - cregMillis < 1000)
+			{
+				cregString = waitForOK();
+				Serial.println(cregString);
+				if(cregString != "" && cregString.indexOf("+CCALR:") != -1)
+				{
+					if(cregString.indexOf("\n", cregString.indexOf("+CCALR:")) != -1)
+					{
+						uint16_t helper = cregString.indexOf(" ", cregString.indexOf("+CCALR:"));
+						tempReg = cregString.substring(helper + 1,  helper + 2).toInt();
+					}
+				}
+				if(cregString != "" && tempReg != 1 && tempReg != 5)
+				{
+					Serial1.println("AT+CCALR?");
+				}
+			}
+			Serial.print("call ready: ");
+			Serial.println(tempReg);
+			delay(5);
+			if(tempReg == 0)
+			{
+				while(Serial1.available())
+					Serial1.read();
+				Serial1.println("AT+CFUN=1,1");
+				char buffer[300];
+				bool found = 0;
+				memset(buffer, 0, sizeof(buffer));
+				Serial1.flush();
+				uint32_t timer = millis();
+				
+				while(!found)
+				{
+					if(Serial1.available())
+					{
+
+						char test = (char)Serial1.read();
+						strncat(buffer, &test, 1);
+						Serial.println(buffer);
+					}
+					if(strstr(buffer, "RDY") != nullptr)
+						found = 1;
+					if((millis() - timer > 5000 && sim_module_version == 1) ||
+					(millis() - timer > 28000 && sim_module_version == 0))
+						break;
+				}
+				delay(2000);
+				checkSim();
+				Serial1.println("AT+CCALR?");
+				uint32_t cregMillis = millis();
+				String cregString = "";
+				int8_t tempReg = -1;
+				while(tempReg == -1 && millis() - cregMillis < 10000)
+				{
+					if(millis() - cregMillis > 500)
+						Serial1.println("AT+CCALR?");
+					if(cregString != "")
+					{
+						Serial.println(cregString);
+						if(cregString.indexOf("\n", cregString.indexOf("+CCALR:")) != -1)
+						{
+							uint16_t helper = cregString.indexOf(" ", cregString.indexOf("+CCALR:"));
+							tempReg = cregString.substring(helper + 1,  helper + 2).toInt();
+						}
+					}
+					cregString = waitForOK();
+				}
+				networkModuleInit();
+				if(tempReg != -1)
+					networkRegistered = tempReg;
+			}
+			digitalWrite(SIM800_DTR, 1);
+		}
 		buttons.activateInterrupt();
 		esp_light_sleep_start();
 	}
@@ -1172,7 +1260,7 @@ void MAKERphone::sleep() {
 		while(!update());
 		return;
 	}
-	while(!update());
+	// while(!update());
 	// delay(1000);
 	if(!inLockScreen)
 	{
