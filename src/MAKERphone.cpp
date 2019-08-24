@@ -593,7 +593,7 @@ bool MAKERphone::update(bool altButtonsUpdate) {
 		}
 	}
 	else if((buttonsPressed || !digitalRead(BTN_INT) || inCall || inAlarmPopup) && sleepTime)
-			sleepTimer = millis();
+		sleepTimer = millis();
 
 	if (millis() > 7000)
 		simReady = 1;
@@ -797,7 +797,9 @@ bool MAKERphone::update(bool altButtonsUpdate) {
 	}
 	batteryVoltage = voltage;
 
-	if((batteryVoltage <= 3580 || simVoltage <= 3600) && digitalRead(CHRG_INT))
+	if((((batteryVoltage <= 3580 || simVoltage <= 3600) && sim_module_version != 1)
+	|| (batteryVoltage <= 3580 && simVoltage <= 3600 && sim_module_version == 1))
+	&& digitalRead(CHRG_INT))
 	{
 		if(timesMeasured != _timesMeasured)
 			shutdownCounter++;
@@ -1115,30 +1117,7 @@ void MAKERphone::sleep() {
 		voltageSample = 0;
 		Serial.println(batteryVoltage);
 		delay(50);
-		if(batteryVoltage <= 3580)
-		{
-			//Serial1.println("AT+CFUN=4");
-			//Serial1.println("AT+CSCLK=2");
-
-			delay(750);
-			Serial.println("TURN OFF");
-			digitalWrite(SIM800_DTR, 1);
-			FastLED.clear(1);
-			ledcDetachPin(LCD_BL_PIN);
-			pinMode(LCD_BL_PIN, OUTPUT);
-			digitalWrite(LCD_BL_PIN, 1);
-			digitalWrite(OFF_PIN, 1);
-			
-			rtc_gpio_isolate(GPIO_NUM_16);
-			rtc_gpio_isolate(GPIO_NUM_17);
-			rtc_gpio_isolate(GPIO_NUM_33);
-			rtc_gpio_isolate(GPIO_NUM_34);
-			rtc_gpio_isolate(GPIO_NUM_36);
-			rtc_gpio_isolate(GPIO_NUM_39);
-			
-			digitalWrite(OFF_PIN, 1);
-			ESP.deepSleep(0);
-		}
+		
 		if(simInserted && sim_module_version != 255)
 		{
 			digitalWrite(SIM800_DTR, 0);
@@ -1224,11 +1203,60 @@ void MAKERphone::sleep() {
 				if(tempReg != -1)
 					networkRegistered = tempReg;
 			}
+			while(Serial1.available())
+				Serial1.read();
+			uint32_t voltMillis = millis();
+			String voltString = "";
+			uint16_t tempVolt = 0;
+			Serial1.println("AT+CBC");
+			while(tempVolt == 0 && millis() - voltMillis < 1000)
+			{
+				voltString = waitForOK();
+				Serial.println(voltString);
+				if(voltString.indexOf("+CBC:") != -1)
+				{
+					uint16_t helper = voltString.indexOf(",", voltString.indexOf("+CBC:"));
+					helper = voltString.indexOf(",", helper + 1) + 1;
+					tempVolt = voltString.substring(helper, voltString.indexOf("\n", helper)).toInt();
+				}
+				if(tempVolt == 0)
+					Serial1.println("AT+CBC");
+			}
+			Serial.print("voltage: ");
+			Serial.println(tempVolt);
 			digitalWrite(SIM800_DTR, 1);
+			simVoltage = tempVolt;
+		}
+		if((((batteryVoltage <= 3580 || simVoltage <= 3600) && sim_module_version != 1)
+		|| (batteryVoltage <= 3580 && simVoltage <= 3600 && sim_module_version == 1))
+		&& digitalRead(CHRG_INT))
+		{
+			//Serial1.println("AT+CFUN=4");
+			//Serial1.println("AT+CSCLK=2");
+
+			delay(750);
+			Serial.println("TURN OFF");
+			digitalWrite(SIM800_DTR, 1);
+			FastLED.clear(1);
+			ledcDetachPin(LCD_BL_PIN);
+			pinMode(LCD_BL_PIN, OUTPUT);
+			digitalWrite(LCD_BL_PIN, 1);
+			digitalWrite(OFF_PIN, 1);
+			
+			rtc_gpio_isolate(GPIO_NUM_16);
+			rtc_gpio_isolate(GPIO_NUM_17);
+			rtc_gpio_isolate(GPIO_NUM_33);
+			rtc_gpio_isolate(GPIO_NUM_34);
+			rtc_gpio_isolate(GPIO_NUM_36);
+			rtc_gpio_isolate(GPIO_NUM_39);
+			
+			digitalWrite(OFF_PIN, 1);
+			ESP.deepSleep(0);
 		}
 		buttons.activateInterrupt();
 		esp_light_sleep_start();
 	}
+	networkDisconnectMillis = millis();
 	sleepTimer = millis();
 	Serial.println("buttons wakuep");
 	// if(sim_module_version != 255)
@@ -2956,8 +2984,8 @@ void MAKERphone::lockscreen() {
 			display.print("loading...");
 		else if(carrierName == "" && !simInserted && sim_module_version == 255)
 			display.print("No module");	
-		// display.setCursor(60, 2);
-		// display.println(shutdownCounter);
+		display.setCursor(60, 2);
+		display.println(simVoltage);
 		if(!digitalRead(CHRG_INT))
 			display.drawBitmap(148, 2, batteryChargingIcon, TFT_BLACK, 2);
 		else
