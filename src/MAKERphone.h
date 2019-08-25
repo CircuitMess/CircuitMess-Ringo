@@ -380,5 +380,6 @@ class MAKERphone:public Buttons, public DateTime
 		int timesMeasured = 0;
 		uint32_t networkDisconnectMillis = millis();
 		bool networkDisconnectFlag = 1;
+		bool networkInitialized = 0;
 };
 #endif

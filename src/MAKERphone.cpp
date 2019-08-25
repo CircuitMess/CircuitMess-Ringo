@@ -493,6 +493,7 @@ void MAKERphone::begin(bool splash) {
 
 	if(sim_module_version != 255)
 		networkModuleInit();
+	networkInitialized = 1;
 	sleepTimer = millis();
 }
 
@@ -848,7 +849,7 @@ bool MAKERphone::update(bool altButtonsUpdate) {
 		shutdownCounter = 0;
 	if(alarmCleared && millis() - alarmMillis > 60000)
 		alarmCleared = 0;
-	if(!digitalRead(SIM_INT) && !inCall)
+	if(!digitalRead(SIM_INT) && !inCall && networkInitialized)
 	{
 		String temp = "";
 		uint32_t curr_millis = millis();
@@ -931,68 +932,70 @@ bool MAKERphone::update(bool altButtonsUpdate) {
 		buttons.update();
 		wokeWithPWRBTN = 0;
 	}
-	if(networkRegistered != 1 && networkRegistered != 5 && networkRegistered != -1 
-	&& millis() - networkDisconnectMillis > 30000 && networkDisconnectFlag && inLockScreen)
+	if(sim_module_version != 255 && simInserted)
 	{
-		display.fillScreen(TFT_BLACK);
-		display.setTextColor(TFT_WHITE);
-		display.setTextSize(1);
-		display.setCursor(0, display.height()/2 - 20);
-		display.setTextFont(2);
-		display.printCenter(F("Registering to network"));
-		display.setCursor(0, display.height()/2);
-		display.printCenter(F("Please wait..."));
-		display.pushSprite(0,0);
-		while(Serial1.available())
-				Serial1.read();
-		Serial1.println("AT+CFUN=1,1");
-		char buffer[300];
-		bool found = 0;
-		memset(buffer, 0, sizeof(buffer));
-		Serial1.flush();
-		uint32_t timer = millis();
-		
-		while(!found)
+		if(networkRegistered != 1 && millis() - networkDisconnectMillis > 30000 && networkDisconnectFlag && inLockScreen)
 		{
-			if(Serial1.available())
+			display.fillScreen(TFT_BLACK);
+			display.setTextColor(TFT_WHITE);
+			display.setTextSize(1);
+			display.setCursor(0, display.height()/2 - 20);
+			display.setTextFont(2);
+			display.printCenter(F("Registering to network"));
+			display.setCursor(0, display.height()/2);
+			display.printCenter(F("Please wait..."));
+			display.pushSprite(0,0);
+			while(Serial1.available())
+					Serial1.read();
+			Serial1.println("AT+CFUN=1,1");
+			char buffer[300];
+			bool found = 0;
+			memset(buffer, 0, sizeof(buffer));
+			Serial1.flush();
+			uint32_t timer = millis();
+			
+			while(!found)
 			{
-
-				char test = (char)Serial1.read();
-				strncat(buffer, &test, 1);
-				Serial.println(buffer);
-			}
-
-			if(strstr(buffer, "RDY") != nullptr)
-				found = 1;
-			if((millis() - timer > 5000 && sim_module_version == 1) ||
-			(millis() - timer > 28000 && sim_module_version == 0))
-				break;
-		}
-		delay(2000);
-		checkSim();
-		Serial1.println("AT+CCALR?");
-		uint32_t cregMillis = millis();
-		String cregString = "";
-		while(networkRegistered == -1 && millis() - cregMillis < 1000)
-		{
-			if(millis() - cregMillis > 500)
-				Serial1.println("AT+CCALR?");
-			if(cregString != "")
-			{
-				Serial.println(cregString);
-				if(cregString.indexOf("\n", cregString.indexOf("+CCALR:")) != -1)
+				if(Serial1.available())
 				{
-					uint16_t helper = cregString.indexOf(" ", cregString.indexOf("+CCALR:"));
-					networkRegistered = cregString.substring(helper + 1,  helper + 2).toInt();
+
+					char test = (char)Serial1.read();
+					strncat(buffer, &test, 1);
+					Serial.println(buffer);
 				}
+
+				if(strstr(buffer, "RDY") != nullptr)
+					found = 1;
+				if((millis() - timer > 5000 && sim_module_version == 1) ||
+				(millis() - timer > 28000 && sim_module_version == 0))
+					break;
 			}
-			cregString = waitForOK();
+			delay(2000);
+			checkSim();
+			Serial1.println("AT+CCALR?");
+			uint32_t cregMillis = millis();
+			String cregString = "";
+			while(networkRegistered == -1 && millis() - cregMillis < 1000)
+			{
+				if(millis() - cregMillis > 500)
+					Serial1.println("AT+CCALR?");
+				if(cregString != "")
+				{
+					Serial.println(cregString);
+					if(cregString.indexOf("\n", cregString.indexOf("+CCALR:")) != -1)
+					{
+						uint16_t helper = cregString.indexOf(" ", cregString.indexOf("+CCALR:"));
+						networkRegistered = cregString.substring(helper + 1,  helper + 2).toInt();
+					}
+				}
+				cregString = waitForOK();
+			}
+			networkModuleInit();
+			networkDisconnectFlag = 0;
 		}
-		networkModuleInit();
-		networkDisconnectFlag = 0;
+		else if(networkRegistered == 1 || !dataRefreshFlag)
+			networkDisconnectMillis = millis();
 	}
-	else if(networkRegistered == 1 || networkRegistered == 5 || networkRegistered == -1 || !dataRefreshFlag)
-		networkDisconnectMillis = millis();
 
 	if (millis() - lastFrameCount >= frameSpeed || screenshotFlag) {
 		lastFrameCount = millis();
@@ -2352,6 +2355,14 @@ void MAKERphone::addCall(String number, String contact, uint32_t dateTime, int d
 	// jb.clear();
 	JsonArray& jarr = jb.parseArray(file);
 	file.close();
+	if(jarr.size() > 39)
+	{
+		Serial.println("call log limit reached");
+		jarr.remove(0);
+		File file = SD.open("/.core/messages.json", "w");
+		jarr.prettyPrintTo(file);
+		file.close();
+	}
 
 	JsonObject& new_item = jb.createObject();
 	new_item["number"] = number.c_str();
@@ -2984,8 +2995,8 @@ void MAKERphone::lockscreen() {
 			display.print("loading...");
 		else if(carrierName == "" && !simInserted && sim_module_version == 255)
 			display.print("No module");	
-		display.setCursor(60, 2);
-		display.println(simVoltage);
+		// display.setCursor(60, 2);
+		// display.println(simVoltage);
 		if(!digitalRead(CHRG_INT))
 			display.drawBitmap(148, 2, batteryChargingIcon, TFT_BLACK, 2);
 		else
