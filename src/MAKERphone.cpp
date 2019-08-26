@@ -119,6 +119,7 @@ void MAKERphone::begin(bool splash) {
 
 	adc_chars = (esp_adc_cal_characteristics_t*)calloc(1, sizeof(esp_adc_cal_characteristics_t)); 
 	int vRef = REG_GET_FIELD(EFUSE_BLK0_RDATA4_REG, EFUSE_RD_ADC_VREF);
+	
 	if(vRef & 0x10)
 		vRef = -(vRef & 0x0F);
 	else
@@ -1109,13 +1110,16 @@ void MAKERphone::sleep() {
 		Serial.println("Timer wakeup");
 		voltageSum = 0;
 		voltageSample = 0;
-		for(int i = 0; i < 2000; i++)
+		for(measuringCounter = 0; measuringCounter < 6000; measuringCounter++)
 		{
-			delayMicroseconds(1);
-			voltageSum += analogRead(VOLTAGE_PIN);
+			chargeDuringADCRead = 0;
+			voltageSum += esp_adc_cal_raw_to_voltage(adc1_get_raw(ADC1_CHANNEL_7), adc_chars)*2;
+			// uint32_t reading =  adc1_get_raw(ADC1_CHANNEL_7)*2;
+			// uint32_t tempVoltage = esp_adc_cal_raw_to_voltage(reading, adc_chars);
+			// voltageSum += tempVoltage;
 			voltageSample++;
 		}
-		batteryVoltage = ((voltageSum )/1150.0);
+		voltage = ((voltageSum )/(6000.0) + 158.0235417);
 		voltageSum = 0;
 		voltageSample = 0;
 		Serial.println(batteryVoltage);
@@ -2140,6 +2144,36 @@ void MAKERphone::incomingMessage(String _serialData)
 	helper+=number.length() + 1;
 	helper = _serialData.indexOf("\"\r", helper);
 	String text = _serialData.substring(helper + 3, _serialData.indexOf("\r", helper + 2));
+	bool isHex = 1;
+	for (uint32_t i = 0; i < text.length(); i++)
+	{
+		if(isdigit(text[i]) || tolower(text[i]) == 'a' || tolower(text[i]) == 'b' || tolower(text[i]) == 'c' ||
+		tolower(text[i]) == 'd' || tolower(text[i]) == 'e' || tolower(text[i]) == 'f')
+			continue;
+		else
+		{
+			isHex = 0;
+			break;
+		}
+	}
+	Serial.println(isHex);
+	if(isHex)
+	{
+		String newText = "";
+		for(int i = 0; i <= text.length() - 4;i+=4)
+		{
+			char snip[5] = "";
+			strncpy(snip, text.substring(i, i+4).c_str(), 5);
+			int charCode = strtol(snip, nullptr, 16);
+			char c = '*';
+			if(charCode <= 128)
+				c = charCode;
+			newText+=c;
+		}
+		Serial.println(newText);
+		text = newText;
+	}
+	
 	JsonArray& jarr = jb.createArray();
 	bool fullStack = 0;
 	if(SDinsertedFlag)
@@ -2198,8 +2232,8 @@ void MAKERphone::incomingMessage(String _serialData)
 	tft.setTextSize(1);
 	tft.setCursor(40, 7);
 	tft.print("NEW MESSAGE!");
-	tft.drawBitmap(10, 5, incomingMessageIcon, TFT_BLUE, 2);
-	tft.setCursor(10,40);
+	tft.drawBitmap(10, 5, incomingMessageIcon, TFT_BLUE, 2); //+CMT: "+385953776154","","19/08/25,19:18:49+08" 
+	tft.setCursor(10,40);// +CMT: "+385953776154","","19/08/25,19:19:21+08"
 	tft.print("From: ");
 	tft.print(number);
 	tft.setCursor(10, 70);
@@ -2260,6 +2294,8 @@ void MAKERphone::incomingMessage(String _serialData)
 				break;
 			}
 		}
+		if(millis() - sleepTimer > sleepTimeActual*1000 && sleepTime != 0)
+			break;
 		buttons.update();
 	}
 	if(fullStack)
@@ -2356,7 +2392,7 @@ void MAKERphone::addCall(String number, String contact, uint32_t dateTime, int d
 	{
 		Serial.println("call log limit reached");
 		jarr.remove(0);
-		File file = SD.open("/.core/messages.json", "w");
+		File file = SD.open("/.core/call_log.json", "w");
 		jarr.prettyPrintTo(file);
 		file.close();
 	}
