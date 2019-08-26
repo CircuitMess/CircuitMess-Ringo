@@ -16,16 +16,20 @@ void Buttons::begin() {
 
 void Buttons::update() {
 	buttonsData = 0;
-	
-	delay(1);
-	button_a = ads.readADC_SingleEnded(3);
-	delay(1);
+	// delay(1);
+	// delayMicroseconds(1000);
+	// delay(1);
+	delayMicroseconds(1000);
 	joystick_x = ads.readADC_SingleEnded(1);
-	delay(1);
+	// delay(1);
+	delayMicroseconds(1000);
 	joystick_y = ads.readADC_SingleEnded(0);
-	delay(1);
+	// delay(1);
+	delayMicroseconds(1000);
 	button_b = ads.readADC_SingleEnded(2);
 
+	button_a = ads.readADC_SingleEnded(3);
+	
 	// Serial.print("Joystick X");
 	// Serial.println(joystick_x);
 	// Serial.print("Joystick Y");
@@ -74,6 +78,12 @@ void Buttons::update() {
 				states[i] = 0xFFFF; //button just released
 			}
 		}
+	}
+	if(holdForUnlock && states[(uint8_t)11] == 0xFFFF)
+	{
+		Serial.println("Release ignored");
+		holdForUnlock = 0;
+		Buttons::update();
 	}
 }
 

@@ -53,6 +53,10 @@ extern HardwareSerial Serial1;
 #include "utility/soundLib/MPWavLib.h"
 #include "utility/arduino_pdu_decoder/pdu_decoder.h"
 
+#include <esp_efuse.h>
+#include <esp_adc_cal.h>
+#include <driver/adc.h>
+#include <driver/gpio.h>
 #define BTN_1 0
 #define BTN_2 1
 #define BTN_3 2
@@ -145,7 +149,7 @@ class MAKERphone:public Buttons, public DateTime
 	void tone2(int pin, int freq, int duration);
 	void vibration(int duration);
 	void ledcAnalogWrite(uint8_t channel, uint32_t value, uint32_t valueMax = 255);
-	bool update();
+	bool update(bool altButtonsUpdate = 0);
 	void splashScreen();
 	void sleep();
 	void incomingCall(String _serialData);
@@ -323,6 +327,8 @@ class MAKERphone:public Buttons, public DateTime
 	String checkContact(String contactNumber);
 	void pduDecode(char* PDU);
 
+	int8_t networkRegistered = -1;
+	void networkModuleInit();
 	private:
 		MPTrack* ringtone = nullptr;
 		int multi_tap(byte key);
@@ -375,5 +381,10 @@ class MAKERphone:public Buttons, public DateTime
 		MPTrack *currTracks[4] = {nullptr,nullptr,nullptr,nullptr};
 		bool pausedTracks[4] = {0,0,0,0};
 		// uint8_t oscillatorVolumeList[14] = {0,10,15,20,35,50,60,80,100,120,150,200,220,255};
+		int shutdownCounter = 0;
+		int timesMeasured = 0;
+		uint32_t networkDisconnectMillis = millis();
+		bool networkDisconnectFlag = 1;
+		bool networkInitialized = 0;
 };
 #endif

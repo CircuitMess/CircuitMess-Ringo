@@ -53,5 +53,6 @@ class Buttons
 		uint16_t getJoystickX(){ return joystick_x; }
 		uint16_t getJoystickY(){ return joystick_y; }
 		void activateInterrupt();
+		bool holdForUnlock = 0;
 };
 #endif
