@@ -407,25 +407,51 @@ void MAKERphone::begin(bool splash) {
 		else if(temp.indexOf("SIM7600") != -1)
 			sim_module_version = 0;
 		checkSim();
-		Serial1.println("AT+CCALR?");
-		uint32_t cregMillis = millis();
-		String cregString = "";
-		while(networkRegistered != 1 && networkRegistered != 5 && millis() - cregMillis < 1000)
+		if(sim_module_version == 1)
 		{
-			if(cregString != "")
+			Serial1.println("AT+CCALR?");
+			uint32_t cregMillis = millis();
+			String cregString = "";
+			while(networkRegistered != 1 && networkRegistered != 5 && millis() - cregMillis < 1000)
 			{
-				Serial.println(cregString);
-				if(cregString.indexOf("\n", cregString.indexOf("+CCALR:")) != -1)
+				if(cregString != "")
 				{
-					uint16_t helper = cregString.indexOf(" ", cregString.indexOf("+CCALR:"));
-					networkRegistered = cregString.substring(helper + 1,  helper + 2).toInt();
+					Serial.println(cregString);
+					if(cregString.indexOf("\n", cregString.indexOf("+CCALR:")) != -1)
+					{
+						uint16_t helper = cregString.indexOf(" ", cregString.indexOf("+CCALR:"));
+						networkRegistered = cregString.substring(helper + 1,  helper + 2).toInt();
+					}
 				}
+				if(cregString != "" && networkRegistered != -1)
+				{
+					Serial1.println("AT+CCALR?");
+				}
+				cregString = waitForOK();
 			}
-			if(cregString != "" && networkRegistered != -1)
+		}
+		else
+		{
+			Serial1.println("AT+CREG?");
+			uint32_t cregMillis = millis();
+			String cregString = "";
+			while(networkRegistered != 1 && networkRegistered != 5 && millis() - cregMillis < 1000)
 			{
-				Serial1.println("AT+CCALR?");
+				if(cregString != "")
+				{
+					Serial.println(cregString);
+					if(cregString.indexOf("\n", cregString.indexOf("+CREG:")) != -1)
+					{
+						uint16_t helper = cregString.indexOf(",", cregString.indexOf("+CREG:"));
+						networkRegistered = cregString.substring(helper + 1,  helper + 2).toInt();
+					}
+				}
+				if(cregString != "" && networkRegistered != -1)
+				{
+					Serial1.println("AT+CREG?");
+				}
+				cregString = waitForOK();
 			}
-			cregString = waitForOK();
 		}
 	}
 	if(EEPROM.readByte(GSM_MODULE_ADDRESS) != sim_module_version)
@@ -635,7 +661,7 @@ bool MAKERphone::update(bool altButtonsUpdate) {
 				switch (alternatingRefresh)
 				{
 				case 0:
-					if (simInserted && !airplaneMode)
+					if (simInserted && !airplaneMode && (networkRegistered == 5 || networkRegistered == 1))
 					{
 						if (carrierName == "")
 							Serial1.println("AT+CSPN?");
@@ -647,14 +673,14 @@ bool MAKERphone::update(bool altButtonsUpdate) {
 					break;
 
 				case 1:
-					if (simInserted && !airplaneMode)
+					if (simInserted && !airplaneMode && (networkRegistered == 5 || networkRegistered == 1))
 						Serial1.println("AT+CSQ");
 					else
 						refreshMillis = millis() + 2000;
 					break;
 
 				case 2:
-					if (simInserted && !airplaneMode)
+					if (simInserted && !airplaneMode && (networkRegistered == 5 || networkRegistered == 1))
 					{
 						if (clockYear % 100 < 19 || clockYear % 100 >= 40 || clockMonth < 1 || clockMonth > 12 || clockHour > 24 || clockMinute >= 60)
 						{
@@ -677,6 +703,9 @@ bool MAKERphone::update(bool altButtonsUpdate) {
 					else
 						refreshMillis = millis() + 2000;
 					break;
+				case 3:
+					Serial1.println("AT+CREG?");
+					break;
 				}
 				updateBuffer = "";
 				// if (simInserted && !airplaneMode)
@@ -690,11 +719,11 @@ bool MAKERphone::update(bool altButtonsUpdate) {
 				// 		Serial1.println("AT+CCLK?");
 				// }
 				alternatingRefresh++;
-				if(alternatingRefresh > 2)
+				if(alternatingRefresh > 3)
 					alternatingRefresh = 0;
 			}
 		}
-		if (Serial1.available())
+		if (Serial1.available() && sim_module_version != 255)
 		{
 			c = Serial1.read();
 			updateBuffer += c;
@@ -789,9 +818,14 @@ bool MAKERphone::update(bool altButtonsUpdate) {
 					simVoltage = updateBuffer.substring(helper, updateBuffer.indexOf("V", helper)).toDouble() * 1000;
 				}
 			}
-			if(updateBuffer.indexOf("\n", updateBuffer.indexOf("+CCALR:")) != -1)
+			if(updateBuffer.indexOf("\n", updateBuffer.indexOf("+CCALR:")) != -1 && sim_module_version == 1)
 			{
 				uint16_t helper = updateBuffer.indexOf(" ", updateBuffer.indexOf("+CCALR:"));
+				networkRegistered = updateBuffer.substring(helper + 1,  helper + 2).toInt();
+			}
+			if(updateBuffer.indexOf("\n", updateBuffer.indexOf("+CREG:")) != -1 && sim_module_version == 0)
+			{
+				uint16_t helper = updateBuffer.indexOf(",", updateBuffer.indexOf("+CREG:"));
 				networkRegistered = updateBuffer.substring(helper + 1,  helper + 2).toInt();
 			}
 
@@ -935,7 +969,8 @@ bool MAKERphone::update(bool altButtonsUpdate) {
 	}
 	if(sim_module_version != 255 && simInserted)
 	{
-		if(networkRegistered != 1 && millis() - networkDisconnectMillis > 30000 && networkDisconnectFlag && inLockScreen)
+		if(networkRegistered != 1 && millis() - networkDisconnectMillis > 30000 && networkDisconnectFlag && inLockScreen
+		&& sim_module_version != 0)
 		{
 			display.fillScreen(TFT_BLACK);
 			display.setTextColor(TFT_WHITE);
@@ -973,23 +1008,49 @@ bool MAKERphone::update(bool altButtonsUpdate) {
 			}
 			delay(2000);
 			checkSim();
-			Serial1.println("AT+CCALR?");
-			uint32_t cregMillis = millis();
-			String cregString = "";
-			while(networkRegistered == -1 && millis() - cregMillis < 1000)
+			if(sim_module_version == 1)
 			{
-				if(millis() - cregMillis > 500)
-					Serial1.println("AT+CCALR?");
-				if(cregString != "")
+				Serial1.println("AT+CCALR?");
+				uint32_t cregMillis = millis();
+				String cregString = "";
+				while(networkRegistered == -1 && millis() - cregMillis < 1000)
 				{
-					Serial.println(cregString);
-					if(cregString.indexOf("\n", cregString.indexOf("+CCALR:")) != -1)
+					if(millis() - cregMillis > 500)
+						Serial1.println("AT+CCALR?");
+					if(cregString != "")
 					{
-						uint16_t helper = cregString.indexOf(" ", cregString.indexOf("+CCALR:"));
-						networkRegistered = cregString.substring(helper + 1,  helper + 2).toInt();
+						Serial.println(cregString);
+						if(cregString.indexOf("\n", cregString.indexOf("+CCALR:")) != -1)
+						{
+							uint16_t helper = cregString.indexOf(" ", cregString.indexOf("+CCALR:"));
+							networkRegistered = cregString.substring(helper + 1,  helper + 2).toInt();
+						}
 					}
+					cregString = waitForOK();
 				}
-				cregString = waitForOK();
+			}
+			else
+			{
+				Serial1.println("AT+CREG?");
+				uint32_t cregMillis = millis();
+				String cregString = "";
+				while(networkRegistered != 1 && networkRegistered != 5 && millis() - cregMillis < 1000)
+				{
+					if(cregString != "")
+					{
+						Serial.println(cregString);
+						if(cregString.indexOf("\n", cregString.indexOf("+CREG:")) != -1)
+						{
+							uint16_t helper = cregString.indexOf(",", cregString.indexOf("+CREG:"));
+							networkRegistered = cregString.substring(helper + 1,  helper + 2).toInt();
+						}
+					}
+					if(cregString != "" && networkRegistered != -1)
+					{
+						Serial1.println("AT+CREG?");
+					}
+					cregString = waitForOK();
+				}
 			}
 			networkModuleInit();
 			networkDisconnectFlag = 0;
@@ -1138,22 +1199,46 @@ void MAKERphone::sleep() {
 			uint32_t cregMillis = millis();
 			String cregString = "";
 			int8_t tempReg = -1;
-			Serial1.println("AT+CCALR?");
-			while(tempReg == -1 && millis() - cregMillis < 1000)
+			if(sim_module_version == 1)
 			{
-				cregString = waitForOK();
-				Serial.println(cregString);
-				if(cregString != "" && cregString.indexOf("+CCALR:") != -1)
+				Serial1.println("AT+CCALR?");
+				while(tempReg == -1 && millis() - cregMillis < 1000)
 				{
-					if(cregString.indexOf("\n", cregString.indexOf("+CCALR:")) != -1)
+					cregString = waitForOK();
+					Serial.println(cregString);
+					if(cregString != "" && cregString.indexOf("+CCALR:") != -1)
 					{
-						uint16_t helper = cregString.indexOf(" ", cregString.indexOf("+CCALR:"));
-						tempReg = cregString.substring(helper + 1,  helper + 2).toInt();
+						if(cregString.indexOf("\n", cregString.indexOf("+CCALR:")) != -1)
+						{
+							uint16_t helper = cregString.indexOf(" ", cregString.indexOf("+CCALR:"));
+							tempReg = cregString.substring(helper + 1,  helper + 2).toInt();
+						}
+					}
+					if(cregString != "" && tempReg != 1 && tempReg != 5)
+					{
+						Serial1.println("AT+CCALR?");
 					}
 				}
-				if(cregString != "" && tempReg != 1 && tempReg != 5)
+			}
+			else
+			{
+				Serial1.println("AT+CREG?");
+				while(tempReg == -1 && millis() - cregMillis < 1000)
 				{
-					Serial1.println("AT+CCALR?");
+					cregString = waitForOK();
+					Serial.println(cregString);
+					if(cregString != "" && cregString.indexOf("+CREG:") != -1)
+					{
+						if(cregString.indexOf("\n", cregString.indexOf("+CREG:")) != -1)
+						{
+							uint16_t helper = cregString.indexOf(" ", cregString.indexOf("+CREG:"));
+							tempReg = cregString.substring(helper + 1,  helper + 2).toInt();
+						}
+					}
+					if(cregString != "" && tempReg != 1 && tempReg != 5)
+					{
+						Serial1.println("AT+CREG?");
+					}
 				}
 			}
 			Serial.print("call ready: ");
@@ -1187,24 +1272,51 @@ void MAKERphone::sleep() {
 				}
 				delay(2000);
 				checkSim();
-				Serial1.println("AT+CCALR?");
-				uint32_t cregMillis = millis();
-				String cregString = "";
-				int8_t tempReg = -1;
-				while(tempReg == -1 && millis() - cregMillis < 10000)
+				if(sim_module_version == 1)
 				{
-					if(millis() - cregMillis > 500)
-						Serial1.println("AT+CCALR?");
-					if(cregString != "")
+					Serial1.println("AT+CCALR?");
+					uint32_t cregMillis = millis();
+					String cregString = "";
+					int8_t tempReg = -1;
+					while(tempReg == -1 && millis() - cregMillis < 10000)
 					{
-						Serial.println(cregString);
-						if(cregString.indexOf("\n", cregString.indexOf("+CCALR:")) != -1)
+						if(millis() - cregMillis > 500)
+							Serial1.println("AT+CCALR?");
+						if(cregString != "")
 						{
-							uint16_t helper = cregString.indexOf(" ", cregString.indexOf("+CCALR:"));
-							tempReg = cregString.substring(helper + 1,  helper + 2).toInt();
+							Serial.println(cregString);
+							if(cregString.indexOf("\n", cregString.indexOf("+CCALR:")) != -1)
+							{
+								uint16_t helper = cregString.indexOf(" ", cregString.indexOf("+CCALR:"));
+								tempReg = cregString.substring(helper + 1,  helper + 2).toInt();
+							}
+						}
+						cregString = waitForOK();
+					}
+				}
+				else
+				{
+					Serial1.println("AT+CREG?");
+					uint32_t cregMillis = millis();
+					String cregString = "";
+					int8_t tempReg = -1;
+					while(tempReg == -1 && millis() - cregMillis < 1000)
+					{
+						cregString = waitForOK();
+						Serial.println(cregString);
+						if(cregString != "" && cregString.indexOf("+CREG:") != -1)
+						{
+							if(cregString.indexOf("\n", cregString.indexOf("+CREG:")) != -1)
+							{
+								uint16_t helper = cregString.indexOf(" ", cregString.indexOf("+CREG:"));
+								tempReg = cregString.substring(helper + 1,  helper + 2).toInt();
+							}
+						}
+						if(cregString != "" && tempReg != 1 && tempReg != 5)
+						{
+							Serial1.println("AT+CREG?");
 						}
 					}
-					cregString = waitForOK();
 				}
 				networkModuleInit();
 				if(tempReg != -1)
