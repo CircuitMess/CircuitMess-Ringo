@@ -99,24 +99,24 @@ void ADCmeasuring(void *parameters)
 		}
 	}
 }
-char* subchar(char* str, uint16_t start, uint16_t length)
-{
-    char* ret = new char[length + 1];
-    for (short i = start; i < start + length; i++)
-        ret[i - start] = str[i];
-    ret[length] = '\0';
-    return ret;
-}
-char* charReverse(char *str) {
-  size_t len = strlen(str);
-  size_t i = 0;
-  while (len > i) {
-    char tmp = str[--len];
-    str[len] = str[i];
-    str[i++] = tmp;
-  }
-  return str;
-}
+// char* subchar(char* str, uint16_t start, uint16_t length)
+// {
+//     char* ret = new char[length + 1];
+//     for (short i = start; i < start + length; i++)
+//         ret[i - start] = str[i];
+//     ret[length] = '\0';
+//     return ret;
+// }
+// char* charReverse(char *str) {
+//   size_t len = strlen(str);
+//   size_t i = 0;
+//   while (len > i) {
+//     char tmp = str[--len];
+//     str[len] = str[i];
+//     str[i++] = tmp;
+//   }
+//   return str;
+// }
 // char* pdu_decode(char* pdu_text, uint16_t len) {
 //   char plain_bytes[256];
 //   byte high_mask = 128; // byte:10000000;
@@ -1005,7 +1005,7 @@ bool MAKERphone::update(bool altButtonsUpdate) {
 		buttons.update();
 		wokeWithPWRBTN = 0;
 	}
-	if(sim_module_version != 255 && simInserted)
+	if(sim_module_version != 255 && simInserted && sim_module_version != 0)
 	{
 		if(networkRegistered != 1 && millis() - networkDisconnectMillis > 30000 && networkDisconnectFlag && inLockScreen)
 		{

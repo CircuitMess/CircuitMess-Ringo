@@ -52,11 +52,18 @@ extern HardwareSerial Serial1;
 #include "utility/soundLib/MPAudioDriver.h"
 #include "utility/soundLib/MPWavLib.h"
 #include "utility/arduino_pdu_decoder/pdu_decoder.h"
+#include "utility/pduParse/pduParse.h"
 
 #include <esp_efuse.h>
 #include <esp_adc_cal.h>
 #include <driver/adc.h>
 #include <driver/gpio.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
+#include <iconv.h>
+
+#include <ctype.h>
 #define BTN_1 0
 #define BTN_2 1
 #define BTN_3 2
