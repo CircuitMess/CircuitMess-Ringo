@@ -214,7 +214,7 @@ class MAKERphone:public Buttons, public DateTime
 	bool airplaneMode = 0;
 	uint8_t brightness = 5;  //brightness 0-5
 	uint8_t actualBrightness = 0; //value from 0 (brightest) to 255 (backlight off)
-	uint16_t sleepTimeActual = 0; //in seconds
+	uint16_t sleepTimeActual = 30; //in seconds
 	uint8_t backgroundIndex = 0;
 	uint8_t ringVolume = 10; //volume 0-14
 	uint8_t mediaVolume = 10; //volume 0-14
@@ -227,7 +227,7 @@ class MAKERphone:public Buttons, public DateTime
 	volatile double batteryVoltage = 50000;
 	uint16_t signalStrength = 0;
 	String carrierName = "";
-	uint8_t sleepTime = 0;
+	uint8_t sleepTime = 2;
 	String ringtone_path = "/Ringtones/Default ringtone.wav";
 	String alarm_path = "/Ringtones/Default ringtone.wav";
 	uint8_t notification = 0;
