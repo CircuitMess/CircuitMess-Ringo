@@ -3,12 +3,12 @@
 #include "Arduino.h"
 #include "pdu_decoder.h"
 
-String pdu_decode(String pdu_text) {
+char* pdu_decode(String pdu_text) {
   uint8_t len = strtol(pdu_text.substring(0, 2).c_str(), NULL, 16); //the fist byte contains the number of chars
   return pdu_decode(pdu_text.substring(2), len);
 }
 
-String pdu_decode(String pdu_text, uint8_t len) {
+char* pdu_decode(String pdu_text, uint8_t len) {
   char plain_bytes[256];
   byte high_mask = 128; // byte:10000000;
   byte low_mask;
