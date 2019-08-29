@@ -99,6 +99,49 @@ void ADCmeasuring(void *parameters)
 		}
 	}
 }
+enum {
+	BITMASK_7BITS = 0x7F,
+	BITMASK_8BITS = 0xFF,
+	BITMASK_HIGH_4BITS = 0xF0,
+	BITMASK_LOW_4BITS = 0x0F,
+
+	TYPE_OF_ADDRESS_INTERNATIONAL_PHONE = 0x91,
+	TYPE_OF_ADDRESS_NATIONAL_SUBSCRIBER = 0xC8,
+
+	SMS_DELIVER_ONE_MESSAGE = 0x04,
+	SMS_SUBMIT              = 0x11,
+
+	SMS_MAX_7BIT_TEXT_LENGTH  = 160,
+};
+int MAKERphone::DecodePDUMessage(const char* buffer, int buffer_length, char* output_sms_text, int sms_text_length)
+{
+	int output_text_length = 0;
+	if (buffer_length > 0)
+		output_sms_text[output_text_length++] = BITMASK_7BITS & buffer[0];
+
+	int carry_on_bits = 1;
+	int i = 1;
+	for (; i < buffer_length; ++i) {
+
+		output_sms_text[output_text_length++] = BITMASK_7BITS &	((buffer[i] << carry_on_bits) | (buffer[i - 1] >> (8 - carry_on_bits)));
+
+		if (output_text_length == sms_text_length) break;
+
+		carry_on_bits++;
+
+		if (carry_on_bits == 8) {
+			carry_on_bits = 1;
+			output_sms_text[output_text_length++] = buffer[i] & BITMASK_7BITS;
+			if (output_text_length == sms_text_length) break;
+		}
+
+	}
+	if (output_text_length < sms_text_length)  // Add last remainder.
+		output_sms_text[output_text_length++] =	buffer[i - 1] >> (8 - carry_on_bits);
+
+	return output_text_length;
+}
+
 // char* subchar(char* str, uint16_t start, uint16_t length)
 // {
 //     char* ret = new char[length + 1];
@@ -5350,15 +5393,16 @@ void MAKERphone::pduDecode(char* PDU)
 		// 	// 	Serial.print(i);
 		// 	// 	Serial.println(my_map[17].GSM7bitValue[i] == snippet[i]);
 		// 	// }
-		// 	for(int y = 0; y < 93; y++)
-		// 	{
-		// 		// Serial.println(y);
-		// 		if(strcmp(my_map[y].GSM7bitValue, snippet) == 0)
-		// 		{
-		// 			content+=my_map[y].AsciiValue;
-		// 			break;
-		// 		}
-		// 	}
+		// 	// for(int y = 0; y < 93; y++)
+		// 	// {
+		// 	// 	// Serial.println(y);
+		// 	// 	if(strcmp(my_map[y].GSM7bitValue, snippet) == 0)
+		// 	// 	{
+		// 	// 		content+=my_map[y].AsciiValue;
+		// 	// 		break;
+		// 	// 	}
+		// 	// }
+		// 	content+=char(strtol(snippet, nullptr, 16) & 0x7F);
 		// 	cursor+=2;
 		// }
 		Serial.print("content: ");

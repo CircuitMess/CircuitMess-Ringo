@@ -10,15 +10,18 @@ from the author. You can redistribute it and/or modify it under the terms of
 the GNU General Public License as published by the Free Software Foundation.
 Either version 2 of the License, or (at your option) any later version.
 */
-
+#include <Arduino.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <iostream>
+#include <fstream>
 #include <string.h>
 #include <ctype.h>
 #include <iconv.h>
 #include "pduParse.h"
-
-
+iconv_t iconv_open(const char*, const char*);
+size_t iconv (iconv_t, char **, size_t *, char **, size_t *);
+int iconv_close (iconv_t);
 // Global constants. FIXME: set correct values
 const int max_number = 64;
 const int max_number_type = 1024;
@@ -691,31 +694,31 @@ void PDU::reset()
     m_is_statusreport = false;
 }
 
-int PDU::convert(const char *tocode, const char *fromcode)
-{
-    iconv_t cd = iconv_open(tocode, fromcode);
-    if (cd == (iconv_t)(-1) || !m_message)
-        return -1;
+// int PDU::convert(const char *tocode, const char *fromcode)
+// {
+//     iconv_t cd = iconv_open(tocode, fromcode);
+//     if (cd == (iconv_t)(-1) || !m_message)
+//         return -1;
         
-    size_t inbytesleft = m_message_len, outbytesleft = maxsms_binary * 2;
+//     size_t inbytesleft = m_message_len, outbytesleft = maxsms_binary * 2;
     
-    char *tmp = (char*)malloc(outbytesleft);
-    char *msg = m_message;
-    char *out = tmp;
-    memset(tmp, 0, outbytesleft);
+//     char *tmp = (char*)malloc(outbytesleft);
+//     char *msg = m_message;
+//     char *out = tmp;
+//     memset(tmp, 0, outbytesleft);
     
-    iconv(cd, &msg, &inbytesleft, &out, &outbytesleft);
+//     iconv(cd, &msg, &inbytesleft, &out, &outbytesleft);
     
-    if (m_message)
-        free(m_message);
-    m_message = tmp;
+//     if (m_message)
+//         free(m_message);
+//     m_message = tmp;
     
-    iconv_close(cd);
+//     iconv_close(cd);
     
-    m_message_len = maxsms_binary - outbytesleft;
+//     m_message_len = maxsms_binary - outbytesleft;
     
-    return m_message_len;
-}
+//     return m_message_len;
+// }
 
 // Parsing
 bool PDU::parse()
@@ -774,8 +777,8 @@ bool PDU::parse()
         m_pdu_ptr += 2;
         if (!parseDeliver())
             return false;
-        if (m_alphabet == 2)
-            convert("UTF8", "UTF16BE");
+        // if (m_alphabet == 2)
+        //     convert("UTF8", "UTF16BE");
     }
     else if (type == 2) // Status Report
     {
@@ -1350,8 +1353,8 @@ void PDU::generate()
     int l;
     char tmp_smsc[max_smsc];
     
-    if (m_alphabet == 2)
-        convert("UTF16BE", "UTF8");
+    // if (m_alphabet == 2)
+    //     convert("UTF16BE", "UTF8");
 
     if (m_number[0] == 's')  // Is number starts with s, then send it without number format indicator
     {
