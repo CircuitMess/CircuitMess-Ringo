@@ -67,6 +67,7 @@ extern HardwareSerial Serial1;
 #define BTN_0 10
 #define BTN_HASHTAG 11
 #define BTN_FUN_RIGHT 12
+#define BTN_HOME 13
 #define BTN_FUN_LEFT 15
 #define BTN_A 16
 #define BTN_B 17
@@ -165,6 +166,11 @@ class MAKERphone:public Buttons, public DateTime
 	void lockscreen();
 	void updateFromFS(String FilePath);
   	void performUpdate(Stream &updateSource, size_t updateSize);
+
+    //Emergency calls
+    void emergencyCall();
+    void callNumberEmergency(String number);
+	void emergencyCallDrawCursor(uint8_t i, int32_t y);
 
 	//NeoPixels...
 	int numberOfColors = 19;

@@ -32,7 +32,8 @@ bool clockFallback = 1;
 bool chargeDuringADCRead = 0;
 uint32_t simBusyCounter = 0;
 static esp_adc_cal_characteristics_t *adc_chars;
-void Task1code( void * pvParameters ){
+void Task1code(void *pvParameters)
+{
 	while (true)
 		updateWav();
 }
@@ -42,15 +43,15 @@ String MAKERphone::waitForOK()
 	memset(buffer, 0, sizeof(buffer));
 	char c;
 	uint32_t temp = millis();
-	while(strstr(buffer, "OK") == nullptr && millis() - temp < 10000)
-		if(Serial1.available())
+	while (strstr(buffer, "OK") == nullptr && millis() - temp < 10000)
+		if (Serial1.available())
 		{
 			c = Serial1.read();
 			strncat(buffer, &c, 1);
 			// Serial.println(buffer);
-			if(strstr(buffer, "ERROR") != nullptr)
+			if (strstr(buffer, "ERROR") != nullptr)
 			{
-				if(strstr(strstr(buffer, "ERROR"), "\r") != nullptr)
+				if (strstr(strstr(buffer, "ERROR"), "\r") != nullptr)
 					break;
 			}
 		}
@@ -58,13 +59,13 @@ String MAKERphone::waitForOK()
 }
 void ADCmeasuring(void *parameters)
 {
-	while(1)
+	while (1)
 	{
-		if(digitalRead(CHRG_INT))//not charging
+		if (digitalRead(CHRG_INT)) //not charging
 		{
-			for(measuringCounter = 0; measuringCounter < 6000; measuringCounter++)
+			for (measuringCounter = 0; measuringCounter < 6000; measuringCounter++)
 			{
-				if(!digitalRead(CHRG_INT))//charging
+				if (!digitalRead(CHRG_INT)) //charging
 				{
 					voltageSum = 0;
 					voltageSample = 0;
@@ -75,22 +76,22 @@ void ADCmeasuring(void *parameters)
 				{
 					chargeDuringADCRead = 0;
 					vTaskDelay(1);
-					voltageSum += esp_adc_cal_raw_to_voltage(adc1_get_raw(ADC1_CHANNEL_7), adc_chars)*2;
+					voltageSum += esp_adc_cal_raw_to_voltage(adc1_get_raw(ADC1_CHANNEL_7), adc_chars) * 2;
 					// uint32_t reading =  adc1_get_raw(ADC1_CHANNEL_7)*2;
 					// uint32_t tempVoltage = esp_adc_cal_raw_to_voltage(reading, adc_chars);
 					// voltageSum += tempVoltage;
 					voltageSample++;
 				}
 			}
-			if(!chargeDuringADCRead)
+			if (!chargeDuringADCRead)
 			{
-				voltage = ((voltageSum )/(6000.0) + 158.0235417);
+				voltage = ((voltageSum) / (6000.0) + 158.0235417);
 				voltageSum = 0;
 				voltageSample = 0;
 				_timesMeasured++;
 			}
 			else
-				chargeDuringADCRead = 0;			
+				chargeDuringADCRead = 0;
 		}
 		else
 		{
@@ -101,8 +102,9 @@ void ADCmeasuring(void *parameters)
 }
 
 //core
-void MAKERphone::begin(bool splash) {
-	String input="";
+void MAKERphone::begin(bool splash)
+{
+	String input = "";
 	pinMode(soundSwitchPin, OUTPUT);
 	digitalWrite(soundSwitchPin, LOW);
 	pinMode(SIM800_DTR, OUTPUT);
@@ -117,20 +119,18 @@ void MAKERphone::begin(bool splash) {
 	//Initialize and start with the NeoPixels
 	FastLED.addLeds<NEOPIXEL, PIXELPIN>(leds, 8);
 
-	adc_chars = (esp_adc_cal_characteristics_t*)calloc(1, sizeof(esp_adc_cal_characteristics_t)); 
+	adc_chars = (esp_adc_cal_characteristics_t *)calloc(1, sizeof(esp_adc_cal_characteristics_t));
 	int vRef = REG_GET_FIELD(EFUSE_BLK0_RDATA4_REG, EFUSE_RD_ADC_VREF);
-	
-	if(vRef & 0x10)
+
+	if (vRef & 0x10)
 		vRef = -(vRef & 0x0F);
 	else
 		vRef = (vRef & 0x0F);
-	vRef*=7;
-	vRef+=1100;
+	vRef *= 7;
+	vRef += 1100;
 	Serial.print("Vref: ");
 	Serial.println(vRef);
 	esp_adc_cal_characterize(ADC_UNIT_1, ADC_ATTEN_11db, ADC_WIDTH_BIT_12, vRef, adc_chars);
-	
-
 
 	//Serial1.println(F("AT+CFUN=1,1"));
 	//Serial1.println("AT+CMEE=2");
@@ -155,11 +155,8 @@ void MAKERphone::begin(bool splash) {
 	buttons.begin();
 	RTC.begin();
 
-	
 	// Serial.println(batteryVoltage);
 	// delay(50);
-
-	
 
 	//display initialization
 	tft.init();
@@ -174,17 +171,16 @@ void MAKERphone::begin(bool splash) {
 	// buf.createSprite(BUF2WIDTH, BUF2HEIGHT); // Create the sprite and clear background to black
 	// buf.setTextSize(1);
 
-	
-
 	display.fillScreen(TFT_BLACK);
-	display.pushSprite(0,0);
+	display.pushSprite(0, 0);
 	//PWM SETUP FOR ESP32
 	delay(30);
 	ledcSetup(0, 2000, 8);
 	ledcSetup(LEDC_CHANNEL, LEDC_BASE_FREQ, LEDC_TIMER);
 	ledcAttachPin(LCD_BL_PIN, LEDC_CHANNEL);
 	ledcAnalogWrite(LEDC_CHANNEL, 255);
-	for (uint8_t i = 255; i > actualBrightness; i--) {
+	for (uint8_t i = 255; i > actualBrightness; i--)
+	{
 		ledcAnalogWrite(LEDC_CHANNEL, i);
 		delay(2);
 	}
@@ -193,13 +189,13 @@ void MAKERphone::begin(bool splash) {
 
 	//SD startup
 	uint32_t tempMillis = millis();
-	if(!digitalRead(SD_INT))
+	if (!digitalRead(SD_INT))
 	{
 		SDinsertedFlag = 1;
 		while (!SD.begin(5, SPI, 8000000))
 		{
 			Serial.println("SD ERROR");
-			if(millis()-tempMillis > 5)
+			if (millis() - tempMillis > 5)
 			{
 				SDinsertedFlag = 0;
 				break;
@@ -213,7 +209,7 @@ void MAKERphone::begin(bool splash) {
 		delay(500);
 	//EEPROM setup for firmware_version
 	EEPROM.begin(256);
-	if(EEPROM.readUInt(FIRMWARE_VERSION_ADDRESS) > 999)
+	if (EEPROM.readUInt(FIRMWARE_VERSION_ADDRESS) > 999)
 	{
 		EEPROM.writeUInt(FIRMWARE_VERSION_ADDRESS, firmware_version);
 		EEPROM.commit();
@@ -226,27 +222,27 @@ void MAKERphone::begin(bool splash) {
 	bool found = 0;
 	char myBuffer[200];
 	memset(myBuffer, 0, sizeof(myBuffer));
-	for(uint8_t i = 0; i< 200;i++)
+	for (uint8_t i = 0; i < 200; i++)
 		myBuffer[i] = 0;
 	Serial.print("myBuffer: ");
 	Serial.println(myBuffer);
 	bool temperino = 1;
 	Serial1.flush();
-	if(sim_module_version == 0) //SIM7600
+	if (sim_module_version == 0) //SIM7600
 	{
 		Serial1.begin(115200, SERIAL_8N1, 17, 16);
-		pinMode(17,INPUT_PULLUP);
+		pinMode(17, INPUT_PULLUP);
 		delay(100);
 		Serial1.println("AT");
 		temperino = 1;
-		while(!found && millis() - temp < 1500)
+		while (!found && millis() - temp < 1500)
 		{
-			if(temperino && millis() - temp > 1000)
+			if (temperino && millis() - temp > 1000)
 			{
 				Serial1.println("AT");
 				temperino = 0;
 			}
-			if(Serial1.available())
+			if (Serial1.available())
 			{
 				// buffer+=(char)Serial1.read();
 				char c = Serial1.read();
@@ -257,28 +253,28 @@ void MAKERphone::begin(bool splash) {
 				// Serial.println(buffer);
 				Serial.println("-------------");
 			}
-			if(strstr(myBuffer, "OK") != nullptr || strstr(myBuffer, "RDY") != nullptr)
+			if (strstr(myBuffer, "OK") != nullptr || strstr(myBuffer, "RDY") != nullptr)
 				found = 1;
 		}
-		if(!found)
+		if (!found)
 		{
 			Serial.println("not sim7600");
 			Serial1.end();
 			temp = millis();
 			memset(myBuffer, 0, sizeof(myBuffer));
 			Serial1.begin(9600, SERIAL_8N1, 17, 16);
-			pinMode(17,INPUT_PULLUP);
+			pinMode(17, INPUT_PULLUP);
 			delay(100);
 			Serial1.println("AT");
 			temperino = 1;
-			while(!found && millis() - temp < 1500)
+			while (!found && millis() - temp < 1500)
 			{
-				if(temperino && millis() - temp > 1000)
+				if (temperino && millis() - temp > 1000)
 				{
 					Serial1.println("AT");
 					temperino = 0;
 				}
-				if(Serial1.available())
+				if (Serial1.available())
 				{
 					// buffer+=(char)Serial1.read();
 					char c = Serial1.read();
@@ -289,17 +285,16 @@ void MAKERphone::begin(bool splash) {
 					// Serial.println(buffer);
 					Serial.println("-------------");
 				}
-				if(strstr(myBuffer, "OK") != nullptr)
+				if (strstr(myBuffer, "OK") != nullptr)
 					found = 1;
 			}
-			if(found)
+			if (found)
 				sim_module_version = 1; //SIM800
 			else
 			{
 				Serial.println("not sim800");
 				sim_module_version = 255; //NO SIM MODULE
 			}
-			
 		}
 		else
 			sim_module_version = 0; //SIM7600
@@ -307,18 +302,18 @@ void MAKERphone::begin(bool splash) {
 	else
 	{
 		Serial1.begin(9600, SERIAL_8N1, 17, 16);
-		pinMode(17,INPUT_PULLUP);
+		pinMode(17, INPUT_PULLUP);
 		delay(100);
 		Serial1.println("AT");
 		temperino = 1;
-		while(!found && millis() - temp < 1500)
+		while (!found && millis() - temp < 1500)
 		{
-			if(temperino && millis() - temp > 1000)
+			if (temperino && millis() - temp > 1000)
 			{
 				Serial1.println("AT");
 				temperino = 0;
 			}
-			if(Serial1.available())
+			if (Serial1.available())
 			{
 				// buffer+=(char)Serial1.read();
 				char c = Serial1.read();
@@ -328,28 +323,28 @@ void MAKERphone::begin(bool splash) {
 				Serial.println(myBuffer);
 				Serial.println("-------------");
 			}
-			if(strstr(myBuffer, "OK") != nullptr)
+			if (strstr(myBuffer, "OK") != nullptr)
 				found = 1;
 		}
-		if(!found)
+		if (!found)
 		{
 			Serial.println("not sim800");
 			Serial1.end();
 			temp = millis();
 			memset(myBuffer, 0, sizeof(myBuffer));
 			Serial1.begin(115200, SERIAL_8N1, 17, 16);
-			pinMode(17,INPUT_PULLUP);
+			pinMode(17, INPUT_PULLUP);
 			delay(100);
 			Serial1.println("AT");
 			temperino = 1;
-			while(!found && millis() - temp < 1500)
+			while (!found && millis() - temp < 1500)
 			{
-				if(temperino && millis() - temp > 1000)
+				if (temperino && millis() - temp > 1000)
 				{
 					Serial1.println("AT");
 					temperino = 0;
 				}
-				if(Serial1.available())
+				if (Serial1.available())
 				{
 					// buffer+=(char)Serial1.read();
 					char c = Serial1.read();
@@ -360,10 +355,10 @@ void MAKERphone::begin(bool splash) {
 					// Serial.println(buffer);
 					Serial.println("-------------");
 				}
-				if(strstr(myBuffer, "OK") != nullptr || strstr(myBuffer, "RDY") != nullptr)
+				if (strstr(myBuffer, "OK") != nullptr || strstr(myBuffer, "RDY") != nullptr)
 					found = 1;
 			}
-			if(found)
+			if (found)
 				sim_module_version = 0; //SIM7600
 			else
 			{
@@ -376,59 +371,59 @@ void MAKERphone::begin(bool splash) {
 			sim_module_version = 1; //SIM800
 	}
 	Serial1.end();
-	if(sim_module_version == 1)
+	if (sim_module_version == 1)
 	{
 		Serial1.begin(9600, SERIAL_8N1, 17, 16);
-		pinMode(17,INPUT_PULLUP);
+		pinMode(17, INPUT_PULLUP);
 		micGain = 15;
 	}
-	else if(sim_module_version == 0)
+	else if (sim_module_version == 0)
 	{
 		Serial1.begin(115200, SERIAL_8N1, 17, 16);
-		pinMode(17,INPUT_PULLUP);
+		pinMode(17, INPUT_PULLUP);
 		micGain = 8;
 	}
-	if(sim_module_version != 255)
+	if (sim_module_version != 255)
 	{
 		Serial1.println("ATI");
 		String temp = waitForOK();
 		Serial.println(temp);
-		if(temp.indexOf("SIM800") != -1)
+		if (temp.indexOf("SIM800") != -1)
 		{
-			if(sim_module_version == 0)
+			if (sim_module_version == 0)
 			{
 				Serial1.println("AT+IPR=9600");
 				Serial1.end();
 				Serial1.begin(9600, SERIAL_8N1, 17, 16);
-				pinMode(17,INPUT_PULLUP);
+				pinMode(17, INPUT_PULLUP);
 			}
 			sim_module_version = 1;
 		}
-		else if(temp.indexOf("SIM7600") != -1)
+		else if (temp.indexOf("SIM7600") != -1)
 			sim_module_version = 0;
 		checkSim();
 		Serial1.println("AT+CCALR?");
 		uint32_t cregMillis = millis();
 		String cregString = "";
-		while(networkRegistered != 1 && networkRegistered != 5 && millis() - cregMillis < 1000)
+		while (networkRegistered != 1 && networkRegistered != 5 && millis() - cregMillis < 1000)
 		{
-			if(cregString != "")
+			if (cregString != "")
 			{
 				Serial.println(cregString);
-				if(cregString.indexOf("\n", cregString.indexOf("+CCALR:")) != -1)
+				if (cregString.indexOf("\n", cregString.indexOf("+CCALR:")) != -1)
 				{
 					uint16_t helper = cregString.indexOf(" ", cregString.indexOf("+CCALR:"));
-					networkRegistered = cregString.substring(helper + 1,  helper + 2).toInt();
+					networkRegistered = cregString.substring(helper + 1, helper + 2).toInt();
 				}
 			}
-			if(cregString != "" && networkRegistered != -1)
+			if (cregString != "" && networkRegistered != -1)
 			{
 				Serial1.println("AT+CCALR?");
 			}
 			cregString = waitForOK();
 		}
 	}
-	if(EEPROM.readByte(GSM_MODULE_ADDRESS) != sim_module_version)
+	if (EEPROM.readByte(GSM_MODULE_ADDRESS) != sim_module_version)
 	{
 		Serial.println("written module type");
 		EEPROM.writeByte(GSM_MODULE_ADDRESS, sim_module_version);
@@ -439,23 +434,23 @@ void MAKERphone::begin(bool splash) {
 	//Audio
 	initWavLib();
 	xTaskCreatePinnedToCore(
-				Task1code,				/* Task function. */
-				"Task1",				/* name of task. */
-				10000,					/* Stack size of task */
-				NULL,					/* parameter of the task */
-				1,						/* priority of the task */
-				&Task1,
-				0);				/* Task handle to keep track of created task */
+		Task1code, /* Task function. */
+		"Task1",   /* name of task. */
+		10000,	 /* Stack size of task */
+		NULL,	  /* parameter of the task */
+		1,		   /* priority of the task */
+		&Task1,
+		0); /* Task handle to keep track of created task */
 	addOscillator(osc);
 	voltageSum = 0;
 	voltageSample = 0;
-	for(int i = 0; i < 2000; i++)
+	for (int i = 0; i < 2000; i++)
 	{
 		delayMicroseconds(1);
 		voltageSum += analogRead(VOLTAGE_PIN);
 		voltageSample++;
 	}
-	batteryVoltage = ((voltageSum )/1150.0);
+	batteryVoltage = ((voltageSum) / 1150.0);
 	voltageSum = 0;
 	voltageSample = 0;
 	voltage = batteryVoltage;
@@ -472,48 +467,48 @@ void MAKERphone::begin(bool splash) {
 	// voltageSample = 0;
 	// batteryVoltage = voltage;
 	xTaskCreatePinnedToCore(
-				ADCmeasuring,				/* Task function. */
-				"MeasuringTask",				/* name of task. */
-				10000,					/* Stack size of task */
-				NULL,					/* parameter of the task */
-				1,						/* priority of the task */
-				&MeasuringTask,
-				0);				/* Task handle to keep track of created task */
-	
+		ADCmeasuring,	/* Task function. */
+		"MeasuringTask", /* name of task. */
+		10000,			 /* Stack size of task */
+		NULL,			 /* parameter of the task */
+		1,				 /* priority of the task */
+		&MeasuringTask,
+		0); /* Task handle to keep track of created task */
 
 	ringtone = nullptr;
-	if(SDinsertedFlag)
+	if (SDinsertedFlag)
 	{
 		loadSettings(1);
 		loadAlarms();
 		loadNotifications();
-		ringtone = new MPTrack((char*)ringtone_path.c_str());
+		ringtone = new MPTrack((char *)ringtone_path.c_str());
 	}
 	applySettings();
 	checkAlarms();
 
-	if(sim_module_version != 255)
+	if (sim_module_version != 255)
 		networkModuleInit();
 	networkInitialized = 1;
 	sleepTimer = millis();
 }
 
-bool MAKERphone::update(bool altButtonsUpdate) {
+bool MAKERphone::update(bool altButtonsUpdate)
+{
 	newMessage = 0;
 	exitedLockscreen = 0;
-	if(digitalRead(SD_INT) && (SDinsertedFlag || (!SDinsertedFlag && SDerror)))
+	if (digitalRead(SD_INT) && (SDinsertedFlag || (!SDinsertedFlag && SDerror)))
 	{
 		SDinsertedFlag = 0;
 		SDerror = 0;
-		for(int i = 0; i<4;i++)
+		for (int i = 0; i < 4; i++)
 		{
-			if(tracks[i] != nullptr)
+			if (tracks[i] != nullptr)
 			{
 				removeTrack(tracks[i]);
 				tracks[i] = nullptr;
 			}
 		}
-		if(ringtone != nullptr)
+		if (ringtone != nullptr)
 		{
 			removeTrack(ringtone);
 			ringtone = nullptr;
@@ -523,7 +518,7 @@ bool MAKERphone::update(bool altButtonsUpdate) {
 		SDremovedPopup();
 		// initWavLib();
 	}
-	else if(!digitalRead(SD_INT) && !SDinsertedFlag && !SDerror)
+	else if (!digitalRead(SD_INT) && !SDinsertedFlag && !SDerror)
 	{
 		SDinsertedFlag = 1;
 		SDinsertedPopup();
@@ -531,20 +526,20 @@ bool MAKERphone::update(bool altButtonsUpdate) {
 		while (!SD.begin(5, SPI, 8000000))
 		{
 			Serial.println("SD ERROR");
-			if(millis()-tempMillis > 50)
+			if (millis() - tempMillis > 50)
 			{
 				SDinsertedFlag = 0;
 				SDerror = 1;
 				break;
 			}
 		}
-		if(SDinsertedFlag)
+		if (SDinsertedFlag)
 		{
 			loadSettings();
 			applySettings();
 		}
 	}
-	if(screenshotFlag)
+	if (screenshotFlag)
 	{
 		screenshotFlag = 0;
 		takeScreenshot();
@@ -560,7 +555,7 @@ bool MAKERphone::update(bool altButtonsUpdate) {
 	// 	display.setRotation(1);
 	// 	spriteCreated=1;
 	// }
-	
+
 	//halved resolution mode
 	// if(resolutionMode == 1)
 	// {
@@ -572,9 +567,9 @@ bool MAKERphone::update(bool altButtonsUpdate) {
 	// }
 	//buf2.invertDisplay(1);
 	buttonsPressed = 0;
-	for(uint8_t i = 16; i < 22;i++)
+	for (uint8_t i = 16; i < 22; i++)
 	{
-		if(buttons.pressed(i))
+		if (buttons.pressed(i))
 		{
 			buttonsPressed = 1;
 			break;
@@ -587,14 +582,14 @@ bool MAKERphone::update(bool altButtonsUpdate) {
 			buttons.update();
 			sleepTimer = millis();
 			sleep();
-			if(!inLockScreen)
+			if (!inLockScreen)
 			{
 				lockscreen();
 				exitedLockscreen = 1;
 			}
 		}
 	}
-	else if((buttonsPressed || !digitalRead(BTN_INT) || inCall || inAlarmPopup) && sleepTime)
+	else if ((buttonsPressed || !digitalRead(BTN_INT) || inCall || inAlarmPopup) && sleepTime)
 		sleepTimer = millis();
 
 	if (millis() > 7000)
@@ -605,7 +600,7 @@ bool MAKERphone::update(bool altButtonsUpdate) {
 	//refreshing signal and battery info
 	if (simReady && dataRefreshFlag)
 	{
-		if(sim_module_version == 1)
+		if (sim_module_version == 1)
 		{
 			if (millis() - refreshMillis >= 5000)
 			{
@@ -614,7 +609,7 @@ bool MAKERphone::update(bool altButtonsUpdate) {
 				Serial1.println("AT+CBC");
 				if (simInserted && !airplaneMode)
 				{
-					if(networkRegistered == 5 || networkRegistered == 1)
+					if (networkRegistered == 5 || networkRegistered == 1)
 					{
 						if (carrierName == "")
 							Serial1.println("AT+CSPN?");
@@ -622,12 +617,12 @@ bool MAKERphone::update(bool altButtonsUpdate) {
 					}
 					Serial1.println("AT+CCALR?");
 					if (clockYear % 100 < 19 || clockYear % 100 >= 40 || clockMonth < 1 || clockMonth > 12 ||
-					clockHour > 24 || clockMinute >= 60)
+						clockHour > 24 || clockMinute >= 60)
 						Serial1.println("AT+CCLK?");
 				}
 			}
 		}
-		else if(sim_module_version == 0)
+		else if (sim_module_version == 0)
 		{
 			if (millis() - refreshMillis >= 2000)
 			{
@@ -640,7 +635,7 @@ bool MAKERphone::update(bool altButtonsUpdate) {
 						if (carrierName == "")
 							Serial1.println("AT+CSPN?");
 						else
-							refreshMillis = millis() + 2000;				
+							refreshMillis = millis() + 2000;
 					}
 					else
 						refreshMillis = millis() + 2000;
@@ -690,7 +685,7 @@ bool MAKERphone::update(bool altButtonsUpdate) {
 				// 		Serial1.println("AT+CCLK?");
 				// }
 				alternatingRefresh++;
-				if(alternatingRefresh > 2)
+				if (alternatingRefresh > 2)
 					alternatingRefresh = 0;
 			}
 		}
@@ -700,9 +695,9 @@ bool MAKERphone::update(bool altButtonsUpdate) {
 			updateBuffer += c;
 			Serial.println("--------------");
 			Serial.println(updateBuffer);
-			if(updateBuffer.indexOf("\r", updateBuffer.indexOf("OK")) != -1)
+			if (updateBuffer.indexOf("\r", updateBuffer.indexOf("OK")) != -1)
 				updateBuffer = "";
-			
+
 			if (simInserted && !airplaneMode)
 			{
 				if (carrierName == "" && updateBuffer.indexOf("\n", updateBuffer.indexOf("+CSPN:")) != -1)
@@ -710,13 +705,14 @@ bool MAKERphone::update(bool altButtonsUpdate) {
 					uint16_t helper = updateBuffer.indexOf("\"", updateBuffer.indexOf("+CSPN:")) + 1;
 					carrierName = updateBuffer.substring(helper, updateBuffer.indexOf("\"", helper));
 				}
-						
+
 				if (updateBuffer.indexOf("\n", updateBuffer.indexOf("+CSQ:")) != -1)
 					signalStrength = updateBuffer.substring(updateBuffer.indexOf(" ", updateBuffer.indexOf("+CSQ:")) + 1,
-					 updateBuffer.indexOf(",", updateBuffer.indexOf(" ", updateBuffer.indexOf("+CSQ:")))).toInt();
-				
+															updateBuffer.indexOf(",", updateBuffer.indexOf(" ", updateBuffer.indexOf("+CSQ:"))))
+										 .toInt();
+
 				if (clockYear % 100 < 19 || clockYear % 100 >= 40 || clockMonth < 1 || clockMonth > 12 ||
-				clockHour > 24 || clockMinute >= 60)
+					clockHour > 24 || clockMinute >= 60)
 					if (updateBuffer.indexOf("\n", updateBuffer.indexOf("+CCLK:")) != -1)
 					{
 						uint16_t index = updateBuffer.indexOf(F("+CCLK: \""));
@@ -761,51 +757,47 @@ bool MAKERphone::update(bool altButtonsUpdate) {
 
 						//TO-DO: UPDATE THE RTC HERE
 						DateTime now = DateTime(clockYear, clockMonth, clockDay,
-						clockHour, clockMinute, clockSecond);
+												clockHour, clockMinute, clockSecond);
 						RTC.adjust(now);
-						if (clockYear%100 != 4 && clockYear%100 != 80 && clockMonth != 0 && clockMonth < 13 &&
-						clockHour < 25 && clockMinute < 60)
+						if (clockYear % 100 != 4 && clockYear % 100 != 80 && clockMonth != 0 && clockMonth < 13 &&
+							clockHour < 25 && clockMinute < 60)
 						{
 							// Serial1.println("AT+CNMP=2");
 							clockFallback = 1;
 						}
 						Serial.println(F("\nRTC TIME UPDATE OVER GSM DONE!"));
 					}
-
 			}
 			if (updateBuffer.indexOf("\n", updateBuffer.indexOf("+CBC:")) != -1)
 			{
-				if(sim_module_version == 1)
+				if (sim_module_version == 1)
 				{
 					uint16_t helper = updateBuffer.indexOf(",", updateBuffer.indexOf("+CBC:"));
 					helper = updateBuffer.indexOf(",", helper + 1) + 1;
 					uint16_t tempVoltage = updateBuffer.substring(helper, updateBuffer.indexOf("\n", helper)).toInt();
-					if(tempVoltage > 3000 && tempVoltage < 5000)
+					if (tempVoltage > 3000 && tempVoltage < 5000)
 						simVoltage = tempVoltage;
 				}
-				else if(sim_module_version == 0)
+				else if (sim_module_version == 0)
 				{
 					uint16_t helper = updateBuffer.indexOf("+CBC: ") + 6;
 					simVoltage = updateBuffer.substring(helper, updateBuffer.indexOf("V", helper)).toDouble() * 1000;
 				}
 			}
-			if(updateBuffer.indexOf("\n", updateBuffer.indexOf("+CCALR:")) != -1)
+			if (updateBuffer.indexOf("\n", updateBuffer.indexOf("+CCALR:")) != -1)
 			{
 				uint16_t helper = updateBuffer.indexOf(" ", updateBuffer.indexOf("+CCALR:"));
-				networkRegistered = updateBuffer.substring(helper + 1,  helper + 2).toInt();
+				networkRegistered = updateBuffer.substring(helper + 1, helper + 2).toInt();
 			}
-
 		}
 	}
 	batteryVoltage = voltage;
 
-	if((((batteryVoltage <= 3580 || simVoltage <= 3600) && sim_module_version != 1)
-	|| (batteryVoltage <= 3580 && simVoltage <= 3600 && sim_module_version == 1))
-	&& digitalRead(CHRG_INT))
+	if ((((batteryVoltage <= 3580 || simVoltage <= 3600) && sim_module_version != 1) || (batteryVoltage <= 3580 && simVoltage <= 3600 && sim_module_version == 1)) && digitalRead(CHRG_INT))
 	{
-		if(timesMeasured != _timesMeasured)
+		if (timesMeasured != _timesMeasured)
 			shutdownCounter++;
-		if(shutdownCounter > 2 && timesMeasured != _timesMeasured)
+		if (shutdownCounter > 2 && timesMeasured != _timesMeasured)
 		{
 			tft.setTextColor(TFT_BLACK);
 			tft.setTextSize(1);
@@ -821,7 +813,6 @@ bool MAKERphone::update(bool altButtonsUpdate) {
 			Serial.println(simVoltage);
 			delay(1500);
 
-
 			//Serial1.println("AT+CFUN=4");
 			//Serial1.println("AT+CSCLK=2");
 
@@ -833,14 +824,14 @@ bool MAKERphone::update(bool altButtonsUpdate) {
 			pinMode(LCD_BL_PIN, OUTPUT);
 			digitalWrite(LCD_BL_PIN, 1);
 			digitalWrite(OFF_PIN, 1);
-			
+
 			rtc_gpio_isolate(GPIO_NUM_16);
 			rtc_gpio_isolate(GPIO_NUM_17);
 			rtc_gpio_isolate(GPIO_NUM_33);
 			rtc_gpio_isolate(GPIO_NUM_34);
 			rtc_gpio_isolate(GPIO_NUM_36);
 			rtc_gpio_isolate(GPIO_NUM_39);
-			
+
 			digitalWrite(OFF_PIN, 1);
 			ESP.deepSleep(0);
 		}
@@ -848,19 +839,16 @@ bool MAKERphone::update(bool altButtonsUpdate) {
 	}
 	else
 		shutdownCounter = 0;
-	if(alarmCleared && millis() - alarmMillis > 60000)
+	if (alarmCleared && millis() - alarmMillis > 60000)
 		alarmCleared = 0;
-	if(!digitalRead(SIM_INT) && !inCall && networkInitialized)
+	if (!digitalRead(SIM_INT) && !inCall && networkInitialized)
 	{
 		String temp = "";
 		uint32_t curr_millis = millis();
 		int32_t helper = -1;
-		while((temp.indexOf("\r", temp.indexOf("\r", helper + 1) + 1) == -1
-		|| temp.indexOf("\r", helper + 1) == -1 || helper == -1)
-		&& temp.indexOf("\r", temp.indexOf("1,4,0,0,")) == -1
-		&& temp.indexOf("RING") == -1 && millis() - curr_millis < 500)
+		while ((temp.indexOf("\r", temp.indexOf("\r", helper + 1) + 1) == -1 || temp.indexOf("\r", helper + 1) == -1 || helper == -1) && temp.indexOf("\r", temp.indexOf("1,4,0,0,")) == -1 && temp.indexOf("RING") == -1 && millis() - curr_millis < 500)
 		{
-			if(Serial1.available())
+			if (Serial1.available())
 			{
 				curr_millis = millis();
 				char c = Serial1.read();
@@ -871,93 +859,91 @@ bool MAKERphone::update(bool altButtonsUpdate) {
 				// Serial.println(helper);
 			}
 		}
-		if(temp.indexOf("\r", temp.indexOf("1,4,0,0,")) != -1 || temp.indexOf("RING") != -1)
+		if (temp.indexOf("\r", temp.indexOf("1,4,0,0,")) != -1 || temp.indexOf("RING") != -1)
 		{
 			inCall = 1;
 			incomingCall(temp);
 			inCall = 0;
 		}
-		else if(temp.indexOf("+CMT:") != -1)
+		else if (temp.indexOf("+CMT:") != -1)
 		{
 			playNotificationSound(notification);
 			incomingMessage(temp);
 		}
-		else if(!inAlarmPopup && !alarmCleared && currentAlarm != 99)
+		else if (!inAlarmPopup && !alarmCleared && currentAlarm != 99)
 		{
 			inAlarmPopup = 1;
 			alarmPopup();
-			if(alarmRepeat[currentAlarm] == 0)
+			if (alarmRepeat[currentAlarm] == 0)
 				alarmEnabled[currentAlarm] = 0;
 			saveAlarms();
-			if(ringtone->isPlaying())
+			if (ringtone->isPlaying())
 				ringtone->stop();
 
 			alarmCleared = 1;
 			alarmMillis = millis();
 			inAlarmPopup = 0;
 		}
-		
 	}
 	updateNotificationSound();
 
-	
-	if(buttons.released(13) && !inShutdownPopup)
+	if (buttons.released(13) && !inShutdownPopup)
 	{
-		if(HOME_POPUP_ENABLE && !inHomePopup)
+		if (HOME_POPUP_ENABLE && !inHomePopup)
 		{
 			inHomePopup = 1;
 			homePopup();
 			inHomePopup = 0;
 		}
-		else if(!HOME_POPUP_ENABLE)
+		else if (!HOME_POPUP_ENABLE)
 		{
 			homeButtonPressed = 1;
 		}
 	}
-	if(!altButtonsUpdate)
+	if (!altButtonsUpdate)
 		buttons.update();
 
-	if(SHUTDOWN_POPUP_ENABLE && buttons.released(14) && !wokeWithPWRBTN && !inCall)
+	if (SHUTDOWN_POPUP_ENABLE && buttons.released(14) && !wokeWithPWRBTN && !inCall)
 	{
 		buttons.update();
 		sleep();
 	}
-	if(buttons.held(14, 40) && !inShutdownPopup && SHUTDOWN_POPUP_ENABLE && !wokeWithPWRBTN && !inCall)
+	if (buttons.held(14, 40) && !inShutdownPopup && SHUTDOWN_POPUP_ENABLE && !wokeWithPWRBTN && !inCall)
 	{
 		inShutdownPopup = 1;
 		shutdownPopup();
 		inShutdownPopup = 0;
 	}
-	if(wokeWithPWRBTN && buttons.released(14))
+	if (wokeWithPWRBTN && buttons.released(14))
 	{
 		buttons.update();
 		wokeWithPWRBTN = 0;
 	}
-	if(sim_module_version != 255 && simInserted)
+	if (sim_module_version != 255 && simInserted)
 	{
-		if(networkRegistered != 1 && millis() - networkDisconnectMillis > 30000 && networkDisconnectFlag && inLockScreen)
+		if (networkRegistered != 1 && millis() - networkDisconnectMillis > 30000 && networkDisconnectFlag && inLockScreen)
 		{
 			display.fillScreen(TFT_BLACK);
 			display.setTextColor(TFT_WHITE);
 			display.setTextSize(1);
-			display.setCursor(0, display.height()/2 - 20);
+			display.setCursor(0, display.height() / 2 - 20);
 			display.setTextFont(2);
 			display.printCenter(F("Registering to network"));
-			display.setCursor(0, display.height()/2);
+			display.setCursor(0, display.height() / 2);
 			display.printCenter(F("Please wait..."));
-			display.pushSprite(0,0);
-			while(Serial1.available())
-					Serial1.read();
+			display.pushSprite(0, 0);
+			while (Serial1.available())
+				Serial1.read();
 			Serial1.println("AT+CFUN=1,1");
 			char buffer[300];
 			bool found = 0;
 			memset(buffer, 0, sizeof(buffer));
 			Serial1.flush();
 			uint32_t timer = millis();
-			
-			while(!found)
+
+			while (!found)
 			{
-				if(Serial1.available())
+				if (Serial1.available())
 				{
 
 					char test = (char)Serial1.read();
@@ -965,10 +951,10 @@ bool MAKERphone::update(bool altButtonsUpdate) {
 					Serial.println(buffer);
 				}
 
-				if(strstr(buffer, "RDY") != nullptr)
+				if (strstr(buffer, "RDY") != nullptr)
 					found = 1;
-				if((millis() - timer > 8000 && sim_module_version == 1) ||
-				(millis() - timer > 28000 && sim_module_version == 0))
+				if ((millis() - timer > 8000 && sim_module_version == 1) ||
+					(millis() - timer > 28000 && sim_module_version == 0))
 					break;
 			}
 			delay(2000);
@@ -976,17 +962,17 @@ bool MAKERphone::update(bool altButtonsUpdate) {
 			Serial1.println("AT+CCALR?");
 			uint32_t cregMillis = millis();
 			String cregString = "";
-			while(networkRegistered == -1 && millis() - cregMillis < 1000)
+			while (networkRegistered == -1 && millis() - cregMillis < 1000)
 			{
-				if(millis() - cregMillis > 500)
+				if (millis() - cregMillis > 500)
 					Serial1.println("AT+CCALR?");
-				if(cregString != "")
+				if (cregString != "")
 				{
 					Serial.println(cregString);
-					if(cregString.indexOf("\n", cregString.indexOf("+CCALR:")) != -1)
+					if (cregString.indexOf("\n", cregString.indexOf("+CCALR:")) != -1)
 					{
 						uint16_t helper = cregString.indexOf(" ", cregString.indexOf("+CCALR:"));
-						networkRegistered = cregString.substring(helper + 1,  helper + 2).toInt();
+						networkRegistered = cregString.substring(helper + 1, helper + 2).toInt();
 					}
 				}
 				cregString = waitForOK();
@@ -994,23 +980,24 @@ bool MAKERphone::update(bool altButtonsUpdate) {
 			networkModuleInit();
 			networkDisconnectFlag = 0;
 		}
-		else if(networkRegistered == 1 || !dataRefreshFlag)
+		else if (networkRegistered == 1 || !dataRefreshFlag)
 			networkDisconnectMillis = millis();
 	}
 
-	if (millis() - lastFrameCount >= frameSpeed || screenshotFlag) {
+	if (millis() - lastFrameCount >= frameSpeed || screenshotFlag)
+	{
 		lastFrameCount = millis();
 
-		if(resolutionMode == 0) //native res mode
+		if (resolutionMode == 0) //native res mode
 		{
-			if(popupTimeLeft)
-				updatePopup();		// else//halved res mode
+			if (popupTimeLeft)
+				updatePopup(); // else//halved res mode
 			else
 				display.pushSprite(0, 0);
 		}
-		if(altButtonsUpdate)
+		if (altButtonsUpdate)
 			buttons.update();
-		FastLED.setBrightness(255/5 * pixelsBrightness);
+		FastLED.setBrightness(255 / 5 * pixelsBrightness);
 		FastLED.show();
 		delay(1);
 		FastLED.clear();
@@ -1018,46 +1005,52 @@ bool MAKERphone::update(bool altButtonsUpdate) {
 	}
 	else
 		return false;
-
 }
-void MAKERphone::splashScreen() {
+void MAKERphone::splashScreen()
+{
 	for (int y = -35; y < -10; y++)
 	{
-		display.drawBitmap(0, y-1, splashScreenLogo, TFT_BLACK);
+		display.drawBitmap(0, y - 1, splashScreenLogo, TFT_BLACK);
 		display.drawBitmap(0, y, splashScreenLogo, TFT_WHITE);
-		while(!update());
+		while (!update())
+			;
 	}
 	delay(100);
 	display.setTextColor(TFT_WHITE);
 	display.setTextFont(2);
-	display.setCursor(0,100);
+	display.setCursor(0, 100);
 	display.printCenter("Loading...");
-	while(!update());
+	while (!update())
+		;
 	delay(2000);
-
 }
-void MAKERphone::setResolution(bool res){
-	mp.resolutionMode=res;
-	mp.spriteCreated=0;
+void MAKERphone::setResolution(bool res)
+{
+	mp.resolutionMode = res;
+	mp.spriteCreated = 0;
 }
-void MAKERphone::tone2(int pin, int freq, int duration) {
+void MAKERphone::tone2(int pin, int freq, int duration)
+{
 	ledcWriteTone(0, freq);
 	delay(duration);
 	ledcWriteTone(0, 0);
 }
-void MAKERphone::ledcAnalogWrite(uint8_t channel, uint32_t value, uint32_t valueMax) {
+void MAKERphone::ledcAnalogWrite(uint8_t channel, uint32_t value, uint32_t valueMax)
+{
 	// calculate duty, 8191 from 2 ^ 13 - 1
 	uint32_t duty = (8191 / 255) * _min(value, valueMax);
 	// write duty to LEDC
 	ledcWrite(channel, duty);
 }
-void MAKERphone::sleep() {
+void MAKERphone::sleep()
+{
 	// if(sim_module_version != 255)
 	digitalWrite(SIM800_DTR, 1);
 
 	FastLED.clear(1);
 	ledcAnalogWrite(LEDC_CHANNEL, 255);
-	for (uint8_t i = actualBrightness; i < 255; i++) {
+	for (uint8_t i = actualBrightness; i < 255; i++)
+	{
 		ledcAnalogWrite(LEDC_CHANNEL, i);
 		delay(1);
 	}
@@ -1065,22 +1058,22 @@ void MAKERphone::sleep() {
 	ledcDetachPin(LCD_BL_PIN);
 	pinMode(LCD_BL_PIN, OUTPUT);
 	digitalWrite(LCD_BL_PIN, 1);
-	tft.writecommand(16);//send 16 for sleep in, 17 for sleep out
+	tft.writecommand(16); //send 16 for sleep in, 17 for sleep out
 	esp_sleep_enable_timer_wakeup(SLEEP_WAKEUP_TIME * 1000000);
 
 	buttons.activateInterrupt();
 	uint8_t reason = 4;
 	vTaskSuspend(MeasuringTask);
-	
-	MPTrack *currTracks[4] = {nullptr,nullptr,nullptr,nullptr};
-	bool pausedTracks[4] = {0,0,0,0};
+
+	MPTrack *currTracks[4] = {nullptr, nullptr, nullptr, nullptr};
+	bool pausedTracks[4] = {0, 0, 0, 0};
 	Serial.println("HERE");
-	for(int i = 0; i < 4; i++)
+	for (int i = 0; i < 4; i++)
 	{
-		if(tracks[i] != nullptr)
+		if (tracks[i] != nullptr)
 		{
 			Serial.printf("%d track is playing: %d\n", i, tracks[i]->isPlaying());
-			if(tracks[i]->isPlaying())
+			if (tracks[i]->isPlaying())
 			{
 				currTracks[i] = tracks[i];
 				currTracks[i]->seek(tracks[i]->getSamplePos());
@@ -1098,60 +1091,60 @@ void MAKERphone::sleep() {
 		}
 	}
 	updateWav();
-	
+
 	vTaskSuspend(Task1);
 	esp_light_sleep_start();
 	reason = esp_sleep_get_wakeup_cause();
-	while(reason == 4)
+	while (reason == 4)
 	{
 		reason = esp_sleep_get_wakeup_cause();
-		if(reason != 4)
+		if (reason != 4)
 			break;
 		Serial.println("Timer wakeup");
 		voltageSum = 0;
 		voltageSample = 0;
-		for(measuringCounter = 0; measuringCounter < 6000; measuringCounter++)
+		for (measuringCounter = 0; measuringCounter < 6000; measuringCounter++)
 		{
 			chargeDuringADCRead = 0;
-			voltageSum += esp_adc_cal_raw_to_voltage(adc1_get_raw(ADC1_CHANNEL_7), adc_chars)*2;
+			voltageSum += esp_adc_cal_raw_to_voltage(adc1_get_raw(ADC1_CHANNEL_7), adc_chars) * 2;
 			// uint32_t reading =  adc1_get_raw(ADC1_CHANNEL_7)*2;
 			// uint32_t tempVoltage = esp_adc_cal_raw_to_voltage(reading, adc_chars);
 			// voltageSum += tempVoltage;
 			voltageSample++;
 		}
-		voltage = ((voltageSum )/(6000.0) + 158.0235417);
+		voltage = ((voltageSum) / (6000.0) + 158.0235417);
 		voltageSum = 0;
 		voltageSample = 0;
 		Serial.println(batteryVoltage);
 		delay(50);
-		
-		if(simInserted && sim_module_version != 255)
+
+		if (simInserted && sim_module_version != 255)
 		{
 			digitalWrite(SIM800_DTR, 0);
 			delay(100);
 			Serial1.end();
-			
-			if(sim_module_version == 1)
+
+			if (sim_module_version == 1)
 				Serial1.begin(9600, SERIAL_8N1, 17, 16);
-			while(Serial1.available())
+			while (Serial1.available())
 				Serial1.read();
 			uint32_t cregMillis = millis();
 			String cregString = "";
 			int8_t tempReg = -1;
 			Serial1.println("AT+CCALR?");
-			while(tempReg == -1 && millis() - cregMillis < 1000)
+			while (tempReg == -1 && millis() - cregMillis < 1000)
 			{
 				cregString = waitForOK();
 				Serial.println(cregString);
-				if(cregString != "" && cregString.indexOf("+CCALR:") != -1)
+				if (cregString != "" && cregString.indexOf("+CCALR:") != -1)
 				{
-					if(cregString.indexOf("\n", cregString.indexOf("+CCALR:")) != -1)
+					if (cregString.indexOf("\n", cregString.indexOf("+CCALR:")) != -1)
 					{
 						uint16_t helper = cregString.indexOf(" ", cregString.indexOf("+CCALR:"));
-						tempReg = cregString.substring(helper + 1,  helper + 2).toInt();
+						tempReg = cregString.substring(helper + 1, helper + 2).toInt();
 					}
 				}
-				if(cregString != "" && tempReg != 1 && tempReg != 5)
+				if (cregString != "" && tempReg != 1 && tempReg != 5)
 				{
 					Serial1.println("AT+CCALR?");
 				}
@@ -1159,9 +1152,9 @@ void MAKERphone::sleep() {
 			Serial.print("call ready: ");
 			Serial.println(tempReg);
 			delay(5);
-			if(tempReg == 0)
+			if (tempReg == 0)
 			{
-				while(Serial1.available())
+				while (Serial1.available())
 					Serial1.read();
 				Serial1.println("AT+CFUN=1,1");
 				char buffer[300];
@@ -1169,20 +1162,20 @@ void MAKERphone::sleep() {
 				memset(buffer, 0, sizeof(buffer));
 				Serial1.flush();
 				uint32_t timer = millis();
-				
-				while(!found)
+
+				while (!found)
 				{
-					if(Serial1.available())
+					if (Serial1.available())
 					{
 
 						char test = (char)Serial1.read();
 						strncat(buffer, &test, 1);
 						Serial.println(buffer);
 					}
-					if(strstr(buffer, "RDY") != nullptr)
+					if (strstr(buffer, "RDY") != nullptr)
 						found = 1;
-					if((millis() - timer > 8000 && sim_module_version == 1) ||
-					(millis() - timer > 28000 && sim_module_version == 0))
+					if ((millis() - timer > 8000 && sim_module_version == 1) ||
+						(millis() - timer > 28000 && sim_module_version == 0))
 						break;
 				}
 				delay(2000);
@@ -1191,42 +1184,42 @@ void MAKERphone::sleep() {
 				uint32_t cregMillis = millis();
 				String cregString = "";
 				int8_t tempReg = -1;
-				while(tempReg == -1 && millis() - cregMillis < 10000)
+				while (tempReg == -1 && millis() - cregMillis < 10000)
 				{
-					if(millis() - cregMillis > 500)
+					if (millis() - cregMillis > 500)
 						Serial1.println("AT+CCALR?");
-					if(cregString != "")
+					if (cregString != "")
 					{
 						Serial.println(cregString);
-						if(cregString.indexOf("\n", cregString.indexOf("+CCALR:")) != -1)
+						if (cregString.indexOf("\n", cregString.indexOf("+CCALR:")) != -1)
 						{
 							uint16_t helper = cregString.indexOf(" ", cregString.indexOf("+CCALR:"));
-							tempReg = cregString.substring(helper + 1,  helper + 2).toInt();
+							tempReg = cregString.substring(helper + 1, helper + 2).toInt();
 						}
 					}
 					cregString = waitForOK();
 				}
 				networkModuleInit();
-				if(tempReg != -1)
+				if (tempReg != -1)
 					networkRegistered = tempReg;
 			}
-			while(Serial1.available())
+			while (Serial1.available())
 				Serial1.read();
 			uint32_t voltMillis = millis();
 			String voltString = "";
 			uint16_t tempVolt = 0;
 			Serial1.println("AT+CBC");
-			while(tempVolt == 0 && millis() - voltMillis < 1000)
+			while (tempVolt == 0 && millis() - voltMillis < 1000)
 			{
 				voltString = waitForOK();
 				Serial.println(voltString);
-				if(voltString.indexOf("+CBC:") != -1)
+				if (voltString.indexOf("+CBC:") != -1)
 				{
 					uint16_t helper = voltString.indexOf(",", voltString.indexOf("+CBC:"));
 					helper = voltString.indexOf(",", helper + 1) + 1;
 					tempVolt = voltString.substring(helper, voltString.indexOf("\n", helper)).toInt();
 				}
-				if(tempVolt == 0)
+				if (tempVolt == 0)
 					Serial1.println("AT+CBC");
 			}
 			Serial.print("voltage: ");
@@ -1234,9 +1227,7 @@ void MAKERphone::sleep() {
 			digitalWrite(SIM800_DTR, 1);
 			simVoltage = tempVolt;
 		}
-		if((((batteryVoltage <= 3580 || simVoltage <= 3600) && sim_module_version != 1)
-		|| (batteryVoltage <= 3580 && simVoltage <= 3600 && sim_module_version == 1))
-		&& digitalRead(CHRG_INT))
+		if ((((batteryVoltage <= 3580 || simVoltage <= 3600) && sim_module_version != 1) || (batteryVoltage <= 3580 && simVoltage <= 3600 && sim_module_version == 1)) && digitalRead(CHRG_INT))
 		{
 			//Serial1.println("AT+CFUN=4");
 			//Serial1.println("AT+CSCLK=2");
@@ -1249,14 +1240,14 @@ void MAKERphone::sleep() {
 			pinMode(LCD_BL_PIN, OUTPUT);
 			digitalWrite(LCD_BL_PIN, 1);
 			digitalWrite(OFF_PIN, 1);
-			
+
 			rtc_gpio_isolate(GPIO_NUM_16);
 			rtc_gpio_isolate(GPIO_NUM_17);
 			rtc_gpio_isolate(GPIO_NUM_33);
 			rtc_gpio_isolate(GPIO_NUM_34);
 			rtc_gpio_isolate(GPIO_NUM_36);
 			rtc_gpio_isolate(GPIO_NUM_39);
-			
+
 			digitalWrite(OFF_PIN, 1);
 			ESP.deepSleep(0);
 		}
@@ -1275,14 +1266,14 @@ void MAKERphone::sleep() {
 	vTaskResume(MeasuringTask);
 	vTaskResume(Task1);
 	buttons.update();
-	if(buttons.pressed(14))
+	if (buttons.pressed(14))
 		wokeWithPWRBTN = 1;
-	if(!digitalRead(SIM_INT))
+	if (!digitalRead(SIM_INT))
 	{
 		initWavLib();
-		for(int i = 0; i < 4; i++)
+		for (int i = 0; i < 4; i++)
 		{
-			if(currTracks[i] != nullptr)
+			if (currTracks[i] != nullptr)
 			{
 				addTrack(currTracks[i]);
 				// currTracks[i]->play();
@@ -1292,12 +1283,13 @@ void MAKERphone::sleep() {
 		ledcAnalogWrite(LEDC_CHANNEL, actualBrightness);
 		tft.writecommand(17);
 		delay(50);
-		while(!update());
+		while (!update())
+			;
 		return;
 	}
 	// while(!update());
 	// delay(1000);
-	if(!inLockScreen)
+	if (!inLockScreen)
 	{
 		display.fillScreen(backgroundColors[backgroundIndex]);
 
@@ -1306,17 +1298,17 @@ void MAKERphone::sleep() {
 		//Hour shadow
 		display.setTextColor(TFT_DARKGREY);
 		if (clockHour == 11)
-			display.setCursor(10*2, 28*2);
+			display.setCursor(10 * 2, 28 * 2);
 		else if (clockHour % 10 == 1 || (int)clockHour / 10 == 1)
-			display.setCursor(7*2, 28*2);
+			display.setCursor(7 * 2, 28 * 2);
 		else
-			display.setCursor(4*2, 28*2);
+			display.setCursor(4 * 2, 28 * 2);
 		if (clockHour < 10)
 			display.print("0");
 		display.print(clockHour);
 
 		//minute shadow
-		display.setCursor(36*2, 28*2);
+		display.setCursor(36 * 2, 28 * 2);
 		if (clockMinute < 10)
 			display.print("0");
 		display.print(clockMinute);
@@ -1324,23 +1316,23 @@ void MAKERphone::sleep() {
 		//Hour black
 		display.setTextColor(TFT_BLACK);
 		if (clockHour == 11)
-			display.setCursor(9*2, 27*2);
+			display.setCursor(9 * 2, 27 * 2);
 		else if (clockHour % 10 == 1 || (int)clockHour / 10 == 1)
-			display.setCursor(6*2, 27*2);
+			display.setCursor(6 * 2, 27 * 2);
 		else
-			display.setCursor(3*2, 27*2);
+			display.setCursor(3 * 2, 27 * 2);
 		if (clockHour < 10)
 			display.print("0");
 		display.print(clockHour);
 
 		//Minute black
-		display.setCursor(35*2, 27*2);
+		display.setCursor(35 * 2, 27 * 2);
 		if (clockMinute < 10)
 			display.print("0");
 		display.print(clockMinute);
 
-		display.setTextSize(1*2);
-		display.setCursor(60*2, 19*2);
+		display.setTextSize(1 * 2);
+		display.setCursor(60 * 2, 19 * 2);
 		display.setTextWrap(false);
 		if (clockDay < 10)
 			display.print("0");
@@ -1349,13 +1341,13 @@ void MAKERphone::sleep() {
 		if (clockMonth < 10)
 			display.print("0");
 		display.print(clockMonth);
-		display.setCursor(62*2, 25*2);
+		display.setCursor(62 * 2, 25 * 2);
 		display.print(clockYear);
 		/*display.setTextSize(2);
 		display.setCursor(10, 50);
 		display.print("12:00");*/
 		uint8_t helper = 11;
-		if(sim_module_version == 255)
+		if (sim_module_version == 255)
 			helper = 1;
 		if (simInserted && !airplaneMode && sim_module_version != 255)
 		{
@@ -1370,15 +1362,15 @@ void MAKERphone::sleep() {
 			else if (signalStrength == 99)
 				display.drawBitmap(2, 2, signalErrorIcon, TFT_BLACK, 2);
 		}
-		else if(!simInserted && !airplaneMode && sim_module_version != 255)
+		else if (!simInserted && !airplaneMode && sim_module_version != 255)
 			display.drawBitmap(2, 2, noSimIcon, TFT_BLACK, 2);
-		else if(airplaneMode)
+		else if (airplaneMode)
 		{
 			display.drawBitmap(2, 2, airplaneModeIcon, TFT_BLACK, 2);
 		}
 		if (ringVolume == 0)
 		{
-			display.drawBitmap(helper*2, 2, silentModeIcon, TFT_BLACK, 2);
+			display.drawBitmap(helper * 2, 2, silentModeIcon, TFT_BLACK, 2);
 			helper += 10;
 		}
 		//display.drawBitmap(31, 1, missedcall);
@@ -1396,31 +1388,29 @@ void MAKERphone::sleep() {
 		// 		display.drawBitmap(helper * 2, 2, BToffIcon, TFT_BLACK, 2);
 		// 	helper += 10;
 		// }
-		
 
-		if(!SDinsertedFlag)
+		if (!SDinsertedFlag)
 		{
 			display.drawBitmap(helper * 2, 2, noSDIcon, TFT_BLACK, 2);
-			helper+=10;
+			helper += 10;
 		}
 		display.setTextFont(2);
 		display.setTextSize(1);
-		display.setCursor(helper*2, 4);
-		if(carrierName != "" && (networkRegistered == 1 || networkRegistered == 5))
+		display.setCursor(helper * 2, 4);
+		if (carrierName != "" && (networkRegistered == 1 || networkRegistered == 5))
 		{
 			// display.setFreeFont(TT1);
 			// display.setTextSize(2);
 			// display.setCursor(helper*2, 15);
 
-			
 			display.print(carrierName);
 		}
-		else if(simInserted && !airplaneMode && (carrierName == "" || !(networkRegistered == 1 || networkRegistered == 5)))
+		else if (simInserted && !airplaneMode && (carrierName == "" || !(networkRegistered == 1 || networkRegistered == 5)))
 			display.print("loading...");
-		else if(carrierName == "" && !simInserted && sim_module_version == 255)
-			display.print("No module");	
+		else if (carrierName == "" && !simInserted && sim_module_version == 255)
+			display.print("No module");
 
-		if(!digitalRead(CHRG_INT))
+		if (!digitalRead(CHRG_INT))
 			display.drawBitmap(148, 2, batteryChargingIcon, TFT_BLACK, 2);
 		else
 		{
@@ -1430,13 +1420,13 @@ void MAKERphone::sleep() {
 			display.setCursor(120, 2);
 			//y = -316139 + 250.3763*x - 0.06612874*x^2 + 0.000005825959*x^3
 			//y - percentage(%), x - voltage(V)
-			double percentage = -316139 + (250.3763*batteryVoltage) - (0.06612874*batteryVoltage*batteryVoltage) + (0.000005825959*batteryVoltage*batteryVoltage*batteryVoltage);
-			if(percentage < 101)
+			double percentage = -316139 + (250.3763 * batteryVoltage) - (0.06612874 * batteryVoltage * batteryVoltage) + (0.000005825959 * batteryVoltage * batteryVoltage * batteryVoltage);
+			if (percentage < 101)
 			{
 				display.printf("%d", (int)percentage);
 				display.print("%");
 			}
-			if(percentage < 0)
+			if (percentage < 0)
 				percentage = 0;
 			// if (batteryVoltage > 4100)
 			// 	display.drawBitmap(148, 2, batteryChargingIcon, TFT_BLACK, 2);
@@ -1452,18 +1442,18 @@ void MAKERphone::sleep() {
 				display.drawBitmap(148, 2, batteryEmptyIcon, TFT_BLACK, 2);
 		}
 		uint8_t temp = sizeof(notificationTypeList);
-		for(int i = 0; i< sizeof(notificationTypeList);i++)
+		for (int i = 0; i < sizeof(notificationTypeList); i++)
 		{
-			if(notificationTypeList[i] == 0)
+			if (notificationTypeList[i] == 0)
 			{
 				temp = i;
 				break;
 			}
 		}
-		if(temp > 0)
-			drawNotificationWindow(64,temp-1);
-		if(temp > 1)
-			drawNotificationWindow(88,temp-2);
+		if (temp > 0)
+			drawNotificationWindow(64, temp - 1);
+		if (temp > 1)
+			drawNotificationWindow(88, temp - 2);
 		display.setFreeFont(TT1);
 		display.setTextSize(4);
 		display.setCursor(2, 111);
@@ -1479,40 +1469,43 @@ void MAKERphone::sleep() {
 		display.setTextColor(TFT_BLACK);
 		display.setCursor(56, 54);
 		display.print(":");
-		while(!update());
+		while (!update())
+			;
 	}
 	tft.writecommand(17);
 	delay(50);
-	display.pushSprite(0,0);
+	display.pushSprite(0, 0);
 	initWavLib();
-	for(int i = 0; i < 4; i++)
+	for (int i = 0; i < 4; i++)
 	{
-		if(currTracks[i] != nullptr)
+		if (currTracks[i] != nullptr)
 		{
 			addTrack(currTracks[i]);
 			// currTracks[i]->play();
 		}
 	}
-	
+
 	ledcAttachPin(LCD_BL_PIN, LEDC_CHANNEL);
 	ledcAnalogWrite(LEDC_CHANNEL, 255);
-	for (uint8_t i = 255; i > actualBrightness; i--) {
+	for (uint8_t i = 255; i > actualBrightness; i--)
+	{
 		ledcAnalogWrite(LEDC_CHANNEL, i);
 		delay(1);
 	}
 	delay(2);
 	FastLED.clear();
 	updateTimeRTC();
-	while(!update());
+	while (!update())
+		;
 
-	if(!inLockScreen)
+	if (!inLockScreen)
 	{
 		lockscreen();
 		exitedLockscreen = 1;
 	}
-	for(int i = 0; i < 4; i++)
+	for (int i = 0; i < 4; i++)
 	{
-		if(pausedTracks[i])
+		if (pausedTracks[i])
 		{
 			Serial.printf("%d was playing\n", i);
 			tracks[i]->play();
@@ -1527,15 +1520,17 @@ void MAKERphone::loader()
 	display.setTextFont(2);
 	display.setTextSize(1);
 	display.printCenter("LOADING...");
-	while(!update());
-	const esp_partition_t* partition;
+	while (!update())
+		;
+	const esp_partition_t *partition;
 	partition = esp_ota_get_running_partition();
-	const esp_partition_t* partition2;
+	const esp_partition_t *partition2;
 	partition2 = esp_ota_get_next_update_partition(partition);
 	esp_ota_set_boot_partition(partition2);
 	ESP.restart();
 }
-void MAKERphone::updateTimeGSM() {
+void MAKERphone::updateTimeGSM()
+{
 	// if(sim_module_version == 0)
 	// {
 	// 	Serial1.println("AT+CNETSTOP");
@@ -1549,7 +1544,8 @@ void MAKERphone::updateTimeGSM() {
 	uint16_t temp = 0;
 	while (!Serial1.available())
 		update();
-	while (Serial1.available()) {
+	while (Serial1.available())
+	{
 		reply += (char)Serial1.read();
 
 		//if (Serial1.read() == '"') {
@@ -1573,7 +1569,7 @@ void MAKERphone::updateTimeGSM() {
 	c1 = reply.charAt(index + 8);
 	c2 = reply.charAt(index + 9);
 	temp = 2000 + ((c1 - '0') * 10) + (c2 - '0');
-	if(temp % 100 < 19 ||  temp % 100 >= 40)
+	if (temp % 100 < 19 || temp % 100 >= 40)
 		return;
 	else
 		clockYear = temp;
@@ -1583,7 +1579,7 @@ void MAKERphone::updateTimeGSM() {
 	c1 = reply.charAt(index + 11);
 	c2 = reply.charAt(index + 12);
 	temp = ((c1 - '0') * 10) + (c2 - '0');
-	if(temp < 1 ||  temp > 12)
+	if (temp < 1 || temp > 12)
 		return;
 	else
 		clockMonth = temp;
@@ -1593,7 +1589,7 @@ void MAKERphone::updateTimeGSM() {
 	c1 = reply.charAt(index + 14);
 	c2 = reply.charAt(index + 15);
 	temp = ((c1 - '0') * 10) + (c2 - '0');
-	if(temp < 1 || temp > 31)
+	if (temp < 1 || temp > 31)
 		return;
 	else
 		clockDay = temp;
@@ -1603,7 +1599,7 @@ void MAKERphone::updateTimeGSM() {
 	c1 = reply.charAt(index + 17);
 	c2 = reply.charAt(index + 18);
 	temp = ((c1 - '0') * 10) + (c2 - '0');
-	if(temp > 24)
+	if (temp > 24)
 		return;
 	else
 		clockHour = temp;
@@ -1613,7 +1609,7 @@ void MAKERphone::updateTimeGSM() {
 	c1 = reply.charAt(index + 20);
 	c2 = reply.charAt(index + 21);
 	temp = ((c1 - '0') * 10) + (c2 - '0');
-	if(temp > 59)
+	if (temp > 59)
 		return;
 	else
 		clockMinute = temp;
@@ -1623,7 +1619,7 @@ void MAKERphone::updateTimeGSM() {
 	c1 = reply.charAt(index + 23);
 	c2 = reply.charAt(index + 24);
 	temp = ((c1 - '0') * 10) + (c2 - '0');
-	if(temp > 59)
+	if (temp > 59)
 		return;
 	else
 		clockSecond = temp;
@@ -1631,12 +1627,13 @@ void MAKERphone::updateTimeGSM() {
 	Serial.println(clockSecond);
 
 	DateTime now = DateTime(clockYear, clockMonth, clockDay,
-	clockHour, clockMinute, clockSecond);
+							clockHour, clockMinute, clockSecond);
 	RTC.adjust(now);
 	Serial.println(F("\nRTC TIME UPDATE OVER GSM DONE!"));
 	delay(5);
 }
-void MAKERphone::updateTimeRTC() {
+void MAKERphone::updateTimeRTC()
+{
 	currentTime = RTC.now();
 	clockHour = currentTime.hour();
 	clockMinute = currentTime.minute();
@@ -1656,26 +1653,34 @@ void MAKERphone::updateTimeRTC() {
 
 	//Serial.println(F("\nGLOBAL TIME UPDATE OVER RTC DONE!"));
 }
-void MAKERphone::performUpdate(Stream &updateSource, size_t updateSize) {
-	if (Update.begin(updateSize)) {
+void MAKERphone::performUpdate(Stream &updateSource, size_t updateSize)
+{
+	if (Update.begin(updateSize))
+	{
 		size_t written = Update.writeStream(updateSource);
-		if (written == updateSize) {
+		if (written == updateSize)
+		{
 			Serial.println("Written : " + String(written) + " successfully");
 		}
-		else {
+		else
+		{
 			Serial.println("Written only : " + String(written) + "/" + String(updateSize) + ". Retry?");
 		}
-		if (Update.end()) {
+		if (Update.end())
+		{
 			Serial.println("OTA done!");
-			if (Update.isFinished()) {
+			if (Update.isFinished())
+			{
 				Serial.println("Update successfully completed. Rebooting.");
 				ESP.restart();
 			}
-			else {
+			else
+			{
 				Serial.println("Update not finished? Something went wrong!");
 			}
 		}
-		else {
+		else
+		{
 			Serial.println("Error Occurred. Error #: " + String(Update.getError()));
 		}
 	}
@@ -1684,15 +1689,18 @@ void MAKERphone::performUpdate(Stream &updateSource, size_t updateSize) {
 		Serial.println("Not enough space to begin OTA");
 	}
 }
-void MAKERphone::updateFromFS(String FilePath) {
+void MAKERphone::updateFromFS(String FilePath)
+{
 	Serial.println(FilePath);
 	// SD.end();
 	// SD.end();
 	// while(!SDFAT.begin(5, SD_SCK_MHZ(8)))
-		// Serial.println("SdFat error");
+	// Serial.println("SdFat error");
 	File updateBin = SD.open(FilePath);
-	if (updateBin) {
-		if (updateBin.isDirectory()) {
+	if (updateBin)
+	{
+		if (updateBin.isDirectory())
+		{
 			Serial.println("Error, update.bin is not a file");
 			updateBin.close();
 			return;
@@ -1700,23 +1708,26 @@ void MAKERphone::updateFromFS(String FilePath) {
 
 		size_t updateSize = updateBin.size();
 
-		if (updateSize > 0) {
+		if (updateSize > 0)
+		{
 			Serial.println("Try to start update");
 			performUpdate(updateBin, updateSize);
 		}
-		else {
+		else
+		{
 			Serial.println("Error, file is empty");
 		}
 
 		updateBin.close();
 	}
-	else {
+	else
+	{
 		Serial.println("Could not load update.bin from sd root");
 	}
 }
 void MAKERphone::incomingCall(String _serialData)
 {
-  	bool state = 0;
+	bool state = 0;
 	String number = "";
 	uint8_t tempNotification = notification;
 	uint32_t callMillis = millis();
@@ -1731,17 +1742,17 @@ void MAKERphone::incomingCall(String _serialData)
 	tft.setTextFont(2);
 	tft.setTextColor(TFT_BLACK);
 	tft.setTextSize(1);
-	tft.fillRect(0,0,160,128,TFT_WHITE);
+	tft.fillRect(0, 0, 160, 128, TFT_WHITE);
 	tft.setCursor(40, 9);
 	Serial.println("ringing");
 	tft.print("Incoming call");
-	tft.drawBitmap(29*2, 24*2, call_icon, TFT_DARKGREY, 2);
+	tft.drawBitmap(29 * 2, 24 * 2, call_icon, TFT_DARKGREY, 2);
 	tft.setCursor(28, 28);
 	tft.print(number);
-	tft.fillRect(90, 51*2, 70, 13*2, TFT_RED);
+	tft.fillRect(90, 51 * 2, 70, 13 * 2, TFT_RED);
 	tft.setCursor(105, 109);
 	tft.print("Hang up");
-	tft.fillRect(0, 51*2, 70, 13*2, TFT_GREEN);
+	tft.fillRect(0, 51 * 2, 70, 13 * 2, TFT_GREEN);
 	tft.setCursor(10, 109);
 	tft.print("Answer");
 	Serial.print("SD inserted:");
@@ -1750,49 +1761,49 @@ void MAKERphone::incomingCall(String _serialData)
 	Serial.print(ringtone_path);
 	Serial.println(SD.exists(ringtone_path));
 	MPTrack *tempTrack = nullptr;
-	while(1)
+	while (1)
 	{
 		if (Serial1.available())
 		{
 			c = (char)Serial1.read();
-			if((uint8_t)c != 255)
+			if ((uint8_t)c != 255)
 				buffer += c;
 			// Serial.println(buffer);
 		}
-		if(buffer.indexOf("CLCC: 1") != -1 && buffer.indexOf("\r", buffer.indexOf("CLCC: 1")) != -1)
+		if (buffer.indexOf("CLCC: 1") != -1 && buffer.indexOf("\r", buffer.indexOf("CLCC: 1")) != -1)
 		{
 			localBuffer = buffer;
 			buffer = "";
 		}
-		if(buttons.released(BTN_FUN_LEFT))
+		if (buttons.released(BTN_FUN_LEFT))
 			break;
-		if(buttons.released(BTN_FUN_RIGHT) || localBuffer.indexOf("1,1,6,0,0") != -1)
+		if (buttons.released(BTN_FUN_RIGHT) || localBuffer.indexOf("1,1,6,0,0") != -1)
 		{
-			if(SDinsertedFlag && SD.exists(ringtone_path))
+			if (SDinsertedFlag && SD.exists(ringtone_path))
 			{
 				ringtone->stop();
 				removeTrack(ringtone);
 			}
-			tft.fillRect(0,0,160,128,TFT_WHITE);
+			tft.fillRect(0, 0, 160, 128, TFT_WHITE);
 			tft.setCursor(60, 9);
 			tft.print("00:00");
 
-			tft.drawBitmap(29*2, 24*2, call_icon, TFT_RED, 2);
+			tft.drawBitmap(29 * 2, 24 * 2, call_icon, TFT_RED, 2);
 			tft.setCursor(28, 28);
 			tft.print(number);
-			tft.fillRect(0, 51*2, 80*2, 13*2, TFT_RED);
+			tft.fillRect(0, 51 * 2, 80 * 2, 13 * 2, TFT_RED);
 			tft.setCursor(10, 110);
 			tft.print("Call ended");
 			Serial.println("ENDED");
-			if(localBuffer.indexOf("1,1,6,0,0") == -1)
+			if (localBuffer.indexOf("1,1,6,0,0") == -1)
 			{
 				uint32_t curr_millis = millis();
 				buffer = "";
 				Serial1.println("ATH");
 				buffer = waitForOK();
 				Serial.println(buffer);
-				while(!digitalRead(SIM_INT))
-					if(Serial1.available())
+				while (!digitalRead(SIM_INT))
+					if (Serial1.available())
 						Serial1.read();
 				// while (buffer.indexOf(",1,6,") == -1 && millis() - curr_millis < 2000){
 				// 	Serial1.println("ATH");
@@ -1801,15 +1812,15 @@ void MAKERphone::incomingCall(String _serialData)
 				// 	// buffer+=(char)Serial.read();
 				// }
 			}
-			
+
 			// update();
 			updateTimeRTC();
-			if(SDinsertedFlag)
+			if (SDinsertedFlag)
 				addCall(number, checkContact(number), RTC.now().unixtime(), tmp_time, 0);
-			if(localBuffer.indexOf("1,1,6,0,0") != -1)
+			if (localBuffer.indexOf("1,1,6,0,0") != -1)
 			{
 				String temp = checkContact(number);
-				if(temp == "")
+				if (temp == "")
 					addNotification(1, number, RTC.now());
 				else
 					addNotification(1, temp, RTC.now());
@@ -1818,14 +1829,14 @@ void MAKERphone::incomingCall(String _serialData)
 			return;
 		}
 
-		if(!SDinsertedFlag || (SDinsertedFlag && !SD.exists(ringtone_path)))
+		if (!SDinsertedFlag || (SDinsertedFlag && !SD.exists(ringtone_path)))
 		{
-			if(millis() - callMillis >= 1000)
+			if (millis() - callMillis >= 1000)
 			{
 				state = 1;
 				callMillis = millis();
 			}
-			if(state)
+			if (state)
 			{
 				playNotificationSound(4);
 				state = 0;
@@ -1833,16 +1844,16 @@ void MAKERphone::incomingCall(String _serialData)
 			notification = tempNotification;
 		}
 
-		else if(!played)
+		else if (!played)
 		{
-			if(!addTrack(ringtone))
+			if (!addTrack(ringtone))
 			{
 				tempTrack = tracks[3];
 				removeTrack(tempTrack);
 				addTrack(ringtone);
 			}
 			Serial.println("PLAYED");
-			if(ringVolume == 0)
+			if (ringVolume == 0)
 				ringtone->setVolume(0);
 			else
 				ringtone->setVolume(map(ringVolume, 0, 14, 100, 300));
@@ -1853,19 +1864,19 @@ void MAKERphone::incomingCall(String _serialData)
 		updateNotificationSound();
 		buttons.update();
 	}
-	if(SDinsertedFlag && SD.exists(ringtone_path))
+	if (SDinsertedFlag && SD.exists(ringtone_path))
 	{
 		ringtone->stop();
 		removeTrack(ringtone);
-		if(tempTrack != nullptr)
+		if (tempTrack != nullptr)
 			addTrack(tempTrack);
 	}
 	// while(!update());
 
-
 	Serial1.println("ATA");
 	long long curr_millis = millis();
-	while (localBuffer.indexOf("1,1,0,0,0") == -1 && millis() - curr_millis < 2000){
+	while (localBuffer.indexOf("1,1,0,0,0") == -1 && millis() - curr_millis < 2000)
+	{
 		Serial1.println("ATA");
 		localBuffer = Serial1.readString();
 	}
@@ -1878,11 +1889,11 @@ void MAKERphone::incomingCall(String _serialData)
 	scale = 2;
 	tft.setTextFont(2);
 	tft.setTextSize(1);
-	tft.fillRect(0,0,160,128,TFT_WHITE);
-	tft.drawBitmap(29*scale, 24*scale, call_icon, TFT_GREEN, scale);
+	tft.fillRect(0, 0, 160, 128, TFT_WHITE);
+	tft.drawBitmap(29 * scale, 24 * scale, call_icon, TFT_GREEN, scale);
 	tft.setCursor(28, 28);
 	tft.print(number);
-	tft.fillRect(0, 51*scale, 80*scale, 13*scale, TFT_RED);
+	tft.fillRect(0, 51 * scale, 80 * scale, 13 * scale, TFT_RED);
 	tft.setCursor(100, 109);
 	tft.print("Hang up");
 	tft.setCursor(5, 109);
@@ -1893,7 +1904,7 @@ void MAKERphone::incomingCall(String _serialData)
 	int8_t written = -1;
 	uint16_t prevTime = 0;
 	// localBuffer = "";
-	if(sim_module_version == 0)
+	if (sim_module_version == 0)
 	{
 		Serial1.println("AT+CECH=0x0000");
 		Serial.println(waitForOK());
@@ -1904,24 +1915,24 @@ void MAKERphone::incomingCall(String _serialData)
 		if (Serial1.available())
 		{
 			c = Serial1.read();
-			if((uint8_t)c != 255)
+			if ((uint8_t)c != 255)
 				buffer += c;
 		}
-		if(buffer.indexOf("CLCC: 1") != -1 && buffer.indexOf("\r", buffer.indexOf("CLCC: 1")) != -1)
+		if (buffer.indexOf("CLCC: 1") != -1 && buffer.indexOf("\r", buffer.indexOf("CLCC: 1")) != -1)
 		{
 			localBuffer = buffer;
 			buffer = "";
 		}
-		if(buffer.indexOf("OK", buffer.indexOf("AT+CMIC=")) != -1)
+		if (buffer.indexOf("OK", buffer.indexOf("AT+CMIC=")) != -1)
 			buffer = "";
-		if(buffer.indexOf("\r") != -1)
+		if (buffer.indexOf("\r") != -1)
 			buffer = "";
 		Serial.println("----------");
 		Serial.println(buffer);
 		delay(1);
 		if (localBuffer.indexOf("CLCC: 1") != -1 || localBuffer.indexOf("AT+CMIC") != -1)
 		{
-			if ((localBuffer.indexOf("1,1,0,0,0") != -1 || localBuffer.indexOf("AT+CMIC") != -1 ) && (written != 0 || prevTime != tmp_time))
+			if ((localBuffer.indexOf("1,1,0,0,0") != -1 || localBuffer.indexOf("AT+CMIC") != -1) && (written != 0 || prevTime != tmp_time))
 			{
 				if (firstPass == 1)
 				{
@@ -1952,8 +1963,8 @@ void MAKERphone::incomingCall(String _serialData)
 			}
 			else if (localBuffer.indexOf("1,1,6,0,0") != -1)
 			{
-				
-				tft.fillRect(0,0,160,128,TFT_WHITE);
+
+				tft.fillRect(0, 0, 160, 128, TFT_WHITE);
 				tft.setCursor(55, 9);
 				if (timeOffset == 0)
 					tft.print("00:00");
@@ -1961,7 +1972,7 @@ void MAKERphone::incomingCall(String _serialData)
 				{
 					temp = "";
 					if ((int((millis() - timeOffset) / 1000) / 60) > 9)
-						temp += (int((millis() - timeOffset) / 1000) / 60) ;
+						temp += (int((millis() - timeOffset) / 1000) / 60);
 					else
 					{
 						temp += "0";
@@ -1977,17 +1988,17 @@ void MAKERphone::incomingCall(String _serialData)
 					}
 					tft.print(temp);
 				}
-				tft.drawBitmap(29*scale, 24*scale, call_icon, TFT_RED, scale);
+				tft.drawBitmap(29 * scale, 24 * scale, call_icon, TFT_RED, scale);
 				tft.setCursor(28, 28);
 				tft.print(number);
-				tft.fillRect(0, 51*scale, 80*scale, 13*scale, TFT_RED);
+				tft.fillRect(0, 51 * scale, 80 * scale, 13 * scale, TFT_RED);
 				tft.setCursor(10, 110);
 				tft.print("Call ended");
 				Serial.println("ENDED");
 				// update();
 
 				updateTimeRTC();
-				if(SDinsertedFlag)
+				if (SDinsertedFlag)
 				{
 					addCall(number, checkContact(number), RTC.now().unixtime(), tmp_time, 2);
 					saveSettings();
@@ -1996,9 +2007,6 @@ void MAKERphone::incomingCall(String _serialData)
 				delay(1000);
 				break;
 			}
-				
-			
-
 		}
 
 		else if (localBuffer.indexOf("CLCC: 1") == -1)
@@ -2008,10 +2016,10 @@ void MAKERphone::incomingCall(String _serialData)
 
 				tft.setCursor(10, 9);
 				tft.print("Error");
-				tft.drawBitmap(29*scale, 24*scale, call_icon, TFT_RED, scale);
+				tft.drawBitmap(29 * scale, 24 * scale, call_icon, TFT_RED, scale);
 				tft.setCursor(28, 28);
 				tft.print(number);
-				tft.fillRect(0, 51*scale, 80*scale, 13*scale, TFT_RED);
+				tft.fillRect(0, 51 * scale, 80 * scale, 13 * scale, TFT_RED);
 				tft.setCursor(2, 100);
 				tft.print("Invalid number or");
 				tft.setCursor(2, 112);
@@ -2031,7 +2039,7 @@ void MAKERphone::incomingCall(String _serialData)
 			// while (Serial1.readString().indexOf(",1,6,") == -1 && millis() - curr_millis < 2000){
 			// 	Serial1.println("ATH");
 			// }
-			tft.fillRect(0,0,160,128,TFT_WHITE);
+			tft.fillRect(0, 0, 160, 128, TFT_WHITE);
 			tft.setCursor(55, 9);
 			if (timeOffset == 0)
 				tft.print("00:00");
@@ -2039,7 +2047,7 @@ void MAKERphone::incomingCall(String _serialData)
 			{
 				temp = "";
 				if ((int((millis() - timeOffset) / 1000) / 60) > 9)
-					temp += (int((millis() - timeOffset) / 1000) / 60) ;
+					temp += (int((millis() - timeOffset) / 1000) / 60);
 				else
 				{
 					temp += "0";
@@ -2055,17 +2063,17 @@ void MAKERphone::incomingCall(String _serialData)
 				}
 				tft.print(temp);
 			}
-			tft.drawBitmap(29*scale, 24*scale, call_icon, TFT_RED, scale);
+			tft.drawBitmap(29 * scale, 24 * scale, call_icon, TFT_RED, scale);
 			tft.setCursor(28, 28);
 			tft.print(number);
-			tft.fillRect(0, 51*scale, 80*scale, 13*scale, TFT_RED);
+			tft.fillRect(0, 51 * scale, 80 * scale, 13 * scale, TFT_RED);
 			tft.setCursor(10, 110);
 			tft.print("Call ended");
 			Serial.println("ENDED");
 			// update();
 
 			updateTimeRTC();
-			if(SDinsertedFlag)
+			if (SDinsertedFlag)
 			{
 				addCall(number, checkContact(number), RTC.now().unixtime(), tmp_time, 2);
 				saveSettings();
@@ -2074,57 +2082,56 @@ void MAKERphone::incomingCall(String _serialData)
 			delay(1000);
 			break;
 		}
-		if(buttons.released(BTN_UP) && ((micGain < 15 && sim_module_version == 1) || (micGain < 8 && sim_module_version == 0))
-		&& callState == 2)
+		if (buttons.released(BTN_UP) && ((micGain < 15 && sim_module_version == 1) || (micGain < 8 && sim_module_version == 0)) && callState == 2)
 		{
 			micGain++;
-			if(sim_module_version == 1)
+			if (sim_module_version == 1)
 				Serial1.printf("AT+CMIC=0,%d\r", micGain);
-			else if(sim_module_version == 0)
+			else if (sim_module_version == 0)
 			{
 				String foo = "AT+CMICGAIN=";
-				foo+=micGain;
+				foo += micGain;
 				Serial1.println(foo);
 				delay(10);
 			}
 			written = -1;
-			tft.fillRect(61, 111, 20, 15, TFT_RED); 
+			tft.fillRect(61, 111, 20, 15, TFT_RED);
 			tft.setCursor(62, 109);
 			tft.print(micGain);
 		}
-		if(buttons.released(BTN_DOWN) && micGain > 0 && callState == 2 )
+		if (buttons.released(BTN_DOWN) && micGain > 0 && callState == 2)
 		{
 			micGain--;
-			if(sim_module_version == 1)
+			if (sim_module_version == 1)
 				Serial1.printf("AT+CMIC=0,%d\r", micGain);
-			else if(sim_module_version == 0)
+			else if (sim_module_version == 0)
 			{
 				String foo = "AT+CMICGAIN=";
-				foo+=micGain;
+				foo += micGain;
 				Serial1.println(foo);
 				delay(10);
 			}
 			written = -1;
-			tft.fillRect(61, 111, 20, 15, TFT_RED); 
+			tft.fillRect(61, 111, 20, 15, TFT_RED);
 			tft.setCursor(62, 109);
 			tft.print(micGain);
 		}
 		tmp_time = int((millis() - timeOffset) / 1000);
-		for(int i = 0; i < 12;i++)
+		for (int i = 0; i < 12; i++)
 		{
-			
-			if(buttons.released(i))
+
+			if (buttons.released(i))
 			{
-				if(i == 9)
+				if (i == 9)
 					Serial1.println("AT+VTS=*");
-				else if(i == 10)
+				else if (i == 10)
 					Serial1.println("AT+VTS=0");
-				else if(i == 11)
+				else if (i == 11)
 					Serial1.println("AT+VTS=#");
 				else
 				{
 					Serial1.print("AT+VTS=");
-					Serial1.println(i+1);
+					Serial1.println(i + 1);
 				}
 				break;
 			}
@@ -2140,15 +2147,15 @@ void MAKERphone::incomingMessage(String _serialData)
 	Serial.println(_serialData);
 	uint16_t helper = 0;
 	helper = _serialData.indexOf("\"", _serialData.indexOf("+CMT:"));
-	String number = _serialData.substring(helper + 1, _serialData.indexOf("\"", helper+1));
-	helper+=number.length() + 1;
+	String number = _serialData.substring(helper + 1, _serialData.indexOf("\"", helper + 1));
+	helper += number.length() + 1;
 	helper = _serialData.indexOf("\"\r", helper);
 	String text = _serialData.substring(helper + 3, _serialData.indexOf("\r", helper + 2));
 	bool isHex = 1;
 	for (uint32_t i = 0; i < text.length(); i++)
 	{
-		if(isdigit(text[i]) || tolower(text[i]) == 'a' || tolower(text[i]) == 'b' || tolower(text[i]) == 'c' ||
-		tolower(text[i]) == 'd' || tolower(text[i]) == 'e' || tolower(text[i]) == 'f')
+		if (isdigit(text[i]) || tolower(text[i]) == 'a' || tolower(text[i]) == 'b' || tolower(text[i]) == 'c' ||
+			tolower(text[i]) == 'd' || tolower(text[i]) == 'e' || tolower(text[i]) == 'f')
 			continue;
 		else
 		{
@@ -2157,49 +2164,50 @@ void MAKERphone::incomingMessage(String _serialData)
 		}
 	}
 	Serial.println(isHex);
-	if(isHex)
+	if (isHex)
 	{
 		String newText = "";
-		for(int i = 0; i <= text.length() - 4;i+=4)
+		for (int i = 0; i <= text.length() - 4; i += 4)
 		{
 			char snip[5] = "";
-			strncpy(snip, text.substring(i, i+4).c_str(), 5);
+			strncpy(snip, text.substring(i, i + 4).c_str(), 5);
 			int charCode = strtol(snip, nullptr, 16);
 			char c = '*';
-			if(charCode <= 128)
+			if (charCode <= 128)
 				c = charCode;
-			newText+=c;
+			newText += c;
 		}
 		Serial.println(newText);
 		text = newText;
 	}
-	
-	JsonArray& jarr = jb.createArray();
+
+	JsonArray &jarr = jb.createArray();
 	bool fullStack = 0;
-	if(SDinsertedFlag)
+	if (SDinsertedFlag)
 	{
 		File file = SD.open("/.core/messages.json", "r");
-		if(file.size() < 2){ // empty -> FILL
+		if (file.size() < 2)
+		{ // empty -> FILL
 			Serial.println("Override");
 			file.close();
 			// JsonArray& jarr = jb.parseArray("[{\"number\":\"123123\", \"dateTime\":\"2018-12-12 12:12:12\", \"text\":\"asd asd asd asd\"}]");
 			// JsonArray& jarr = jb.parseArray("[{\"number\":\"123123\", \"dateTime\":\"2018-12-12 12:12:12\", \"text\":\"asd asd asd asd\"}, {\"number\":\"09123\", \"dateTime\":\"2018-12-12 12:12:12\", \"text\":\"Some other text\"}, {\"number\":\"911\", \"dateTime\":\"2018-03-12 12:12:12\", \"text\":\"Help\"}]");
-			JsonArray& jarr = jb.createArray();
+			JsonArray &jarr = jb.createArray();
 			delay(10);
 			File file1 = SD.open("/.core/messages.json", "w");
 			jarr.prettyPrintTo(file1);
 			file1.close();
 			file = SD.open("/.core/messages.json", "r");
-			while(!file)
+			while (!file)
 				Serial.println("Messages ERROR");
 			jb.clear();
 		}
 		jb.clear();
-		JsonArray& jarr = jb.parseArray(file);
+		JsonArray &jarr = jb.parseArray(file);
 		updateTimeRTC();
 		file.close();
 
-		if(!jarr.success())
+		if (!jarr.success())
 		{
 			Serial.println("MESSAGE NOT SAVED");
 			// Serial.println(readFile("/.core/messages.json"));
@@ -2207,10 +2215,10 @@ void MAKERphone::incomingMessage(String _serialData)
 		else
 		{
 			jarr.prettyPrintTo(Serial);
-			if(jarr.size() > 34)
+			if (jarr.size() > 34)
 				fullStack = 1;
 			String temp = checkContact(number);
-			if(temp == "")
+			if (temp == "")
 			{
 				saveMessage(text, "", number, 0, 1);
 				addNotification(2, number, RTC.now());
@@ -2220,56 +2228,52 @@ void MAKERphone::incomingMessage(String _serialData)
 				saveMessage(text, temp, number, 0, 1);
 				addNotification(2, temp, RTC.now());
 			}
-			
 		}
 	}
-	
+
 	// popup(String(number + ": " + text), 50);
 	tft.setTextColor(TFT_BLACK);
-	tft.fillRect(0,0,160,128,TFT_WHITE);
-	tft.fillRect(0,108,160,20, 0xA534);
+	tft.fillRect(0, 0, 160, 128, TFT_WHITE);
+	tft.fillRect(0, 108, 160, 20, 0xA534);
 	tft.setTextFont(2);
 	tft.setTextSize(1);
 	tft.setCursor(40, 7);
 	tft.print("NEW MESSAGE!");
-	tft.drawBitmap(10, 5, incomingMessageIcon, TFT_BLUE, 2); //+CMT: "+385953776154","","19/08/25,19:18:49+08" 
-	tft.setCursor(10,40);// +CMT: "+385953776154","","19/08/25,19:19:21+08"
+	tft.drawBitmap(10, 5, incomingMessageIcon, TFT_BLUE, 2); //+CMT: "+385953776154","","19/08/25,19:18:49+08"
+	tft.setCursor(10, 40);									 // +CMT: "+385953776154","","19/08/25,19:19:21+08"
 	tft.print("From: ");
 	tft.print(number);
 	tft.setCursor(10, 70);
 	tft.setTextWrap(1);
-	for(int i = 0; i < text.length();i++)
+	for (int i = 0; i < text.length(); i++)
 	{
 		tft.print(text[i]);
-		if(tft.getCursorY() > 80 && tft.getCursorX() > 130)
+		if (tft.getCursorY() > 80 && tft.getCursorX() > 130)
 		{
 			tft.print("...");
 			break;
 		}
-		if(tft.getCursorX() > 150)
+		if (tft.getCursorX() > 150)
 		{
-			
-				tft.print("\n");
-				tft.setCursor(10, tft.getCursorY());
+
+			tft.print("\n");
+			tft.setCursor(10, tft.getCursorY());
 		}
 	}
 	// tft.print(text);
 	tft.setCursor(3, 110);
 	tft.print("Press \"A\" to continue");
-	while(!buttons.released(BTN_A))
+	while (!buttons.released(BTN_A))
 	{
 		updateNotificationSound();
-		if(!digitalRead(SIM_INT) && !inCall)
+		if (!digitalRead(SIM_INT) && !inCall)
 		{
 			String temp = "";
 			long long curr_millis = millis();
 
-			while((temp.indexOf("\r", temp.indexOf("\r", helper + 1) + 1) == -1
-			|| temp.indexOf("\r", helper + 1) == -1 || helper == -1)
-			&& temp.indexOf("\r", temp.indexOf("1,4,0,0,")) == -1
-			&& millis() - curr_millis < 500)
-			{ 
-				if(Serial1.available())
+			while ((temp.indexOf("\r", temp.indexOf("\r", helper + 1) + 1) == -1 || temp.indexOf("\r", helper + 1) == -1 || helper == -1) && temp.indexOf("\r", temp.indexOf("1,4,0,0,")) == -1 && millis() - curr_millis < 500)
+			{
+				if (Serial1.available())
 				{
 					curr_millis = millis();
 					char c = Serial1.read();
@@ -2280,55 +2284,52 @@ void MAKERphone::incomingMessage(String _serialData)
 					Serial.println(helper);
 				}
 			}
-			if(temp.indexOf("\r", temp.indexOf("1,4,0,0,")) != -1)
+			if (temp.indexOf("\r", temp.indexOf("1,4,0,0,")) != -1)
 			{
 				inCall = 1;
 				incomingCall(temp);
 				inCall = 0;
 				break;
 			}
-			else if(temp.indexOf("+CMT:") != -1)
+			else if (temp.indexOf("+CMT:") != -1)
 			{
 				playNotificationSound(notification);
 				incomingMessage(temp);
 				break;
 			}
 		}
-		if(millis() - sleepTimer > sleepTimeActual*1000 && sleepTime != 0)
+		if (millis() - sleepTimer > sleepTimeActual * 1000 && sleepTime != 0)
 			break;
 		buttons.update();
 	}
-	if(fullStack)
+	if (fullStack)
 	{
 		tft.setTextColor(TFT_BLACK);
-		tft.fillRect(0,0,160,128,TFT_WHITE);
+		tft.fillRect(0, 0, 160, 128, TFT_WHITE);
 		tft.setTextFont(2);
 		tft.setTextSize(1);
 		tft.setCursor(10, 30);
 		tft.print("Couldn't save message!");
-		tft.setCursor(35,50);
+		tft.setCursor(35, 50);
 		tft.print("No more space");
 		tft.setCursor(10, 70);
 		tft.print("Deleting oldest SMS...");
 		uint32_t tempMillis = millis();
-		while(millis() < tempMillis + 2000)
+		while (millis() < tempMillis + 2000)
 		{
 			buttons.update();
-			if(buttons.pressed(BTN_A) || buttons.pressed(BTN_B))
+			if (buttons.pressed(BTN_A) || buttons.pressed(BTN_B))
 			{
-				while(!buttons.released(BTN_A) && !buttons.released(BTN_B))
+				while (!buttons.released(BTN_A) && !buttons.released(BTN_B))
 				{
-					if(!digitalRead(SIM_INT) && !inCall)
+					if (!digitalRead(SIM_INT) && !inCall)
 					{
 						String temp = "";
 						long long curr_millis = millis();
 
-						while((temp.indexOf("\r", temp.indexOf("\r", helper + 1) + 1) == -1
-						|| temp.indexOf("\r", helper + 1) == -1 || helper == -1)
-						&& temp.indexOf("\r", temp.indexOf("1,4,0,0,")) == -1
-						&& millis() - curr_millis < 500)
-						{ 
-							if(Serial1.available())
+						while ((temp.indexOf("\r", temp.indexOf("\r", helper + 1) + 1) == -1 || temp.indexOf("\r", helper + 1) == -1 || helper == -1) && temp.indexOf("\r", temp.indexOf("1,4,0,0,")) == -1 && millis() - curr_millis < 500)
+						{
+							if (Serial1.available())
 							{
 								curr_millis = millis();
 								char c = Serial1.read();
@@ -2339,14 +2340,14 @@ void MAKERphone::incomingMessage(String _serialData)
 								Serial.println(helper);
 							}
 						}
-						if(temp.indexOf("\r", temp.indexOf("1,4,0,0,")) != -1)
+						if (temp.indexOf("\r", temp.indexOf("1,4,0,0,")) != -1)
 						{
 							inCall = 1;
 							incomingCall(temp);
 							inCall = 0;
 							break;
 						}
-						else if(temp.indexOf("+CMT:") != -1)
+						else if (temp.indexOf("+CMT:") != -1)
 						{
 							playNotificationSound(notification);
 							incomingMessage(temp);
@@ -2364,31 +2365,32 @@ void MAKERphone::incomingMessage(String _serialData)
 
 	// +CMT: "+385921488476","","19/06/03,20:14:58+08"
 	// Wjd
-
-
 }
-void MAKERphone::addCall(String number, String contact, uint32_t dateTime, int duration, uint8_t direction){
+void MAKERphone::addCall(String number, String contact, uint32_t dateTime, int duration, uint8_t direction)
+{
 	File file = SD.open("/.core/call_log.json", "r");
-	Serial.print("Direction of call: "); Serial.println(direction);
-	if(file.size() < 2){
+	Serial.print("Direction of call: ");
+	Serial.println(direction);
+	if (file.size() < 2)
+	{
 		file.close();
 		// jb.clear();
-		JsonArray& jarr = jb.createArray();
+		JsonArray &jarr = jb.createArray();
 		delay(10);
 		File file1 = SD.open("/.core/call_log.json", "w");
 		jarr.prettyPrintTo(file1);
 		file1.close();
 		file = SD.open("/.core/call_log.json", "r");
-		while(!file)
+		while (!file)
 		{
 			file = SD.open("/.core/call_log.json", "r");
 		}
 	}
 
 	// jb.clear();
-	JsonArray& jarr = jb.parseArray(file);
+	JsonArray &jarr = jb.parseArray(file);
 	file.close();
-	if(jarr.size() > 39)
+	if (jarr.size() > 39)
 	{
 		Serial.println("call log limit reached");
 		jarr.remove(0);
@@ -2397,7 +2399,7 @@ void MAKERphone::addCall(String number, String contact, uint32_t dateTime, int d
 		file.close();
 	}
 
-	JsonObject& new_item = jb.createObject();
+	JsonObject &new_item = jb.createObject();
 	new_item["number"] = number.c_str();
 	new_item["contact"] = contact.c_str();
 	new_item["dateTime"] = dateTime;
@@ -2409,14 +2411,15 @@ void MAKERphone::addCall(String number, String contact, uint32_t dateTime, int d
 	jarr.prettyPrintTo(file1);
 	file1.close();
 }
-void MAKERphone::saveMessage(String text, String contact, String number, bool isRead, bool direction){
+void MAKERphone::saveMessage(String text, String contact, String number, bool isRead, bool direction)
+{
 	File file = SD.open("/.core/messages.json", "r");
-	while(!file)
+	while (!file)
 		Serial.println("Messages ERROR");
 	jb.clear();
-	JsonArray& messages = jb.parseArray(file);
+	JsonArray &messages = jb.parseArray(file);
 	file.close();
-	if(messages.size() > 34)
+	if (messages.size() > 34)
 	{
 		Serial.println("SMS limit reached");
 		messages.remove(0);
@@ -2426,7 +2429,7 @@ void MAKERphone::saveMessage(String text, String contact, String number, bool is
 	}
 	messages.prettyPrintTo(Serial);
 	delay(1);
-	JsonObject& new_item = jb.createObject();
+	JsonObject &new_item = jb.createObject();
 	updateTimeRTC();
 	new_item["number"] = number;
 	new_item["contact"] = contact;
@@ -2450,9 +2453,9 @@ void MAKERphone::checkSim()
 	Serial.println(input);
 	uint32_t timeoutMillis = millis();
 
-	while (input.indexOf("+CPIN:") == -1 && input.indexOf("NOT INSERTED") == -1
-	&& input.indexOf("not inserted") == -1 && input.indexOf("ERROR") == -1) {
-		if(millis() - timeoutMillis >= 2500)
+	while (input.indexOf("+CPIN:") == -1 && input.indexOf("NOT INSERTED") == -1 && input.indexOf("not inserted") == -1 && input.indexOf("ERROR") == -1)
+	{
+		if (millis() - timeoutMillis >= 2500)
 		{
 			simInserted = 0;
 			return;
@@ -2462,23 +2465,21 @@ void MAKERphone::checkSim()
 		input = waitForOK();
 		Serial.println(input);
 	}
-	if(input.indexOf("busy") != -1 && simBusyCounter < 5)
+	if (input.indexOf("busy") != -1 && simBusyCounter < 5)
 	{
 		simBusyCounter++;
 		delay(100);
 		checkSim();
 		return;
 	}
-	if (input.indexOf("NOT READY", input.indexOf("+CPIN:")) != -1 || (input.indexOf("ERROR") != -1 && input.indexOf("+CPIN:") == -1)
-		|| input.indexOf("NOT INSERTED") != -1 || input.indexOf("not inserted", input.indexOf("+CPIN")) != -1
-		|| input.indexOf("failure") != -1)
+	if (input.indexOf("NOT READY", input.indexOf("+CPIN:")) != -1 || (input.indexOf("ERROR") != -1 && input.indexOf("+CPIN:") == -1) || input.indexOf("NOT INSERTED") != -1 || input.indexOf("not inserted", input.indexOf("+CPIN")) != -1 || input.indexOf("failure") != -1)
 		simInserted = 0;
 	else
 	{
 		simInserted = 1;
 		if (input.indexOf("SIM PIN") != -1)
 			enterPin();
-		if(input.indexOf("SIM PUK") != -1)
+		if (input.indexOf("SIM PUK") != -1)
 			enterPUK();
 	}
 	simBusyCounter = 0;
@@ -2489,7 +2490,7 @@ void MAKERphone::enterPin()
 	String pinBuffer = "";
 	String reply = "";
 	uint32_t color = TFT_BLACK;
-	if(backgroundColors[backgroundIndex] == TFT_BLACK)
+	if (backgroundColors[backgroundIndex] == TFT_BLACK)
 		color = TFT_WHITE;
 	while (reply.indexOf("+SPIC:") == -1)
 	{
@@ -2518,7 +2519,7 @@ void MAKERphone::enterPin()
 		display.print("Confirm");
 		display.setCursor(5, 85);
 		String temp = "Remaining attempts: ";
-		temp+=timesRemaining;
+		temp += timesRemaining;
 		display.printCenter(temp);
 
 		key = buttons.getKey(); //BUTTONSREFRESH
@@ -2527,22 +2528,24 @@ void MAKERphone::enterPin()
 		else if (key != NO_KEY && isDigit(key) && pinBuffer.length() != 4)
 			pinBuffer += key;
 
-		if ((buttons.released(BTN_A) || mp.buttons.released(BTN_FUN_RIGHT)) && pinBuffer.length() == 4)//enter PIN
+		if ((buttons.released(BTN_A) || mp.buttons.released(BTN_FUN_RIGHT)) && pinBuffer.length() == 4) //enter PIN
 		{
 			reply = "";
 			Serial1.print(F("AT+CPIN=\""));
 			Serial1.print(pinBuffer);
 			Serial1.println("\"");
-			while (!Serial1.available());
+			while (!Serial1.available())
+				;
 			while (reply.indexOf("+CPIN: READY") == -1 && reply.indexOf("ERROR") == -1)
-				reply= Serial1.readString();
+				reply = Serial1.readString();
 			display.fillScreen(backgroundColors[backgroundIndex]);
 			display.setCursor(28, 52);
 			display.setTextFont(2);
 			if (reply.indexOf("+CPIN: READY") != -1)
 			{
 				display.printCenter("PIN OK :)");
-				while (!update());
+				while (!update())
+					;
 				delay(1000);
 				break;
 			}
@@ -2551,9 +2554,10 @@ void MAKERphone::enterPin()
 				timesRemaining--;
 				pinBuffer = "";
 				display.printCenter("Wrong PIN :(");
-				while (!update());
+				while (!update())
+					;
 				delay(2000);
-				if(timesRemaining == 0)
+				if (timesRemaining == 0)
 				{
 					enterPUK();
 					break;
@@ -2571,7 +2575,7 @@ void MAKERphone::enterPUK()
 	String pukBuffer = "";
 	String reply = "";
 	uint32_t color = TFT_BLACK;
-	if(backgroundColors[backgroundIndex] == TFT_BLACK)
+	if (backgroundColors[backgroundIndex] == TFT_BLACK)
 		color = TFT_WHITE;
 	while (reply.indexOf("+SPIC:") == -1)
 	{
@@ -2602,7 +2606,7 @@ void MAKERphone::enterPUK()
 		display.print("Confirm");
 		display.setCursor(5, 85);
 		String temp = "Remaining attempts: ";
-		temp+=timesRemaining;
+		temp += timesRemaining;
 		display.printCenter(temp);
 
 		key = buttons.getKey(); //BUTTONSREFRESH
@@ -2611,15 +2615,16 @@ void MAKERphone::enterPUK()
 		else if (key != NO_KEY && isDigit(key) && pukBuffer.length() != 8)
 			pukBuffer += key;
 
-		if ((buttons.released(BTN_A) || buttons.released(BTN_FUN_RIGHT)) && pukBuffer.length() == 8)//enter PUK
+		if ((buttons.released(BTN_A) || buttons.released(BTN_FUN_RIGHT)) && pukBuffer.length() == 8) //enter PUK
 		{
 			reply = "";
 			Serial1.print(F("AT+CPIN=\""));
 			Serial1.print(pukBuffer);
 			Serial1.println("\", \"0000\"");
-			while (!Serial1.available());
+			while (!Serial1.available())
+				;
 			while (reply.indexOf("+CPIN: READY") == -1 && reply.indexOf("ERROR") == -1)
-				reply= Serial1.readString();
+				reply = Serial1.readString();
 			Serial.println(reply);
 			delay(5);
 			display.fillScreen(backgroundColors[backgroundIndex]);
@@ -2628,7 +2633,8 @@ void MAKERphone::enterPUK()
 			if (reply.indexOf("+CPIN: READY") != -1)
 			{
 				display.printCenter("PUK OK :)");
-				while (!update());
+				while (!update())
+					;
 				delay(1000);
 				String pinBuffer = "";
 				while (1)
@@ -2648,22 +2654,22 @@ void MAKERphone::enterPUK()
 					display.setCursor(110, 112);
 					display.print("Confirm");
 
-
 					key = buttons.getKey(); //BUTTONSREFRESH
 					if (buttons.released(BTN_FUN_LEFT) && pinBuffer != "")
 						pinBuffer.remove(pinBuffer.length() - 1);
 					else if (key != NO_KEY && isDigit(key) && pinBuffer.length() != 4)
 						pinBuffer += key;
 
-					if ((buttons.released(BTN_A) || buttons.released(BTN_FUN_RIGHT)) && pinBuffer.length() == 4)//enter PIN
+					if ((buttons.released(BTN_A) || buttons.released(BTN_FUN_RIGHT)) && pinBuffer.length() == 4) //enter PIN
 					{
 						reply = "";
 						Serial1.print(F("AT+CPWD= \"SC\",\"0000\", \""));
 						Serial1.print(pinBuffer);
 						Serial1.println("\"");
-						while (!Serial1.available());
+						while (!Serial1.available())
+							;
 						while (reply.indexOf("OK", reply.indexOf("AT+CPWD")) == -1)
-							reply = Serial1.readString();						
+							reply = Serial1.readString();
 						break;
 					}
 					update();
@@ -2676,7 +2682,8 @@ void MAKERphone::enterPUK()
 				timesRemaining--;
 				pukBuffer = "";
 				display.printCenter("Wrong PUK :(");
-				while (!update());
+				while (!update())
+					;
 				delay(2000);
 			}
 		}
@@ -2696,24 +2703,25 @@ String MAKERphone::textInput(String buffer, int16_t length)
 			textPointer--;
 		buffer.remove(buffer.length() - 1);
 	}
-	else if(key == '*')
+	else if (key == '*')
 	{
 		if (textPointer != buffer.length())
 			textPointer++;
 		textPointer++;
-		buffer+=' ';
+		buffer += ' ';
 	}
 
-	if(textLimitFlag && buffer.length() == length)
+	if (textLimitFlag && buffer.length() == length)
 		return buffer;
 	else
 		textLimitFlag = 0;
 
-	if(length == -1 || length >= buffer.length()){
-		ret = multi_tap(key);// Feed the key press to the multi_tap function.
+	if (length == -1 || length >= buffer.length())
+	{
+		ret = multi_tap(key); // Feed the key press to the multi_tap function.
 		if ((ret & 256) != 0) // If this is non-zero, we got a key. Handle some special keys or just print the key on screen
 		{
-			if(buffer.length() == length)
+			if (buffer.length() == length)
 			{
 				textLimitFlag = 1;
 				return buffer;
@@ -2729,9 +2737,9 @@ String MAKERphone::textInput(String buffer, int16_t length)
 				buffer[buffer.length() - 1] = char(lowByte(ret));
 		}
 	}
-	if(buffer.length() > length)
+	if (buffer.length() > length)
 	{
-		buffer = buffer.substring(0,length);
+		buffer = buffer.substring(0, length);
 		textPointer--;
 	}
 	return buffer;
@@ -2742,17 +2750,16 @@ int MAKERphone::multi_tap(byte key)
 	static byte prevKeyPress = NO_KEY, cyclicPtr = 0;
 	static unsigned long prevKeyMillis = 0;
 	static const char multi_tap_mapping[10][map_width] = {
-		{'0','#','$','.','?','"','&'},
-		{'1','+','-','*','/','\'',':'},
-		{'A','B','C','2','!',';','<'},
-		{'D','E','F','3','%','[','='},
-		{'G','H','I','4','(','\\','>'},
-		{'J','K','L','5',')',']','^'},
-		{'M','N','O','6','@','_','`'},
-		{'P','Q','R','S','7','{','|'},
-		{'T','U','V','8',',','}','~'},
-		{'W','X','Y','Z','9',' ',0}
-	};
+		{'0', '#', '$', '.', '?', '"', '&'},
+		{'1', '+', '-', '*', '/', '\'', ':'},
+		{'A', 'B', 'C', '2', '!', ';', '<'},
+		{'D', 'E', 'F', '3', '%', '[', '='},
+		{'G', 'H', 'I', '4', '(', '\\', '>'},
+		{'J', 'K', 'L', '5', ')', ']', '^'},
+		{'M', 'N', 'O', '6', '@', '_', '`'},
+		{'P', 'Q', 'R', 'S', '7', '{', '|'},
+		{'T', 'U', 'V', '8', ',', '}', '~'},
+		{'W', 'X', 'Y', 'Z', '9', ' ', 0}};
 	if (key == RESET_MTP) // Received reset command. Flush everything and get ready for restart.
 	{
 		upperCase = true;
@@ -2789,7 +2796,8 @@ int MAKERphone::multi_tap(byte key)
 				if (prevKeyPress != NO_KEY)
 				{
 					char temp1 = multi_tap_mapping[prevKeyPress - '0'][cyclicPtr];
-					if ((!upperCase) && (temp1 >= 'A') && (temp1 <= 'Z')) temp1 += 'a' - 'A';
+					if ((!upperCase) && (temp1 >= 'A') && (temp1 <= 'Z'))
+						temp1 += 'a' - 'A';
 					cyclicPtr = 0;
 					prevKeyMillis = 0;
 					switch (key)
@@ -2808,7 +2816,7 @@ int MAKERphone::multi_tap(byte key)
 						prevKeyPress = NO_KEY; // Clear the buffer.
 						break;
 					}
-					return(256 + (unsigned int)(temp1));
+					return (256 + (unsigned int)(temp1));
 				}
 				else
 				{
@@ -2843,58 +2851,66 @@ int MAKERphone::multi_tap(byte key)
 			{
 				char temp1;
 				cyclicPtr++;
-				if ((multi_tap_mapping[key - '0'][cyclicPtr] == 0) || (cyclicPtr == map_width)) cyclicPtr = 0; //Cycle key
+				if ((multi_tap_mapping[key - '0'][cyclicPtr] == 0) || (cyclicPtr == map_width))
+					cyclicPtr = 0; //Cycle key
 				prevKeyMillis = millis();
 				temp1 = multi_tap_mapping[key - '0'][cyclicPtr];
-				if ((!upperCase) && (temp1 >= 'A') && (temp1 <= 'Z')) temp1 += 'a' - 'A';
+				if ((!upperCase) && (temp1 >= 'A') && (temp1 <= 'Z'))
+					temp1 += 'a' - 'A';
 				return ((unsigned int)(temp1));
 			}
 			else
 			{
 				char temp1 = multi_tap_mapping[prevKeyPress - '0'][cyclicPtr];
-				if ((!upperCase) && (temp1 >= 'A') && (temp1 <= 'Z')) temp1 += 'a' - 'A';
+				if ((!upperCase) && (temp1 >= 'A') && (temp1 <= 'Z'))
+					temp1 += 'a' - 'A';
 				prevKeyPress = key;
 				cyclicPtr = 0;
 				prevKeyMillis = millis();
 				//Print key on cursor+1
-				return(256 + (unsigned int)(temp1));
+				return (256 + (unsigned int)(temp1));
 			}
 		}
 		else
 		{
 			char temp1 = multi_tap_mapping[key - '0'][cyclicPtr];
-			if ((!upperCase) && (temp1 >= 'A') && (temp1 <= 'Z')) temp1 += 'a' - 'A';
+			if ((!upperCase) && (temp1 >= 'A') && (temp1 <= 'Z'))
+				temp1 += 'a' - 'A';
 			prevKeyPress = key;
 			prevKeyMillis = millis();
 			cyclicPtr = 0;
 			return ((unsigned int)(temp1));
 		}
-
 	}
 	else // No key is pressed at this iteration.
 	{
-		if (prevKeyPress == NO_KEY) return 0; // No key was previously pressed.
+		if (prevKeyPress == NO_KEY)
+			return 0;											 // No key was previously pressed.
 		else if (millis() - prevKeyMillis < multi_tap_threshold) // Key was pressed previously but within threshold
 		{
 			char temp1 = multi_tap_mapping[prevKeyPress - '0'][cyclicPtr];
-			if ((!upperCase) && (temp1 >= 'A') && (temp1 <= 'Z')) temp1 += 'a' - 'A';
-			return((unsigned int)(temp1));
+			if ((!upperCase) && (temp1 >= 'A') && (temp1 <= 'Z'))
+				temp1 += 'a' - 'A';
+			return ((unsigned int)(temp1));
 		}
 		else // Key was pressed previously and threshold has passed
 		{
 			char temp1 = multi_tap_mapping[prevKeyPress - '0'][cyclicPtr];
-			if ((!upperCase) && (temp1 >= 'A') && (temp1 <= 'Z')) temp1 += 'a' - 'A';
+			if ((!upperCase) && (temp1 >= 'A') && (temp1 <= 'Z'))
+				temp1 += 'a' - 'A';
 			prevKeyPress = NO_KEY;
 			cyclicPtr = 0;
-			return(256 + (unsigned int)(temp1));
+			return (256 + (unsigned int)(temp1));
 		}
 	}
 	return 0;
 }
-void MAKERphone::lockscreen() {
+void MAKERphone::lockscreen()
+{
 	dataRefreshFlag = 1;
-    bool blinkState = 0;
-    // bool goOut = 0;
+	bool blinkState = 0;
+	uint8_t altBlinkState = 0; //emergency call/hold to unlock switcher
+							   // bool goOut = 0;
 	uint32_t elapsedMillis = millis();
 	// FastLED.clear();
 	inLockScreen = 1;
@@ -2909,17 +2925,17 @@ void MAKERphone::lockscreen() {
 		//Hour shadow
 		display.setTextColor(TFT_DARKGREY);
 		if (clockHour == 11)
-			display.setCursor(10*2, 28*2);
+			display.setCursor(10 * 2, 28 * 2);
 		else if (clockHour % 10 == 1 || (int)clockHour / 10 == 1)
-			display.setCursor(7*2, 28*2);
+			display.setCursor(7 * 2, 28 * 2);
 		else
-			display.setCursor(4*2, 28*2);
+			display.setCursor(4 * 2, 28 * 2);
 		if (clockHour < 10)
 			display.print("0");
 		display.print(clockHour);
 
 		//minute shadow
-		display.setCursor(36*2, 28*2);
+		display.setCursor(36 * 2, 28 * 2);
 		if (clockMinute < 10)
 			display.print("0");
 		display.print(clockMinute);
@@ -2927,23 +2943,23 @@ void MAKERphone::lockscreen() {
 		//Hour black
 		display.setTextColor(TFT_BLACK);
 		if (clockHour == 11)
-			display.setCursor(9*2, 27*2);
+			display.setCursor(9 * 2, 27 * 2);
 		else if (clockHour % 10 == 1 || (int)clockHour / 10 == 1)
-			display.setCursor(6*2, 27*2);
+			display.setCursor(6 * 2, 27 * 2);
 		else
-			display.setCursor(3*2, 27*2);
+			display.setCursor(3 * 2, 27 * 2);
 		if (clockHour < 10)
 			display.print("0");
 		display.print(clockHour);
 
 		//Minute black
-		display.setCursor(35*2, 27*2);
+		display.setCursor(35 * 2, 27 * 2);
 		if (clockMinute < 10)
 			display.print("0");
 		display.print(clockMinute);
 
-		display.setTextSize(1*2);
-		display.setCursor(60*2, 19*2);
+		display.setTextSize(1 * 2);
+		display.setCursor(60 * 2, 19 * 2);
 		display.setTextWrap(false);
 		if (clockDay < 10)
 			display.print("0");
@@ -2952,17 +2968,17 @@ void MAKERphone::lockscreen() {
 		if (clockMonth < 10)
 			display.print("0");
 		display.print(clockMonth);
-		display.setCursor(62*2, 25*2);
+		display.setCursor(62 * 2, 25 * 2);
 		display.print(clockYear);
 		/*display.setTextSize(2);
 		display.setCursor(10, 50);
 		display.print("12:00");*/
 		uint8_t helper = 11;
-		if(sim_module_version == 255)
+		if (sim_module_version == 255)
 			helper = 1;
-		if (simInserted && !airplaneMode && sim_module_version != 255 )
+		if (simInserted && !airplaneMode && sim_module_version != 255)
 		{
-			if(networkRegistered == 1 || networkRegistered == 5)
+			if (networkRegistered == 1 || networkRegistered == 5)
 			{
 
 				if (signalStrength <= 3)
@@ -2979,15 +2995,15 @@ void MAKERphone::lockscreen() {
 			else
 				display.drawBitmap(2, 2, signalErrorIcon, TFT_BLACK, 2);
 		}
-		else if(!simInserted && !airplaneMode && sim_module_version != 255)
+		else if (!simInserted && !airplaneMode && sim_module_version != 255)
 			display.drawBitmap(2, 2, noSimIcon, TFT_BLACK, 2);
-		else if(airplaneMode)
+		else if (airplaneMode)
 		{
 			display.drawBitmap(2, 2, airplaneModeIcon, TFT_BLACK, 2);
 		}
 		if (ringVolume == 0)
 		{
-			display.drawBitmap(helper*2, 2, silentModeIcon, TFT_BLACK, 2);
+			display.drawBitmap(helper * 2, 2, silentModeIcon, TFT_BLACK, 2);
 			helper += 10;
 		}
 		//display.drawBitmap(31, 1, missedcall);
@@ -3005,53 +3021,51 @@ void MAKERphone::lockscreen() {
 		// 		display.drawBitmap(helper * 2, 2, BToffIcon, TFT_BLACK, 2);
 		// 	helper += 10;
 		// }
-		
 
-		if(!SDinsertedFlag)
+		if (!SDinsertedFlag)
 		{
 			display.drawBitmap(helper * 2, 2, noSDIcon, TFT_BLACK, 2);
-			helper+=10;
+			helper += 10;
 		}
 		display.setTextFont(2);
 		display.setTextSize(1);
-		display.setCursor(helper*2, 4);
-		if(carrierName != "" && (networkRegistered == 1 || networkRegistered == 5))
+		display.setCursor(helper * 2, 4);
+		if (carrierName != "" && (networkRegistered == 1 || networkRegistered == 5))
 		{
 			// display.setFreeFont(TT1);
 			// display.setTextSize(2);
 			// display.setCursor(helper*2, 15);
 
-			
 			display.print(carrierName);
 		}
-		else if(simInserted && !airplaneMode && (carrierName == "" || !(networkRegistered == 1 || networkRegistered == 5)))
+		else if (simInserted && !airplaneMode && (carrierName == "" || !(networkRegistered == 1 || networkRegistered == 5)))
 			display.print("loading...");
-		else if(carrierName == "" && !simInserted && sim_module_version == 255)
-			display.print("No module");	
+		else if (carrierName == "" && !simInserted && sim_module_version == 255)
+			display.print("No module");
 		// display.setCursor(60, 2);
 		// display.println(simVoltage);
-		if(!digitalRead(CHRG_INT))
+		if (!digitalRead(CHRG_INT))
 			display.drawBitmap(148, 2, batteryChargingIcon, TFT_BLACK, 2);
 		else
 		{
 			//y = -316139 + 250.3763*x - 0.06612874*x^2 + 0.000005825959*x^3
 			//y - percentage(%), x - voltage(V)
-			double percentage = -316139 + (250.3763*batteryVoltage) - (0.06612874*batteryVoltage*batteryVoltage) + (0.000005825959*batteryVoltage*batteryVoltage*batteryVoltage);
-			
-			if(percentage > 100)
+			double percentage = -316139 + (250.3763 * batteryVoltage) - (0.06612874 * batteryVoltage * batteryVoltage) + (0.000005825959 * batteryVoltage * batteryVoltage * batteryVoltage);
+
+			if (percentage > 100)
 			{
 				// Serial.print("Voltage: ");
-				
+
 				percentage = 100;
 			}
-			if(percentage < 0)
+			if (percentage < 0)
 				percentage = 0;
 			display.setTextFont(2);
 			display.setTextSize(1);
 			display.setTextColor(TFT_BLACK);
 			display.setCursor(120, 2);
-			percentage = round(percentage/10);
-			if(percentage == 10)
+			percentage = round(percentage / 10);
+			if (percentage == 10)
 				display.setCursor(110, 2);
 
 			display.printf("%d", (int)percentage * 10);
@@ -3069,26 +3083,31 @@ void MAKERphone::lockscreen() {
 			else if (batteryVoltage < 3600)
 				display.drawBitmap(148, 2, batteryEmptyIcon, TFT_BLACK, 2);
 		}
-		
+
 		uint8_t temp = sizeof(notificationTypeList);
-		for(int i = 0; i< sizeof(notificationTypeList);i++)
+		for (int i = 0; i < sizeof(notificationTypeList); i++)
 		{
-			if(notificationTypeList[i] == 0)
+			if (notificationTypeList[i] == 0)
 			{
 				temp = i;
 				break;
 			}
 		}
-		if(temp > 0)
-			drawNotificationWindow(64,temp-1);
-		if(temp > 1)
-			drawNotificationWindow(88,temp-2);
+		if (temp > 0)
+			drawNotificationWindow(64, temp - 1);
+		if (temp > 1)
+			drawNotificationWindow(88, temp - 2);
 		display.setFreeFont(TT1);
 		display.setTextSize(4);
-		if (millis() - elapsedMillis >= 500) {
+		if (millis() - elapsedMillis >= 500)
+		{
 			elapsedMillis = millis();
 			blinkState = !blinkState;
-			if (clockYear%100 != 4 && clockYear%100 != 80)
+			if (blinkState)
+				altBlinkState++;
+			if (altBlinkState >= 3)
+				altBlinkState = 0;
+			if (clockYear % 100 != 4 && clockYear % 100 != 80)
 				updateTimeRTC();
 		}
 		if (blinkState == 1)
@@ -3097,7 +3116,15 @@ void MAKERphone::lockscreen() {
 			display.setTextFont(2);
 			display.setTextSize(1);
 			display.setTextColor(TFT_BLACK);
-			display.print("Hold \"#\" to unlock");
+
+			if (altBlinkState >= 2)
+			{
+				display.print("Hold \"*\" for emergency");
+			}
+			else
+			{
+				display.print("Hold \"#\" to unlock");
+			}
 			display.setTextSize(6);
 			display.setTextColor(TFT_DARKGREY);
 			display.setFreeFont(TT1);
@@ -3107,17 +3134,16 @@ void MAKERphone::lockscreen() {
 			display.setCursor(56, 54);
 			display.print(":");
 		}
-
-
-		if(buttons.timeHeld(BTN_HASHTAG) < 5 && buttons.timeHeld(BTN_HASHTAG) > 0)
-		{ 
+		if (buttons.timeHeld(BTN_HASHTAG) < 5 && buttons.timeHeld(BTN_HASHTAG) > 0)
+		{
 			display.setTextFont(2);
 			display.setTextSize(1);
 			display.fillRect(0, 112, display.width(), 16, backgroundColors[backgroundIndex]);
 			display.setCursor(2, 111);
 			display.print("Unlocking");
 		}
-		if (buttons.timeHeld(BTN_HASHTAG) >= 5 && buttons.timeHeld(BTN_HASHTAG) < 12) {
+		if (buttons.timeHeld(BTN_HASHTAG) >= 5 && buttons.timeHeld(BTN_HASHTAG) < 12)
+		{
 			display.fillRect(0, 112, display.width(), 16, backgroundColors[backgroundIndex]);
 			display.setCursor(2, 111);
 			display.setTextFont(2);
@@ -3170,7 +3196,7 @@ void MAKERphone::lockscreen() {
 			leds[3] = CRGB::Red;
 			leds[4] = CRGB::Red;
 		}
-		else if(buttons.timeHeld(BTN_HASHTAG) >= 30)
+		else if (buttons.timeHeld(BTN_HASHTAG) >= 30)
 		{
 			// while(!update());
 			buttons.holdForUnlock = 1;
@@ -3179,13 +3205,87 @@ void MAKERphone::lockscreen() {
 			display.setTextFont(2);
 			return;
 		}
+		/*--------------------------------------------emergency call start-------------------------------------------------*/
+		if (buttons.timeHeld(BTN_ASTERISK) < 5 && buttons.timeHeld(BTN_ASTERISK) > 0)
+		{
+			display.setTextFont(2);
+			display.setTextSize(1);
+			display.fillRect(0, 112, display.width(), 16, backgroundColors[backgroundIndex]);
+			display.setCursor(2, 111);
+			display.print("Emergency");
+		}
+		if (buttons.timeHeld(BTN_ASTERISK) >= 5 && buttons.timeHeld(BTN_ASTERISK) < 12)
+		{
+			display.fillRect(0, 112, display.width(), 16, backgroundColors[backgroundIndex]);
+			display.setCursor(2, 111);
+			display.setTextFont(2);
+			display.setTextSize(1);
+			display.print("Emergency *");
+
+			leds[0] = CRGB::Red;
+			leds[7] = CRGB::Red;
+			// FastLED.show();
+		}
+		else if (buttons.timeHeld(BTN_ASTERISK) >= 12 && buttons.timeHeld(BTN_ASTERISK) < 18)
+		{
+			display.fillRect(0, 112, display.width(), 16, backgroundColors[backgroundIndex]);
+			display.setCursor(2, 111);
+			display.setTextFont(2);
+			display.setTextSize(1);
+			display.print("Emergency * *");
+			leds[0] = CRGB::Red;
+			leds[7] = CRGB::Red;
+			leds[1] = CRGB::Red;
+			leds[6] = CRGB::Red;
+		}
+		else if (buttons.timeHeld(BTN_ASTERISK) >= 18 && buttons.timeHeld(BTN_ASTERISK) < 24)
+		{
+			display.fillRect(0, 112, display.width(), 16, backgroundColors[backgroundIndex]);
+			display.setCursor(2, 111);
+			display.setTextFont(2);
+			display.setTextSize(1);
+			display.print("Emergency * * *");
+			leds[0] = CRGB::Red;
+			leds[7] = CRGB::Red;
+			leds[1] = CRGB::Red;
+			leds[6] = CRGB::Red;
+			leds[2] = CRGB::Red;
+			leds[5] = CRGB::Red;
+		}
+		else if (buttons.timeHeld(BTN_ASTERISK) >= 24 && buttons.timeHeld(BTN_ASTERISK) < 30)
+		{
+			display.fillRect(0, 112, display.width(), 16, backgroundColors[backgroundIndex]);
+			display.setCursor(2, 111);
+			display.setTextFont(2);
+			display.setTextSize(1);
+			display.print("Emergency * * * *");
+			leds[0] = CRGB::Red;
+			leds[7] = CRGB::Red;
+			leds[1] = CRGB::Red;
+			leds[6] = CRGB::Red;
+			leds[2] = CRGB::Red;
+			leds[5] = CRGB::Red;
+			leds[3] = CRGB::Red;
+			leds[4] = CRGB::Red;
+		}
+		else if (buttons.timeHeld(BTN_ASTERISK) >= 30)
+		{
+			// while(!update());
+			buttons.holdForUnlock = 1;
+			inLockScreen = 0;
+			emergencyCall();
+			display.setTextSize(1);
+			display.setTextFont(2);
+			return;
+		}
+		/*--------------------------------------------emergency call end-------------------------------------------------*/
 		update();
 	}
 }
 void MAKERphone::networkModuleInit()
 {
 	Serial.println("module inserted");
-	if(simInserted)
+	if (simInserted)
 		Serial.println("SIM INSERTED");
 	else
 		Serial.println("SIM NOT INSERTED");
@@ -3193,14 +3293,14 @@ void MAKERphone::networkModuleInit()
 	// updateTimeGSM();
 	Serial1.println(F("AT+CMEE=2"));
 	waitForOK();
-	if(sim_module_version == 1)
+	if (sim_module_version == 1)
 	{
 		Serial1.println(F("AT+CRSL=100"));
 		Serial1.println(F("AT+CLVL=100"));
 		Serial1.println(F("AT+CLTS=1")); //Enable local Timestamp mode (used for syncrhonising RTC with GSM time
 		Serial1.println(F("AT+IPR=9600"));
 	}
-	else if(sim_module_version == 0)
+	else if (sim_module_version == 0)
 	{
 		Serial1.println("AT+COUTGAIN=8");
 		waitForOK();
@@ -3230,37 +3330,45 @@ void MAKERphone::networkModuleInit()
 	Serial.println("Serial1 up and running...");
 }
 //JPEG drawing
-void MAKERphone::drawJpeg(String filename, int xpos, int ypos) {
+void MAKERphone::drawJpeg(String filename, int xpos, int ypos)
+{
 
-  Serial.println(F("==========================="));
-  Serial.print(F("Drawing file: ")); Serial.println(filename);
-  Serial.println(F("==========================="));
-  // Open the named file (the Jpeg decoder library will close it after rendering image)
-  File jpegFile = SD.open( filename);    // File handle reference for SPIFFS
-  //  File jpegFile = SD.open( filename, FILE_READ);  // or, file handle reference for SD library
-  if ( !jpegFile ) {
-    Serial.print(F("ERROR: File \"")); Serial.print(filename); Serial.println ("\" not found!");
-    return;
-  }
+	Serial.println(F("==========================="));
+	Serial.print(F("Drawing file: "));
+	Serial.println(filename);
+	Serial.println(F("==========================="));
+	// Open the named file (the Jpeg decoder library will close it after rendering image)
+	File jpegFile = SD.open(filename); // File handle reference for SPIFFS
+	//  File jpegFile = SD.open( filename, FILE_READ);  // or, file handle reference for SD library
+	if (!jpegFile)
+	{
+		Serial.print(F("ERROR: File \""));
+		Serial.print(filename);
+		Serial.println("\" not found!");
+		return;
+	}
 
-  // Use one of the three following methods to initialise the decoder:
-  //boolean decoded = JpegDec.decodeFsFile(jpegFile); // Pass a SPIFFS file handle to the decoder,
-  //boolean decoded = JpegDec.decodeSdFile(jpegFile); // or pass the SD file handle to the decoder,
-  boolean decoded = JpegDec.decodeSdFile(jpegFile);  // or pass the filename (leading / distinguishes SPIFFS files)
-  // Note: the filename can be a String or character array type
-  if (decoded) {
-    // print information about the image to the serial port
-    jpegInfo();
+	// Use one of the three following methods to initialise the decoder:
+	//boolean decoded = JpegDec.decodeFsFile(jpegFile); // Pass a SPIFFS file handle to the decoder,
+	//boolean decoded = JpegDec.decodeSdFile(jpegFile); // or pass the SD file handle to the decoder,
+	boolean decoded = JpegDec.decodeSdFile(jpegFile); // or pass the filename (leading / distinguishes SPIFFS files)
+	// Note: the filename can be a String or character array type
+	if (decoded)
+	{
+		// print information about the image to the serial port
+		jpegInfo();
 
-    // render the image onto the screen at given coordinates
-    jpegRender(xpos, ypos);
-  }
-  else {
-    Serial.println(F("Jpeg file format not supported!"));
-  }
-  jpegFile.close();
+		// render the image onto the screen at given coordinates
+		jpegRender(xpos, ypos);
+	}
+	else
+	{
+		Serial.println(F("Jpeg file format not supported!"));
+	}
+	jpegFile.close();
 }
-void MAKERphone::jpegRender(int xpos, int ypos) {
+void MAKERphone::jpegRender(int xpos, int ypos)
+{
 	Serial.println("JPEG render");
 	delay(5);
 
@@ -3341,47 +3449,57 @@ void MAKERphone::jpegRender(int xpos, int ypos) {
 
 		else if ((mcu_y + win_h) >= display.height())
 			JpegDec.abort();
+	}
 
-  }
+	// calculate how long it took to draw the image
+	drawTime = millis() - drawTime; // Calculate the time it took
 
-  // calculate how long it took to draw the image
-  drawTime = millis() - drawTime; // Calculate the time it took
-
-  // print the results to the serial port
-  Serial.print  ("Total render time was    : "); Serial.print(drawTime); Serial.println(" ms");
-  Serial.println("=====================================");
-
+	// print the results to the serial port
+	Serial.print("Total render time was    : ");
+	Serial.print(drawTime);
+	Serial.println(" ms");
+	Serial.println("=====================================");
 }
-void MAKERphone::jpegInfo() {
+void MAKERphone::jpegInfo()
+{
 
-  Serial.println(F("==============="));
-  Serial.println(F("JPEG image info"));
-  Serial.println(F("==============="));
-  Serial.print  (F("Width      :")); Serial.println(JpegDec.width);
-  Serial.print  (F("Height     :")); Serial.println(JpegDec.height);
-  Serial.print  (F("Components :")); Serial.println(JpegDec.comps);
-  Serial.print  (F("MCU / row  :")); Serial.println(JpegDec.MCUSPerRow);
-  Serial.print  (F("MCU / col  :")); Serial.println(JpegDec.MCUSPerCol);
-  Serial.print  (F("Scan type  :")); Serial.println(JpegDec.scanType);
-  Serial.print  (F("MCU width  :")); Serial.println(JpegDec.MCUWidth);
-  Serial.print  (F("MCU height :")); Serial.println(JpegDec.MCUHeight);
-  Serial.println(F("==============="));
-  Serial.println();
+	Serial.println(F("==============="));
+	Serial.println(F("JPEG image info"));
+	Serial.println(F("==============="));
+	Serial.print(F("Width      :"));
+	Serial.println(JpegDec.width);
+	Serial.print(F("Height     :"));
+	Serial.println(JpegDec.height);
+	Serial.print(F("Components :"));
+	Serial.println(JpegDec.comps);
+	Serial.print(F("MCU / row  :"));
+	Serial.println(JpegDec.MCUSPerRow);
+	Serial.print(F("MCU / col  :"));
+	Serial.println(JpegDec.MCUSPerCol);
+	Serial.print(F("Scan type  :"));
+	Serial.println(JpegDec.scanType);
+	Serial.print(F("MCU width  :"));
+	Serial.println(JpegDec.MCUWidth);
+	Serial.print(F("MCU height :"));
+	Serial.println(JpegDec.MCUHeight);
+	Serial.println(F("==============="));
+	Serial.println();
 }
-
 
 //settings operations
 void MAKERphone::saveSettings(bool debug)
 {
-	const char * path = "/.core/settings.json";
+	const char *path = "/.core/settings.json";
 	Serial.println("");
 	SD.remove(path);
 	jb.clear();
-	JsonObject& settings = jb.createObject();
+	JsonObject &settings = jb.createObject();
 	Serial.print("MIC GAIN: ");
 	Serial.println(micGain);
-	if (settings.success()) {
-		if(debug){
+	if (settings.success())
+	{
+		if (debug)
+		{
 			// Serial.print("wifi: ");
 			// Serial.println(settings["wifi"].as<bool>());
 			// Serial.print("bluetooth: ");
@@ -3410,33 +3528,36 @@ void MAKERphone::saveSettings(bool debug)
 		File file1 = SD.open(path, "w");
 		settings.prettyPrintTo(file1);
 		file1.close();
-	} else {
+	}
+	else
+	{
 		Serial.println("Error saving new settings");
 	}
-
 }
 void MAKERphone::loadSettings(bool debug)
 {
 	//create default system folders if not present
-	if(!SD.exists("/Music"))
+	if (!SD.exists("/Music"))
 		SD.mkdir("/Music");
-	if(!SD.exists("/Images"))
+	if (!SD.exists("/Images"))
 		SD.mkdir("/Images");
-	if(!SD.exists("/Video"))
+	if (!SD.exists("/Video"))
 		SD.mkdir("/Video");
-	if(!SD.exists("/Ringtones"))
+	if (!SD.exists("/Ringtones"))
 		SD.mkdir("/Ringtones");
-	if(!SD.exists("/.core"))
+	if (!SD.exists("/.core"))
 		SD.mkdir("/.core");
-	const char * path = "/.core/settings.json";
+	const char *path = "/.core/settings.json";
 	Serial.println("");
 	File file = SD.open(path);
 	jb.clear();
-	JsonObject& settings = jb.parseObject(file);
+	JsonObject &settings = jb.parseObject(file);
 	file.close();
 
-	if (settings.success()) {
-		if(debug){
+	if (settings.success())
+	{
+		if (debug)
+		{
 			// Serial.print("wifi: ");
 			// Serial.println(settings["wifi"].as<bool>());
 			// Serial.print("bluetooth: ");
@@ -3452,7 +3573,7 @@ void MAKERphone::loadSettings(bool debug)
 			Serial.print("notification: ");
 			Serial.println(settings["notification"].as<int>());
 			Serial.print("ringtone: ");
-			Serial.println(settings["ringtone"].as<char*>());
+			Serial.println(settings["ringtone"].as<char *>());
 		}
 		// wifi = settings["wifi"];
 		// bt = settings["bluetooth"];
@@ -3461,12 +3582,13 @@ void MAKERphone::loadSettings(bool debug)
 		sleepTime = settings["sleep_time"];
 		backgroundIndex = settings["background_color"];
 		notification = settings["notification"];
-		ringtone_path = String(settings["ringtone"].as<char*>());
+		ringtone_path = String(settings["ringtone"].as<char *>());
 		ringVolume = settings["ringVolume"];
 		mediaVolume = settings["mediaVolume"];
 		micGain = settings["micGain"];
-		         
-	} else {
+	}
+	else
+	{
 		Serial.println("Error loading new settings");
 		saveSettings();
 	}
@@ -3483,8 +3605,10 @@ void MAKERphone::applySettings()
 	// }
 	// else
 	// {
-	WiFi.disconnect(true); delay(10); // disable WIFI altogether
-	WiFi.mode(WIFI_MODE_NULL); delay(10);
+	WiFi.disconnect(true);
+	delay(10); // disable WIFI altogether
+	WiFi.mode(WIFI_MODE_NULL);
+	delay(10);
 	// }
 
 	// if(bt)
@@ -3492,13 +3616,13 @@ void MAKERphone::applySettings()
 	// else
 	btStop();
 
-
 	if (brightness == 0)
 		actualBrightness = 230;
 	else
 		actualBrightness = (5 - brightness) * 51;
 	ledcAnalogWrite(LEDC_CHANNEL, actualBrightness);
-	switch (sleepTime) { //interpreting value into actual numbers
+	switch (sleepTime)
+	{ //interpreting value into actual numbers
 	case 0:
 		sleepTimeActual = 0;
 		break;
@@ -3519,27 +3643,27 @@ void MAKERphone::applySettings()
 		break;
 	}
 	osc->setVolume(oscillatorVolumeList[mediaVolume]);
-	if(SDinsertedFlag)
+	if (SDinsertedFlag)
 	{
-		if(ringtone == nullptr)
-			ringtone = new MPTrack((char*)ringtone_path.c_str());
+		if (ringtone == nullptr)
+			ringtone = new MPTrack((char *)ringtone_path.c_str());
 		else
-			ringtone->reloadFile(((char*)ringtone_path.c_str()));
-		if(ringVolume == 0)
+			ringtone->reloadFile(((char *)ringtone_path.c_str()));
+		if (ringVolume == 0)
 			ringtone->setVolume(0);
 		else
 			ringtone->setVolume(map(ringVolume, 0, 14, 100, 300));
 	}
-	if(sim_module_version != 255)
+	if (sim_module_version != 255)
 	{
-		if(sim_module_version == 1)
+		if (sim_module_version == 1)
 		{
 			Serial1.print(F("AT+CMIC=0,"));
 			Serial1.println(micGain);
 		}
-		else if(sim_module_version == 0)
+		else if (sim_module_version == 0)
 		{
-			if(micGain > 8)
+			if (micGain > 8)
 				micGain = 8;
 			Serial1.print(F("AT+CMICGAIN="));
 			Serial1.println(micGain);
@@ -3548,41 +3672,41 @@ void MAKERphone::applySettings()
 
 		Serial1.println("AT+CFUN?");
 		String readOutput = "";
-		while(readOutput.indexOf("+CFUN:") == -1)
+		while (readOutput.indexOf("+CFUN:") == -1)
 			readOutput = waitForOK();
-		if(airplaneMode && readOutput.indexOf("+CFUN: 4") == -1)
+		if (airplaneMode && readOutput.indexOf("+CFUN: 4") == -1)
 			Serial1.println("AT+CFUN=4");
-		else if(!airplaneMode && readOutput.indexOf("+CFUN: 1") == -1)
+		else if (!airplaneMode && readOutput.indexOf("+CFUN: 1") == -1)
 			Serial1.println("AT+CFUN=1");
 	}
-	for(int i = 0; i < 4;i++)
+	for (int i = 0; i < 4; i++)
 	{
-		if(tracks[i] != nullptr)
+		if (tracks[i] != nullptr)
 		{
-			if(mediaVolume == 0)
+			if (mediaVolume == 0)
 				tracks[i]->setVolume(0);
 			else
 				tracks[i]->setVolume(map(mediaVolume, 0, 14, 100, 300));
 		}
-		if(oscs[i] != nullptr)
+		if (oscs[i] != nullptr)
 			oscs[i]->setVolume(oscillatorVolumeList[mediaVolume]);
 	}
 }
 
 //save manipulation
-JsonArray& MAKERphone::getJSONfromSAV(const char *path)
+JsonArray &MAKERphone::getJSONfromSAV(const char *path)
 {
 	String temp = readFile(path);
 	jb.clear();
-	JsonArray& json = jb.parseArray(temp);
+	JsonArray &json = jb.parseArray(temp);
 	return json;
 }
-void MAKERphone::saveJSONtoSAV(const char *path, JsonArray& json)
+void MAKERphone::saveJSONtoSAV(const char *path, JsonArray &json)
 {
-	while(!SD.begin(5, SPI, 8000000))
-        Serial.println("SD ERROR");
+	while (!SD.begin(5, SPI, 8000000))
+		Serial.println("SD ERROR");
 	File file = SD.open(path, "w");
-	if(file)
+	if (file)
 		json.prettyPrintTo(file);
 	else
 		Serial.println("SD ERROR");
@@ -3591,72 +3715,87 @@ void MAKERphone::saveJSONtoSAV(const char *path, JsonArray& json)
 }
 
 //Collision
-bool MAKERphone::collideRectRect(int16_t x1, int16_t y1, int16_t w1, int16_t h1, int16_t x2, int16_t y2, int16_t w2, int16_t h2) {
+bool MAKERphone::collideRectRect(int16_t x1, int16_t y1, int16_t w1, int16_t h1, int16_t x2, int16_t y2, int16_t w2, int16_t h2)
+{
 	return (x2 < x1 + w1 && x2 + w2 > x1 && y2 < y1 + h1 && y2 + h2 > y1);
 }
-bool MAKERphone::collidePointRect(int16_t pointX, int16_t pointY, uint16_t rectX, uint16_t rectY, uint16_t rectW, uint16_t rectH) {
+bool MAKERphone::collidePointRect(int16_t pointX, int16_t pointY, uint16_t rectX, uint16_t rectY, uint16_t rectW, uint16_t rectH)
+{
 	return (pointX >= rectX && pointX < rectX + rectW && pointY >= rectY && pointY < rectY + rectH);
 }
-bool MAKERphone::collideCircleCircle(int16_t centerX1, int16_t centerY1, int16_t r1, int16_t centerX2, int16_t centerY2, int16_t r2) {
+bool MAKERphone::collideCircleCircle(int16_t centerX1, int16_t centerY1, int16_t r1, int16_t centerX2, int16_t centerY2, int16_t r2)
+{
 	r1 = abs(r1);
 	r2 = abs(r2);
 	return (((centerX1 - centerX2) * (centerX1 - centerX2) + (centerY1 - centerY2) * (centerY1 - centerY2)) < (r1 + r2) * (r1 + r2));
 }
-bool MAKERphone::collidePointCircle(int16_t pointX, int16_t pointY, int16_t centerX, int16_t centerY, int16_t r) {
+bool MAKERphone::collidePointCircle(int16_t pointX, int16_t pointY, int16_t centerX, int16_t centerY, int16_t r)
+{
 	return (((pointX - centerX) * (pointX - centerX) + (pointY - centerY) * (pointY - centerY)) < abs(r) ^ 2);
 }
 
 //SD operations
-void MAKERphone::writeFile(const char * path, const char * message)
+void MAKERphone::writeFile(const char *path, const char *message)
 {
-	while (!SD.begin(5, SPI, 8000000));
+	while (!SD.begin(5, SPI, 8000000))
+		;
 	Serial.printf("Writing file: %s\n", path);
 
 	File file = SD.open(path);
-	if (!file) {
+	if (!file)
+	{
 		Serial.println("Failed to open file for writing");
 		return;
 	}
-	if (file.print(message)) {
+	if (file.print(message))
+	{
 		Serial.println("File written");
 	}
-	else {
+	else
+	{
 		Serial.println("Write failed");
 	}
 	file.close();
 }
-void MAKERphone::appendFile(const char * path, const char * message) {
+void MAKERphone::appendFile(const char *path, const char *message)
+{
 	Serial.printf("Appending to file: %s\n", path);
 
 	File file = SD.open(path);
-	if (!file) {
+	if (!file)
+	{
 		Serial.println("Failed to open file for appending");
 		return;
 	}
-	if (file.print(message)) {
+	if (file.print(message))
+	{
 		Serial.println("Message appended");
 		delay(5);
 	}
-	else {
+	else
+	{
 		Serial.println("Append failed");
 		delay(5);
 	}
 	file.close();
 }
-String MAKERphone::readFile(const char * path) {
-	while (!SD.begin(5, SPI, 8000000));
+String MAKERphone::readFile(const char *path)
+{
+	while (!SD.begin(5, SPI, 8000000))
+		;
 	Serial.printf("Reading file: %s\n", path);
-	String helper="";
+	String helper = "";
 	File file = SD.open(path);
-	if (!file) {
+	if (!file)
+	{
 		Serial.println("Failed to open file for reading");
 		return "";
 	}
 
 	Serial.print("Read from file: ");
-	while (file.available()) {
+	while (file.available())
+	{
 		helper += (char)file.read();
-
 	}
 	file.close();
 
@@ -3665,12 +3804,12 @@ String MAKERphone::readFile(const char * path) {
 void MAKERphone::takeScreenshot()
 {
 	Serial.println("HERE");
-	for(int i = 0; i < 4; i++)
+	for (int i = 0; i < 4; i++)
 	{
-		if(tracks[i] != nullptr)
+		if (tracks[i] != nullptr)
 		{
 			Serial.printf("%d track is playing: %d\n", i, tracks[i]->isPlaying());
-			if(tracks[i]->isPlaying())
+			if (tracks[i]->isPlaying())
 			{
 				currTracks[i] = tracks[i];
 				currTracks[i]->seek(tracks[i]->getSamplePos());
@@ -3696,22 +3835,23 @@ void MAKERphone::takeScreenshot()
 	// display.fillRect(15, 46, 132, 36, 0xC59F);
 	// display.setCursor(47, 55);
 	// display.printCenter("Taking screenshot");
-	while(!update());
+	while (!update())
+		;
 
 	char name[] = "/Images/screenshot_00.bmp";
 	while (!SD.begin(5, SPI, 8000000))
 		Serial.println("SD ERROR");
-	for (int i = 0; i < 100;i++)
+	for (int i = 0; i < 100; i++)
 	{
 		name[20] = i % 10 + '0';
 		name[19] = i / 10 + '0';
-		if(!SD.exists(name))
+		if (!SD.exists(name))
 			break;
 	}
 	Serial.println(name);
 	delay(5);
 	File file = SD.open(name, "w");
-	if(!file)
+	if (!file)
 	{
 		Serial.println("SD file error!");
 		return;
@@ -3719,19 +3859,19 @@ void MAKERphone::takeScreenshot()
 
 	uint8_t w = 160;
 	uint8_t h = 128;
-	int px[] = {255, 0, 255, 0, 255, 0
-	 };
+	int px[] = {255, 0, 255, 0, 255, 0};
 	bool debugPrint = 1;
-	unsigned char *img = NULL;          // image data
+	unsigned char *img = NULL; // image data
 	//  int filesize = 54 + 3 * w * h;      //  w is image width, h is image height
-	int filesize = 54 + 4 * w * h;      //  w is image width, h is image height
-	if (img) {
+	int filesize = 54 + 4 * w * h; //  w is image width, h is image height
+	if (img)
+	{
 		free(img);
 	}
-	img = (unsigned char *)malloc(3*w);
+	img = (unsigned char *)malloc(3 * w);
 	Serial.println(ESP.getFreeHeap());
 	delay(5);
-	memset(img,0,sizeof(img));        // not sure if I really need this; runs fine without...
+	memset(img, 0, sizeof(img)); // not sure if I really need this; runs fine without...
 	Serial.println(ESP.getFreeHeap());
 	delay(5);
 	// for (int y=0; y<h; y++) {
@@ -3769,31 +3909,31 @@ void MAKERphone::takeScreenshot()
 
 	// create file headers (also taken from above example)
 	unsigned char bmpFileHeader[14] = {
-	'B','M', 0,0,0,0, 0,0, 0,0, 54,0,0,0             };
+		'B', 'M', 0, 0, 0, 0, 0, 0, 0, 0, 54, 0, 0, 0};
 	unsigned char bmpInfoHeader[40] = {
-	40,0,0,0, 0,0,0,0, 0,0,0,0, 1,0, 24,0             };
+		40, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 24, 0};
 	unsigned char bmpPad[3] = {
-	0,0,0             };
+		0, 0, 0};
 
-	bmpFileHeader[ 2] = (unsigned char)(filesize    );
-	bmpFileHeader[ 3] = (unsigned char)(filesize>> 8);
-	bmpFileHeader[ 4] = (unsigned char)(filesize>>16);
-	bmpFileHeader[ 5] = (unsigned char)(filesize>>24);
+	bmpFileHeader[2] = (unsigned char)(filesize);
+	bmpFileHeader[3] = (unsigned char)(filesize >> 8);
+	bmpFileHeader[4] = (unsigned char)(filesize >> 16);
+	bmpFileHeader[5] = (unsigned char)(filesize >> 24);
 
-	bmpInfoHeader[ 4] = (unsigned char)(       w    );
-	bmpInfoHeader[ 5] = (unsigned char)(       w>> 8);
-	bmpInfoHeader[ 6] = (unsigned char)(       w>>16);
-	bmpInfoHeader[ 7] = (unsigned char)(       w>>24);
-	bmpInfoHeader[ 8] = (unsigned char)(       h    );
-	bmpInfoHeader[ 9] = (unsigned char)(       h>> 8);
-	bmpInfoHeader[10] = (unsigned char)(       h>>16);
-	bmpInfoHeader[11] = (unsigned char)(       h>>24);
+	bmpInfoHeader[4] = (unsigned char)(w);
+	bmpInfoHeader[5] = (unsigned char)(w >> 8);
+	bmpInfoHeader[6] = (unsigned char)(w >> 16);
+	bmpInfoHeader[7] = (unsigned char)(w >> 24);
+	bmpInfoHeader[8] = (unsigned char)(h);
+	bmpInfoHeader[9] = (unsigned char)(h >> 8);
+	bmpInfoHeader[10] = (unsigned char)(h >> 16);
+	bmpInfoHeader[11] = (unsigned char)(h >> 24);
 
 	// write the file (thanks forum!)
-	file.write(bmpFileHeader, sizeof(bmpFileHeader));    // write file header
-	file.write(bmpInfoHeader, sizeof(bmpInfoHeader));    // " info header
+	file.write(bmpFileHeader, sizeof(bmpFileHeader)); // write file header
+	file.write(bmpInfoHeader, sizeof(bmpInfoHeader)); // " info header
 
-	for (int i = h - 1; i >= 0; i--) 			  // iterate image array
+	for (int i = h - 1; i >= 0; i--) // iterate image array
 	{
 		// memset(img,0,sizeof(img));        // not sure if I really need this; runs fine without...
 		for (int x = 0; x < w; x++)
@@ -3817,8 +3957,6 @@ void MAKERphone::takeScreenshot()
 			// r = (r * 255) / 31;
 			// g = (g * 255) / 63;
 			// b = (b * 255) / 31;
-
-
 
 			//  r = rgb >> 16;
 			//  g = (rgb & 0x00ff00) >> 8;
@@ -3867,23 +4005,24 @@ void MAKERphone::takeScreenshot()
 	display.setCursor(47, 61);
 	display.printCenter("saved to SD!");
 	uint32_t tempMillis = millis();
-	while(millis() < tempMillis + 3000)
+	while (millis() < tempMillis + 3000)
 	{
 		update();
-		if(buttons.pressed(BTN_A) || buttons.pressed(BTN_B))
+		if (buttons.pressed(BTN_A) || buttons.pressed(BTN_B))
 		{
-			while(!buttons.released(BTN_A) && !buttons.released(BTN_B))
+			while (!buttons.released(BTN_A) && !buttons.released(BTN_B))
 				update();
 			break;
 		}
 	}
-	while(!update());
-	for(int i = 0; i < 4; i++)
+	while (!update())
+		;
+	for (int i = 0; i < 4; i++)
 	{
-		if(currTracks[i] != nullptr)
+		if (currTracks[i] != nullptr)
 		{
 			addTrack(currTracks[i]);
-			if(pausedTracks[i])
+			if (pausedTracks[i])
 				currTracks[i]->play();
 		}
 		currTracks[i] = nullptr;
@@ -3892,29 +4031,33 @@ void MAKERphone::takeScreenshot()
 }
 
 //Popups
-void MAKERphone::popup(String text, uint16_t duration) {
+void MAKERphone::popup(String text, uint16_t duration)
+{
 	popupText = text;
 	popupTotalTime = popupTimeLeft = duration + 16;
 }
 
-void MAKERphone::updatePopup() {
-	if (!popupTimeLeft) {
+void MAKERphone::updatePopup()
+{
+	if (!popupTimeLeft)
+	{
 		return;
 	}
 	uint8_t yOffset = 0;
-	if (popupTimeLeft >= popupTotalTime - 18) {
+	if (popupTimeLeft >= popupTotalTime - 18)
+	{
 		yOffset = (19 - (popupTotalTime - popupTimeLeft));
 	}
-	if (popupTimeLeft < 18) {
+	if (popupTimeLeft < 18)
+	{
 		yOffset = (19 - popupTimeLeft);
 	}
-	
-	
+
 	popupSprite.setTextColor(TFT_WHITE);
 	popupSprite.fillScreen(TFT_BLACK);
 	popupSprite.fillRect(0, yOffset, display.width(), 18, TFT_DARKGREY);
 	// popupSprite.fillRect(0, 18 - yOffset, display.width(), 2, TFT_BLACK);
-	if(yOffset == 0)
+	if (yOffset == 0)
 	{
 		popupSprite.setTextFont(2);
 		popupSprite.setTextSize(1);
@@ -3929,12 +4072,12 @@ void MAKERphone::homePopup(bool animation)
 {
 	bool tempArray[4];
 	Serial.println("HERE");
-	for(int i = 0; i < 4; i++)
+	for (int i = 0; i < 4; i++)
 	{
-		if(tracks[i] != nullptr)
+		if (tracks[i] != nullptr)
 		{
 			Serial.printf("%d track is playing: %d\n", i, tracks[i]->isPlaying());
-			if(tracks[i]->isPlaying())
+			if (tracks[i]->isPlaying())
 			{
 				currTracks[i] = tracks[i];
 				currTracks[i]->seek(tracks[i]->getSamplePos());
@@ -3972,23 +4115,23 @@ void MAKERphone::homePopup(bool animation)
 	// 	if(oscs[i] != nullptr)
 	// 		oscs[i]->stop();
 	// }
-	if(animation)
+	if (animation)
 	{
 		for (int i = 0; i < display.height(); i++)
 		{
 			display.drawFastHLine(0, i, display.width(), TFT_WHITE);
-			if(i % 4 == 0)
+			if (i % 4 == 0)
 				update();
 			// delayMicroseconds(750);
 		}
 	}
 	dataRefreshFlag = 1;
 	display.fillScreen(TFT_WHITE);
-	display.drawIcon(popupVolume,12,25,20,20,2);
-	display.drawIcon(popupExit,60,25,20,20,2);
-	display.drawIcon(popupScreenBrightness,108,25,20,20,2);
-	display.drawIcon(popupScreenshot,12,70,20,20,2);
-	display.drawIcon(popupPixelBrightness,108,70,20,20,2);
+	display.drawIcon(popupVolume, 12, 25, 20, 20, 2);
+	display.drawIcon(popupExit, 60, 25, 20, 20, 2);
+	display.drawIcon(popupScreenBrightness, 108, 25, 20, 20, 2);
+	display.drawIcon(popupScreenshot, 12, 70, 20, 20, 2);
+	display.drawIcon(popupPixelBrightness, 108, 70, 20, 20, 2);
 	uint8_t cursor = 1;
 	uint8_t scale = 2;
 	uint32_t blinkMillis = millis();
@@ -3996,71 +4139,68 @@ void MAKERphone::homePopup(bool animation)
 	uint8_t cursorState = 0;
 	dataRefreshFlag = 1;
 	String temp;
-	while(!buttons.released(BTN_B))
+	while (!buttons.released(BTN_B))
 	{
 		display.fillScreen(TFT_WHITE);
-		display.drawIcon(popupVolume,12,25,20,20,2);
-		display.drawIcon(popupExit,60,25,20,20,2);
-		display.drawIcon(popupScreenBrightness,108,25,20,20,2);
-		display.drawIcon(popupScreenshot,12,70,20,20,2);
-		display.drawIcon(popupPixelBrightness,108,70,20,20,2);
-		display.fillRect(0,0, 160,18, TFT_WHITE);
-		display.fillRect(0,114, 160,20, TFT_WHITE);
-
+		display.drawIcon(popupVolume, 12, 25, 20, 20, 2);
+		display.drawIcon(popupExit, 60, 25, 20, 20, 2);
+		display.drawIcon(popupScreenBrightness, 108, 25, 20, 20, 2);
+		display.drawIcon(popupScreenshot, 12, 70, 20, 20, 2);
+		display.drawIcon(popupPixelBrightness, 108, 70, 20, 20, 2);
+		display.fillRect(0, 0, 160, 18, TFT_WHITE);
+		display.fillRect(0, 114, 160, 20, TFT_WHITE);
 
 		//drawing the top icons
 		uint8_t helper = 11;
 		if (simInserted && !airplaneMode && (networkRegistered == 1 || networkRegistered == 5))
 		{
 			if (signalStrength <= 3)
-				display.drawBitmap(1*scale, 1*scale, noSignalIcon, TFT_BLACK, scale);
+				display.drawBitmap(1 * scale, 1 * scale, noSignalIcon, TFT_BLACK, scale);
 			else if (signalStrength > 3 && signalStrength <= 10)
-				display.drawBitmap(1*scale, 1*scale, signalLowIcon, TFT_BLACK, scale);
+				display.drawBitmap(1 * scale, 1 * scale, signalLowIcon, TFT_BLACK, scale);
 			else if (signalStrength > 10 && signalStrength <= 20)
-				display.drawBitmap(1*scale, 1*scale, signalHighIcon, TFT_BLACK, scale);
+				display.drawBitmap(1 * scale, 1 * scale, signalHighIcon, TFT_BLACK, scale);
 			else if (signalStrength > 20 && signalStrength <= 31)
-				display.drawBitmap(1*scale, 1*scale, signalFullIcon, TFT_BLACK, scale);
+				display.drawBitmap(1 * scale, 1 * scale, signalFullIcon, TFT_BLACK, scale);
 			else if (signalStrength == 99)
-				display.drawBitmap(1*scale, 1*scale, signalErrorIcon, TFT_BLACK, scale);
+				display.drawBitmap(1 * scale, 1 * scale, signalErrorIcon, TFT_BLACK, scale);
 		}
-		else if(!simInserted && !airplaneMode)
-			display.drawBitmap(1*scale, 1*scale, noSimIcon, TFT_BLACK, scale);
-		if(airplaneMode)
+		else if (!simInserted && !airplaneMode)
+			display.drawBitmap(1 * scale, 1 * scale, noSimIcon, TFT_BLACK, scale);
+		if (airplaneMode)
 		{
 			display.drawBitmap(scale, scale, airplaneModeIcon, TFT_BLACK, scale);
 			helper += 10;
 		}
 		if (ringVolume == 0)
 		{
-			display.drawBitmap(helper*scale, 1*scale, silentModeIcon, TFT_BLACK, scale);
+			display.drawBitmap(helper * scale, 1 * scale, silentModeIcon, TFT_BLACK, scale);
 			helper += 10;
 		}
 
-	
-		if(!SDinsertedFlag)
+		if (!SDinsertedFlag)
 		{
-			display.drawBitmap(helper*scale, 1*scale, noSDIcon, TFT_BLACK, scale);
-			helper+=10;
+			display.drawBitmap(helper * scale, 1 * scale, noSDIcon, TFT_BLACK, scale);
+			helper += 10;
 		}
 		display.setTextFont(2);
 		display.setTextSize(1);
 		display.setTextColor(TFT_BLACK);
-		display.setCursor(helper*2, 4);
-		if(carrierName != "" && (networkRegistered == 1 || networkRegistered == 5))
+		display.setCursor(helper * 2, 4);
+		if (carrierName != "" && (networkRegistered == 1 || networkRegistered == 5))
 		{
 			// display.setFreeFont(TT1);
 			// display.setTextSize(2);
 			// display.setCursor(helper*2, 15);
 
-			
 			display.print(carrierName);
 		}
-		else if((carrierName == "" && simInserted && !airplaneMode) || !(networkRegistered == 1 || networkRegistered == 5))
+		else if ((carrierName == "" && simInserted && !airplaneMode) || !(networkRegistered == 1 || networkRegistered == 5))
 			display.print("loading...");
-		else if(carrierName == "" && !simInserted && sim_module_version == 255)
-			display.print("No module");	
+		else if (carrierName == "" && !simInserted && sim_module_version == 255)
+			display.print("No module");
 
-		if(!digitalRead(CHRG_INT))
+		if (!digitalRead(CHRG_INT))
 			display.drawBitmap(148, 2, batteryChargingIcon, TFT_BLACK, 2);
 		else
 		{
@@ -4070,13 +4210,13 @@ void MAKERphone::homePopup(bool animation)
 			display.setCursor(120, 2);
 			//y = -316139 + 250.3763*x - 0.06612874*x^2 + 0.000005825959*x^3
 			//y - percentage(%), x - voltage(V)
-			double percentage = -316139 + (250.3763*batteryVoltage) - (0.06612874*batteryVoltage*batteryVoltage) + (0.000005825959*batteryVoltage*batteryVoltage*batteryVoltage);
-			if(percentage < 101)
+			double percentage = -316139 + (250.3763 * batteryVoltage) - (0.06612874 * batteryVoltage * batteryVoltage) + (0.000005825959 * batteryVoltage * batteryVoltage * batteryVoltage);
+			if (percentage < 101)
 			{
 				display.printf("%d", (int)percentage);
 				display.print("%");
 			}
-			if(percentage < 0)
+			if (percentage < 0)
 				percentage = 0;
 			// if (batteryVoltage > 4100)
 			// 	display.drawBitmap(148, 2, batteryChargingIcon, TFT_BLACK, 2);
@@ -4092,15 +4232,16 @@ void MAKERphone::homePopup(bool animation)
 				display.drawBitmap(148, 2, batteryEmptyIcon, TFT_BLACK, 2);
 		}
 
-		if (millis() - blinkMillis >= 250) {
+		if (millis() - blinkMillis >= 250)
+		{
 			blinkMillis = millis();
 			cursorState = !cursorState;
 		}
-		
-		if(millis() - notificationMillis >= 2000)
+
+		if (millis() - notificationMillis >= 2000)
 			notificationMillis = millis();
-		display.setCursor(2,112);
-		if(millis() - notificationMillis > 1000 && millis() - notificationMillis < 2000)
+		display.setCursor(2, 112);
+		if (millis() - notificationMillis > 1000 && millis() - notificationMillis < 2000)
 		{
 			display.printCenter("Notifications   ");
 			display.drawBitmap(display.cursor_x - 10, display.cursor_y, arrowDown, TFT_BLACK, 2);
@@ -4112,7 +4253,7 @@ void MAKERphone::homePopup(bool animation)
 
 		// date and time
 		updateTimeRTC();
-		display.fillRect(60,70,40,40,0x963F);
+		display.fillRect(60, 70, 40, 40, 0x963F);
 		display.setFreeFont(TT1);
 		display.setTextSize(2);
 		display.setCursor(63, 85);
@@ -4138,31 +4279,31 @@ void MAKERphone::homePopup(bool animation)
 		display.setTextSize(1);
 		display.setTextFont(2);
 
-
-		if(buttons.released(BTN_UP))
+		if (buttons.released(BTN_UP))
 		{
 			osc->note(75, 0.05);
 			osc->play();
-			display.drawRect(12 + cursor % 3 * 48 - 2, 25 + 45 * (int)(cursor / 3) - 2, 44, 44,TFT_WHITE);
-			display.drawRect(12 + cursor % 3 * 48 - 1, 25 + 45 * (int)(cursor / 3) - 1, 42, 42,TFT_WHITE);
+			display.drawRect(12 + cursor % 3 * 48 - 2, 25 + 45 * (int)(cursor / 3) - 2, 44, 44, TFT_WHITE);
+			display.drawRect(12 + cursor % 3 * 48 - 1, 25 + 45 * (int)(cursor / 3) - 1, 42, 42, TFT_WHITE);
 			cursorState = 1;
 			blinkMillis = millis();
-			if(cursor < 3)
+			if (cursor < 3)
 				cursor += 3;
 			else
 				cursor -= 3;
 			notificationMillis = millis();
-			while(!update());
+			while (!update())
+				;
 		}
-		if(buttons.released(BTN_DOWN))
+		if (buttons.released(BTN_DOWN))
 		{
 			osc->note(75, 0.05);
 			osc->play();
-			display.drawRect(12 + cursor % 3 * 48 - 2, 25 + 45 * (int)(cursor / 3) - 2, 44, 44,TFT_WHITE);
-			display.drawRect(12 + cursor % 3 * 48 - 1, 25 + 45 * (int)(cursor / 3) - 1, 42, 42,TFT_WHITE);
+			display.drawRect(12 + cursor % 3 * 48 - 2, 25 + 45 * (int)(cursor / 3) - 2, 44, 44, TFT_WHITE);
+			display.drawRect(12 + cursor % 3 * 48 - 1, 25 + 45 * (int)(cursor / 3) - 1, 42, 42, TFT_WHITE);
 			cursorState = 1;
 			blinkMillis = millis();
-			if(cursor < 3)
+			if (cursor < 3)
 				cursor += 3;
 			else
 			{
@@ -4170,264 +4311,273 @@ void MAKERphone::homePopup(bool animation)
 			}
 			notificationMillis = millis();
 
-			while(!update());
+			while (!update())
+				;
 		}
-		if(buttons.released(BTN_LEFT))
+		if (buttons.released(BTN_LEFT))
 		{
 			osc->note(75, 0.05);
 			osc->play();
-			display.drawRect(12 + cursor % 3 * 48 - 2, 25 + 45 * (int)(cursor / 3) - 2, 44, 44,TFT_WHITE);
-			display.drawRect(12 + cursor % 3 * 48 - 1, 25 + 45 * (int)(cursor / 3) - 1, 42, 42,TFT_WHITE);
+			display.drawRect(12 + cursor % 3 * 48 - 2, 25 + 45 * (int)(cursor / 3) - 2, 44, 44, TFT_WHITE);
+			display.drawRect(12 + cursor % 3 * 48 - 1, 25 + 45 * (int)(cursor / 3) - 1, 42, 42, TFT_WHITE);
 			cursorState = 1;
 			blinkMillis = millis();
-			if(cursor % 3 == 0)
+			if (cursor % 3 == 0)
 				cursor += 2;
 			else
 				cursor -= 1;
 			notificationMillis = millis();
-			while(!update());
+			while (!update())
+				;
 		}
-		if(buttons.released(BTN_RIGHT))
+		if (buttons.released(BTN_RIGHT))
 		{
 			osc->note(75, 0.05);
 			osc->play();
-			display.drawRect(12 + cursor % 3 * 48 - 2, 25 + 45 * (int)(cursor / 3) - 2, 44, 44,TFT_WHITE);
-			display.drawRect(12 + cursor % 3 * 48 - 1, 25 + 45 * (int)(cursor / 3) - 1, 42, 42,TFT_WHITE);
+			display.drawRect(12 + cursor % 3 * 48 - 2, 25 + 45 * (int)(cursor / 3) - 2, 44, 44, TFT_WHITE);
+			display.drawRect(12 + cursor % 3 * 48 - 1, 25 + 45 * (int)(cursor / 3) - 1, 42, 42, TFT_WHITE);
 			cursorState = 1;
 			blinkMillis = millis();
-			if(cursor % 3 == 2)
+			if (cursor % 3 == 2)
 				cursor -= 2;
 			else
 				cursor += 1;
 			notificationMillis = millis();
-			while(!update());
+			while (!update())
+				;
 		}
-		if(buttons.released(BTN_A))
+		if (buttons.released(BTN_A))
 		{
-			while(!update());
+			while (!update())
+				;
 			switch (cursor)
 			{
-				case 0: //volume
-					while(!buttons.released(BTN_B) && !buttons.released(BTN_A))
-					{
-						display.drawRect(14, 50, 134, 28, TFT_BLACK);
-						display.drawRect(13, 49, 136, 30, TFT_BLACK);
-						display.fillRect(15, 51, 132, 26, 0x9FFE);
-						display.drawRect(37, 59, 86, 10, TFT_BLACK);
-						display.drawRect(36, 58, 88, 12, TFT_BLACK);
-						display.fillRect(38, 60, mediaVolume * 6, 8, TFT_BLACK);
-						display.drawBitmap(18, 56, noSound, TFT_BLACK, 2);
-						display.drawBitmap(126, 56, fullSound, TFT_BLACK, 2);
-						if(buttons.released(BTN_LEFT) && mediaVolume > 0)
-						{
-							mediaVolume--;
-							for(uint8_t i = 0 ; i < 4;i++)
-							{
-								if(tracks[i] != nullptr)
-								{
-									if(mediaVolume == 0)
-										tracks[i]->setVolume(0);
-									else
-										tracks[i]->setVolume(map(mediaVolume, 0, 14, 100, 300));
-								}
-							}
-							for(uint8_t i = 0 ; i < 4;i++)
-							{
-								if(oscs[i] != nullptr)
-									oscs[i]->setVolume(oscillatorVolumeList[mediaVolume]);
-							}
-							osc->setVolume(oscillatorVolumeList[mediaVolume]);
-							osc->note(75, 0.05);
-							osc->play();
-							while(!update());
-						}
-						if(buttons.released(BTN_RIGHT) && mediaVolume < 14)
-						{
-							mediaVolume++;
-							for(uint8_t i = 0 ; i < 4;i++)
-							{
-								if(tracks[i] != nullptr)
-								{
-									if(mediaVolume == 0)
-										tracks[i]->setVolume(0);
-									else
-										tracks[i]->setVolume(map(mediaVolume, 0, 14, 100, 300));
-								}
-							}
-							for(uint8_t i = 0 ; i < 4;i++)
-							{
-								if(oscs[i] != nullptr)
-									oscs[i]->setVolume(oscillatorVolumeList[mediaVolume]);
-							}
-							// osc->setVolume(oscillatorVolumeList[mediaVolume]);
-							osc->note(75, 0.05);
-							osc->play();
-							while(!update());
-							
-						}
-						update();
-					}
-				break;
-
-				case 1: //exit
-					loader();
-				break;
-
-				case 2: //screen brightness
-					while(!buttons.released(BTN_B) && !buttons.released(BTN_A))
-					{
-						display.drawRect(13, 49, 136, 30, TFT_BLACK);
-						display.drawRect(14, 50, 134, 28, TFT_BLACK);
-						display.fillRect(15, 51, 132, 26, 0xFF92);
-						display.drawRect(33, 58, 89, 12, TFT_BLACK);
-						display.drawRect(34, 59, 87, 10, TFT_BLACK);
-						display.fillRect(35, 60, brightness * 17, 8, TFT_BLACK);
-						display.drawBitmap(18, 59, noBrightness, TFT_BLACK, 2);
-						display.drawBitmap(125, 53, fullBrightness, TFT_BLACK, 2);
-						if(buttons.released(BTN_LEFT) && brightness > 0)
-						{
-							brightness--;
-							osc->note(75, 0.05);
-							osc->play();
-							while(!update());
-						}
-						if(buttons.released(BTN_RIGHT) && brightness < 5)
-						{
-							brightness++;
-							osc->note(75, 0.05);
-							osc->play();
-							while(!update());
-						}
-						if (brightness == 0)
-							ledcAnalogWrite(LEDC_CHANNEL, 230);
-						else
-							ledcAnalogWrite(LEDC_CHANNEL, (5 - brightness) * 51);
-
-						update();
-					}
-				break;
-
-				case 3: //screenshot
-					screenshotFlag = 1;
-					return;
-				break;
-
-				case 4: //clock
+			case 0: //volume
+				while (!buttons.released(BTN_B) && !buttons.released(BTN_A))
 				{
-					uint32_t timer = millis();
-					bool blinkState = 0;
-					String temp = "";
-					String monthsList[] = {"January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"};
-
-					while(!buttons.released(BTN_B) && !buttons.released(BTN_A))
+					display.drawRect(14, 50, 134, 28, TFT_BLACK);
+					display.drawRect(13, 49, 136, 30, TFT_BLACK);
+					display.fillRect(15, 51, 132, 26, 0x9FFE);
+					display.drawRect(37, 59, 86, 10, TFT_BLACK);
+					display.drawRect(36, 58, 88, 12, TFT_BLACK);
+					display.fillRect(38, 60, mediaVolume * 6, 8, TFT_BLACK);
+					display.drawBitmap(18, 56, noSound, TFT_BLACK, 2);
+					display.drawBitmap(126, 56, fullSound, TFT_BLACK, 2);
+					if (buttons.released(BTN_LEFT) && mediaVolume > 0)
 					{
-						display.fillScreen(0x963F);
-						// date and time
-						updateTimeRTC();
-						display.setTextFont(2);
-						display.setTextSize(2);
-						display.setCursor(15, 25);
-						temp = "";
-						if (clockHour < 10)
-							temp.concat("0");
-						temp.concat(clockHour);
-						temp.concat(":");
-						if (clockMinute < 10)
-							temp.concat("0");
-						temp.concat(clockMinute);
-						temp.concat(":");
-						if (clockSecond < 10)
-							temp.concat("0");
-						temp.concat(clockSecond);
-
-						display.printCenter(temp);
-						display.setTextSize(1);
-						display.setCursor(63, 85);
-						temp = "";
-						if (clockDay < 10)
-							temp.concat("0");
-						temp.concat(clockDay);
-						if(clockDay < 20 && clockDay > 10)
-							temp.concat("th");
-						else if(clockDay%10 == 1)
-							temp.concat("st");
-						else if(clockDay%10 == 2)
-							temp.concat("nd");
-						else if(clockDay%10 == 3)
-							temp.concat("rd");
-						else
-							temp.concat("th");
-						temp.concat(" of ");
-						temp.concat(monthsList[clockMonth - 1]);
-
-						display.printCenter(temp);
-						display.setCursor(0,100);
-						display.printCenter(clockYear);
-
-
-						if(millis()-timer >= 1000)
+						mediaVolume--;
+						for (uint8_t i = 0; i < 4; i++)
 						{
-							blinkState = !blinkState;
-							timer = millis();
+							if (tracks[i] != nullptr)
+							{
+								if (mediaVolume == 0)
+									tracks[i]->setVolume(0);
+								else
+									tracks[i]->setVolume(map(mediaVolume, 0, 14, 100, 300));
+							}
 						}
-						update();
-
+						for (uint8_t i = 0; i < 4; i++)
+						{
+							if (oscs[i] != nullptr)
+								oscs[i]->setVolume(oscillatorVolumeList[mediaVolume]);
+						}
+						osc->setVolume(oscillatorVolumeList[mediaVolume]);
+						osc->note(75, 0.05);
+						osc->play();
+						while (!update())
+							;
 					}
+					if (buttons.released(BTN_RIGHT) && mediaVolume < 14)
+					{
+						mediaVolume++;
+						for (uint8_t i = 0; i < 4; i++)
+						{
+							if (tracks[i] != nullptr)
+							{
+								if (mediaVolume == 0)
+									tracks[i]->setVolume(0);
+								else
+									tracks[i]->setVolume(map(mediaVolume, 0, 14, 100, 300));
+							}
+						}
+						for (uint8_t i = 0; i < 4; i++)
+						{
+							if (oscs[i] != nullptr)
+								oscs[i]->setVolume(oscillatorVolumeList[mediaVolume]);
+						}
+						// osc->setVolume(oscillatorVolumeList[mediaVolume]);
+						osc->note(75, 0.05);
+						osc->play();
+						while (!update())
+							;
+					}
+					update();
 				}
 				break;
 
-				case 5: //LED brightness
+			case 1: //exit
+				loader();
+				break;
+
+			case 2: //screen brightness
+				while (!buttons.released(BTN_B) && !buttons.released(BTN_A))
 				{
-					while(!buttons.released(BTN_B) && !buttons.released(BTN_A))
+					display.drawRect(13, 49, 136, 30, TFT_BLACK);
+					display.drawRect(14, 50, 134, 28, TFT_BLACK);
+					display.fillRect(15, 51, 132, 26, 0xFF92);
+					display.drawRect(33, 58, 89, 12, TFT_BLACK);
+					display.drawRect(34, 59, 87, 10, TFT_BLACK);
+					display.fillRect(35, 60, brightness * 17, 8, TFT_BLACK);
+					display.drawBitmap(18, 59, noBrightness, TFT_BLACK, 2);
+					display.drawBitmap(125, 53, fullBrightness, TFT_BLACK, 2);
+					if (buttons.released(BTN_LEFT) && brightness > 0)
 					{
-						for (int i = 0; i < 8; i++)
-							leds[i] = CRGB::Red;
-						display.drawRect(13, 49, 136, 30, TFT_BLACK);
-						display.drawRect(14, 50, 134, 28, TFT_BLACK);
-						display.fillRect(15, 51, 132, 26, 0xA794);
-						display.drawRect(33, 58, 89, 12, TFT_BLACK);
-						display.drawRect(34, 59, 87, 10, TFT_BLACK);
-						display.fillRect(35, 60, pixelsBrightness * 17, 8, TFT_BLACK);
-						display.drawBitmap(18, 59, noBrightness, TFT_BLACK, 2);
-						display.drawBitmap(125, 53, fullBrightness, TFT_BLACK, 2);
-						if(buttons.released(BTN_LEFT) && pixelsBrightness > 0)
-						{
-							pixelsBrightness--;
-							osc->note(75, 0.05);
-							osc->play();
-							while(!update());
-						}
-						if(buttons.released(BTN_RIGHT) && pixelsBrightness < 5)
-						{
-							pixelsBrightness++;
-							osc->note(75, 0.05);
-							osc->play();
-							while(!update());
-						}
-						update();
+						brightness--;
+						osc->note(75, 0.05);
+						osc->play();
+						while (!update())
+							;
 					}
+					if (buttons.released(BTN_RIGHT) && brightness < 5)
+					{
+						brightness++;
+						osc->note(75, 0.05);
+						osc->play();
+						while (!update())
+							;
+					}
+					if (brightness == 0)
+						ledcAnalogWrite(LEDC_CHANNEL, 230);
+					else
+						ledcAnalogWrite(LEDC_CHANNEL, (5 - brightness) * 51);
+
+					update();
 				}
 				break;
+
+			case 3: //screenshot
+				screenshotFlag = 1;
+				return;
+				break;
+
+			case 4: //clock
+			{
+				uint32_t timer = millis();
+				bool blinkState = 0;
+				String temp = "";
+				String monthsList[] = {"January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"};
+
+				while (!buttons.released(BTN_B) && !buttons.released(BTN_A))
+				{
+					display.fillScreen(0x963F);
+					// date and time
+					updateTimeRTC();
+					display.setTextFont(2);
+					display.setTextSize(2);
+					display.setCursor(15, 25);
+					temp = "";
+					if (clockHour < 10)
+						temp.concat("0");
+					temp.concat(clockHour);
+					temp.concat(":");
+					if (clockMinute < 10)
+						temp.concat("0");
+					temp.concat(clockMinute);
+					temp.concat(":");
+					if (clockSecond < 10)
+						temp.concat("0");
+					temp.concat(clockSecond);
+
+					display.printCenter(temp);
+					display.setTextSize(1);
+					display.setCursor(63, 85);
+					temp = "";
+					if (clockDay < 10)
+						temp.concat("0");
+					temp.concat(clockDay);
+					if (clockDay < 20 && clockDay > 10)
+						temp.concat("th");
+					else if (clockDay % 10 == 1)
+						temp.concat("st");
+					else if (clockDay % 10 == 2)
+						temp.concat("nd");
+					else if (clockDay % 10 == 3)
+						temp.concat("rd");
+					else
+						temp.concat("th");
+					temp.concat(" of ");
+					temp.concat(monthsList[clockMonth - 1]);
+
+					display.printCenter(temp);
+					display.setCursor(0, 100);
+					display.printCenter(clockYear);
+
+					if (millis() - timer >= 1000)
+					{
+						blinkState = !blinkState;
+						timer = millis();
+					}
+					update();
+				}
 			}
-			while(!update());
+			break;
+
+			case 5: //LED brightness
+			{
+				while (!buttons.released(BTN_B) && !buttons.released(BTN_A))
+				{
+					for (int i = 0; i < 8; i++)
+						leds[i] = CRGB::Red;
+					display.drawRect(13, 49, 136, 30, TFT_BLACK);
+					display.drawRect(14, 50, 134, 28, TFT_BLACK);
+					display.fillRect(15, 51, 132, 26, 0xA794);
+					display.drawRect(33, 58, 89, 12, TFT_BLACK);
+					display.drawRect(34, 59, 87, 10, TFT_BLACK);
+					display.fillRect(35, 60, pixelsBrightness * 17, 8, TFT_BLACK);
+					display.drawBitmap(18, 59, noBrightness, TFT_BLACK, 2);
+					display.drawBitmap(125, 53, fullBrightness, TFT_BLACK, 2);
+					if (buttons.released(BTN_LEFT) && pixelsBrightness > 0)
+					{
+						pixelsBrightness--;
+						osc->note(75, 0.05);
+						osc->play();
+						while (!update())
+							;
+					}
+					if (buttons.released(BTN_RIGHT) && pixelsBrightness < 5)
+					{
+						pixelsBrightness++;
+						osc->note(75, 0.05);
+						osc->play();
+						while (!update())
+							;
+					}
+					update();
+				}
+			}
+			break;
+			}
+			while (!update())
+				;
 			display.fillScreen(TFT_WHITE);
-			display.drawIcon(popupVolume,12,25,20,20,2);
-			display.drawIcon(popupExit,60,25,20,20,2);
-			display.drawIcon(popupScreenBrightness,108,25,20,20,2);
-			display.drawIcon(popupScreenshot,12,70,20,20,2);
-			display.drawIcon(popupPixelBrightness,108,70,20,20,2);
+			display.drawIcon(popupVolume, 12, 25, 20, 20, 2);
+			display.drawIcon(popupExit, 60, 25, 20, 20, 2);
+			display.drawIcon(popupScreenBrightness, 108, 25, 20, 20, 2);
+			display.drawIcon(popupScreenshot, 12, 70, 20, 20, 2);
+			display.drawIcon(popupPixelBrightness, 108, 70, 20, 20, 2);
 		}
 		update();
 	}
-	while(!update());
-	if(SDinsertedFlag)
+	while (!update())
+		;
+	if (SDinsertedFlag)
 		saveSettings();
-	for(int i = 0; i < 4; i++)
+	for (int i = 0; i < 4; i++)
 	{
-		if(currTracks[i] != nullptr)
+		if (currTracks[i] != nullptr)
 		{
 			addTrack(currTracks[i]);
-			if(pausedTracks[i])
+			if (pausedTracks[i])
 				currTracks[i]->play();
 		}
 		currTracks[i] = nullptr;
@@ -4446,7 +4596,8 @@ void MAKERphone::homePopup(bool animation)
 	// }
 	dataRefreshFlag = 0;
 }
-void MAKERphone::drawNotificationWindow(uint8_t y, uint8_t index) {
+void MAKERphone::drawNotificationWindow(uint8_t y, uint8_t index)
+{
 	display.setTextFont(2);
 	display.setTextSize(1);
 	display.setCursor(22, y + 2);
@@ -4455,15 +4606,15 @@ void MAKERphone::drawNotificationWindow(uint8_t y, uint8_t index) {
 	display.print(notificationDescriptionList[index]);
 	switch (notificationTypeList[index])
 	{
-		case 1:
-			display.drawBitmap(5, y + 2, missedCallIcon, TFT_RED, 2);
-			break;
-		case 2:
-			display.drawBitmap(5, y + 2, newMessageIcon, TFT_BLACK, 2);
-			break;
-		case 3:
-			display.drawBitmap(5, y + 2, systemNotification, TFT_RED, 2);
-			break;
+	case 1:
+		display.drawBitmap(5, y + 2, missedCallIcon, TFT_RED, 2);
+		break;
+	case 2:
+		display.drawBitmap(5, y + 2, newMessageIcon, TFT_BLACK, 2);
+		break;
+	case 3:
+		display.drawBitmap(5, y + 2, systemNotification, TFT_RED, 2);
+		break;
 	}
 	display.setTextFont(1);
 	display.setCursor(129, y + 2);
@@ -4507,18 +4658,18 @@ void MAKERphone::playNotificationSound(uint8_t _notification)
 }
 void MAKERphone::updateNotificationSound()
 {
-	if(playingNotification && millis() - notificationMillis >= notificationSoundDuration*1000 +  125)
+	if (playingNotification && millis() - notificationMillis >= notificationSoundDuration * 1000 + 125)
 	{
 		osc->setVolume(oscillatorVolumeList[ringVolume]);
 		notificationSoundDuration = notificationNotesDuration[notification][notesIndex];
 		notificationSoundNote = notificationNotes[notification][notesIndex];
-		if(notificationSoundDuration == 0 || notesIndex == 5)
+		if (notificationSoundDuration == 0 || notesIndex == 5)
 		{
 			playingNotification = 0;
 			// osc->stop();
 			return;
 		}
-		if(notificationSoundNote == 0)
+		if (notificationSoundNote == 0)
 		{
 			notesIndex++;
 			return;
@@ -4531,9 +4682,9 @@ void MAKERphone::updateNotificationSound()
 }
 void MAKERphone::addNotification(uint8_t _type, String _description, DateTime _time)
 {
-	for(int i = 0; i < sizeof(notificationTypeList);i++)
+	for (int i = 0; i < sizeof(notificationTypeList); i++)
 	{
-		if(notificationTypeList[i] == 0)
+		if (notificationTypeList[i] == 0)
 		{
 			notificationTypeList[i] = _type;
 			notificationDescriptionList[i] = _description;
@@ -4552,16 +4703,17 @@ void MAKERphone::removeNotification(uint8_t index)
 }
 void MAKERphone::loadNotifications(bool debug)
 {
-	const char * path = "/.core/notifications.json";
+	const char *path = "/.core/notifications.json";
 	File file = SD.open(path);
 	jb.clear();
-	JsonArray& notifications = jb.parseArray(file);
+	JsonArray &notifications = jb.parseArray(file);
 	file.close();
 
-	if (notifications.success()) {
+	if (notifications.success())
+	{
 		int i = 0;
 		// notifications.prettyPrintTo(Serial);
-		for(JsonObject& tempNotification:notifications)
+		for (JsonObject &tempNotification : notifications)
 		{
 			notificationTypeList[i] = tempNotification["Type"];
 			notificationDescriptionList[i] = tempNotification["Description"].as<String>();
@@ -4569,7 +4721,8 @@ void MAKERphone::loadNotifications(bool debug)
 			i++;
 		}
 	}
-	else {
+	else
+	{
 		saveNotifications();
 		Serial.println("Error loading new notifications");
 	}
@@ -4578,16 +4731,17 @@ void MAKERphone::loadNotifications(bool debug)
 }
 void MAKERphone::saveNotifications(bool debug)
 {
-	const char * path = "/.core/notifications.json";
+	const char *path = "/.core/notifications.json";
 	Serial.println("");
 	SD.remove(path);
 	jb.clear();
-	JsonArray& notifications = jb.createArray();
-	
-	if (notifications.success()) {
-		for(int i = 0; i<sizeof(notificationTypeList);i++)
+	JsonArray &notifications = jb.createArray();
+
+	if (notifications.success())
+	{
+		for (int i = 0; i < sizeof(notificationTypeList); i++)
 		{
-			JsonObject& tempNotification = jb.createObject();
+			JsonObject &tempNotification = jb.createObject();
 			tempNotification["Type"] = notificationTypeList[i];
 			tempNotification["Description"] = notificationDescriptionList[i].c_str();
 			tempNotification["DateTime"] = notificationTimeList[i].unixtime();
@@ -4598,13 +4752,15 @@ void MAKERphone::saveNotifications(bool debug)
 		notifications.prettyPrintTo(file1);
 		// notifications.prettyPrintTo(Serial);
 		file1.close();
-	} else {
+	}
+	else
+	{
 		Serial.println("Error saving notifications data");
 	}
 }
 void MAKERphone::notificationView()
 {
-	while(!buttons.released(BTN_B) && !buttons.released(BTN_UP))
+	while (!buttons.released(BTN_B) && !buttons.released(BTN_UP))
 	{
 		display.fillScreen(TFT_WHITE);
 		display.setCursor(0, 2);
@@ -4616,65 +4772,72 @@ void MAKERphone::notificationView()
 
 		uint8_t temp = 0;
 		bool anyNotifications = 0;
-		for(int i = 0; i< sizeof(notificationTypeList);i++)
+		for (int i = 0; i < sizeof(notificationTypeList); i++)
 		{
-			if(notificationTypeList[i] != 0)
+			if (notificationTypeList[i] != 0)
 			{
 				temp++;
-				if(temp == 1)
-					drawNotificationWindow(20,i);
-				else if(temp == 2)
-					drawNotificationWindow(44,i);
-				else if(temp == 3)
-					drawNotificationWindow(68,i);
-				else if(temp == 4)
-					drawNotificationWindow(92,i);
+				if (temp == 1)
+					drawNotificationWindow(20, i);
+				else if (temp == 2)
+					drawNotificationWindow(44, i);
+				else if (temp == 3)
+					drawNotificationWindow(68, i);
+				else if (temp == 4)
+					drawNotificationWindow(92, i);
 				anyNotifications = 1;
 			}
 		}
-		if(!anyNotifications)
+		if (!anyNotifications)
 		{
 			display.setCursor(0, display.height() / 2 - 16);
 			display.printCenter("No notifications...");
 		}
-		if(buttons.released(BTN_FUN_LEFT))
+		if (buttons.released(BTN_FUN_LEFT))
 		{
-			for(int i = 0; i< sizeof(notificationTypeList);i++)
+			for (int i = 0; i < sizeof(notificationTypeList); i++)
 				notificationTypeList[i] = 0;
-			if(SDinsertedFlag)
+			if (SDinsertedFlag)
 				saveNotifications();
 		}
 		update();
 	}
-	while(!update());
+	while (!update())
+		;
 }
-String MAKERphone::currentDateTime(){
+String MAKERphone::currentDateTime()
+{
 	updateTimeRTC();
 	// 2019-04-18 12:00:00
 	String dateTime = String(clockYear);
 	dateTime += "-";
-	if(clockMonth < 10){
+	if (clockMonth < 10)
+	{
 		dateTime += "0";
 	}
 	dateTime += String(clockMonth);
 	dateTime += "-";
-	if(clockDay < 10){
+	if (clockDay < 10)
+	{
 		dateTime += "0";
 	}
 	dateTime += String(clockDay);
 	dateTime += " ";
 
-	if(clockHour < 10){
+	if (clockHour < 10)
+	{
 		dateTime += "0";
 	}
 	dateTime += String(clockHour);
 	dateTime += ":";
-	if(clockMinute < 10){
+	if (clockMinute < 10)
+	{
 		dateTime += "0";
 	}
 	dateTime += String(clockMinute);
 	dateTime += ":";
-	if(clockSecond < 10){
+	if (clockSecond < 10)
+	{
 		dateTime += "0";
 	}
 	dateTime += String(clockSecond);
@@ -4683,14 +4846,14 @@ String MAKERphone::currentDateTime(){
 
 void MAKERphone::shutdownPopup(bool animation)
 {
-	if(animation)
+	if (animation)
 	{
 		for (int i = 2; i < 75; i++)
 		{
 			// tft.fillRect(tft.width()/2 - i, 34, i * 2 + 2, 60, TFT_BLACK);
-			tft.drawRect(tft.width()/2 - i, 28, i*2+2, 72, TFT_BLACK);
-			tft.drawRect(tft.width()/2 - i + 1, 29, i*2+1, 70, TFT_BLACK);
-			tft.fillRect(tft.width()/2 - i + 2, 30, i * 2 - 2, 68, TFT_WHITE);
+			tft.drawRect(tft.width() / 2 - i, 28, i * 2 + 2, 72, TFT_BLACK);
+			tft.drawRect(tft.width() / 2 - i + 1, 29, i * 2 + 1, 70, TFT_BLACK);
+			tft.fillRect(tft.width() / 2 - i + 2, 30, i * 2 - 2, 68, TFT_WHITE);
 			// update();
 			// delayMicroseconds(2000);
 		}
@@ -4719,25 +4882,25 @@ void MAKERphone::shutdownPopup(bool animation)
 	tft.setCursor(95, 68);
 	tft.print("Restart");
 	// tft.print("YES      NO");
-	while(!buttons.released(BTN_B))
+	while (!buttons.released(BTN_B))
 	{
-		if(millis() - blinkMillis > 350)
+		if (millis() - blinkMillis > 350)
 		{
 			blinkMillis = millis();
 			blinkState = !blinkState;
 		}
 		switch (cursor)
 		{
-			case 0:
-				tft.drawRect(13, 37, 71, 54, blinkState ? TFT_RED: TFT_WHITE);
-				tft.drawRect(14, 38, 69, 52, blinkState ? TFT_RED: TFT_WHITE);
+		case 0:
+			tft.drawRect(13, 37, 71, 54, blinkState ? TFT_RED : TFT_WHITE);
+			tft.drawRect(14, 38, 69, 52, blinkState ? TFT_RED : TFT_WHITE);
 			break;
-			case 1:
-				tft.drawRect(86, 37, 60, 54, blinkState ? TFT_RED: TFT_WHITE);
-				tft.drawRect(87, 38, 58, 52, blinkState ? TFT_RED: TFT_WHITE);
+		case 1:
+			tft.drawRect(86, 37, 60, 54, blinkState ? TFT_RED : TFT_WHITE);
+			tft.drawRect(87, 38, 58, 52, blinkState ? TFT_RED : TFT_WHITE);
 			break;
 		}
-		if(buttons.released(BTN_LEFT) && cursor == 1)
+		if (buttons.released(BTN_LEFT) && cursor == 1)
 		{
 			cursor = 0;
 			blinkMillis = millis();
@@ -4745,7 +4908,7 @@ void MAKERphone::shutdownPopup(bool animation)
 			tft.drawRect(86, 37, 60, 54, TFT_WHITE);
 			tft.drawRect(87, 38, 58, 52, TFT_WHITE);
 		}
-		if(buttons.released(BTN_RIGHT) && cursor == 0)
+		if (buttons.released(BTN_RIGHT) && cursor == 0)
 		{
 			cursor = 1;
 			blinkMillis = millis();
@@ -4753,18 +4916,18 @@ void MAKERphone::shutdownPopup(bool animation)
 			tft.drawRect(13, 37, 71, 54, TFT_WHITE);
 			tft.drawRect(14, 38, 69, 52, TFT_WHITE);
 		}
-		if(buttons.released(BTN_A))
+		if (buttons.released(BTN_A))
 		{
-			if(cursor == 1)
+			if (cursor == 1)
 			{
 				tft.fillRect(12, 36, 138, 56, TFT_WHITE);
 				tft.setCursor(40, 51);
 				tft.print("Restarting...");
-				if(sim_module_version == 255)
+				if (sim_module_version == 255)
 					delay(1500);
 				else
 				{
-					while(Serial1.available())
+					while (Serial1.available())
 						Serial1.read();
 					Serial1.println("AT+CFUN=1,1");
 					char buffer[300];
@@ -4772,9 +4935,9 @@ void MAKERphone::shutdownPopup(bool animation)
 					memset(buffer, 0, sizeof(buffer));
 					Serial1.flush();
 					uint32_t timer = millis();
-					while(!found)
+					while (!found)
 					{
-						if(Serial1.available())
+						if (Serial1.available())
 						{
 
 							char test = (char)Serial1.read();
@@ -4782,10 +4945,10 @@ void MAKERphone::shutdownPopup(bool animation)
 							Serial.println(buffer);
 						}
 
-						if(strstr(buffer, "RDY") != nullptr)
+						if (strstr(buffer, "RDY") != nullptr)
 							found = 1;
-						if((millis() - timer > 8000 && sim_module_version == 1) ||
-						(millis() - timer > 28000 && sim_module_version == 0))
+						if ((millis() - timer > 8000 && sim_module_version == 1) ||
+							(millis() - timer > 28000 && sim_module_version == 0))
 							break;
 					}
 				}
@@ -4808,22 +4971,22 @@ void MAKERphone::shutdownPopup(bool animation)
 				pinMode(LCD_BL_PIN, OUTPUT);
 				digitalWrite(LCD_BL_PIN, 1);
 				// digitalWrite(OFF_PIN, 1);
-				
+
 				rtc_gpio_isolate(GPIO_NUM_16);
 				rtc_gpio_isolate(GPIO_NUM_17);
 				rtc_gpio_isolate(GPIO_NUM_33);
 				rtc_gpio_isolate(GPIO_NUM_34);
 				rtc_gpio_isolate(GPIO_NUM_36);
 				rtc_gpio_isolate(GPIO_NUM_39);
-				
+
 				digitalWrite(OFF_PIN, 1);
 				ESP.deepSleep(0);
-				
 			}
 		}
 		buttons.update();
 	}
-	while(!update());
+	while (!update())
+		;
 }
 void MAKERphone::shutdownPopupEnable(bool enabled)
 {
@@ -4845,7 +5008,7 @@ void MAKERphone::alarmPopup(bool animation)
 	DateTime now = RTC.now();
 	char buf[100];
 	strncpy(buf, "hh:mm\0", 100);
-	tft.fillRect(0,0,160,128,TFT_WHITE);
+	tft.fillRect(0, 0, 160, 128, TFT_WHITE);
 	tft.setCursor(38, 12);
 	tft.setTextFont(1);
 	tft.setTextSize(3);
@@ -4853,7 +5016,7 @@ void MAKERphone::alarmPopup(bool animation)
 	tft.print(now.format(buf));
 	tft.setTextFont(2);
 	tft.setTextSize(2);
-	tft.setCursor(50,50);
+	tft.setCursor(50, 50);
 	tft.print("Alarm");
 	tft.setTextSize(1);
 	tft.setCursor(2, 111);
@@ -4863,32 +5026,33 @@ void MAKERphone::alarmPopup(bool animation)
 	uint32_t blinkMillis = millis();
 	Serial.println(currentAlarm);
 
-	if(!SDinsertedFlag || (SDinsertedFlag && !SD.exists(ringtone_path)))
+	if (!SDinsertedFlag || (SDinsertedFlag && !SD.exists(ringtone_path)))
 	{
 
 		bool state = 0;
 		uint8_t tempNotification = notification;
 		uint32_t callMillis = millis();
-		while(1)
+		while (1)
 		{
-			if(millis() - callMillis >= 1000)
+			if (millis() - callMillis >= 1000)
 			{
 				state = 1;
 				callMillis = millis();
 			}
-			if(state)
+			if (state)
 			{
 
 				playNotificationSound(4);
 				state = 0;
 			}
-			if(millis()- blinkMillis >= 350)
+			if (millis() - blinkMillis >= 350)
 			{
 				blinkMillis = millis();
 				blinkState = !blinkState;
 			}
-			
-			if (buttons.released(BTN_A)) {
+
+			if (buttons.released(BTN_A))
+			{
 				buttons.update();
 				break;
 			}
@@ -4899,23 +5063,24 @@ void MAKERphone::alarmPopup(bool animation)
 	}
 	else
 	{
-		if(!addTrack(ringtone))
+		if (!addTrack(ringtone))
 		{
 			temp = tracks[3];
 			removeTrack(temp);
 			addTrack(ringtone);
 		}
 		Serial.println(ringtone_path);
-		if(ringVolume == 0)
+		if (ringVolume == 0)
 			ringtone->setVolume(0);
 		else
 			ringtone->setVolume(map(ringVolume, 0, 14, 100, 300));
 		ringtone->setRepeat(1);
 		ringtone->play();
 
-		while(1)
+		while (1)
 		{
-			if (buttons.released(BTN_A)) {
+			if (buttons.released(BTN_A))
+			{
 				buttons.update();
 				break;
 			}
@@ -4923,58 +5088,61 @@ void MAKERphone::alarmPopup(bool animation)
 		}
 		ringtone->stop();
 		removeTrack(ringtone);
-		if(temp != nullptr)
+		if (temp != nullptr)
 			addTrack(temp);
 	}
 }
 void MAKERphone::loadAlarms()
 {
-	const char * path = "/.core/alarms.json";
+	const char *path = "/.core/alarms.json";
 	File file = SD.open(path);
 	jb.clear();
-	JsonArray& alarms = jb.parseArray(file);
+	JsonArray &alarms = jb.parseArray(file);
 	file.close();
 
-	if (alarms.success()) {
+	if (alarms.success())
+	{
 		int i = 0;
-		for(JsonObject& tempAlarm:alarms)
+		for (JsonObject &tempAlarm : alarms)
 		{
 			alarmHours[i] = tempAlarm["hours"];
 			alarmMins[i] = tempAlarm["mins"];
 			alarmEnabled[i] = tempAlarm["enabled"];
 			alarmRepeat[i] = tempAlarm["repeat"];
-			JsonArray& days = tempAlarm["days"];
-			for(int x = 0; x<7;x++)
+			JsonArray &days = tempAlarm["days"];
+			for (int x = 0; x < 7; x++)
 			{
 				alarmRepeatDays[i][x] = days[x];
 			}
-			alarmTrack[i] = String(tempAlarm["track"].as<char*>());
+			alarmTrack[i] = String(tempAlarm["track"].as<char *>());
 			i++;
 		}
 	}
-	else {
+	else
+	{
 		saveAlarms();
 		Serial.println("Error loading new alarms");
 	}
 }
 void MAKERphone::saveAlarms()
 {
-	const char * path = "/.core/alarms.json";
+	const char *path = "/.core/alarms.json";
 	Serial.println("");
 	SD.remove(path);
 	jb.clear();
-	JsonArray& alarms = jb.createArray();
+	JsonArray &alarms = jb.createArray();
 
-	if (alarms.success()) {
-		for(int i = 0; i<5;i++)
+	if (alarms.success())
+	{
+		for (int i = 0; i < 5; i++)
 		{
-			JsonObject& tempAlarm = jb.createObject();
+			JsonObject &tempAlarm = jb.createObject();
 			tempAlarm["hours"] = alarmHours[i];
 			tempAlarm["mins"] = alarmMins[i];
 			tempAlarm["enabled"] = alarmEnabled[i];
 			tempAlarm["repeat"] = alarmRepeat[i];
-			JsonArray& days = jb.createArray();
-			for(int x = 0; x<7;x++)
+			JsonArray &days = jb.createArray();
+			for (int x = 0; x < 7; x++)
 			{
 				days.add(alarmRepeatDays[i][x]);
 			}
@@ -4987,7 +5155,9 @@ void MAKERphone::saveAlarms()
 		alarms.prettyPrintTo(file1);
 		// alarms.prettyPrintTo(Serial);
 		file1.close();
-	} else {
+	}
+	else
+	{
 		Serial.println("Error saving alarm data");
 	}
 	checkAlarms();
@@ -5000,9 +5170,9 @@ void MAKERphone::checkAlarms()
 	Serial.print("Today: ");
 	Serial.println(currentTime.dayOfWeek());
 	delay(5);
-	for(int x = 0; x < 6; x++)
+	for (int x = 0; x < 6; x++)
 	{
-		for(int y = 0; y < 5 ;y++)
+		for (int y = 0; y < 5; y++)
 		{
 			// if(i == currentTime.dayOfWeek())
 			// {
@@ -5013,62 +5183,64 @@ void MAKERphone::checkAlarms()
 			// 	Serial.println("-----------");
 			// 	delay(10);
 			// }
-			if(alarmEnabled[y] == 1 && alarmRepeat[y] && alarmRepeatDays[y][i] &&
-			((DateTime(clockYear, clockMonth, clockDay, alarmHours[y], alarmMins[y], 0) > currentTime &&
-			i == currentTime.dayOfWeek()) || i != currentTime.dayOfWeek()))
+			if (alarmEnabled[y] == 1 && alarmRepeat[y] && alarmRepeatDays[y][i] &&
+				((DateTime(clockYear, clockMonth, clockDay, alarmHours[y], alarmMins[y], 0) > currentTime &&
+				  i == currentTime.dayOfWeek()) ||
+				 i != currentTime.dayOfWeek()))
 			{
-				if(next_alarm == 99)
+				if (next_alarm == 99)
 					next_alarm = y;
-				else if(DateTime(clockYear, clockMonth, clockDay, alarmHours[y], alarmMins[y], 0) <
-				DateTime(clockYear, clockMonth, clockDay, alarmHours[next_alarm], alarmMins[next_alarm]))
+				else if (DateTime(clockYear, clockMonth, clockDay, alarmHours[y], alarmMins[y], 0) <
+						 DateTime(clockYear, clockMonth, clockDay, alarmHours[next_alarm], alarmMins[next_alarm]))
 					next_alarm = y;
 			}
 		}
 		i++;
-		if(i > 7)
+		if (i > 7)
 			i = 1;
 	}
 
-	for(int x = 0; x < 5; x++)
+	for (int x = 0; x < 5; x++)
 	{
 		DateTime tempAlarm = DateTime(clockYear, clockMonth, clockDay, alarmHours[x], alarmMins[x], 0);
 		DateTime nextAlarm;
-		if(next_alarm != 99)
+		if (next_alarm != 99)
 			DateTime nextAlarm = DateTime(clockYear, clockMonth, clockDay, alarmHours[next_alarm], alarmMins[next_alarm], 0);
-		if(alarmEnabled[x] == 1 && !alarmRepeat[x])
+		if (alarmEnabled[x] == 1 && !alarmRepeat[x])
 		{
-			if(next_alarm == 99)
+			if (next_alarm == 99)
 				next_alarm = x;
-			else if(((!alarmRepeat[next_alarm] || (alarmRepeat[next_alarm] &&
-			alarmRepeatDays[next_alarm][currentTime.dayOfWeek()])) &&
-			(tempAlarm > RTC.now() && tempAlarm > nextAlarm) || (tempAlarm < RTC.now() && nextAlarm < RTC.now() && tempAlarm < nextAlarm))
-			|| (alarmRepeat[next_alarm] && !alarmRepeatDays[next_alarm][currentTime.dayOfWeek()]))
+			else if (((!alarmRepeat[next_alarm] || (alarmRepeat[next_alarm] &&
+													alarmRepeatDays[next_alarm][currentTime.dayOfWeek()])) &&
+						  (tempAlarm > RTC.now() && tempAlarm > nextAlarm) ||
+					  (tempAlarm < RTC.now() && nextAlarm < RTC.now() && tempAlarm < nextAlarm)) ||
+					 (alarmRepeat[next_alarm] && !alarmRepeatDays[next_alarm][currentTime.dayOfWeek()]))
 				next_alarm = x;
 		}
 	}
 	Serial.print("next alarm: ");
 	Serial.println(next_alarm);
 	currentAlarm = next_alarm;
-	if(next_alarm == 99)
+	if (next_alarm == 99)
 		RTC.off_alarm();
 	else
 	{
 		uint8_t z = 0;
-		if(alarmRepeat[next_alarm])
+		if (alarmRepeat[next_alarm])
 		{
 			uint8_t x = currentTime.dayOfWeek();
 
-			for(z = 0; z < 7;z++)
+			for (z = 0; z < 7; z++)
 			{
-				if(alarmRepeatDays[next_alarm][x])
+				if (alarmRepeatDays[next_alarm][x])
 					break;
 				x++;
-				if(x > 6)
-					x=0;
+				if (x > 6)
+					x = 0;
 			}
 		}
 		DateTime alarm = DateTime(clockYear, clockMonth, clockDay, alarmHours[next_alarm], alarmMins[next_alarm, 0]);
-		alarm = DateTime(alarm.unixtime() + z*3600*24);
+		alarm = DateTime(alarm.unixtime() + z * 3600 * 24);
 		alarm_flags flags;
 		flags.hour = 1;
 		flags.minute = 1;
@@ -5082,9 +5254,9 @@ void MAKERphone::SDremovedPopup()
 {
 	for (int i = 2; i < 72; i++)
 	{
-		tft.drawRect(tft.width()/2 - i, 46, i * 2 + 2, 36, TFT_BLACK);
-		tft.drawRect(tft.width()/2 - i + 1, 47, i * 2 + 1, 34, TFT_BLACK);
-		tft.fillRect(tft.width()/2 - i + 2, 48, i * 2 - 2, 32, TFT_WHITE);
+		tft.drawRect(tft.width() / 2 - i, 46, i * 2 + 2, 36, TFT_BLACK);
+		tft.drawRect(tft.width() / 2 - i + 1, 47, i * 2 + 1, 34, TFT_BLACK);
+		tft.fillRect(tft.width() / 2 - i + 2, 48, i * 2 - 2, 32, TFT_WHITE);
 	}
 	tft.drawBitmap(14, 52, SDcardIcon, TFT_BLACK, 2);
 	tft.setCursor(38, 55);
@@ -5098,9 +5270,9 @@ void MAKERphone::SDinsertedPopup()
 {
 	for (int i = 2; i < 72; i++)
 	{
-		tft.drawRect(tft.width()/2 - i, 46, i * 2 + 2, 36, TFT_BLACK);
-		tft.drawRect(tft.width()/2 - i + 1, 47, i * 2 + 1, 34, TFT_BLACK);
-		tft.fillRect(tft.width()/2 - i + 2, 48, i * 2 - 2, 32, TFT_WHITE);
+		tft.drawRect(tft.width() / 2 - i, 46, i * 2 + 2, 36, TFT_BLACK);
+		tft.drawRect(tft.width() / 2 - i + 1, 47, i * 2 + 1, 34, TFT_BLACK);
+		tft.fillRect(tft.width() / 2 - i + 2, 48, i * 2 - 2, 32, TFT_WHITE);
 	}
 	tft.drawBitmap(14, 52, SDcardIcon, TFT_BLACK, 2);
 	tft.setCursor(38, 55);
@@ -5119,44 +5291,720 @@ void MAKERphone::deallocateAudio()
 void MAKERphone::reallocateAudio()
 {
 	xTaskCreatePinnedToCore(
-			Task1code,				/* Task function. */
-			"Task1",				/* name of task. */
-			10000,					/* Stack size of task */
-			NULL,					/* parameter of the task */
-			1,						/* priority of the task */
-			&Task1,
-			0);				/* Task handle to keep track of created task */
+		Task1code, /* Task function. */
+		"Task1",   /* name of task. */
+		10000,	 /* Stack size of task */
+		NULL,	  /* parameter of the task */
+		1,		   /* priority of the task */
+		&Task1,
+		0); /* Task handle to keep track of created task */
 }
 String MAKERphone::checkContact(String contactNumber)
 {
 	File file = SD.open("/.core/contacts.json", "r");
 
-	if(file.size() < 2){ // empty -> FILL
+	if (file.size() < 2)
+	{ // empty -> FILL
 		Serial.println("Override");
 		file.close();
 		jb.clear();
-		JsonArray& jarr = jb.createArray();
+		JsonArray &jarr = jb.createArray();
 		delay(10);
 		File file1 = SD.open("/.core/contacts.json", "w");
 		jarr.prettyPrintTo(file1);
 		file1.close();
 		file = SD.open("/.core/contacts.json", "r");
-		if(!file)
+		if (!file)
 			Serial.println("CONTACTS ERROR");
 	}
 	jb.clear();
-	JsonArray& jarr = jb.parseArray(file);
+	JsonArray &jarr = jb.parseArray(file);
 	file.close();
 
-	if(!jarr.success())
+	if (!jarr.success())
 		Serial.println("Error loading contacts");
 	else
 	{
-		for (JsonObject& elem : jarr) {
-			char * tempNumber = (char*)elem["number"].as<char*>();
-			if(contactNumber == String(tempNumber))
-				return String(elem["name"].as<char*>());
+		for (JsonObject &elem : jarr)
+		{
+			char *tempNumber = (char *)elem["number"].as<char *>();
+			if (contactNumber == String(tempNumber))
+				return String(elem["name"].as<char *>());
 		}
 	}
 	return "";
+}
+
+void MAKERphone::emergencyCall()
+{
+	int8_t nSelector = 0;
+	bool freshLine = false;
+	String callBuffer = "";
+	char key = NO_KEY;
+	mp.display.setTextWrap(0);
+	mp.display.setTextFont(2);
+	bool plusSign = 0;
+	uint32_t blinkMillis = millis();
+	bool blinkState = 1;
+	while (1)
+	{
+		if (millis() - blinkMillis >= 350)
+		{
+			blinkMillis = millis();
+			blinkState = !blinkState;
+		}
+		mp.display.fillScreen(TFT_BLACK);
+		mp.display.setTextColor(TFT_WHITE);
+		mp.display.setTextSize(1);
+		mp.display.fillRect(0, 79, mp.display.width(), 26, TFT_DARKGREY);
+		mp.display.drawRect(61, 110, 98, 17, TFT_WHITE);
+		mp.display.setCursor(63, 110);
+		mp.display.setTextFont(2);
+		mp.display.setTextColor(TFT_WHITE);
+		mp.display.print("Press A to dial");
+		mp.display.setCursor(60, -1);
+		mp.display.setCursor(4, 110);
+		mp.display.print("Erase");
+		mp.display.setCursor(2, -1);
+		mp.display.setTextColor(TFT_LIGHTGREY);
+		mp.display.print("Emergency calls only!");
+		mp.display.setTextColor(TFT_WHITE);
+		mp.display.setCursor(2, 28);
+		mp.display.print("112");
+		mp.display.setCursor(2, 55);
+		mp.display.print("911");
+		key = NO_KEY;
+		for (int i = 0; i < 12; i++)
+		{
+			if (mp.buttons.released(i))
+			{
+				if (i == 10)
+					key = '0';
+				else if (i == 9)
+					key = '*';
+				else if (i == 11)
+					key = '#';
+				else
+					key = '0' + i + 1;
+				break;
+			}
+		}
+		if (mp.buttons.pressed(BTN_DOWN) && nSelector >= 0)
+		{
+			if (nSelector < 2 && nSelector >= 0)
+			{
+				nSelector++;
+			}
+			else
+			{
+				nSelector = 0;
+			}
+		}
+		if (mp.buttons.pressed(BTN_UP) && nSelector <= 2)
+		{
+			if (nSelector > 0 && nSelector <= 2)
+			{
+				nSelector--;
+			}
+			else
+			{
+				nSelector = 2;
+			}
+		}
+		if (blinkState)
+			emergencyCallDrawCursor(nSelector, 1);
+
+		if (mp.buttons.released(BTN_HOME))
+		{
+			mp.exitedLockscreen = true;
+			mp.lockscreen();
+		}
+		if (mp.buttons.held(BTN_0, 20))
+		{
+			callBuffer += "+";
+			plusSign = 1;
+		}
+		if (key == '0' && plusSign)
+			key = NO_KEY;
+		if (plusSign && mp.buttons.released(BTN_0))
+			plusSign = 0;
+		if (mp.buttons.released(BTN_FUN_LEFT))
+		{
+			callBuffer.remove(callBuffer.length() - 1);
+			mp.buttons.update();
+		}
+		if (key != NO_KEY)
+		{
+			switch (key)
+			{
+			case '1':
+				mp.osc->note(C5, 0.05);
+				mp.osc->play();
+				break;
+			case '2':
+				mp.osc->note(D5, 0.05);
+				mp.osc->play();
+				break;
+			case '3':
+				mp.osc->note(E5, 0.05);
+				mp.osc->play();
+				break;
+			case '4':
+				mp.osc->note(F5, 0.05);
+				mp.osc->play();
+				break;
+			case '5':
+				mp.osc->note(G5, 0.05);
+				mp.osc->play();
+				break;
+			case '6':
+				mp.osc->note(A5, 0.05);
+				mp.osc->play();
+				break;
+			case '7':
+				mp.osc->note(B5, 0.05);
+				mp.osc->play();
+				break;
+			case '8':
+				mp.osc->note(C6, 0.05);
+				mp.osc->play();
+				break;
+			case '9':
+				mp.osc->note(D6, 0.05);
+				mp.osc->play();
+				break;
+			case '*':
+				mp.osc->note(E6, 0.05);
+				mp.osc->play();
+				break;
+			case '0':
+				mp.osc->note(F6, 0.05);
+				mp.osc->play();
+				break;
+			case '#':
+				mp.osc->note(G6, 0.05);
+				mp.osc->play();
+				break;
+			default:
+				break;
+			}
+			callBuffer += key;
+		}
+		if (callBuffer == "*" && !freshLine)
+		{
+			callBuffer = "";  //delete stuck asterisk
+			freshLine = true; //don't delete more than once...
+		}
+		mp.display.setCursor(0, 76);
+		mp.display.setTextSize(2);
+		mp.display.print(callBuffer);
+		if (mp.display.cursor_x + 4 >= mp.display.width())
+		{
+			mp.display.fillRect(0, 79, mp.display.width(), 26, TFT_DARKGREY);
+			mp.display.setCursor(mp.display.width() - mp.display.cursor_x - 14, 76);
+			mp.display.print(callBuffer);
+		}
+		if (blinkState)
+		{
+			mp.display.drawFastVLine(mp.display.getCursorX() + 1, mp.display.getCursorY() + 6, 20, TFT_WHITE);
+			mp.display.drawFastVLine(mp.display.getCursorX() + 2, mp.display.getCursorY() + 6, 20, TFT_WHITE);
+		}
+		//Call may still be valid if callBuffer=null if nSelector is on one of the two options
+		if ((mp.buttons.released(BTN_A) && callBuffer != "") || (mp.buttons.released(BTN_A) && nSelector != 2)) //initate call
+		{
+			while (!mp.update());
+			if (mp.sim_module_version == 255)
+			{
+				mp.display.fillScreen(TFT_BLACK);
+				mp.display.setTextColor(TFT_WHITE);
+				mp.display.setTextSize(1);
+				mp.display.setCursor(0, mp.display.height() / 2 - 20);
+				mp.display.setTextFont(2);
+				mp.display.printCenter(F("No network board!"));
+				mp.display.setCursor(0, mp.display.height() / 2);
+				mp.display.printCenter(F("Insert board and reset"));
+				uint32_t tempMillis = millis();
+				while (millis() < tempMillis + 2000 && !mp.buttons.released(BTN_A) && !mp.buttons.released(BTN_B))
+					mp.update();
+				while (!mp.update());
+			}
+			else if (mp.airplaneMode)
+			{
+				mp.display.fillScreen(TFT_BLACK);
+				mp.display.setTextColor(TFT_WHITE);
+				mp.display.setTextSize(1);
+				mp.display.setCursor(0, mp.display.height() / 2 - 20);
+				mp.display.setTextFont(2);
+				mp.display.printCenter(F("Can't make calls"));
+				mp.display.setCursor(0, mp.display.height() / 2);
+				mp.display.printCenter(F("Turn off airplane mode"));
+				uint32_t tempMillis = millis();
+				while (millis() < tempMillis + 2000 && !mp.buttons.released(BTN_A) && !mp.buttons.released(BTN_B))
+					mp.update();
+				while (!mp.update());
+			}
+			else
+			{
+				uint32_t timeoutMillis = millis();
+				while (Serial1.available())
+					Serial1.read();
+				Serial1.println("AT+CCALR?"); //No sim - returns 0 - not ready, that's okay for emergency call
+				String input = mp.waitForOK();
+				Serial.println(input);
+				if (mp.signalStrength == 99)
+				{
+					Serial1.println("AT+CSQ");
+					String buffer = "";
+					uint32_t current = millis();
+					while (buffer.indexOf("+CSQ:") == -1 && millis() - current >= 2000)
+						buffer = Serial1.readString();
+					if (buffer.indexOf("+CSQ:") != -1)
+						mp.signalStrength = buffer.substring(buffer.indexOf(" ", buffer.indexOf("+CSQ:")) + 1, buffer.indexOf(",", buffer.indexOf(" ", buffer.indexOf("+CSQ:")))).toInt();
+					if (mp.signalStrength == 99)
+					{
+						mp.display.fillScreen(TFT_BLACK);
+						mp.display.setTextColor(TFT_WHITE);
+						mp.display.setTextSize(1);
+						mp.display.setCursor(0, mp.display.height() / 2 - 20);
+						mp.display.setTextFont(2);
+						mp.display.printCenter(F("No signal!"));
+						mp.display.setCursor(0, mp.display.height() / 2);
+						mp.display.printCenter(F("Check your antenna"));
+						uint32_t tempMillis = millis();
+						while (millis() < tempMillis + 2000 && !mp.buttons.released(BTN_A) && !mp.buttons.released(BTN_B))
+							mp.update();
+						while (!mp.update());
+					}
+					else
+					{
+						if (nSelector == 0)
+						{
+							callBuffer = "112";
+						}
+						else if (nSelector == 1)
+						{
+							callBuffer = "911";
+						}
+						callNumberEmergency(callBuffer);
+						while (!mp.update());
+						callBuffer = "";
+					}
+				}
+				else
+				{   //Check if number obviously ins't an emergency number, some countries use something other than 112/911
+				    //Later we will check with the operator if they allow the call to go through or not
+					if (callBuffer.length() > 4)
+					{
+						mp.display.fillScreen(TFT_BLACK);
+						mp.display.setTextColor(TFT_WHITE);
+						mp.display.setTextSize(1);
+						mp.display.setCursor(0, mp.display.height() / 2 - 20);
+						mp.display.setTextFont(2);
+						mp.display.printCenter(F("No SIM card!"));
+						mp.display.setCursor(0, mp.display.height() / 2);
+						mp.display.printCenter(F("Emergency calls only!"));
+						uint32_t tempMillis = millis();
+						while (millis() < tempMillis + 2000 && !mp.buttons.released(BTN_A) && !mp.buttons.released(BTN_B))
+							mp.update();
+						while (!mp.update());
+					}
+					else
+					{   //Assign number to buffer if there's a selection other than input box
+						if (nSelector == 0)
+						{
+							callBuffer = "112";
+						}
+						else if (nSelector == 1)
+						{
+							callBuffer = "911";
+						}
+						//Make call
+						callNumberEmergency(callBuffer);
+						while (!mp.update());
+					}
+					callBuffer = "";
+				}
+			}
+		}
+		if (mp.buttons.released(BTN_B)) //BACK BUTTON
+			break;
+
+		mp.update();
+	}
+	while (!mp.update());
+}
+
+void MAKERphone::callNumberEmergency(String number)
+{
+	String contact = mp.checkContact(number);
+	mp.inCall = 1;
+	mp.dataRefreshFlag = 0;
+	char c;
+	String localBuffer = "";
+	String buffer = "";
+	Serial1.print(F("ATD"));
+	Serial1.print(number);
+	Serial1.print(";\r\n");
+	mp.display.setFreeFont(TT1);
+	mp.display.setTextColor(TFT_BLACK);
+	bool firstPass = 1;
+	uint32_t timeOffset = 0;
+	uint8_t scale;
+	String temp;
+	unsigned int tmp_time = 0;
+	if (mp.resolutionMode)
+	{
+		scale = 1;
+		mp.display.setFreeFont(TT1);
+	}
+	else
+	{
+		scale = 2;
+		mp.display.setTextFont(2);
+	}
+	mp.display.setTextSize(1);
+	digitalWrite(soundSwitchPin, 1);
+	if (contact == "")
+		mp.display.printCenter(number);
+	else
+		mp.display.printCenter(contact);
+	uint8_t callState = 1;
+	while (1)
+	{
+		mp.display.fillScreen(TFT_WHITE);
+		if (Serial1.available())
+		{
+			c = Serial1.read();
+			buffer += c;
+		}
+		//Check if the operator allows the call to go through; check if it's an emergency number
+		//If the response contains "ERROR" selected/entered number is invalid, we print a msg to let the user know
+		if (buffer.indexOf("ERROR") > 1)
+		{
+			mp.display.fillScreen(TFT_BLACK);
+			mp.display.setTextColor(TFT_WHITE);
+			mp.display.setTextSize(1);
+			mp.display.setCursor(0, mp.display.height() / 2 - 20);
+			mp.display.setTextFont(2);
+			mp.display.printCenter(F("Invalid number!"));
+			mp.display.setCursor(0, mp.display.height() / 2);
+			mp.display.printCenter(F("Emergency calls only!"));
+			uint32_t tempMillis = millis();
+			while (millis() < tempMillis + 2000 && !mp.buttons.released(BTN_A) && !mp.buttons.released(BTN_B))
+				mp.update();
+			while (!mp.update());
+			if (mp.SDinsertedFlag)
+				mp.saveSettings();
+			digitalWrite(soundSwitchPin, 0);
+			mp.inCall = 0;
+			return;
+		}
+		if (buffer.indexOf("CLCC:") != -1 && buffer.indexOf("\r", buffer.indexOf("CLCC:")) != -1)
+		{
+			localBuffer = buffer;
+			buffer = "";
+		}
+		if (buffer.indexOf("\r") != -1)
+			buffer = "";
+		Serial.println("---------------");
+		Serial.println(buffer);
+		delay(5);
+		if (buffer.indexOf("OK", buffer.indexOf("AT+CMIC=")) != -1)
+			buffer = "";
+		if (localBuffer.indexOf("+CLCC: 1") != -1 || localBuffer.indexOf("AT+CMIC") != -1)
+		{
+			if (localBuffer.indexOf("1,0,0,0,0") != -1 || localBuffer.indexOf("AT+CMIC") != -1)
+			{
+				callState = 2;
+			}
+
+			else if (localBuffer.indexOf("1,0,3,0,0") != -1)
+			{
+				callState = 0;
+			}
+
+			else if (localBuffer.indexOf("1,0,2,0,0") != -1)
+			{
+				callState = 1;
+			}
+
+			else if (localBuffer.indexOf("1,0,6,0,0") != -1)
+			{
+				mp.display.fillScreen(TFT_WHITE);
+				mp.display.setCursor(32, 9);
+				if (timeOffset == 0)
+					mp.display.printCenter("00:00");
+				else
+				{
+					temp = "";
+					if ((int((millis() - timeOffset) / 1000) / 60) > 9)
+						temp += (int((millis() - timeOffset) / 1000) / 60);
+					else
+					{
+						temp += "0";
+						temp += (int((millis() - timeOffset) / 1000) / 60);
+					}
+					temp += ":";
+					if (int((millis() - timeOffset) / 1000) % 60 > 9)
+						temp += (int((millis() - timeOffset) / 1000) % 60);
+					else
+					{
+						temp += "0";
+						temp += (int((millis() - timeOffset) / 1000) % 60);
+					}
+					mp.display.setCursor(9, 9);
+					mp.display.printCenter(temp);
+				}
+				mp.display.drawBitmap(29 * scale, 24 * scale, call_icon, TFT_RED, scale);
+				if (mp.resolutionMode)
+					mp.display.setCursor(11, 20);
+				else
+					mp.display.setCursor(11, 28);
+				if (contact == "")
+					mp.display.printCenter(number);
+				else
+					mp.display.printCenter(contact);
+				mp.display.fillRect(0, 51 * scale, 80 * scale, 13 * scale, TFT_RED);
+				if (mp.resolutionMode)
+					mp.display.setCursor(2, 62);
+				else
+					mp.display.setCursor(2, 112);
+				mp.display.print("Call ended");
+				Serial.println("ENDED");
+				while (!mp.update());
+
+				mp.updateTimeRTC();
+				if (mp.SDinsertedFlag)
+					mp.addCall(number, mp.checkContact(number), mp.RTC.now().unixtime(), tmp_time, 1);
+
+				delay(1000);
+				break;
+			}
+		}
+
+		else if (localBuffer.indexOf("CLCC:") == -1)
+		{
+			if (localBuffer.indexOf("ERROR") != -1)
+			{
+
+				mp.display.setCursor(3, 9);
+				mp.display.printCenter("Couldn't dial number!");
+				mp.display.drawBitmap(29 * scale, 24 * scale, call_icon, TFT_RED, scale);
+				if (mp.resolutionMode)
+					mp.display.setCursor(11, 20);
+				else
+					mp.display.setCursor(11, 28);
+				if (contact == "")
+					mp.display.printCenter(number);
+				else
+					mp.display.printCenter(contact);
+				mp.display.fillRect(0, 51 * scale, 80 * scale, 13 * scale, TFT_RED);
+				if (mp.resolutionMode)
+				{
+					mp.display.setCursor(2, 57);
+					mp.display.print("Invalid number or");
+					mp.display.setCursor(2, 63);
+					mp.display.print("SIM card missing!");
+				}
+				else
+				{
+					mp.display.setCursor(2, 100);
+					mp.display.print("Invalid number or");
+					mp.display.setCursor(2, 112);
+					mp.display.print("SIM card missing!");
+				}
+				while (!mp.buttons.released(BTN_B))
+					mp.update();
+				break;
+			}
+			else
+			{
+				callState = 1;
+			}
+		}
+		if (mp.buttons.pressed(BTN_FUN_RIGHT)) // hanging up
+		{
+
+			mp.display.fillScreen(TFT_WHITE);
+			mp.display.setCursor(32, 9);
+			if (timeOffset == 0)
+				mp.display.printCenter("00:00");
+			else
+			{
+				temp = "";
+				if ((int((millis() - timeOffset) / 1000) / 60) > 9)
+					temp += (int((millis() - timeOffset) / 1000) / 60);
+				else
+				{
+					temp += "0";
+					temp += (int((millis() - timeOffset) / 1000) / 60);
+				}
+				temp += ":";
+				if (int((millis() - timeOffset) / 1000) % 60 > 9)
+					temp += (int((millis() - timeOffset) / 1000) % 60);
+				else
+				{
+					temp += "0";
+					temp += (int((millis() - timeOffset) / 1000) % 60);
+				}
+				mp.display.setCursor(9, 9);
+				mp.display.printCenter(temp);
+			}
+			mp.display.drawBitmap(29 * scale, 24 * scale, call_icon, TFT_RED, scale);
+			mp.display.setCursor(11, 28);
+			if (contact == "")
+				mp.display.printCenter(number);
+			else
+				mp.display.printCenter(contact);
+			mp.display.fillRect(0, 51 * scale, 80 * scale, 13 * scale, TFT_RED);
+			mp.display.setCursor(2, 112);
+			mp.display.print("Call ended");
+			Serial.println("ENDED");
+			while (!mp.update())
+				;
+			mp.updateTimeRTC();
+			Serial.println("B PRESSED");
+			Serial1.println("ATH");
+			uint32_t curr_millis = millis();
+			while (Serial1.readString().indexOf("1,0,6,0,0") == -1 && millis() - curr_millis < 2000)
+			{
+				Serial1.println("ATH");
+			}
+			if (mp.SDinsertedFlag)
+				mp.addCall(number, mp.checkContact(number), mp.RTC.now().unixtime(), tmp_time, 1);
+			delay(1000);
+			break;
+		}
+		if (mp.buttons.released(BTN_UP) && ((mp.micGain < 15 && mp.sim_module_version == 1) || (mp.micGain < 8 && mp.sim_module_version == 0)) && callState == 2)
+		{
+			mp.micGain++;
+			if (mp.sim_module_version == 1)
+				Serial1.printf("AT+CMIC=0,%d\r", mp.micGain);
+			else if (mp.sim_module_version == 0)
+			{
+				String foo = "AT+CMICGAIN=";
+				foo += mp.micGain;
+				Serial1.println(foo);
+				delay(10);
+			}
+		}
+		if (mp.buttons.released(BTN_DOWN) && mp.micGain > 0 && callState == 2)
+		{
+			mp.micGain--;
+			if (mp.sim_module_version == 1)
+				Serial1.printf("AT+CMIC=0,%d\r", mp.micGain);
+			else if (mp.sim_module_version == 0)
+			{
+				String foo = "AT+CMICGAIN=";
+				foo += mp.micGain;
+				Serial1.println(foo);
+				delay(10);
+			}
+		}
+		switch (callState)
+		{
+		case 0:
+			mp.display.setCursor(25, 9);
+			mp.display.printCenter("Ringing...");
+			mp.display.drawBitmap(29 * scale, 24 * scale, call_icon, TFT_DARKGREY, scale);
+			mp.display.setCursor(11, 28);
+			if (contact == "")
+				mp.display.printCenter(number);
+			else
+				mp.display.printCenter(contact);
+			mp.display.fillRect(0, 51 * scale, 80 * scale, 13 * scale, TFT_RED);
+			mp.display.setCursor(5, 109);
+			mp.display.print("Mic gain: ");
+			mp.display.print(mp.micGain);
+			mp.display.setCursor(100, 109);
+			mp.display.print("Hang up");
+			break;
+		case 1:
+			mp.display.setCursor(25, 9);
+			mp.display.printCenter("Calling...");
+			mp.display.drawBitmap(29 * scale, 24 * scale, call_icon, TFT_DARKGREY, scale);
+			mp.display.setCursor(11, 28);
+			if (contact == "")
+				mp.display.printCenter(number);
+			else
+				mp.display.printCenter(contact);
+			mp.display.fillRect(0, 51 * scale, 80 * scale, 13 * scale, TFT_RED);
+			mp.display.setCursor(5, 109);
+			mp.display.print("Mic gain: ");
+			mp.display.print(mp.micGain);
+			mp.display.setCursor(100, 109);
+			mp.display.print("Hang up");
+			break;
+		case 2:
+			if (firstPass == 1)
+			{
+				timeOffset = millis();
+				firstPass = 0;
+			}
+			String temp = "";
+			if ((int((millis() - timeOffset) / 1000) / 60) > 9)
+				temp += (int((millis() - timeOffset) / 1000) / 60);
+			else
+			{
+				temp += "0";
+				temp += (int((millis() - timeOffset) / 1000) / 60);
+			}
+			temp += ":";
+			if (int((millis() - timeOffset) / 1000) % 60 > 9)
+				temp += (int((millis() - timeOffset) / 1000) % 60);
+			else
+			{
+				temp += "0";
+				temp += (int((millis() - timeOffset) / 1000) % 60);
+			}
+			mp.display.setCursor(9, 9);
+			mp.display.printCenter(temp);
+			mp.display.drawBitmap(29 * scale, 24 * scale, call_icon, TFT_GREEN, scale);
+			mp.display.setCursor(11, 28);
+			if (contact == "")
+				mp.display.printCenter(number);
+			else
+				mp.display.printCenter(contact);
+			mp.display.fillRect(0, 51 * scale, 80 * scale, 13 * scale, TFT_RED);
+			mp.display.setCursor(5, 109);
+			mp.display.print("Mic gain: ");
+			mp.display.print(mp.micGain);
+			mp.display.setCursor(100, 109);
+			mp.display.print("Hang up");
+			break;
+		}
+		for (int i = 0; i < 12; i++)
+		{
+
+			if (mp.buttons.released(i))
+			{
+				if (i == 9)
+					Serial1.println("AT+VTS=*");
+				else if (i == 10)
+					Serial1.println("AT+VTS=0");
+				else if (i == 11)
+					Serial1.println("AT+VTS=#");
+				else
+				{
+					Serial1.print("AT+VTS=");
+					Serial1.println(i + 1);
+				}
+				break;
+			}
+		}
+		tmp_time = int((millis() - timeOffset) / 1000);
+		mp.update();
+	}
+	if (mp.SDinsertedFlag)
+		mp.saveSettings();
+	digitalWrite(soundSwitchPin, 0);
+	mp.inCall = 0;
+}
+
+void MAKERphone::emergencyCallDrawCursor(uint8_t i, int32_t y)
+{
+	uint8_t offset = 20;
+	uint8_t boxHeight = 28;
+	y += i * boxHeight + offset;
+	mp.display.drawRect(0, y, mp.display.width(), boxHeight + 1, TFT_RED);
 }
