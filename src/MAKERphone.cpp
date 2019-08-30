@@ -629,7 +629,6 @@ bool MAKERphone::update(bool altButtonsUpdate) {
 	// 	}
 	// }
 	//buf2.invertDisplay(1);
-	Serial.println(voltage);
 
 	buttonsPressed = 0;
 	for(uint8_t i = 16; i < 22;i++)
