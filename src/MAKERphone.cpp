@@ -31,6 +31,8 @@ uint32_t _timesMeasured = 0;
 bool clockFallback = 1;
 bool chargeDuringADCRead = 0;
 uint32_t simBusyCounter = 0;
+double _voltOffset1 = 0;
+double _voltOffset2 = 0;
 static esp_adc_cal_characteristics_t *adc_chars;
 void Task1code( void * pvParameters ){
 	while (true)
@@ -75,7 +77,9 @@ void ADCmeasuring(void *parameters)
 				{
 					chargeDuringADCRead = 0;
 					vTaskDelay(1);
-					voltageSum += esp_adc_cal_raw_to_voltage(adc1_get_raw(ADC1_CHANNEL_7), adc_chars)*2;
+					double value  = esp_adc_cal_raw_to_voltage(adc1_get_raw(ADC1_CHANNEL_7), adc_chars)*2 + 158.0235417;
+					value = (value - _voltOffset2)*400/(_voltOffset1 - _voltOffset2) + 3600;
+					voltageSum += value;
 					// uint32_t reading =  adc1_get_raw(ADC1_CHANNEL_7)*2;
 					// uint32_t tempVoltage = esp_adc_cal_raw_to_voltage(reading, adc_chars);
 					// voltageSum += tempVoltage;
@@ -84,7 +88,7 @@ void ADCmeasuring(void *parameters)
 			}
 			if(!chargeDuringADCRead)
 			{
-				voltage = ((voltageSum )/(6000.0) + 158.0235417);
+				voltage = ((voltageSum )/(6000.0));
 				voltageSum = 0;
 				voltageSample = 0;
 				_timesMeasured++;
@@ -129,9 +133,37 @@ void MAKERphone::begin(bool splash) {
 	Serial.print("Vref: ");
 	Serial.println(vRef);
 	esp_adc_cal_characterize(ADC_UNIT_1, ADC_ATTEN_11db, ADC_WIDTH_BIT_12, vRef, adc_chars);
-	
+	Serial.println(REG_GET_FIELD(EFUSE_BLK0_RDATA3_REG, EFUSE_RD_BLK3_PART_RESERVE));
+	if(REG_GET_FIELD(EFUSE_BLK0_RDATA3_REG, EFUSE_RD_BLK3_PART_RESERVE))
+	{
+		int offset1 = REG_GET_FIELD(EFUSE_BLK3_RDATA3_REG, EFUSE_RD_ADC1_TP_HIGH);
+		Serial.print("Reading from efuse ADC1HIGH: ");
+		Serial.println(offset1, BIN);
+		int offset2 = REG_GET_FIELD(EFUSE_BLK3_RDATA3_REG, EFUSE_RD_ADC2_TP_HIGH);
+		Serial.print("Reading from efuse ADC1LOW: ");
+		Serial.println(offset2, BIN);
 
-
+		// offset1 = 0b1011010;
+		// offset2 = 0b1011001;
+		uint16_t offset1PlusMinus = offset1 & 0x100;
+		Serial.println(offset1PlusMinus);
+		uint16_t offset2PlusMinus = offset2 & 0x100;
+		Serial.println(offset2PlusMinus);
+		_voltOffset1 = offset1 & 0xFF;
+		if(offset1PlusMinus == 0)
+			_voltOffset1 = 4000 + _voltOffset1*3;
+		else
+			_voltOffset1 = 4000 - _voltOffset1*3;
+		_voltOffset2 = offset2 & 0xFF;
+		if(offset2PlusMinus == 0)
+			_voltOffset2 = 3600 + _voltOffset2*3;
+		else
+			_voltOffset2 = 3600 - _voltOffset2*3;
+		Serial.print("offset value 1:");
+		Serial.println(_voltOffset1);
+		Serial.print("offset value 2:");
+		Serial.println(_voltOffset2);
+	}
 	//Serial1.println(F("AT+CFUN=1,1"));
 	//Serial1.println("AT+CMEE=2");
 	//Serial1.println(F("AT+CPIN?"));
@@ -597,6 +629,8 @@ bool MAKERphone::update(bool altButtonsUpdate) {
 	// 	}
 	// }
 	//buf2.invertDisplay(1);
+	Serial.println(voltage);
+
 	buttonsPressed = 0;
 	for(uint8_t i = 16; i < 22;i++)
 	{
@@ -1174,13 +1208,15 @@ void MAKERphone::sleep() {
 		for(measuringCounter = 0; measuringCounter < 6000; measuringCounter++)
 		{
 			chargeDuringADCRead = 0;
-			voltageSum += esp_adc_cal_raw_to_voltage(adc1_get_raw(ADC1_CHANNEL_7), adc_chars)*2;
+			double value  = esp_adc_cal_raw_to_voltage(adc1_get_raw(ADC1_CHANNEL_7), adc_chars)*2 + 158.0235417;
+			value = (value - _voltOffset2)*400/(_voltOffset1 - _voltOffset2) + 3600;
+			voltageSum += value;
 			// uint32_t reading =  adc1_get_raw(ADC1_CHANNEL_7)*2;
 			// uint32_t tempVoltage = esp_adc_cal_raw_to_voltage(reading, adc_chars);
 			// voltageSum += tempVoltage;
 			voltageSample++;
 		}
-		voltage = ((voltageSum )/(6000.0) + 158.0235417);
+		voltage = ((voltageSum )/(6000.0));
 		voltageSum = 0;
 		voltageSample = 0;
 		Serial.println(batteryVoltage);
