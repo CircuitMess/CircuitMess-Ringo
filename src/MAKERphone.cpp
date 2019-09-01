@@ -2731,7 +2731,6 @@ String MAKERphone::textInput(String buffer, int16_t length)
 		return buffer;
 	else
 		textLimitFlag = 0;
-
 	if((length == -1 || length >= buffer.length()) && !btnHeld){
 		ret = multi_tap(key);// Feed the key press to the multi_tap function.
 		if ((ret & 256) != 0) // If this is non-zero, we got a key. Handle some special keys or just print the key on screen
