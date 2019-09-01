@@ -26,6 +26,8 @@ TaskHandle_t MeasuringTask;
 uint32_t voltageSum = 0;
 uint32_t voltageSample = 0;
 volatile double voltage = 3700;
+boolean btnHeld;
+boolean btnHeldField[10];
 uint32_t measuringCounter = 0;
 uint32_t _timesMeasured = 0;
 bool clockFallback = 1;
@@ -2692,8 +2694,10 @@ String MAKERphone::textInput(String buffer, int16_t length)
 
 	if (buttons.released(BTN_FUN_LEFT) && buffer != "")
 	{
-		if (textPointer == buffer.length())
+		if (textPointer == buffer.length()){
 			textPointer--;
+			btnHeld = false;
+		}
 		buffer.remove(buffer.length() - 1);
 	}
 	else if(key == '*')
@@ -2703,13 +2707,32 @@ String MAKERphone::textInput(String buffer, int16_t length)
 		textPointer++;
 		buffer+=' ';
 	}
+	
+	if(!textLimitFlag && !(buffer.length() == length) && !btnHeld){
+		if (mp.buttons.held(10,25)){
+			btnHeld = true;
+			btnHeldField[9] = true;	
+			buffer+='+';
+			textPointer++;
+			}
+		else for(int i = 0; i < 9; i++){
+			if(mp.buttons.held(i,25)){
+				buffer+=i+1;
+				textPointer++;
+				btnHeld = true;
+				btnHeldField[i] = true;
+				break;
+			}	
+		}
+		if(buffer.length() == length) textLimitFlag = 1;
+	}
 
 	if(textLimitFlag && buffer.length() == length)
 		return buffer;
 	else
 		textLimitFlag = 0;
 
-	if(length == -1 || length >= buffer.length()){
+	if((length == -1 || length >= buffer.length()) && !btnHeld){
 		ret = multi_tap(key);// Feed the key press to the multi_tap function.
 		if ((ret & 256) != 0) // If this is non-zero, we got a key. Handle some special keys or just print the key on screen
 		{
@@ -2729,6 +2752,21 @@ String MAKERphone::textInput(String buffer, int16_t length)
 				buffer[buffer.length() - 1] = char(lowByte(ret));
 		}
 	}
+	
+	if(btnHeld){
+		if (btnHeldField[9] && mp.buttons.released(10)) {
+			btnHeldField[9] = false;
+			btnHeld = false;
+		}
+		else for(int i = 0; i < 9; i++){
+			if(btnHeldField[i] && mp.buttons.released(i)){
+					btnHeldField[i] = false;
+					btnHeld = false;
+					break;	
+			}
+		}
+	}
+
 	if(buffer.length() > length)
 	{
 		buffer = buffer.substring(0,length);
