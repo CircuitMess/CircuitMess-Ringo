@@ -332,7 +332,7 @@ class MAKERphone:public Buttons, public DateTime
 	bool exitedLockscreen = 0;
 	bool homeButtonPressed = 0;
 	String checkContact(String contactNumber);
-	char* pduDecode(const char* PDU);
+	void pduDecode(const char* PDU);
 
 	int8_t networkRegistered = -1;
 	void networkModuleInit();
@@ -394,5 +394,9 @@ class MAKERphone:public Buttons, public DateTime
 		uint32_t networkDisconnectMillis = millis();
 		bool networkDisconnectFlag = 1;
 		bool networkInitialized = 0;
+		char _smsText[162];
+		char _smsNumber[20];
+		DateTime _smsDatetime;
+
 };
 #endif
