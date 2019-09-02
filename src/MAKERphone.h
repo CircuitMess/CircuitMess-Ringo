@@ -332,7 +332,7 @@ class MAKERphone:public Buttons, public DateTime
 	bool exitedLockscreen = 0;
 	bool homeButtonPressed = 0;
 	String checkContact(String contactNumber);
-	void pduDecode(char* PDU);
+	char* pduDecode(const char* PDU);
 
 	int8_t networkRegistered = -1;
 	void networkModuleInit();

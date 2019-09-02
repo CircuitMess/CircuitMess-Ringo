@@ -99,48 +99,6 @@ void ADCmeasuring(void *parameters)
 		}
 	}
 }
-enum {
-	BITMASK_7BITS = 0x7F,
-	BITMASK_8BITS = 0xFF,
-	BITMASK_HIGH_4BITS = 0xF0,
-	BITMASK_LOW_4BITS = 0x0F,
-
-	TYPE_OF_ADDRESS_INTERNATIONAL_PHONE = 0x91,
-	TYPE_OF_ADDRESS_NATIONAL_SUBSCRIBER = 0xC8,
-
-	SMS_DELIVER_ONE_MESSAGE = 0x04,
-	SMS_SUBMIT              = 0x11,
-
-	SMS_MAX_7BIT_TEXT_LENGTH  = 160,
-};
-int MAKERphone::DecodePDUMessage(const char* buffer, int buffer_length, char* output_sms_text, int sms_text_length)
-{
-	int output_text_length = 0;
-	if (buffer_length > 0)
-		output_sms_text[output_text_length++] = BITMASK_7BITS & buffer[0];
-
-	int carry_on_bits = 1;
-	int i = 1;
-	for (; i < buffer_length; ++i) {
-
-		output_sms_text[output_text_length++] = BITMASK_7BITS &	((buffer[i] << carry_on_bits) | (buffer[i - 1] >> (8 - carry_on_bits)));
-
-		if (output_text_length == sms_text_length) break;
-
-		carry_on_bits++;
-
-		if (carry_on_bits == 8) {
-			carry_on_bits = 1;
-			output_sms_text[output_text_length++] = buffer[i] & BITMASK_7BITS;
-			if (output_text_length == sms_text_length) break;
-		}
-
-	}
-	if (output_text_length < sms_text_length)  // Add last remainder.
-		output_sms_text[output_text_length++] =	buffer[i - 1] >> (8 - carry_on_bits);
-
-	return output_text_length;
-}
 
 // char* subchar(char* str, uint16_t start, uint16_t length)
 // {
@@ -2258,36 +2216,8 @@ void MAKERphone::incomingMessage(String _serialData)
 	String number = _serialData.substring(helper + 1, _serialData.indexOf("\"", helper+1));
 	helper+=number.length() + 1;
 	helper = _serialData.indexOf("\"\r", helper);
-	String text = _serialData.substring(helper + 3, _serialData.indexOf("\r", helper + 2));
-	bool isHex = 1;
-	for (uint32_t i = 0; i < text.length(); i++)
-	{
-		if(isdigit(text[i]) || tolower(text[i]) == 'a' || tolower(text[i]) == 'b' || tolower(text[i]) == 'c' ||
-		tolower(text[i]) == 'd' || tolower(text[i]) == 'e' || tolower(text[i]) == 'f')
-			continue;
-		else
-		{
-			isHex = 0;
-			break;
-		}
-	}
-	Serial.println(isHex);
-	if(isHex)
-	{
-		String newText = "";
-		for(int i = 0; i <= text.length() - 4;i+=4)
-		{
-			char snip[5] = "";
-			strncpy(snip, text.substring(i, i+4).c_str(), 5);
-			int charCode = strtol(snip, nullptr, 16);
-			char c = '*';
-			if(charCode <= 128)
-				c = charCode;
-			newText+=c;
-		}
-		Serial.println(newText);
-		text = newText;
-	}
+	const char *pdu_text = _serialData.substring(helper + 3, _serialData.indexOf("\r", helper + 2)).c_str();
+	String text = String(pduDecode(pdu_text));
 	
 	JsonArray& jarr = jb.createArray();
 	bool fullStack = 0;
@@ -5275,7 +5205,7 @@ String MAKERphone::checkContact(String contactNumber)
 	}
 	return "";
 }
-void MAKERphone::pduDecode(char* PDU)
+char* MAKERphone::pduDecode(const char* PDU)
 {
 	uint16_t cursor = 0;
 	//07 91 839515001000 04 0C 91 839535685687 0008 91806291402080 04 0076 010D
@@ -5305,7 +5235,10 @@ void MAKERphone::pduDecode(char* PDU)
 
 		06 - number of characters in message
 	 */
-	uint8_t SMSC_length = strtol(subchar(PDU, cursor,2), nullptr, 16);
+	char subcharBuffer[3];
+	memset(subcharBuffer, 0, 3);
+	subchar(PDU, cursor, 2, subcharBuffer);
+	uint8_t SMSC_length = strtol(subcharBuffer, nullptr, 16);
 	cursor+=4; //one octet for SMSC length, one for type-of-address
 	Serial.print("SMSC length: ");
 	Serial.println(SMSC_length);
@@ -5315,15 +5248,17 @@ void MAKERphone::pduDecode(char* PDU)
 	memset(serviceNumber, 0, 16);
 	for(int i = 0; i < SMSC_length; i++)
 	{
-		if(charReverse(subchar(PDU, cursor, 2))[1] == 'F') //remove trailing F in case number can't be split in even octets
-			strncat(serviceNumber, &charReverse(subchar(PDU, cursor, 2))[0], 1);
+		subchar(PDU, cursor, 2, subcharBuffer);
+		if(charReverse(subcharBuffer)[1] == 'F') //remove trailing F in case number can't be split in even octets
+			strncat(serviceNumber, &subcharBuffer[0], 1);
 		else
-			strncat(serviceNumber, charReverse(subchar(PDU, cursor, 2)), 2);
+			strncat(serviceNumber, subcharBuffer, 2);
 		cursor+=2;
 	}
 
 	cursor+=2; //skip first octet of SMS-DELIVER
-	uint8_t addressLength = strtol(subchar(PDU, cursor,2), nullptr, 16);
+	subchar(PDU, cursor,2, subcharBuffer);
+	uint8_t addressLength = strtol(subcharBuffer, nullptr, 16);
 	if(addressLength % 2 == 1)
 		addressLength++;
 	cursor+=4; //address length and type-of-address
@@ -5334,37 +5269,46 @@ void MAKERphone::pduDecode(char* PDU)
 	memset(phoneNumber, 0, 16);
 	for(int i = 0; i < addressLength/2; i++)
 	{
-		if(charReverse(subchar(PDU, cursor, 2))[1] == 'F') //remove trailing F in case number can't be split in even octets
-			strncat(phoneNumber, &charReverse(subchar(PDU, cursor, 2))[0], 1);
+		subchar(PDU, cursor, 2, subcharBuffer);
+		if(charReverse(subcharBuffer)[1] == 'F') //remove trailing F in case number can't be split in even octets
+			strncat(phoneNumber, &subcharBuffer[0], 1);
 		else
-			strncat(phoneNumber, charReverse(subchar(PDU, cursor, 2)), 2);
+			strncat(phoneNumber, subcharBuffer, 2);
 		cursor+=2;
 	}
 	cursor+=2;//PID
 
 	bool codingScheme = 0; // 0 - GSM 7 bit, 1 - UCS2
-	if(strtol(subchar(PDU, cursor, 2), nullptr, 16) != 0)
+	subchar(PDU, cursor, 2, subcharBuffer);
+	if(strtol(subcharBuffer, nullptr, 16) != 0)
 		codingScheme = 1;
 	cursor+=2;
-	clockYear = 2000 + strtol(charReverse(subchar(PDU, cursor, 2)), nullptr, 10);
+	subchar(PDU, cursor, 2, subcharBuffer);
+	clockYear = 2000 + strtol(charReverse(subcharBuffer), nullptr, 10);
 	cursor+=2;
-	clockMonth = strtol(charReverse(subchar(PDU, cursor, 2)), nullptr, 10);
+	subchar(PDU, cursor, 2, subcharBuffer);
+	clockMonth = strtol(charReverse(subcharBuffer), nullptr, 10);
 	cursor+=2;
-	clockDay = strtol(charReverse(subchar(PDU, cursor, 2)), nullptr, 10);
+	subchar(PDU, cursor, 2, subcharBuffer);
+	clockDay = strtol(charReverse(subcharBuffer), nullptr, 10);
 	cursor+=2;
 	// Serial.println(clockYear);
 	// Serial.println(clockMonth);
 	// Serial.println(clockDay);
-	clockHour = strtol(charReverse(subchar(PDU, cursor, 2)), nullptr, 10);
+	subchar(PDU, cursor, 2, subcharBuffer);
+	clockHour = strtol(charReverse(subcharBuffer), nullptr, 10);
 	cursor+=2;
-	clockMinute = strtol(charReverse(subchar(PDU, cursor, 2)), nullptr, 10);
+	subchar(PDU, cursor, 2, subcharBuffer);
+	clockMinute = strtol(charReverse(subcharBuffer), nullptr, 10);
 	cursor+=2;
-	clockSecond = strtol(charReverse(subchar(PDU, cursor, 2)), nullptr, 10);
+	subchar(PDU, cursor, 2, subcharBuffer);
+	clockSecond = strtol(charReverse(subcharBuffer), nullptr, 10);
 	cursor+=2;
 	// Serial.println(clockHour);
 	// Serial.println(clockMinute);
 	// Serial.println(clockSecond);
-	uint16_t timeZone = strtol(subchar(PDU, cursor, 2), nullptr, 16);
+	subchar(PDU, cursor, 2, subcharBuffer);
+	uint16_t timeZone = strtol(subcharBuffer, nullptr, 16);
 	bool plusMinus = bitRead(timeZone, 3);
 	timeZone = timeZone & 0b11110111;
 	char zoneHelper[3];
@@ -5372,13 +5316,22 @@ void MAKERphone::pduDecode(char* PDU)
 	timeZone = strtol(charReverse(zoneHelper), nullptr, 10) / 4;
 	cursor+=2;
 	DateTime timeRead = DateTime(clockYear, clockMonth, clockDay, clockHour, clockMinute, clockSecond);
-	uint16_t userDataLength = strtol(subchar(PDU, cursor, 2), nullptr, 16);
-	if(codingScheme)
+	subchar(PDU, cursor, 2, subcharBuffer);
+	uint16_t userDataLength = strtol(subcharBuffer, nullptr, 16);
+	// if(codingScheme)
 		cursor+=2;
-	String content;
+	char content[userDataLength + 1];
+	// memset(content, 0, 162);
+
 	if(!codingScheme)
 	{
-		content = String(pdu_decode(subchar(PDU, cursor, (userDataLength+1)*2)));
+		// Serial.println(subchar(PDU, cursor, (userDataLength)*2));
+		// Serial.println(userDataLength);
+		char buffer[(userDataLength)*2 + 1];
+		subchar(PDU, cursor, (userDataLength)*2, buffer);
+		myDecode(buffer, userDataLength, content);
+
+		// delete [] received;
 		
 		// for(int i = 0; i < userDataLength; i++)
 		// {
@@ -5405,10 +5358,30 @@ void MAKERphone::pduDecode(char* PDU)
 		// 	content+=char(strtol(snippet, nullptr, 16) & 0x7F);
 		// 	cursor+=2;
 		// }
-		Serial.print("content: ");
-		Serial.println(content);
+		
 
 	}
+	else
+	{
+		char newText[162];
+		memset(newText, 0, 162);
+		for(int i = 0; i <= userDataLength*2 - 4;i+=4)
+		{
+			char snip[5] = "";
+			subchar(PDU, cursor + i, 4, snip);
+			// strncpy(snip, subchar(PDU, cursor + i, 4), 5);
+			Serial.println(snip);
+			int charCode = strtol(snip, nullptr, 16);
+			char c = '*';
+			if(charCode <= 128)
+				c = charCode;
+			strncat(newText, &c, 1);
+		}
+		strncpy(content, newText, sizeof(newText));
+		// content = newText;
+	}
+	Serial.print("content: ");
+	Serial.println(content);
 	Serial.print("data length: ");
 	Serial.println(userDataLength);
 	Serial.print("coding scheme: ");
@@ -5416,4 +5389,6 @@ void MAKERphone::pduDecode(char* PDU)
 	// Serial.print(plusMinus ? "-" : "+");
 	// Serial.println(timeZone);
 	Serial.println(phoneNumber);
+	// free(content);
+	// return content;
 }
