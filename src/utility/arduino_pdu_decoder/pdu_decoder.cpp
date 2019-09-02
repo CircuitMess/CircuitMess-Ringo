@@ -223,19 +223,16 @@ char* charReverse(char *str) {
   
 //   return plain_text;
 // }
-void myDecode(char* pdu_text, uint8_t len, char* destination)
+void myDecode(char* pdu_text, uint8_t len, char* destination, uint8_t zerosPadding)
 {
-  uint8_t shift = 1;
-  uint8_t nextMask = 0;
-  // char buffer[len+1];
-  // memset(buffer, 0, len+1);
   bool escapeFlag = 0;
-  bool buffer2[512];
-  memset(buffer2, 0, 512);
+  bool buffer2[1288];
+  memset(buffer2, 0, 1288);
   uint16_t cursor = 0;
   // len = strlen(pdu_text)/2;
   Serial.print("length of array: ");
   Serial.println(len);
+  char* t = "ahahhshshshshshhshshahahahahuahahahshshhshshshshshhshsusuahshshahwhwhhwhwhwhwhwhwhwhwhhwhwhwhwhwhwhhwhwhwhwhahahahhwhwhwhwhwhwhhwhwhwhwhwhhwhwhwhwhwhhwah";
 
   for(int i = 0; i < len; i++)
   {
@@ -243,16 +240,13 @@ void myDecode(char* pdu_text, uint8_t len, char* destination)
     memset(temp, 0 , 3);
     subchar(pdu_text, i * 2, 2, temp);
     uint8_t current = strtol(temp, NULL, 16);
-    // Serial.println(current, HEX);
     for(int y = 0; y < 8; y++)
     {
       buffer2[cursor] = bitRead(current, y);
       cursor++;
     }
   }
-
-  // Serial.println("all printed");
-  cursor = 0;
+  cursor = zerosPadding;
   for(int i = 0; i < len;i++)
   {
     uint8_t current = 0;

@@ -2221,7 +2221,52 @@ void MAKERphone::incomingMessage(String _serialData)
 	Serial.print("pdu_text");
 	Serial.println(pdu_text);
 	pduDecode(pdu_text);
-	
+	char masterText[_concatSMSCounter > 1 ? _concatSMSCounter*160 : 162];
+	memset(masterText, 0, _concatSMSCounter > 1 ? _concatSMSCounter*160 : 162);
+	strncat(masterText, _smsText, _concatSMSCounter > 1 ? _concatSMSCounter*160 : 162);
+	Serial.println(masterText);
+	while(_concatSMSCounter > 1)
+	{
+		tft.setTextColor(TFT_WHITE);
+		tft.fillRect(0,0,160,128,TFT_BLACK);
+		tft.setTextFont(2);
+		tft.setTextSize(1);
+		tft.setCursor(2, 50);
+		tft.print("Receiving additional SMS");
+		tft.setCursor(4, 69);
+		tft.print("Please wait...");
+		while(digitalRead(SIM_INT) )
+		{
+			String temp = "";
+			long long curr_millis = millis();
+
+			while((temp.indexOf("\r", temp.indexOf("\r", helper + 1) + 1) == -1
+			|| temp.indexOf("\r", helper + 1) == -1 || helper == -1)
+			&& temp.indexOf("\r", temp.indexOf("1,4,0,0,")) == -1
+			&& millis() - curr_millis < 500)
+			{ 
+				if(Serial1.available())
+				{
+					curr_millis = millis();
+					char c = Serial1.read();
+					temp += c;
+					helper = temp.indexOf("+CMT:");
+				}
+			}
+			if(temp.indexOf("+CMT:") != -1)
+			{
+				helper = temp.indexOf("\r", temp.indexOf("+CMT")) + 1;
+				const char *pdu_text = temp.substring(helper + 1, temp.indexOf("\r", helper + 2)).c_str();
+				Serial.println("pdu_text:");
+				Serial.println(pdu_text);
+				pduDecode(pdu_text);
+				strncat(masterText, _smsText, _concatSMSCounter > 1 ? _concatSMSCounter*160 : 162);
+				break;
+			}
+		}
+		_concatSMSCounter--;
+	}
+	_concatSMSCounter = 0;
 	JsonArray& jarr = jb.createArray();
 	bool fullStack = 0;
 	if(SDinsertedFlag)
@@ -2260,18 +2305,17 @@ void MAKERphone::incomingMessage(String _serialData)
 			String temp = checkContact(_smsNumber);
 			if(temp == "")
 			{
-				saveMessage(_smsText, "", _smsNumber, 0, 1);
+				saveMessage(masterText, "", _smsNumber, 0, 1);
 				addNotification(2, _smsNumber, RTC.now());
 			}
 			else
 			{
-				saveMessage(_smsText, temp, _smsNumber, 0, 1);
+				saveMessage(masterText, temp, _smsNumber, 0, 1);
 				addNotification(2, temp, RTC.now());
 			}
 			
 		}
 	}
-	
 	// popup(String(number + ": " + text), 50);
 	tft.setTextColor(TFT_BLACK);
 	tft.fillRect(0,0,160,128,TFT_WHITE);
@@ -2286,9 +2330,9 @@ void MAKERphone::incomingMessage(String _serialData)
 	tft.print(_smsNumber);
 	tft.setCursor(10, 70);
 	tft.setTextWrap(1);
-	for(int i = 0; i < strlen(_smsText);i++)
+	for(int i = 0; i < strlen(masterText);i++)
 	{
-		tft.print(_smsText[i]);
+		tft.print(masterText[i]);
 		if(tft.getCursorY() > 80 && tft.getCursorX() > 130)
 		{
 			tft.print("...");
@@ -5042,9 +5086,6 @@ void MAKERphone::checkAlarms()
 	updateTimeRTC();
 	uint8_t next_alarm = 99;
 	int i = currentTime.dayOfWeek();
-	Serial.print("Today: ");
-	Serial.println(currentTime.dayOfWeek());
-	delay(5);
 	for(int x = 0; x < 6; x++)
 	{
 		for(int y = 0; y < 5 ;y++)
@@ -5319,8 +5360,33 @@ void MAKERphone::pduDecode(const char* PDU)
 
 	subchar(PDU, cursor, 2, subcharBuffer);
 	uint16_t userDataLength = strtol(subcharBuffer, nullptr, 16);
-	// if(codingScheme)
+	cursor+=2;
+	uint8_t zerosPadding = 0;
+	if(userDataLength == 160 || _concatSMSCounter > 0)
+	{
+		userDataLength-=7;
+		subchar(PDU, cursor, 2, subcharBuffer);
+		uint8_t concatHeaderLength = strtol(subcharBuffer, nullptr, 16);
+		Serial.print("concat header length: ");
+		Serial.println(concatHeaderLength);
+		cursor+=(concatHeaderLength - 1)*2;
+		subchar(PDU, cursor, 2, subcharBuffer);
+		uint8_t totalParts = strtol(subcharBuffer, nullptr, 16);
+		Serial.print("totalParts ");
+		Serial.println(totalParts);
 		cursor+=2;
+		subchar(PDU, cursor, 2, subcharBuffer);
+		uint8_t partIndex = strtol(subcharBuffer, nullptr, 16);
+		Serial.print("partIndex: ");
+		Serial.println(partIndex);
+		if(_concatSMSCounter == 0)
+			_concatSMSCounter = totalParts;
+		cursor+=2;
+		zerosPadding = 7 - (((concatHeaderLength + 1) * 8) % 7);
+		Serial.print("zeros padding: ");
+		Serial.println(zerosPadding);
+	}
+	// if(codingScheme)
 	memset(_smsText, 0, userDataLength + 1);
 
 	if(!codingScheme)
@@ -5329,7 +5395,8 @@ void MAKERphone::pduDecode(const char* PDU)
 		// Serial.println(userDataLength);
 		char buffer[(userDataLength)*2 + 1];
 		subchar(PDU, cursor, (userDataLength)*2, buffer);
-		myDecode(buffer, userDataLength, _smsText);
+		Serial.println(buffer);
+		myDecode(buffer, userDataLength, _smsText, zerosPadding);
 
 		// delete [] received;
 		

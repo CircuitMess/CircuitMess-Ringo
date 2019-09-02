@@ -397,6 +397,7 @@ class MAKERphone:public Buttons, public DateTime
 		char _smsText[162];
 		char _smsNumber[20];
 		DateTime _smsDatetime;
+		uint8_t _concatSMSCounter = 0;
 
 };
 #endif
