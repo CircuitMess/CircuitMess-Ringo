@@ -52,7 +52,6 @@ extern HardwareSerial Serial1;
 #include "utility/soundLib/MPAudioDriver.h"
 #include "utility/soundLib/MPWavLib.h"
 #include "utility/arduino_pdu_decoder/pdu_decoder.h"
-#include "utility/pduParse/pduParse.h"
 
 #include <esp_efuse.h>
 #include <esp_adc_cal.h>
@@ -61,7 +60,6 @@ extern HardwareSerial Serial1;
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-#include <iconv.h>
 
 #include <ctype.h>
 #define BTN_1 0
@@ -398,6 +396,7 @@ class MAKERphone:public Buttons, public DateTime
 		char _smsNumber[20];
 		DateTime _smsDatetime;
 		uint8_t _concatSMSCounter = 0;
+		uint8_t _currentConcatSMS = 0;
 
 };
 #endif

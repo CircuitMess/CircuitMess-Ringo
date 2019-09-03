@@ -145,94 +145,13 @@ char* charReverse(char *str) {
   }
   return str;
 }
-// char* pdu_decode(char* pdu_text) {
-//   uint8_t len = strtol(subchar(pdu_text, 0, 2), NULL, 16); //the fist byte contains the number of chars
-//   return pdu_decode(subchar(pdu_text, 2, strlen(pdu_text) - 2), len);
-// }
-// char* pdu_decode(char* pdu_text, uint8_t len) {
-//   char plain_bytes[256];
-//   byte high_mask = 128; // byte:10000000;
-//   byte low_mask;
-//   byte shift = 0;
-//   byte this_byte;
-//   byte high_byte_new = 0;
-//   byte high_byte_old = 0;
-//   byte low_byte = 0;
-//   int y = 0;
-//   int i = 0;
-//   bool escapeFlag = 0;
 
-//   for (y = 0; y < len ; y++) {
-//     if(escapeFlag)
-//       y--;
-//     this_byte = strtol(subchar(pdu_text, i * 2, 2), NULL, 16);
-
-    
-//     low_mask = high_mask ^ 0xFF;                      //invert
-//     high_byte_new = this_byte & high_mask;            // 10000000 = 11000111 & 10000000
-//     low_byte = this_byte & low_mask;                  // 01000111 = 11000111 & 01111111
-
-//     plain_bytes[y] = low_byte << shift;               // 10001110
-//     high_byte_old = high_byte_old >> (8 - shift);     // 00000001
-//     plain_bytes[y] =  plain_bytes[y] + high_byte_old; // 10001111
-
-//     if (shift == 6) {
-//       y++;
-//       plain_bytes[y] = high_byte_new >> 1;
-//     }
-//     Serial.print(plain_bytes[y], HEX);
-//     if(escapeFlag)
-//     {
-//       escapeFlag = 0;
-//       // Serial.println(plain_bytes[y], HEX);
-//       for(int z = 0; z < 93; z++)
-//         if(strlen(my_map[z].GSM7bitValue) > 3)
-//           if(strtol(subchar(my_map[z].GSM7bitValue, 2, 2), nullptr, 16) == plain_bytes[y])
-//             plain_bytes[y] = my_map[z].AsciiValue;
-//     }
-//     else if(plain_bytes[y] == 0x1B)
-//     {
-//       uint8_t tempByte = strtol(subchar(pdu_text, i * 2, 2), NULL, 16);
-//       Serial.println("escape byte");
-//       len--;
-//       escapeFlag = 1;
-//     }
-//     else if(plain_bytes[y] < 21)
-//     {
-//       // Serial.println(subchar(pdu_text, (i+1) * 2, 2));
-//       for(int z = 0; z < 93; z++)
-//         if(strtol(my_map[z].GSM7bitValue, nullptr, 16) == plain_bytes[y])
-//           plain_bytes[y] = my_map[z].AsciiValue;
-//     }
-
-//     high_mask = high_mask >> 1;                       // 10000000 > 01000000
-//     high_mask = high_mask + 128;                      // 01000000 > 11000000
-//     if (high_mask == 255)high_mask = 128;             // 11111111 > 10000000
-//     low_mask = high_mask ^ 0xFF;                      // invert
-
-//     high_byte_old = high_byte_new;
-//     shift++;
-//     if (shift == 7) {
-//       shift = 0;
-//     }
-//     i++;
-//   }
-//   plain_bytes[y] = 0;
-//   char *plain_text = new char[y];
-//   strcpy(plain_text, plain_bytes);
-  
-//   return plain_text;
-// }
 void myDecode(char* pdu_text, uint8_t len, char* destination, uint8_t zerosPadding)
 {
   bool escapeFlag = 0;
   bool buffer2[1288];
   memset(buffer2, 0, 1288);
   uint16_t cursor = 0;
-  // len = strlen(pdu_text)/2;
-  Serial.print("length of array: ");
-  Serial.println(len);
-  char* t = "ahahhshshshshshhshshahahahahuahahahshshhshshshshshhshsusuahshshahwhwhhwhwhwhwhwhwhwhwhhwhwhwhwhwhwhhwhwhwhwhahahahhwhwhwhwhwhwhhwhwhwhwhwhhwhwhwhwhwhhwah";
 
   for(int i = 0; i < len; i++)
   {
@@ -286,7 +205,7 @@ void myDecode(char* pdu_text, uint8_t len, char* destination, uint8_t zerosPaddi
     }
   }
   destination[len] = '\0';
-  Serial.println(destination);
+  // Serial.println(destination);
   // for(int i = 0; i < len; i++)
   // {
   //   uint8_t current = strtol(subchar(pdu_text, i * 2, 2), NULL, 16);

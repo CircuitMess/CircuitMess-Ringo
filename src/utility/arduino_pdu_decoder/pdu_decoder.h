@@ -5,8 +5,6 @@
 
 #include "Arduino.h"
 
-// char* pdu_decode(char* pdu_text);
-// char* pdu_decode(char* pdu_text, uint8_t len);
 char* charReverse(char *str);
 void subchar(char* str, uint16_t start, uint16_t length, char* destination);
 void subchar(const char* str, uint16_t start, uint16_t length, char* destination);

@@ -100,79 +100,6 @@ void ADCmeasuring(void *parameters)
 	}
 }
 
-// char* subchar(char* str, uint16_t start, uint16_t length)
-// {
-//     char* ret = new char[length + 1];
-//     for (short i = start; i < start + length; i++)
-//         ret[i - start] = str[i];
-//     ret[length] = '\0';
-//     return ret;
-// }
-// char* charReverse(char *str) {
-//   size_t len = strlen(str);
-//   size_t i = 0;
-//   while (len > i) {
-//     char tmp = str[--len];
-//     str[len] = str[i];
-//     str[i++] = tmp;
-//   }
-//   return str;
-// }
-// char* pdu_decode(char* pdu_text, uint16_t len) {
-//   char plain_bytes[256];
-//   byte high_mask = 128; // byte:10000000;
-//   byte low_mask;
-//   byte shift = 0;
-//   byte this_byte;
-//   byte high_byte_new = 0;
-//   byte high_byte_old = 0;
-//   byte low_byte = 0;
-//   int y = 0;
-//   int i = 0;
-
-//   for (y = 0; y < len ; y++) {
-//     this_byte = strtol(subchar(pdu_text, i * 2, 2), NULL, 16);
-
-//     low_mask = high_mask ^ 0xFF;                      //invert
-//     high_byte_new = this_byte & high_mask;            // 10000000 = 11000111 & 10000000
-//     low_byte = this_byte & low_mask;                  // 01000111 = 11000111 & 01111111
-
-//     plain_bytes[y] = low_byte << shift;               // 10001110
-//     high_byte_old = high_byte_old >> (8 - shift);     // 00000001
-//     plain_bytes[y] =  plain_bytes[y] + high_byte_old; // 10001111
-
-//     if (shift == 6) {
-//       y++;
-//       plain_bytes[y] = high_byte_new >> 1;
-//     }
-
-//     high_mask = high_mask >> 1;                       // 10000000 > 01000000
-//     high_mask = high_mask + 128;                      // 01000000 > 11000000
-//     if (high_mask == 255)high_mask = 128;             // 11111111 > 10000000
-//     low_mask = high_mask ^ 0xFF;                      // invert
-
-//     high_byte_old = high_byte_new;
-//     shift++;
-//     if (shift == 7) {
-//       shift = 0;
-//     }
-//     i++;
-//   }
-//   plain_bytes[y] = 0;
-
-//   char *plain_text = new char[y];
-//   strcpy(plain_text, plain_bytes);
-  
-//   return plain_text;
-// }
-
-// char* pdu_decode(char* pdu_text) {
-//   uint16_t len = strtol(subchar(pdu_text, 0, 2), NULL, 16); //the fist byte contains the number of chars
-//   Serial.println(len);
-//   delay(1);
-//   return pdu_decode(subchar(pdu_text, 2, sizeof(pdu_text) - 2), len);
-// }
-
 //core
 void MAKERphone::begin(bool splash) {
 	String input="";
@@ -569,6 +496,7 @@ void MAKERphone::begin(bool splash) {
 		networkModuleInit();
 	networkInitialized = 1;
 	sleepTimer = millis();
+	networkDisconnectMillis = millis();
 }
 
 bool MAKERphone::update(bool altButtonsUpdate) {
@@ -2218,54 +2146,77 @@ void MAKERphone::incomingMessage(String _serialData)
 	// helper = _serialData.indexOf("\"\r", helper);
 	helper = _serialData.indexOf("\r", _serialData.indexOf("+CMT")) + 1;
 	const char *pdu_text = _serialData.substring(helper + 1, _serialData.indexOf("\r", helper + 2)).c_str();
-	Serial.print("pdu_text");
-	Serial.println(pdu_text);
 	pduDecode(pdu_text);
-	char masterText[_concatSMSCounter > 1 ? _concatSMSCounter*160 : 162];
-	memset(masterText, 0, _concatSMSCounter > 1 ? _concatSMSCounter*160 : 162);
-	strncat(masterText, _smsText, _concatSMSCounter > 1 ? _concatSMSCounter*160 : 162);
-	Serial.println(masterText);
-	while(_concatSMSCounter > 1)
+	char masterText[_concatSMSCounter > 1 ? _concatSMSCounter*160 : 162] = "";
+	// memset(masterText, 0, sizeof(masterText));
+	Serial.print("current SMS index: "); Serial.println(_currentConcatSMS);
+	Serial.println("sms text: ");
+	Serial.println(_smsText);
+	if(_concatSMSCounter > 1)
+	{
+		strcpy(&masterText[(_currentConcatSMS - 1)*153], _smsText);
+		// masterText[(_currentConcatSMS - 1)*153] = '\0';
+	}
+	else
+		strncat(masterText, _smsText, sizeof(masterText));
+	// Serial.print("master text: ");
+	// for(int i = 0; i < sizeof(masterText); i++)
+	Serial.print("length of message: ");
+	Serial.println(_concatSMSCounter);
+	uint8_t lengthOfSMS = _concatSMSCounter;
+	// 	Serial.println((uint8_t)masterText[i]);
+	if(_concatSMSCounter > 1)
 	{
 		tft.setTextColor(TFT_WHITE);
 		tft.fillRect(0,0,160,128,TFT_BLACK);
 		tft.setTextFont(2);
 		tft.setTextSize(1);
-		tft.setCursor(2, 50);
+		tft.setCursor(2, 45);
 		tft.print("Receiving additional SMS");
-		tft.setCursor(4, 69);
+		tft.setCursor(35, 64);
 		tft.print("Please wait...");
-		while(digitalRead(SIM_INT) )
+		while(_concatSMSCounter > 1)
 		{
-			String temp = "";
-			long long curr_millis = millis();
+			tft.fillRect(50,80,50,30,TFT_BLACK);
+			tft.setCursor(68, 83);
+			tft.printf("%d/%d", lengthOfSMS - _concatSMSCounter + 1, lengthOfSMS);
 
-			while((temp.indexOf("\r", temp.indexOf("\r", helper + 1) + 1) == -1
-			|| temp.indexOf("\r", helper + 1) == -1 || helper == -1)
-			&& temp.indexOf("\r", temp.indexOf("1,4,0,0,")) == -1
-			&& millis() - curr_millis < 500)
-			{ 
-				if(Serial1.available())
+			while(digitalRead(SIM_INT) )
+			{
+				String temp = "";
+				long long curr_millis = millis();
+
+				while(((helper == -1) || (helper != -1 && temp.indexOf("\r", temp.indexOf("\r", helper) + 1) == -1))
+				&& millis() - curr_millis < 25000)
+				{ 
+					if(Serial1.available())
+					{
+						curr_millis = millis();
+						char c = Serial1.read();
+						temp += c;
+						helper = temp.indexOf("+CMT:");
+					}
+				}
+				if(temp.indexOf("+CMT:") != -1)
 				{
-					curr_millis = millis();
-					char c = Serial1.read();
-					temp += c;
-					helper = temp.indexOf("+CMT:");
+					helper = temp.indexOf("\r", temp.indexOf("+CMT")) + 1;
+					const char *pdu_text = temp.substring(helper + 1, temp.indexOf("\r", helper + 2)).c_str();
+					pduDecode(pdu_text);
+					Serial.print("current SMS index: "); Serial.println(_currentConcatSMS);
+					// strncat(masterText, _smsText, _concatSMSCounter*160);
+					strcpy(&masterText[(_currentConcatSMS - 1)*153], _smsText);
+					// for(int i = 0; i < sizeof(masterText); i++)
+					// 	Serial.println((uint8_t)masterText[i]);
+					break;
 				}
 			}
-			if(temp.indexOf("+CMT:") != -1)
-			{
-				helper = temp.indexOf("\r", temp.indexOf("+CMT")) + 1;
-				const char *pdu_text = temp.substring(helper + 1, temp.indexOf("\r", helper + 2)).c_str();
-				Serial.println("pdu_text:");
-				Serial.println(pdu_text);
-				pduDecode(pdu_text);
-				strncat(masterText, _smsText, _concatSMSCounter > 1 ? _concatSMSCounter*160 : 162);
-				break;
-			}
+			_concatSMSCounter--;
 		}
-		_concatSMSCounter--;
 	}
+	
+	Serial.print("final text: ");
+	Serial.println(masterText);
+	_currentConcatSMS = 0;
 	_concatSMSCounter = 0;
 	JsonArray& jarr = jb.createArray();
 	bool fullStack = 0;
@@ -2548,6 +2499,7 @@ void MAKERphone::checkSim()
 		}
 		// input = Serial1.readString();
 		Serial1.println(F("AT+CPIN?"));
+		Serial.println("printed at+cpin?");
 		input = waitForOK();
 		Serial.println(input);
 	}
@@ -5281,8 +5233,8 @@ void MAKERphone::pduDecode(const char* PDU)
 	subchar(PDU, cursor, 2, subcharBuffer);
 	uint8_t SMSC_length = strtol(subcharBuffer, nullptr, 16);
 	cursor+=4; //one octet for SMSC length, one for type-of-address
-	Serial.print("SMSC length: ");
-	Serial.println(SMSC_length);
+	// Serial.print("SMSC length: ");
+	// Serial.println(SMSC_length);
 	if(SMSC_length > 1)
 		SMSC_length--;
 	char serviceNumber[16];
@@ -5296,7 +5248,8 @@ void MAKERphone::pduDecode(const char* PDU)
 			strncat(serviceNumber, subcharBuffer, 2);
 		cursor+=2;
 	}
-
+	subchar(PDU, cursor, 2, subcharBuffer);
+	bool dataHeaderIndicator = bitRead(strtol(subcharBuffer, nullptr, 16), 6);
 	cursor+=2; //skip first octet of SMS-DELIVER
 	subchar(PDU, cursor,2, subcharBuffer);
 	uint8_t addressLength = strtol(subcharBuffer, nullptr, 16);
@@ -5362,29 +5315,31 @@ void MAKERphone::pduDecode(const char* PDU)
 	uint16_t userDataLength = strtol(subcharBuffer, nullptr, 16);
 	cursor+=2;
 	uint8_t zerosPadding = 0;
-	if(userDataLength == 160 || _concatSMSCounter > 0)
+	// if(userDataLength == 160 || _concatSMSCounter > 0)
+	if(dataHeaderIndicator)
 	{
 		userDataLength-=7;
 		subchar(PDU, cursor, 2, subcharBuffer);
 		uint8_t concatHeaderLength = strtol(subcharBuffer, nullptr, 16);
-		Serial.print("concat header length: ");
-		Serial.println(concatHeaderLength);
+		// Serial.print("concat header length: ");
+		// Serial.println(concatHeaderLength);
 		cursor+=(concatHeaderLength - 1)*2;
 		subchar(PDU, cursor, 2, subcharBuffer);
 		uint8_t totalParts = strtol(subcharBuffer, nullptr, 16);
-		Serial.print("totalParts ");
-		Serial.println(totalParts);
+		// Serial.print("totalParts ");
+		// Serial.println(totalParts);
 		cursor+=2;
 		subchar(PDU, cursor, 2, subcharBuffer);
 		uint8_t partIndex = strtol(subcharBuffer, nullptr, 16);
-		Serial.print("partIndex: ");
-		Serial.println(partIndex);
+		// Serial.print("partIndex: ");
+		// Serial.println(partIndex);
+		_currentConcatSMS = partIndex;
 		if(_concatSMSCounter == 0)
 			_concatSMSCounter = totalParts;
 		cursor+=2;
 		zerosPadding = 7 - (((concatHeaderLength + 1) * 8) % 7);
-		Serial.print("zeros padding: ");
-		Serial.println(zerosPadding);
+		// Serial.print("zeros padding: ");
+		// Serial.println(zerosPadding);
 	}
 	// if(codingScheme)
 	memset(_smsText, 0, userDataLength + 1);
@@ -5395,7 +5350,7 @@ void MAKERphone::pduDecode(const char* PDU)
 		// Serial.println(userDataLength);
 		char buffer[(userDataLength)*2 + 1];
 		subchar(PDU, cursor, (userDataLength)*2, buffer);
-		Serial.println(buffer);
+		// Serial.println(buffer);
 		myDecode(buffer, userDataLength, _smsText, zerosPadding);
 
 		// delete [] received;
@@ -5447,14 +5402,14 @@ void MAKERphone::pduDecode(const char* PDU)
 		strncpy(_smsText, newText, sizeof(newText));
 		// content = newText;
 	}
-	Serial.print("content: ");
-	Serial.println(_smsText);
-	Serial.print("data length: ");
-	Serial.println(userDataLength);
-	Serial.print("coding scheme: ");
-	Serial.println(codingScheme);
+	// Serial.print("content: ");
+	// Serial.println(_smsText);
+	// Serial.print("data length: ");
+	// Serial.println(userDataLength);
+	// Serial.print("coding scheme: ");
+	// Serial.println(codingScheme);
 	// Serial.print(plusMinus ? "-" : "+");
 	// Serial.println(timeZone);
-	Serial.println(_smsNumber);
+	// Serial.println(_smsNumber);
 	// free(content);
 }
