@@ -2164,6 +2164,8 @@ void MAKERphone::incomingMessage(String _serialData)
 	Serial.print("length of message: ");
 	Serial.println(_concatSMSCounter);
 	uint8_t lengthOfSMS = _concatSMSCounter;
+	if(lengthOfSMS == 0)
+		lengthOfSMS = 1;
 	// 	Serial.println((uint8_t)masterText[i]);
 	if(_concatSMSCounter > 1)
 	{
@@ -2251,7 +2253,14 @@ void MAKERphone::incomingMessage(String _serialData)
 		else
 		{
 			// jarr.prettyPrintTo(Serial);
-			if(jarr.size() > 34)
+			uint8_t messagesSize = jarr.size();
+			for(int i = 0; i < jarr.size(); i++)
+			{
+				if(strlen(jarr[i]["text"].as<char*>()) > 160)
+					messagesSize+=strlen(jarr[i]["text"].as<char*>())/160;
+			}
+			Serial.println(messagesSize);
+			if(messagesSize > 35 - lengthOfSMS)
 				fullStack = 1;
 			String temp = checkContact(_smsNumber);
 			if(temp == "")
@@ -2449,17 +2458,36 @@ void MAKERphone::addCall(String number, String contact, uint32_t dateTime, int d
 	jarr.prettyPrintTo(file1);
 	file1.close();
 }
-void MAKERphone::saveMessage(String text, String contact, String number, bool isRead, bool direction){
+void MAKERphone::saveMessage(char* text, String contact, String number, bool isRead, bool direction){
 	File file = SD.open("/.core/messages.json", "r");
 	while(!file)
 		Serial.println("Messages ERROR");
 	jb.clear();
 	JsonArray& messages = jb.parseArray(file);
 	file.close();
-	if(messages.size() > 34)
+	uint8_t messagesSize = messages.size();
+	for(int i = 0; i < messages.size(); i++)
+	{
+		if(strlen(messages[i]["text"].as<char*>()) > 160)
+			messagesSize+=strlen(messages[i]["text"].as<char*>())/160;
+	}
+	uint8_t thisMessageSize = 1;
+	if(strlen(text) > 160)
+		thisMessageSize+=strlen(text)/160;
+	if(messagesSize > 35 - thisMessageSize)
 	{
 		Serial.println("SMS limit reached");
-		messages.remove(0);
+		while(messagesSize > 35 - thisMessageSize)
+		{
+			messages.remove(0);
+			messagesSize = messages.size();
+			for(int i = 0; i < messages.size(); i++)
+			{
+				if(strlen(messages[i]["text"].as<char*>()) > 160)
+					messagesSize+=strlen(messages[i]["text"].as<char*>())/160;
+			}
+			Serial.println(messagesSize);
+		}
 		File file = SD.open("/.core/messages.json", "w");
 		messages.prettyPrintTo(file);
 		file.close();
