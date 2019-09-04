@@ -498,6 +498,7 @@ void MAKERphone::begin(bool splash) {
 		networkModuleInit();
 	networkInitialized = 1;
 	sleepTimer = millis();
+	networkDisconnectMillis = millis();
 }
 
 bool MAKERphone::update(bool altButtonsUpdate) {
@@ -935,7 +936,7 @@ bool MAKERphone::update(bool altButtonsUpdate) {
 		buttons.update();
 		wokeWithPWRBTN = 0;
 	}
-	if(sim_module_version != 255 && simInserted)
+	if(sim_module_version != 255 && simInserted && sim_module_version != 0)
 	{
 		if(networkRegistered != 1 && millis() - networkDisconnectMillis > 30000 && networkDisconnectFlag && inLockScreen)
 		{
@@ -2141,41 +2142,96 @@ void MAKERphone::incomingMessage(String _serialData)
 	Serial.println("incoming message");
 	Serial.println(_serialData);
 	uint16_t helper = 0;
-	helper = _serialData.indexOf("\"", _serialData.indexOf("+CMT:"));
-	String number = _serialData.substring(helper + 1, _serialData.indexOf("\"", helper+1));
-	helper+=number.length() + 1;
-	helper = _serialData.indexOf("\"\r", helper);
-	String text = _serialData.substring(helper + 3, _serialData.indexOf("\r", helper + 2));
-	bool isHex = 1;
-	for (uint32_t i = 0; i < text.length(); i++)
+	// helper = _serialData.indexOf("\"", _serialData.indexOf("+CMT:"));
+	// String number = _serialData.substring(helper + 1, _serialData.indexOf("\"", helper+1));
+	// helper+=number.length() + 1;
+	// helper = _serialData.indexOf("\"\r", helper);
+	helper = _serialData.indexOf("\r", _serialData.indexOf("+CMT")) + 1;
+	const char *pdu_text = _serialData.substring(helper + 1, _serialData.indexOf("\r", helper + 2)).c_str();
+	pduDecode(pdu_text);
+	size_t masterTextLength;
+	if(_concatSMSCounter > 1)
+		masterTextLength = _concatSMSCodingScheme ? _concatSMSCounter*68 : _concatSMSCounter*160;
+	else
+		masterTextLength = 160;
+	char masterText[masterTextLength] = "";
+	// memset(masterText, 0, sizeof(masterText));
+	Serial.print("current SMS index: "); Serial.println(_currentConcatSMS);
+	Serial.println("sms text: ");
+	Serial.println(_smsText);
+	if(_concatSMSCounter > 1)
 	{
-		if(isdigit(text[i]) || tolower(text[i]) == 'a' || tolower(text[i]) == 'b' || tolower(text[i]) == 'c' ||
-		tolower(text[i]) == 'd' || tolower(text[i]) == 'e' || tolower(text[i]) == 'f')
-			continue;
+		if(_concatSMSCodingScheme)
+			strcpy(&masterText[(_currentConcatSMS - 1)*67], _smsText);
 		else
-		{
-			isHex = 0;
-			break;
-		}
+			strcpy(&masterText[(_currentConcatSMS - 1)*153], _smsText);
 	}
-	Serial.println(isHex);
-	if(isHex)
+	else
+		strncat(masterText, _smsText, sizeof(masterText));
+	// Serial.print("master text: ");
+	// for(int i = 0; i < sizeof(masterText); i++)
+	Serial.print("length of message: ");
+	Serial.println(_concatSMSCounter);
+	uint8_t lengthOfSMS = _concatSMSCounter;
+	if(lengthOfSMS == 0)
+		lengthOfSMS = 1;
+	// 	Serial.println((uint8_t)masterText[i]);
+	if(_concatSMSCounter > 1)
 	{
-		String newText = "";
-		for(int i = 0; i <= text.length() - 4;i+=4)
+		tft.setTextColor(TFT_WHITE);
+		tft.fillRect(0,0,160,128,TFT_BLACK);
+		tft.setTextFont(2);
+		tft.setTextSize(1);
+		tft.setCursor(2, 45);
+		tft.print("Receiving additional SMS");
+		tft.setCursor(35, 64);
+		tft.print("Please wait...");
+		while(_concatSMSCounter > 1)
 		{
-			char snip[5] = "";
-			strncpy(snip, text.substring(i, i+4).c_str(), 5);
-			int charCode = strtol(snip, nullptr, 16);
-			char c = '*';
-			if(charCode <= 128)
-				c = charCode;
-			newText+=c;
+			tft.fillRect(50,80,50,30,TFT_BLACK);
+			tft.setCursor(68, 83);
+			tft.printf("%d/%d", lengthOfSMS - _concatSMSCounter + 1, lengthOfSMS);
+
+			while(digitalRead(SIM_INT) )
+			{
+				String temp = "";
+				long long curr_millis = millis();
+
+				while(((helper == -1) || (helper != -1 && temp.indexOf("\r", temp.indexOf("\r", helper) + 1) == -1))
+				&& millis() - curr_millis < 25000)
+				{ 
+					if(Serial1.available())
+					{
+						curr_millis = millis();
+						char c = Serial1.read();
+						temp += c;
+						helper = temp.indexOf("+CMT:");
+					}
+				}
+				if(temp.indexOf("+CMT:") != -1)
+				{
+					helper = temp.indexOf("\r", temp.indexOf("+CMT")) + 1;
+					const char *pdu_text = temp.substring(helper + 1, temp.indexOf("\r", helper + 2)).c_str();
+					pduDecode(pdu_text);
+					Serial.print("current SMS index: "); Serial.println(_currentConcatSMS);
+					// strncat(masterText, _smsText, _concatSMSCounter*160);
+					if(_concatSMSCodingScheme)
+						strcpy(&masterText[(_currentConcatSMS - 1)*67], _smsText);
+					else
+						strcpy(&masterText[(_currentConcatSMS - 1)*153], _smsText);
+					// for(int i = 0; i < sizeof(masterText); i++)
+					// 	Serial.println((uint8_t)masterText[i]);
+					break;
+				}
+			}
+			_concatSMSCounter--;
 		}
-		Serial.println(newText);
-		text = newText;
 	}
 	
+	Serial.print("final text: ");
+	Serial.println(masterText);
+	_currentConcatSMS = 0;
+	_concatSMSCounter = 0;
 	JsonArray& jarr = jb.createArray();
 	bool fullStack = 0;
 	if(SDinsertedFlag)
@@ -2208,24 +2264,30 @@ void MAKERphone::incomingMessage(String _serialData)
 		}
 		else
 		{
-			jarr.prettyPrintTo(Serial);
-			if(jarr.size() > 34)
+			// jarr.prettyPrintTo(Serial);
+			uint8_t messagesSize = jarr.size();
+			for(int i = 0; i < jarr.size(); i++)
+			{
+				if(strlen(jarr[i]["text"].as<char*>()) > 160)
+					messagesSize+=strlen(jarr[i]["text"].as<char*>())/160;
+			}
+			Serial.println(messagesSize);
+			if(messagesSize > 35 - lengthOfSMS)
 				fullStack = 1;
-			String temp = checkContact(number);
+			String temp = checkContact(_smsNumber);
 			if(temp == "")
 			{
-				saveMessage(text, "", number, 0, 1);
-				addNotification(2, number, RTC.now());
+				saveMessage(masterText, "", _smsNumber, 0, 1);
+				addNotification(2, _smsNumber, RTC.now());
 			}
 			else
 			{
-				saveMessage(text, temp, number, 0, 1);
+				saveMessage(masterText, temp, _smsNumber, 0, 1);
 				addNotification(2, temp, RTC.now());
 			}
 			
 		}
 	}
-	
 	// popup(String(number + ": " + text), 50);
 	tft.setTextColor(TFT_BLACK);
 	tft.fillRect(0,0,160,128,TFT_WHITE);
@@ -2237,12 +2299,12 @@ void MAKERphone::incomingMessage(String _serialData)
 	tft.drawBitmap(10, 5, incomingMessageIcon, TFT_BLUE, 2); //+CMT: "+385953776154","","19/08/25,19:18:49+08" 
 	tft.setCursor(10,40);// +CMT: "+385953776154","","19/08/25,19:19:21+08"
 	tft.print("From: ");
-	tft.print(number);
+	tft.print(_smsNumber);
 	tft.setCursor(10, 70);
 	tft.setTextWrap(1);
-	for(int i = 0; i < text.length();i++)
+	for(int i = 0; i < strlen(masterText);i++)
 	{
-		tft.print(text[i]);
+		tft.print(masterText[i]);
 		if(tft.getCursorY() > 80 && tft.getCursorX() > 130)
 		{
 			tft.print("...");
@@ -2276,10 +2338,7 @@ void MAKERphone::incomingMessage(String _serialData)
 					curr_millis = millis();
 					char c = Serial1.read();
 					temp += c;
-					Serial.println(temp);
-					Serial.println("-----------------");
 					helper = temp.indexOf("+CMT:");
-					Serial.println(helper);
 				}
 			}
 			if(temp.indexOf("\r", temp.indexOf("1,4,0,0,")) != -1)
@@ -2411,22 +2470,41 @@ void MAKERphone::addCall(String number, String contact, uint32_t dateTime, int d
 	jarr.prettyPrintTo(file1);
 	file1.close();
 }
-void MAKERphone::saveMessage(String text, String contact, String number, bool isRead, bool direction){
+void MAKERphone::saveMessage(char* text, String contact, String number, bool isRead, bool direction){
 	File file = SD.open("/.core/messages.json", "r");
 	while(!file)
 		Serial.println("Messages ERROR");
 	jb.clear();
 	JsonArray& messages = jb.parseArray(file);
 	file.close();
-	if(messages.size() > 34)
+	uint8_t messagesSize = messages.size();
+	for(int i = 0; i < messages.size(); i++)
+	{
+		if(strlen(messages[i]["text"].as<char*>()) > 160)
+			messagesSize+=strlen(messages[i]["text"].as<char*>())/160;
+	}
+	uint8_t thisMessageSize = 1;
+	if(strlen(text) > 160)
+		thisMessageSize+=strlen(text)/160;
+	if(messagesSize > 35 - thisMessageSize)
 	{
 		Serial.println("SMS limit reached");
-		messages.remove(0);
+		while(messagesSize > 35 - thisMessageSize)
+		{
+			messages.remove(0);
+			messagesSize = messages.size();
+			for(int i = 0; i < messages.size(); i++)
+			{
+				if(strlen(messages[i]["text"].as<char*>()) > 160)
+					messagesSize+=strlen(messages[i]["text"].as<char*>())/160;
+			}
+			Serial.println(messagesSize);
+		}
 		File file = SD.open("/.core/messages.json", "w");
 		messages.prettyPrintTo(file);
 		file.close();
 	}
-	messages.prettyPrintTo(Serial);
+	// messages.prettyPrintTo(Serial);
 	delay(1);
 	JsonObject& new_item = jb.createObject();
 	updateTimeRTC();
@@ -2441,7 +2519,7 @@ void MAKERphone::saveMessage(String text, String contact, String number, bool is
 
 	File file1 = SD.open("/.core/messages.json", "w");
 	messages.prettyPrintTo(file1);
-	messages.prettyPrintTo(Serial);
+	// messages.prettyPrintTo(Serial);
 	file1.close();
 }
 void MAKERphone::checkSim()
@@ -2461,6 +2539,7 @@ void MAKERphone::checkSim()
 		}
 		// input = Serial1.readString();
 		Serial1.println(F("AT+CPIN?"));
+		Serial.println("printed at+cpin?");
 		input = waitForOK();
 		Serial.println(input);
 	}
@@ -3249,7 +3328,7 @@ void MAKERphone::networkModuleInit()
 		waitForOK();
 	}
 	waitForOK();
-	Serial1.println(F("AT+CMGF=1"));
+	Serial1.println(F("AT+CMGF=0"));
 	waitForOK();
 	Serial1.println(F("AT+CNMI=1,2,0,0,0"));
 	waitForOK();
@@ -5034,9 +5113,6 @@ void MAKERphone::checkAlarms()
 	updateTimeRTC();
 	uint8_t next_alarm = 99;
 	int i = currentTime.dayOfWeek();
-	Serial.print("Today: ");
-	Serial.println(currentTime.dayOfWeek());
-	delay(5);
 	for(int x = 0; x < 6; x++)
 	{
 		for(int y = 0; y < 5 ;y++)
@@ -5196,4 +5272,220 @@ String MAKERphone::checkContact(String contactNumber)
 		}
 	}
 	return "";
+}
+void MAKERphone::pduDecode(const char* PDU)
+{
+	uint16_t cursor = 0;
+	//07 91 839515001000 04 0C 91 839535685687 0008 91806291402080 04 0076 010D
+	// +CMT: "",25
+	//07 91 839515001000 04 0C 91 839535771645 0000 91 80 90 61 90 92 80 06    32 5A CD 76 C3 01
+	/*
+		07 - length of SMSC info in octets
+		91 - type of address (91 international)
+		next 6 octets are the service center number
+		04 - first octet of SMS-deliver part
+		0C - address (phone number) length in digits (not octets!)
+		91 - type of address
+		next 12 digits are the phone number
+		0000 - protocol identifier and data coding scheme
+
+		next 7 octets are the timestamp: 9th of August 2019, 16:09:29, GMT+2
+		91 - last two digits of the year (2019)
+		80 - month (august)
+		90 - day (9th)
+		61 - 4 PM
+		90 - 9 minutes
+		92 - 29 seconds
+		80 - timezone: 0b1000 0000
+		bit 3 decides +/- timezone - in this case +
+		the remaining number 80 & 1111 0111 = 80
+		80 represents number 08, the timezone offset is 8*15 minutes = 120min = 2 hours
+
+		06 - number of characters in message
+	 */
+	char subcharBuffer[3];
+	memset(subcharBuffer, 0, 3);
+	subchar(PDU, cursor, 2, subcharBuffer);
+	uint8_t SMSC_length = strtol(subcharBuffer, nullptr, 16);
+	cursor+=4; //one octet for SMSC length, one for type-of-address
+	// Serial.print("SMSC length: ");
+	// Serial.println(SMSC_length);
+	if(SMSC_length > 1)
+		SMSC_length--;
+	char serviceNumber[16];
+	memset(serviceNumber, 0, 16);
+	for(int i = 0; i < SMSC_length; i++)
+	{
+		subchar(PDU, cursor, 2, subcharBuffer);
+		if(charReverse(subcharBuffer)[1] == 'F') //remove trailing F in case number can't be split in even octets
+			strncat(serviceNumber, &subcharBuffer[0], 1);
+		else
+			strncat(serviceNumber, subcharBuffer, 2);
+		cursor+=2;
+	}
+	subchar(PDU, cursor, 2, subcharBuffer);
+	bool dataHeaderIndicator = bitRead(strtol(subcharBuffer, nullptr, 16), 6);
+	cursor+=2; //skip first octet of SMS-DELIVER
+	subchar(PDU, cursor,2, subcharBuffer);
+	uint8_t addressLength = strtol(subcharBuffer, nullptr, 16);
+	if(addressLength % 2 == 1)
+		addressLength++;
+	cursor+=4; //address length and type-of-address
+	// Serial.print("cursor: ");
+	// Serial.println(cursor);
+
+	memset(_smsNumber, 0, 20);
+	strncat(_smsNumber, "+", 1);
+	for(int i = 0; i < addressLength/2; i++)
+	{
+		subchar(PDU, cursor, 2, subcharBuffer);
+		if(charReverse(subcharBuffer)[1] == 'F') //remove trailing F in case number can't be split in even octets
+			strncat(_smsNumber, &subcharBuffer[0], 1);
+		else
+			strncat(_smsNumber, subcharBuffer, 2);
+		cursor+=2;
+	}
+	cursor+=2;//PID
+
+	bool codingScheme = 0; // 0 - GSM 7 bit, 1 - UCS2
+	subchar(PDU, cursor, 2, subcharBuffer);
+	if(strtol(subcharBuffer, nullptr, 16) != 0)
+		codingScheme = 1;
+	cursor+=2;
+	subchar(PDU, cursor, 2, subcharBuffer);
+	clockYear = 2000 + strtol(charReverse(subcharBuffer), nullptr, 10);
+	cursor+=2;
+	subchar(PDU, cursor, 2, subcharBuffer);
+	clockMonth = strtol(charReverse(subcharBuffer), nullptr, 10);
+	cursor+=2;
+	subchar(PDU, cursor, 2, subcharBuffer);
+	clockDay = strtol(charReverse(subcharBuffer), nullptr, 10);
+	cursor+=2;
+	// Serial.println(clockYear);
+	// Serial.println(clockMonth);
+	// Serial.println(clockDay);
+	subchar(PDU, cursor, 2, subcharBuffer);
+	clockHour = strtol(charReverse(subcharBuffer), nullptr, 10);
+	cursor+=2;
+	subchar(PDU, cursor, 2, subcharBuffer);
+	clockMinute = strtol(charReverse(subcharBuffer), nullptr, 10);
+	cursor+=2;
+	subchar(PDU, cursor, 2, subcharBuffer);
+	clockSecond = strtol(charReverse(subcharBuffer), nullptr, 10);
+	cursor+=2;
+	// Serial.println(clockHour);
+	// Serial.println(clockMinute);
+	// Serial.println(clockSecond);
+	subchar(PDU, cursor, 2, subcharBuffer);
+	uint16_t timeZone = strtol(subcharBuffer, nullptr, 16);
+	bool plusMinus = bitRead(timeZone, 3);
+	timeZone = timeZone & 0b11110111;
+	char zoneHelper[3];
+	sprintf(zoneHelper, "%X", timeZone);
+	timeZone = strtol(charReverse(zoneHelper), nullptr, 10) / 4;
+	cursor+=2;
+	_smsDatetime = DateTime(clockYear, clockMonth, clockDay, clockHour, clockMinute, clockSecond);
+
+	subchar(PDU, cursor, 2, subcharBuffer);
+	uint16_t userDataLength = strtol(subcharBuffer, nullptr, 16);
+	cursor+=2;
+	uint8_t zerosPadding = 0;
+	// if(userDataLength == 160 || _concatSMSCounter > 0)
+	if(dataHeaderIndicator)
+	{
+		if(!codingScheme)
+			userDataLength-=7;
+		subchar(PDU, cursor, 2, subcharBuffer);
+		uint8_t concatHeaderLength = strtol(subcharBuffer, nullptr, 16);
+		// Serial.print("concat header length: ");
+		// Serial.println(concatHeaderLength);
+		cursor+=(concatHeaderLength - 1)*2;
+		subchar(PDU, cursor, 2, subcharBuffer);
+		uint8_t totalParts = strtol(subcharBuffer, nullptr, 16);
+		// Serial.print("totalParts ");
+		// Serial.println(totalParts);
+		cursor+=2;
+		subchar(PDU, cursor, 2, subcharBuffer);
+		uint8_t partIndex = strtol(subcharBuffer, nullptr, 16);
+		// Serial.print("partIndex: ");
+		// Serial.println(partIndex);
+		_currentConcatSMS = partIndex;
+		if(_concatSMSCounter == 0)
+			_concatSMSCounter = totalParts;
+		cursor+=2;
+		zerosPadding = 7 - (((concatHeaderLength + 1) * 8) % 7);
+		// Serial.print("zeros padding: ");
+		// Serial.println(zerosPadding);
+		_concatSMSCodingScheme = codingScheme;
+	}
+	// if(codingScheme)
+	memset(_smsText, 0, userDataLength + 1);
+
+	if(!codingScheme)
+	{
+		// Serial.println(subchar(PDU, cursor, (userDataLength)*2));
+		// Serial.println(userDataLength);
+		char buffer[(userDataLength)*2 + 1];
+		subchar(PDU, cursor, (userDataLength)*2, buffer);
+		// Serial.println(buffer);
+		myDecode(buffer, userDataLength, _smsText, zerosPadding);
+
+		// delete [] received;
+		
+		// for(int i = 0; i < userDataLength; i++)
+		// {
+		// 	char snippet[3];
+		// 	strncpy(&snippet[0], subchar(PDU, cursor, 2), 3);
+		// 	// snippet[2] = '\0';
+		// 	// Serial.print("snip ");
+		// 	// Serial.println(snippet);
+		// 	// Serial.println(my_map[17].GSM7bitValue);
+		// 	// for(int i = 0; i < 3 ; i++)
+		// 	// {
+		// 	// 	Serial.print(i);
+		// 	// 	Serial.println(my_map[17].GSM7bitValue[i] == snippet[i]);
+		// 	// }
+		// 	// for(int y = 0; y < 93; y++)
+		// 	// {
+		// 	// 	// Serial.println(y);
+		// 	// 	if(strcmp(my_map[y].GSM7bitValue, snippet) == 0)
+		// 	// 	{
+		// 	// 		content+=my_map[y].AsciiValue;
+		// 	// 		break;
+		// 	// 	}
+		// 	// }
+		// 	content+=char(strtol(snippet, nullptr, 16) & 0x7F);
+		// 	cursor+=2;
+		// }
+		
+
+	}
+	else
+	{
+		char newText[162];
+		memset(newText, 0, 162);
+		for(int i = 0; i <= userDataLength*2 - 4;i+=4)
+		{
+			char snip[5] = "";
+			subchar(PDU, cursor + i, 4, snip);
+			// strncpy(snip, subchar(PDU, cursor + i, 4), 5);
+			int charCode = strtol(snip, nullptr, 16);
+			char c = '*';
+			if(charCode <= 128)
+				c = charCode;
+			strncat(newText, &c, 1);
+		}
+		strncpy(_smsText, newText, sizeof(newText));
+		// content = newText;
+	}
+	// Serial.print("content: ");
+	// Serial.println(_smsText);
+	// Serial.print("data length: ");
+	// Serial.println(userDataLength);
+	// Serial.print("coding scheme: ");
+	// Serial.println(codingScheme);
+	// Serial.print(plusMinus ? "-" : "+");
+	// Serial.println(timeZone);
+	// Serial.println(_smsNumber);
+	// free(content);
 }

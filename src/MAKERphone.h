@@ -39,6 +39,7 @@ extern HardwareSerial Serial1;
 #include <HTTPClient.h>
 #include <WiFiClientSecure.h>
 #include <EEPROM.h>
+#include "utility/arduino_pdu_decoder/pdu_decoder.h"
 
 //Fonts and sprites to use
 #include "utility/Free_Fonts.h"
@@ -50,10 +51,17 @@ extern HardwareSerial Serial1;
 #include "esp_system.h"
 #include "utility/soundLib/MPAudioDriver.h"
 #include "utility/soundLib/MPWavLib.h"
+#include "utility/arduino_pdu_decoder/pdu_decoder.h"
+
 #include <esp_efuse.h>
 #include <esp_adc_cal.h>
 #include <driver/adc.h>
 #include <driver/gpio.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
+
+#include <ctype.h>
 #define BTN_1 0
 #define BTN_2 1
 #define BTN_3 2
@@ -154,7 +162,7 @@ class MAKERphone:public Buttons, public DateTime
 	void addCall(String number, String contact, uint32_t dateTime, int duration, uint8_t direction);
 	void incomingMessage(String _serialData);
 	bool newMessage = 0;
-	void saveMessage(String text, String contact, String number, bool isRead, bool direction);
+	void saveMessage(char* text, String contact, String number, bool isRead, bool direction);
 	void checkSim();
 	void enterPin();
 	void enterPUK();
@@ -323,8 +331,11 @@ class MAKERphone:public Buttons, public DateTime
 	bool exitedLockscreen = 0;
 	bool homeButtonPressed = 0;
 	String checkContact(String contactNumber);
+	void pduDecode(const char* PDU);
+
 	int8_t networkRegistered = -1;
 	void networkModuleInit();
+	static int DecodePDUMessage(const char* buffer, int buffer_length, char* output_sms_text, int sms_text_length);
 	private:
 		MPTrack* ringtone = nullptr;
 		int multi_tap(byte key);
@@ -382,5 +393,11 @@ class MAKERphone:public Buttons, public DateTime
 		uint32_t networkDisconnectMillis = millis();
 		bool networkDisconnectFlag = 1;
 		bool networkInitialized = 0;
+		char _smsText[162];
+		char _smsNumber[20];
+		DateTime _smsDatetime;
+		uint8_t _concatSMSCounter = 0;
+		uint8_t _currentConcatSMS = 0;
+		bool _concatSMSCodingScheme = 0;
 };
 #endif
