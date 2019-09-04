@@ -2147,15 +2147,22 @@ void MAKERphone::incomingMessage(String _serialData)
 	helper = _serialData.indexOf("\r", _serialData.indexOf("+CMT")) + 1;
 	const char *pdu_text = _serialData.substring(helper + 1, _serialData.indexOf("\r", helper + 2)).c_str();
 	pduDecode(pdu_text);
-	char masterText[_concatSMSCounter > 1 ? _concatSMSCounter*160 : 162] = "";
+	size_t masterTextLength;
+	if(_concatSMSCounter > 1)
+		masterTextLength = _concatSMSCodingScheme ? _concatSMSCounter*68 : _concatSMSCounter*160;
+	else
+		masterTextLength = 160;
+	char masterText[masterTextLength] = "";
 	// memset(masterText, 0, sizeof(masterText));
 	Serial.print("current SMS index: "); Serial.println(_currentConcatSMS);
 	Serial.println("sms text: ");
 	Serial.println(_smsText);
 	if(_concatSMSCounter > 1)
 	{
-		strcpy(&masterText[(_currentConcatSMS - 1)*153], _smsText);
-		// masterText[(_currentConcatSMS - 1)*153] = '\0';
+		if(_concatSMSCodingScheme)
+			strcpy(&masterText[(_currentConcatSMS - 1)*67], _smsText);
+		else
+			strcpy(&masterText[(_currentConcatSMS - 1)*153], _smsText);
 	}
 	else
 		strncat(masterText, _smsText, sizeof(masterText));
@@ -2206,7 +2213,10 @@ void MAKERphone::incomingMessage(String _serialData)
 					pduDecode(pdu_text);
 					Serial.print("current SMS index: "); Serial.println(_currentConcatSMS);
 					// strncat(masterText, _smsText, _concatSMSCounter*160);
-					strcpy(&masterText[(_currentConcatSMS - 1)*153], _smsText);
+					if(_concatSMSCodingScheme)
+						strcpy(&masterText[(_currentConcatSMS - 1)*67], _smsText);
+					else
+						strcpy(&masterText[(_currentConcatSMS - 1)*153], _smsText);
 					// for(int i = 0; i < sizeof(masterText); i++)
 					// 	Serial.println((uint8_t)masterText[i]);
 					break;
@@ -5346,7 +5356,8 @@ void MAKERphone::pduDecode(const char* PDU)
 	// if(userDataLength == 160 || _concatSMSCounter > 0)
 	if(dataHeaderIndicator)
 	{
-		userDataLength-=7;
+		if(!codingScheme)
+			userDataLength-=7;
 		subchar(PDU, cursor, 2, subcharBuffer);
 		uint8_t concatHeaderLength = strtol(subcharBuffer, nullptr, 16);
 		// Serial.print("concat header length: ");
@@ -5368,6 +5379,7 @@ void MAKERphone::pduDecode(const char* PDU)
 		zerosPadding = 7 - (((concatHeaderLength + 1) * 8) % 7);
 		// Serial.print("zeros padding: ");
 		// Serial.println(zerosPadding);
+		_concatSMSCodingScheme = codingScheme;
 	}
 	// if(codingScheme)
 	memset(_smsText, 0, userDataLength + 1);
@@ -5420,7 +5432,6 @@ void MAKERphone::pduDecode(const char* PDU)
 			char snip[5] = "";
 			subchar(PDU, cursor + i, 4, snip);
 			// strncpy(snip, subchar(PDU, cursor + i, 4), 5);
-			Serial.println(snip);
 			int charCode = strtol(snip, nullptr, 16);
 			char c = '*';
 			if(charCode <= 128)
