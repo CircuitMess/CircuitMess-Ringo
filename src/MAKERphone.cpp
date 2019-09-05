@@ -888,26 +888,25 @@ bool MAKERphone::update(bool altButtonsUpdate) {
 		alarmCleared = 0;
 	if(!digitalRead(SIM_INT) && !inCall && networkInitialized)
 	{
+		Serial.println("CALL");
 		String temp = "";
 		uint32_t curr_millis = millis();
 		int32_t helper = -1;
-		while((temp.indexOf("\r", temp.indexOf("\r", helper + 1) + 1) == -1
-		|| temp.indexOf("\r", helper + 1) == -1 || helper == -1)
-		&& temp.indexOf("\r", temp.indexOf("1,4,0,0,")) == -1
-		&& temp.indexOf("RING") == -1 && millis() - curr_millis < 500)
+		while((helper == -1 || temp.indexOf("\r", helper) == -1) && (temp.indexOf(",1,4,0,0") == -1
+		|| temp.indexOf("\r", temp.indexOf(",1,4,0,0")) == -1) && millis() - curr_millis < 1500)
 		{
 			if(Serial1.available())
 			{
 				curr_millis = millis();
 				char c = Serial1.read();
 				temp += c;
-				// Serial.println(temp);
-				// Serial.println("-----------------");
+				Serial.println(temp);
+				Serial.println(".........");
 				helper = temp.indexOf("+CMT:");
 				// Serial.println(helper);
 			}
 		}
-		if(temp.indexOf("\r", temp.indexOf("1,4,0,0,")) != -1 || temp.indexOf("RING") != -1)
+		if(temp.indexOf("\r", temp.indexOf(",1,4,0,0")) != -1)
 		{
 			inCall = 1;
 			incomingCall(temp);
@@ -1839,7 +1838,7 @@ void MAKERphone::incomingCall(String _serialData)
 	uint16_t tmp_time = 0;
 	String localBuffer = _serialData;
 	String buffer = "";
-	uint16_t foo = localBuffer.indexOf("\"+", localBuffer.indexOf("1,4,0,0,")) + 1;
+	uint16_t foo = localBuffer.indexOf("\"+", localBuffer.indexOf(",1,4,0,0")) + 1;
 	number = localBuffer.substring(foo, localBuffer.indexOf("\"", foo));
 	localBuffer = "";
 	bool played = 0;
@@ -1873,16 +1872,18 @@ void MAKERphone::incomingCall(String _serialData)
 			c = (char)Serial1.read();
 			if((uint8_t)c != 255)
 				buffer += c;
-			// Serial.println(buffer);
+			Serial.println(buffer);
 		}
-		if(buffer.indexOf("CLCC: 1") != -1 && buffer.indexOf("\r", buffer.indexOf("CLCC: 1")) != -1)
+		if((buffer.indexOf("CLCC: 1") != -1 && buffer.indexOf("\r", buffer.indexOf("CLCC: 1")) != -1 && sim_module_version == 1)
+		|| (buffer.indexOf("CLCC: 2") != -1 && buffer.indexOf("\r", buffer.indexOf("CLCC: 2")) != -1 && sim_module_version == 0))
 		{
 			localBuffer = buffer;
 			buffer = "";
 		}
 		if(buttons.released(BTN_FUN_LEFT))
 			break;
-		if(buttons.released(BTN_FUN_RIGHT) || localBuffer.indexOf("1,1,6,0,0") != -1)
+		if(buttons.released(BTN_FUN_RIGHT) || (localBuffer.indexOf("1,1,6,0,0") != -1 && sim_module_version == 1)
+		|| (localBuffer.indexOf("2,1,6,0,0") != -1 && sim_module_version == 0))
 		{
 			if(SDinsertedFlag && SD.exists(ringtone_path))
 			{
@@ -1900,7 +1901,8 @@ void MAKERphone::incomingCall(String _serialData)
 			tft.setCursor(10, 110);
 			tft.print("Call ended");
 			Serial.println("ENDED");
-			if(localBuffer.indexOf("1,1,6,0,0") == -1)
+			if((localBuffer.indexOf("1,1,6,0,0") == -1 && sim_module_version == 1)
+			|| (localBuffer.indexOf("2,1,6,0,0") == -1 && sim_module_version == 0))
 			{
 				uint32_t curr_millis = millis();
 				buffer = "";
@@ -1922,7 +1924,8 @@ void MAKERphone::incomingCall(String _serialData)
 			updateTimeRTC();
 			if(SDinsertedFlag)
 				addCall(number, checkContact(number), RTC.now().unixtime(), tmp_time, 0);
-			if(localBuffer.indexOf("1,1,6,0,0") != -1)
+			if((localBuffer.indexOf("1,1,6,0,0") != -1 && sim_module_version == 1)
+			|| (localBuffer.indexOf("2,1,6,0,0") != -1 && sim_module_version == 0))
 			{
 				String temp = checkContact(number);
 				if(temp == "")
@@ -1981,9 +1984,11 @@ void MAKERphone::incomingCall(String _serialData)
 
 	Serial1.println("ATA");
 	long long curr_millis = millis();
-	while (localBuffer.indexOf("1,1,0,0,0") == -1 && millis() - curr_millis < 2000){
+	while (((localBuffer.indexOf("1,1,0,0,0") == -1 && sim_module_version == 1) ||
+	(localBuffer.indexOf("2,1,0,0,0") == -1 && sim_module_version == 0)) && millis() - curr_millis < 2000){
 		Serial1.println("ATA");
 		localBuffer = Serial1.readString();
+		Serial.println(localBuffer);
 	}
 	tft.setTextColor(TFT_BLACK);
 	bool firstPass = 1;
@@ -2020,10 +2025,10 @@ void MAKERphone::incomingCall(String _serialData)
 		if (Serial1.available())
 		{
 			c = Serial1.read();
-			if((uint8_t)c != 255)
-				buffer += c;
+			buffer += c;
 		}
-		if(buffer.indexOf("CLCC: 1") != -1 && buffer.indexOf("\r", buffer.indexOf("CLCC: 1")) != -1)
+		if((buffer.indexOf("CLCC: 1") != -1 && buffer.indexOf("\r", buffer.indexOf("CLCC: 1")) != -1 && sim_module_version == 1)
+		|| (buffer.indexOf("CLCC: 2") != -1 && buffer.indexOf("\r", buffer.indexOf("CLCC: 2")) != -1 && sim_module_version == 0))
 		{
 			localBuffer = buffer;
 			buffer = "";
@@ -2033,11 +2038,15 @@ void MAKERphone::incomingCall(String _serialData)
 		if(buffer.indexOf("\r") != -1)
 			buffer = "";
 		Serial.println("----------");
-		Serial.println(buffer);
+		Serial.println(localBuffer);
 		delay(1);
-		if (localBuffer.indexOf("CLCC: 1") != -1 || localBuffer.indexOf("AT+CMIC") != -1)
+		if (((localBuffer.indexOf("CLCC: 1") != -1 && sim_module_version == 1) || 
+		(localBuffer.indexOf("CLCC: 2") != -1 && sim_module_version == 0)) || localBuffer.indexOf("AT+CMIC") != -1)
 		{
-			if ((localBuffer.indexOf("1,1,0,0,0") != -1 || localBuffer.indexOf("AT+CMIC") != -1 ) && (written != 0 || prevTime != tmp_time))
+			if((((localBuffer.indexOf("1,1,0,0,0") != -1 && sim_module_version == 1) 
+			|| ((localBuffer.indexOf("2,1,0,0,0") != -1 || localBuffer.indexOf("2,1,0,0,0") != -1) && sim_module_version == 0))
+			|| localBuffer.indexOf("AT+CMIC") != -1 ) 
+			&& (written != 0 || prevTime != tmp_time))
 			{
 				if (firstPass == 1)
 				{
@@ -2066,7 +2075,8 @@ void MAKERphone::incomingCall(String _serialData)
 				prevTime = tmp_time;
 				written = 0;
 			}
-			else if (localBuffer.indexOf("1,1,6,0,0") != -1)
+			else if((localBuffer.indexOf("1,1,6,0,0") != -1 && sim_module_version == 1) 
+			|| (localBuffer.indexOf("2,1,6,0,0") != -1 && sim_module_version == 0))
 			{
 				
 				tft.fillRect(0,0,160,128,TFT_WHITE);
@@ -2112,12 +2122,10 @@ void MAKERphone::incomingCall(String _serialData)
 				delay(1000);
 				break;
 			}
-				
-			
-
 		}
 
-		else if (localBuffer.indexOf("CLCC: 1") == -1)
+		else if (((localBuffer.indexOf("CLCC: 1") == -1 && sim_module_version == 1) || 
+		(localBuffer.indexOf("CLCC: 2") == -1 && sim_module_version == 0)))
 		{
 			if (localBuffer.indexOf("ERROR") != -1)
 			{
@@ -2440,21 +2448,20 @@ void MAKERphone::incomingMessage(String _serialData)
 		{
 			String temp = "";
 			long long curr_millis = millis();
-
-			while((temp.indexOf("\r", temp.indexOf("\r", helper + 1) + 1) == -1
-			|| temp.indexOf("\r", helper + 1) == -1 || helper == -1)
-			&& temp.indexOf("\r", temp.indexOf("1,4,0,0,")) == -1
-			&& millis() - curr_millis < 500)
+			int16_t helper2 = -1;
+			while((helper2 == -1 || temp.indexOf("\r", helper2) == -1) && (temp.indexOf(",1,4,0,0") == -1
+			|| temp.indexOf("\r", temp.indexOf(",1,4,0,0")) == -1) && millis() - curr_millis < 1500)
 			{ 
 				if(Serial1.available())
 				{
 					curr_millis = millis();
 					char c = Serial1.read();
 					temp += c;
-					helper = temp.indexOf("+CMT:");
+					helper2 = temp.indexOf("+CMT:");
+					Serial.println(temp);
 				}
 			}
-			if(temp.indexOf("\r", temp.indexOf("1,4,0,0,")) != -1)
+			if(temp.indexOf("\r", temp.indexOf("+CLCC: ")) != -1)
 			{
 				inCall = 1;
 				incomingCall(temp);
@@ -2496,24 +2503,22 @@ void MAKERphone::incomingMessage(String _serialData)
 					{
 						String temp = "";
 						long long curr_millis = millis();
-
-						while((temp.indexOf("\r", temp.indexOf("\r", helper + 1) + 1) == -1
-						|| temp.indexOf("\r", helper + 1) == -1 || helper == -1)
-						&& temp.indexOf("\r", temp.indexOf("1,4,0,0,")) == -1
-						&& millis() - curr_millis < 500)
-						{ 
+						int16_t helper2 = -1;
+						while((helper2 == -1 || temp.indexOf("\r", helper2) == -1) && (temp.indexOf(",1,4,0,0") == -1
+						|| temp.indexOf("\r", temp.indexOf(",1,4,0,0")) == -1)	&& millis() - curr_millis < 1500)
+						{
 							if(Serial1.available())
 							{
 								curr_millis = millis();
 								char c = Serial1.read();
 								temp += c;
-								Serial.println(temp);
-								Serial.println("-----------------");
-								helper = temp.indexOf("+CMT:");
-								Serial.println(helper);
+								// Serial.println(temp);
+								// Serial.println("-----------------");
+								helper2 = temp.indexOf("+CMT:");
+								// Serial.println(helper);
 							}
 						}
-						if(temp.indexOf("\r", temp.indexOf("1,4,0,0,")) != -1)
+						if(temp.indexOf("\r", temp.indexOf("+CLCC: ")) != -1)
 						{
 							inCall = 1;
 							incomingCall(temp);
