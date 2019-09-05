@@ -26,10 +26,12 @@ TaskHandle_t MeasuringTask;
 uint32_t voltageSum = 0;
 uint32_t voltageSample = 0;
 volatile double voltage = 3700;
+uint32_t btnRefresh = millis();
 boolean btnHeld;
 boolean btnHeldField[10];
 uint32_t measuringCounter = 0;
 uint32_t _timesMeasured = 0;
+// uint32_t btnRefresh = millis();
 bool clockFallback = 1;
 bool chargeDuringADCRead = 0;
 uint32_t simBusyCounter = 0;
@@ -916,8 +918,8 @@ bool MAKERphone::update(bool altButtonsUpdate) {
 			homeButtonPressed = 1;
 		}
 	}
-	if(!altButtonsUpdate)
-		buttons.update();
+ 	 	if(!(altButtonsUpdate))
+			buttons.update();
 
 	if(SHUTDOWN_POPUP_ENABLE && buttons.released(14) && !wokeWithPWRBTN && !inCall)
 	{
@@ -3209,14 +3211,14 @@ void MAKERphone::lockscreen() {
 		}
 		else if(buttons.timeHeld(BTN_HASHTAG) >= 30)
 		{
-			// while(!update());
+			//while(!update());
 			buttons.holdForUnlock = 1;
 			inLockScreen = 0;
 			display.setTextSize(1);
 			display.setTextFont(2);
 			return;
 		}
-		update();
+		update(0);
 	}
 }
 void MAKERphone::networkModuleInit()

@@ -147,7 +147,7 @@ class MAKERphone:public Buttons, public DateTime
 	void tone2(int pin, int freq, int duration);
 	void vibration(int duration);
 	void ledcAnalogWrite(uint8_t channel, uint32_t value, uint32_t valueMax = 255);
-	bool update(bool altButtonsUpdate = 0);
+	bool update(bool altButtonsUpdate = 1);
 	void splashScreen();
 	void sleep();
 	void incomingCall(String _serialData);
