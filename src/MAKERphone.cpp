@@ -835,9 +835,8 @@ bool MAKERphone::update(bool altButtonsUpdate) {
 	}
 	batteryVoltage = voltage;
 
-	if((((batteryVoltage <= 3580 || simVoltage <= 3600) && sim_module_version != 1)
-	|| (batteryVoltage <= 3580 && simVoltage <= 3600 && sim_module_version == 1))
-	&& digitalRead(CHRG_INT))
+	if(digitalRead(CHRG_INT) && ((sim_module_version != 1 && batteryVoltage <= 3580) || 
+	(sim_module_version == 1 && simVoltage <= 3580)))
 	{
 		if(timesMeasured != _timesMeasured)
 			shutdownCounter++;
@@ -1348,9 +1347,8 @@ void MAKERphone::sleep() {
 			simVoltage = tempVolt;
 		}
 		
-		if((((batteryVoltage <= 3580 || simVoltage <= 3600) && sim_module_version != 1)
-		|| (batteryVoltage <= 3580 && simVoltage <= 3600 && sim_module_version == 1))
-		&& digitalRead(CHRG_INT))
+		if(digitalRead(CHRG_INT) && ((sim_module_version != 1 && batteryVoltage <= 3580) || 
+		(sim_module_version == 1 && simVoltage <= 3580)))
 		{
 			//Serial1.println("AT+CFUN=4");
 			//Serial1.println("AT+CSCLK=2");
