@@ -1863,6 +1863,11 @@ void MAKERphone::incomingCall(String _serialData)
 	Serial.print(ringtone_path);
 	Serial.println(SD.exists(ringtone_path));
 	MPTrack *tempTrack = nullptr;
+	uint8_t callIdNumber = 0;
+	uint16_t helper = _serialData.indexOf("+CLCC: ") + 7;
+	callIdNumber = _serialData.substring(helper, helper + 1).toInt();
+	Serial.print("call id: ");
+	Serial.println(callIdNumber);
 	while(1)
 	{
 		if (Serial1.available())
@@ -1872,16 +1877,15 @@ void MAKERphone::incomingCall(String _serialData)
 				buffer += c;
 			Serial.println(buffer);
 		}
-		if((buffer.indexOf("CLCC: 1") != -1 && buffer.indexOf("\r", buffer.indexOf("CLCC: 1")) != -1 && sim_module_version == 1)
-		|| (buffer.indexOf("CLCC: 2") != -1 && buffer.indexOf("\r", buffer.indexOf("CLCC: 2")) != -1 && sim_module_version == 0))
+		if(buffer.indexOf(String("CLCC: " + String(callIdNumber))) != -1 &&
+		buffer.indexOf("\r", buffer.indexOf(String("CLCC: " + String(callIdNumber)))) != -1)
 		{
 			localBuffer = buffer;
 			buffer = "";
 		}
 		if(buttons.released(BTN_FUN_LEFT))
 			break;
-		if(buttons.released(BTN_FUN_RIGHT) || (localBuffer.indexOf("1,1,6,0,0") != -1 && sim_module_version == 1)
-		|| (localBuffer.indexOf("2,1,6,0,0") != -1 && sim_module_version == 0))
+		if(buttons.released(BTN_FUN_RIGHT) || localBuffer.indexOf(String(String(callIdNumber) + ",1,6,0,0")) != -1)
 		{
 			if(SDinsertedFlag && SD.exists(ringtone_path))
 			{
@@ -1899,8 +1903,7 @@ void MAKERphone::incomingCall(String _serialData)
 			tft.setCursor(10, 110);
 			tft.print("Call ended");
 			Serial.println("ENDED");
-			if((localBuffer.indexOf("1,1,6,0,0") == -1 && sim_module_version == 1)
-			|| (localBuffer.indexOf("2,1,6,0,0") == -1 && sim_module_version == 0))
+			if(localBuffer.indexOf(String(String(callIdNumber) + ",1,6,0,0")) == -1)
 			{
 				uint32_t curr_millis = millis();
 				buffer = "";
@@ -1922,8 +1925,7 @@ void MAKERphone::incomingCall(String _serialData)
 			updateTimeRTC();
 			if(SDinsertedFlag)
 				addCall(number, checkContact(number), RTC.now().unixtime(), tmp_time, 0);
-			if((localBuffer.indexOf("1,1,6,0,0") != -1 && sim_module_version == 1)
-			|| (localBuffer.indexOf("2,1,6,0,0") != -1 && sim_module_version == 0))
+			if(localBuffer.indexOf(String(String(callIdNumber) + ",1,6,0,0")) != -1)
 			{
 				String temp = checkContact(number);
 				if(temp == "")
@@ -1981,12 +1983,13 @@ void MAKERphone::incomingCall(String _serialData)
 
 
 	Serial1.println("ATA");
+	localBuffer = waitForOK();
 	long long curr_millis = millis();
-	while (((localBuffer.indexOf("1,1,0,0,0") == -1 && sim_module_version == 1) ||
-	(localBuffer.indexOf("2,1,0,0,0") == -1 && sim_module_version == 0)) && millis() - curr_millis < 2000){
+	while (localBuffer.indexOf(String(String(callIdNumber) + ",1,0,0,0")) == -1 && millis() - curr_millis < 2000){
 		Serial1.println("ATA");
-		localBuffer = Serial1.readString();
+		localBuffer = waitForOK();
 		Serial.println(localBuffer);
+		delay(200);
 	}
 	tft.setTextColor(TFT_BLACK);
 	bool firstPass = 1;
@@ -2025,8 +2028,8 @@ void MAKERphone::incomingCall(String _serialData)
 			c = Serial1.read();
 			buffer += c;
 		}
-		if((buffer.indexOf("CLCC: 1") != -1 && buffer.indexOf("\r", buffer.indexOf("CLCC: 1")) != -1 && sim_module_version == 1)
-		|| (buffer.indexOf("CLCC: 2") != -1 && buffer.indexOf("\r", buffer.indexOf("CLCC: 2")) != -1 && sim_module_version == 0))
+		if(buffer.indexOf(String("CLCC: " + String(callIdNumber))) != -1 &&
+		buffer.indexOf("\r", buffer.indexOf(String("CLCC: " + String(callIdNumber)))) != -1)
 		{
 			localBuffer = buffer;
 			buffer = "";
@@ -2038,13 +2041,10 @@ void MAKERphone::incomingCall(String _serialData)
 		Serial.println("----------");
 		Serial.println(localBuffer);
 		delay(1);
-		if (((localBuffer.indexOf("CLCC: 1") != -1 && sim_module_version == 1) || 
-		(localBuffer.indexOf("CLCC: 2") != -1 && sim_module_version == 0)) || localBuffer.indexOf("AT+CMIC") != -1)
+		if (localBuffer.indexOf(String("CLCC: " + String(callIdNumber))) != -1 || localBuffer.indexOf("AT+CMIC") != -1)
 		{
-			if((((localBuffer.indexOf("1,1,0,0,0") != -1 && sim_module_version == 1) 
-			|| ((localBuffer.indexOf("2,1,0,0,0") != -1 || localBuffer.indexOf("2,1,0,0,0") != -1) && sim_module_version == 0))
-			|| localBuffer.indexOf("AT+CMIC") != -1 ) 
-			&& (written != 0 || prevTime != tmp_time))
+			if((localBuffer.indexOf(String(String(callIdNumber) + ",1,0,0,0")) != -1 
+			|| localBuffer.indexOf("AT+CMIC") != -1 ) && (written != 0 || prevTime != tmp_time))
 			{
 				if (firstPass == 1)
 				{
@@ -2073,8 +2073,7 @@ void MAKERphone::incomingCall(String _serialData)
 				prevTime = tmp_time;
 				written = 0;
 			}
-			else if((localBuffer.indexOf("1,1,6,0,0") != -1 && sim_module_version == 1) 
-			|| (localBuffer.indexOf("2,1,6,0,0") != -1 && sim_module_version == 0))
+			else if(localBuffer.indexOf(String(String(callIdNumber) + ",1,6,0,0")) != -1)
 			{
 				
 				tft.fillRect(0,0,160,128,TFT_WHITE);
@@ -2122,8 +2121,7 @@ void MAKERphone::incomingCall(String _serialData)
 			}
 		}
 
-		else if (((localBuffer.indexOf("CLCC: 1") == -1 && sim_module_version == 1) || 
-		(localBuffer.indexOf("CLCC: 2") == -1 && sim_module_version == 0)))
+		else if(localBuffer.indexOf(String("CLCC: " + String(callIdNumber))) == -1)
 		{
 			if (localBuffer.indexOf("ERROR") != -1)
 			{
@@ -3441,6 +3439,8 @@ void MAKERphone::networkModuleInit()
 		Serial1.println("AT+CTZU=1");
 		waitForOK();
 		Serial1.println("AT+CNMP=2");
+		waitForOK();
+		Serial1.println("AT+CGATT=0");
 		waitForOK();
 	}
 	waitForOK();
