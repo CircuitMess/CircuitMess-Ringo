@@ -230,8 +230,6 @@ void MAKERphone::begin(bool splash) {
 	memset(myBuffer, 0, sizeof(myBuffer));
 	for(uint8_t i = 0; i< 200;i++)
 		myBuffer[i] = 0;
-	Serial.print("myBuffer: ");
-	Serial.println(myBuffer);
 	bool temperino = 1;
 	Serial1.flush();
 	if(sim_module_version == 0) //SIM7600
@@ -241,23 +239,27 @@ void MAKERphone::begin(bool splash) {
 		delay(100);
 		Serial1.println("AT");
 		temperino = 1;
-		while(!found && millis() - temp < 1500)
+		uint32_t atMillis = millis();
+		while(!found && millis() - temp < 8000)
 		{
-			if(temperino && millis() - temp > 1000)
+			// if(temperino && millis() - temp > 1000)
+			// {
+			if(millis() - atMillis > 1000)
 			{
 				Serial1.println("AT");
-				temperino = 0;
+				Serial.println("at printed");
+				atMillis = millis();
 			}
+
+				// temperino = 0;
+			// }
 			if(Serial1.available())
 			{
-				// buffer+=(char)Serial1.read();
 				char c = Serial1.read();
-				// testArray[0] = (char)Serial1.read();
-				// strcat(myBuffer, testArray);
 				strncat(myBuffer, &c, 1);
 				Serial.println(myBuffer);
-				// Serial.println(buffer);
 				Serial.println("-------------");
+				atMillis = millis();
 			}
 			if(strstr(myBuffer, "OK") != nullptr || strstr(myBuffer, "RDY") != nullptr)
 				found = 1;
@@ -344,12 +346,14 @@ void MAKERphone::begin(bool splash) {
 			delay(100);
 			Serial1.println("AT");
 			temperino = 1;
-			while(!found && millis() - temp < 1500)
+			uint32_t atMillis = millis();
+			while(!found && millis() - temp < 8000)
 			{
-				if(temperino && millis() - temp > 1000)
+				if(millis() - atMillis > 1000)
 				{
 					Serial1.println("AT");
-					temperino = 0;
+					Serial.println("at printed");
+					atMillis = millis();
 				}
 				if(Serial1.available())
 				{
@@ -436,7 +440,7 @@ void MAKERphone::begin(bool splash) {
 		{
 			Serial1.println("AT+CREG?");
 			uint32_t cregMillis = millis();
-			String cregString = "";
+			String cregString = waitForOK();
 			while(networkRegistered != 1 && networkRegistered != 5 && millis() - cregMillis < 1000)
 			{
 				if(cregString != "")
@@ -2640,12 +2644,12 @@ void MAKERphone::saveMessage(char* text, String contact, String number, bool isR
 }
 void MAKERphone::checkSim()
 {
+	Serial.println("checking sim");
 	String input = "";
 	Serial1.println(F("AT+CPIN?"));
 	input = waitForOK();
 	Serial.println(input);
 	uint32_t timeoutMillis = millis();
-
 	while (input.indexOf("+CPIN:") == -1 && input.indexOf("NOT INSERTED") == -1
 	&& input.indexOf("not inserted") == -1 && input.indexOf("ERROR") == -1) {
 		if(millis() - timeoutMillis >= 2500)
@@ -3452,9 +3456,9 @@ void MAKERphone::networkModuleInit()
 	waitForOK();
 	Serial1.println(F("AT+CNMI=1,2,0,0,0"));
 	waitForOK();
-	waitForOK();
-	Serial1.println(F("AT+CPMS=\"SM\",\"SM\",\"SM\""));
-	waitForOK();
+	// waitForOK();
+	// Serial1.println(F("AT+CPMS=\"SM\",\"SM\",\"SM\""));
+	// waitForOK();
 	Serial1.println(F("AT+CLCC=1"));
 	waitForOK();
 	Serial1.println(F("AT+CSCLK=1"));
