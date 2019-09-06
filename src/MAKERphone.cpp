@@ -1191,10 +1191,12 @@ void MAKERphone::sleep() {
 			
 			if(sim_module_version == 1)
 				Serial1.begin(9600, SERIAL_8N1, 17, 16);
+			else
+				Serial1.begin(115200, SERIAL_8N1, 17, 16);
 			while(Serial1.available())
-				Serial1.read();
+				Serial.print(Serial1.read());
 			uint32_t cregMillis = millis();
-		String cregString = "";
+			String cregString = "";
 			int8_t tempReg = -1;
 			if(sim_module_version == 1)
 			{
@@ -1220,7 +1222,7 @@ void MAKERphone::sleep() {
 			else
 			{
 				Serial1.println("AT+CREG?");
-				while(tempReg == -1 && millis() - cregMillis < 1000)
+				while(tempReg == -1 && millis() - cregMillis < 5000)
 				{
 					cregString = waitForOK();
 					Serial.println(cregString);
@@ -1228,7 +1230,7 @@ void MAKERphone::sleep() {
 					{
 						if(cregString.indexOf("\n", cregString.indexOf("+CREG:")) != -1)
 						{
-							uint16_t helper = cregString.indexOf(" ", cregString.indexOf("+CREG:"));
+							uint16_t helper = cregString.indexOf(",", cregString.indexOf("+CREG:"));
 							tempReg = cregString.substring(helper + 1,  helper + 2).toInt();
 						}
 					}
@@ -1305,7 +1307,7 @@ void MAKERphone::sleep() {
 						{
 							if(cregString.indexOf("\n", cregString.indexOf("+CREG:")) != -1)
 							{
-								uint16_t helper = cregString.indexOf(" ", cregString.indexOf("+CREG:"));
+								uint16_t helper = cregString.indexOf(",", cregString.indexOf("+CREG:"));
 								tempReg = cregString.substring(helper + 1,  helper + 2).toInt();
 							}
 						}
@@ -1319,29 +1321,32 @@ void MAKERphone::sleep() {
 				if(tempReg != -1)
 					networkRegistered = tempReg;
 			}
-			while(Serial1.available())
-				Serial1.read();
-			uint32_t voltMillis = millis();
-			String voltString = "";
-			uint16_t tempVolt = 0;
-			Serial1.println("AT+CBC");
-			while(tempVolt == 0 && millis() - voltMillis < 1000)
+			if(sim_module_version == 1)
 			{
-				voltString = waitForOK();
-				Serial.println(voltString);
-				if(voltString.indexOf("+CBC:") != -1)
+				while(Serial1.available())
+					Serial1.read();
+				uint32_t voltMillis = millis();
+				String voltString = "";
+				uint16_t tempVolt = 0;
+				Serial1.println("AT+CBC");
+				while(tempVolt == 0 && millis() - voltMillis < 1000)
 				{
-					uint16_t helper = voltString.indexOf(",", voltString.indexOf("+CBC:"));
-					helper = voltString.indexOf(",", helper + 1) + 1;
-					tempVolt = voltString.substring(helper, voltString.indexOf("\n", helper)).toInt();
+					voltString = waitForOK();
+					Serial.println(voltString);
+					if(voltString.indexOf("+CBC:") != -1)
+					{
+						uint16_t helper = voltString.indexOf(",", voltString.indexOf("+CBC:"));
+						helper = voltString.indexOf(",", helper + 1) + 1;
+						tempVolt = voltString.substring(helper, voltString.indexOf("\n", helper)).toInt();
+					}
+					if(tempVolt == 0)
+						Serial1.println("AT+CBC");
 				}
-				if(tempVolt == 0)
-					Serial1.println("AT+CBC");
+				Serial.print("voltage: ");
+				simVoltage = tempVolt;
+				Serial.println(tempVolt);
 			}
-			Serial.print("voltage: ");
-			Serial.println(tempVolt);
 			digitalWrite(SIM800_DTR, 1);
-			simVoltage = tempVolt;
 		}
 		
 		if(digitalRead(CHRG_INT) && ((sim_module_version != 1 && batteryVoltage <= 3580) || 
@@ -1872,7 +1877,7 @@ void MAKERphone::incomingCall(String _serialData)
 			c = (char)Serial1.read();
 			if((uint8_t)c != 255)
 				buffer += c;
-			Serial.println(buffer);
+			// Serial.println(buffer);
 		}
 		if(buffer.indexOf(String("CLCC: " + String(callIdNumber))) != -1 &&
 		buffer.indexOf("\r", buffer.indexOf(String("CLCC: " + String(callIdNumber)))) != -1)
@@ -2035,9 +2040,9 @@ void MAKERphone::incomingCall(String _serialData)
 			buffer = "";
 		if(buffer.indexOf("\r") != -1)
 			buffer = "";
-		Serial.println("----------");
-		Serial.println(localBuffer);
-		delay(1);
+		// Serial.println("----------");
+		// Serial.println(localBuffer);
+		// delay(1);
 		if (localBuffer.indexOf(String("CLCC: " + String(callIdNumber))) != -1 || localBuffer.indexOf("AT+CMIC") != -1)
 		{
 			if((localBuffer.indexOf(String(String(callIdNumber) + ",1,0,0,0")) != -1 
@@ -3438,6 +3443,8 @@ void MAKERphone::networkModuleInit()
 		Serial1.println("AT+CNMP=2");
 		waitForOK();
 		Serial1.println("AT+CGATT=0");
+		waitForOK();
+		Serial1.println("AT+CPMVT=1,0,5000");
 		waitForOK();
 	}
 	waitForOK();
