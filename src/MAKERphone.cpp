@@ -230,8 +230,6 @@ void MAKERphone::begin(bool splash) {
 	memset(myBuffer, 0, sizeof(myBuffer));
 	for(uint8_t i = 0; i< 200;i++)
 		myBuffer[i] = 0;
-	Serial.print("myBuffer: ");
-	Serial.println(myBuffer);
 	bool temperino = 1;
 	Serial1.flush();
 	if(sim_module_version == 0) //SIM7600
@@ -241,23 +239,28 @@ void MAKERphone::begin(bool splash) {
 		delay(100);
 		Serial1.println("AT");
 		temperino = 1;
-		while(!found && millis() - temp < 1500)
+		uint32_t atMillis = millis();
+		while(!found && millis() - temp < 8000)
 		{
-			if(temperino && millis() - temp > 1000)
+			// if(temperino && millis() - temp > 1000)
+			// {
+			if(millis() - atMillis > 1000)
 			{
 				Serial1.println("AT");
-				temperino = 0;
+				Serial.println("at printed");
+				atMillis = millis();
 			}
+
+				// temperino = 0;
+			// }
 			if(Serial1.available())
 			{
-				// buffer+=(char)Serial1.read();
 				char c = Serial1.read();
-				// testArray[0] = (char)Serial1.read();
-				// strcat(myBuffer, testArray);
 				strncat(myBuffer, &c, 1);
 				Serial.println(myBuffer);
-				// Serial.println(buffer);
 				Serial.println("-------------");
+				atMillis = millis();
+				temp = millis();
 			}
 			if(strstr(myBuffer, "OK") != nullptr || strstr(myBuffer, "RDY") != nullptr)
 				found = 1;
@@ -290,6 +293,8 @@ void MAKERphone::begin(bool splash) {
 					Serial.println(myBuffer);
 					// Serial.println(buffer);
 					Serial.println("-------------");
+					temp = millis();
+
 				}
 				if(strstr(myBuffer, "OK") != nullptr)
 					found = 1;
@@ -329,6 +334,8 @@ void MAKERphone::begin(bool splash) {
 				strncat(myBuffer, &c, 1);
 				Serial.println(myBuffer);
 				Serial.println("-------------");
+				temp = millis();
+
 			}
 			if(strstr(myBuffer, "OK") != nullptr)
 				found = 1;
@@ -344,12 +351,14 @@ void MAKERphone::begin(bool splash) {
 			delay(100);
 			Serial1.println("AT");
 			temperino = 1;
-			while(!found && millis() - temp < 1500)
+			uint32_t atMillis = millis();
+			while(!found && millis() - temp < 8000)
 			{
-				if(temperino && millis() - temp > 1000)
+				if(millis() - atMillis > 1000)
 				{
 					Serial1.println("AT");
-					temperino = 0;
+					Serial.println("at printed");
+					atMillis = millis();
 				}
 				if(Serial1.available())
 				{
@@ -361,6 +370,9 @@ void MAKERphone::begin(bool splash) {
 					Serial.println(myBuffer);
 					// Serial.println(buffer);
 					Serial.println("-------------");
+					atMillis = millis();
+					temp = millis();
+
 				}
 				if(strstr(myBuffer, "OK") != nullptr || strstr(myBuffer, "RDY") != nullptr)
 					found = 1;
@@ -392,6 +404,7 @@ void MAKERphone::begin(bool splash) {
 	}
 	if(sim_module_version != 255)
 	{
+		Serial1.setRxBufferSize(1024);
 		Serial1.println("ATI");
 		String temp = waitForOK();
 		Serial.println(temp);
@@ -409,25 +422,51 @@ void MAKERphone::begin(bool splash) {
 		else if(temp.indexOf("SIM7600") != -1)
 			sim_module_version = 0;
 		checkSim();
-		Serial1.println("AT+CCALR?");
-		uint32_t cregMillis = millis();
-		String cregString = "";
-		while(networkRegistered != 1 && networkRegistered != 5 && millis() - cregMillis < 1000)
+		if(sim_module_version == 1)
 		{
-			if(cregString != "")
+			Serial1.println("AT+CCALR?");
+			uint32_t cregMillis = millis();
+			String cregString = "";
+			while(networkRegistered != 1 && networkRegistered != 5 && millis() - cregMillis < 1000)
 			{
-				Serial.println(cregString);
-				if(cregString.indexOf("\n", cregString.indexOf("+CCALR:")) != -1)
+				if(cregString != "")
 				{
-					uint16_t helper = cregString.indexOf(" ", cregString.indexOf("+CCALR:"));
-					networkRegistered = cregString.substring(helper + 1,  helper + 2).toInt();
+					// Serial.println(cregString);
+					if(cregString.indexOf("\n", cregString.indexOf("+CCALR:")) != -1)
+					{
+						uint16_t helper = cregString.indexOf(" ", cregString.indexOf("+CCALR:"));
+						networkRegistered = cregString.substring(helper + 1,  helper + 2).toInt();
+					}
 				}
+				if(cregString != "" && networkRegistered != -1)
+				{
+					Serial1.println("AT+CCALR?");
+				}
+				cregString = waitForOK();
 			}
-			if(cregString != "" && networkRegistered != -1)
+		}
+		else
+		{
+			Serial1.println("AT+CREG?");
+			uint32_t cregMillis = millis();
+			String cregString = waitForOK();
+			while(networkRegistered != 1 && networkRegistered != 5 && millis() - cregMillis < 1000)
 			{
-				Serial1.println("AT+CCALR?");
+				if(cregString != "")
+				{
+					// Serial.println(cregString);
+					if(cregString.indexOf("\n", cregString.indexOf("+CREG:")) != -1)
+					{
+						uint16_t helper = cregString.indexOf(",", cregString.indexOf("+CREG:"));
+						networkRegistered = cregString.substring(helper + 1,  helper + 2).toInt();
+					}
+				}
+				if(cregString != "" && networkRegistered != -1)
+				{
+					Serial1.println("AT+CREG?");
+				}
+				cregString = waitForOK();
 			}
-			cregString = waitForOK();
 		}
 	}
 	if(EEPROM.readByte(GSM_MODULE_ADDRESS) != sim_module_version)
@@ -638,7 +677,7 @@ bool MAKERphone::update() {
 				switch (alternatingRefresh)
 				{
 				case 0:
-					if (simInserted && !airplaneMode)
+					if (simInserted && !airplaneMode && (networkRegistered == 5 || networkRegistered == 1))
 					{
 						if (carrierName == "")
 							Serial1.println("AT+CSPN?");
@@ -650,14 +689,14 @@ bool MAKERphone::update() {
 					break;
 
 				case 1:
-					if (simInserted && !airplaneMode)
+					if (simInserted && !airplaneMode && (networkRegistered == 5 || networkRegistered == 1))
 						Serial1.println("AT+CSQ");
 					else
 						refreshMillis = millis() + 2000;
 					break;
 
 				case 2:
-					if (simInserted && !airplaneMode)
+					if (simInserted && !airplaneMode && (networkRegistered == 5 || networkRegistered == 1))
 					{
 						if (clockYear % 100 < 19 || clockYear % 100 >= 40 || clockMonth < 1 || clockMonth > 12 || clockHour > 24 || clockMinute >= 60)
 						{
@@ -680,6 +719,9 @@ bool MAKERphone::update() {
 					else
 						refreshMillis = millis() + 2000;
 					break;
+				case 3:
+					Serial1.println("AT+CREG?");
+					break;
 				}
 				updateBuffer = "";
 				// if (simInserted && !airplaneMode)
@@ -693,11 +735,11 @@ bool MAKERphone::update() {
 				// 		Serial1.println("AT+CCLK?");
 				// }
 				alternatingRefresh++;
-				if(alternatingRefresh > 2)
+				if(alternatingRefresh > 3)
 					alternatingRefresh = 0;
 			}
 		}
-		if (Serial1.available())
+		if (Serial1.available() && sim_module_version != 255)
 		{
 			c = Serial1.read();
 			updateBuffer += c;
@@ -792,19 +834,22 @@ bool MAKERphone::update() {
 					simVoltage = updateBuffer.substring(helper, updateBuffer.indexOf("V", helper)).toDouble() * 1000;
 				}
 			}
-			if(updateBuffer.indexOf("\n", updateBuffer.indexOf("+CCALR:")) != -1)
+			if(updateBuffer.indexOf("\n", updateBuffer.indexOf("+CCALR:")) != -1 && sim_module_version == 1)
 			{
 				uint16_t helper = updateBuffer.indexOf(" ", updateBuffer.indexOf("+CCALR:"));
 				networkRegistered = updateBuffer.substring(helper + 1,  helper + 2).toInt();
 			}
-
+			if(updateBuffer.indexOf("\n", updateBuffer.indexOf("+CREG:")) != -1 && sim_module_version == 0)
+			{
+				uint16_t helper = updateBuffer.indexOf(",", updateBuffer.indexOf("+CREG:"));
+				networkRegistered = updateBuffer.substring(helper + 1,  helper + 2).toInt();
+			}
 		}
 	}
 	batteryVoltage = voltage;
 
-	if((((batteryVoltage <= 3580 || simVoltage <= 3600) && sim_module_version != 1)
-	|| (batteryVoltage <= 3580 && simVoltage <= 3600 && sim_module_version == 1))
-	&& digitalRead(CHRG_INT))
+	if(digitalRead(CHRG_INT) && ((sim_module_version != 1 && batteryVoltage <= 3580) || 
+	(sim_module_version == 1 && simVoltage <= 3580)))
 	{
 		if(timesMeasured != _timesMeasured)
 			shutdownCounter++;
@@ -861,7 +906,7 @@ bool MAKERphone::update() {
 		while((temp.indexOf("\r", temp.indexOf("\r", helper + 1) + 1) == -1
 		|| temp.indexOf("\r", helper + 1) == -1 || helper == -1)
 		&& temp.indexOf("\r", temp.indexOf("1,4,0,0,")) == -1
-		&& temp.indexOf("RING") == -1 && millis() - curr_millis < 500)
+		&& temp.indexOf("RING") == -1 && millis() - curr_millis < 2500)
 		{
 			if(Serial1.available())
 			{
@@ -871,6 +916,8 @@ bool MAKERphone::update() {
 				// Serial.println(temp);
 				// Serial.println("-----------------");
 				helper = temp.indexOf("+CMT:");
+				if(helper > 0)
+					temp = "+CMT:";
 				// Serial.println(helper);
 			}
 		}
@@ -935,9 +982,10 @@ bool MAKERphone::update() {
 		buttons.update();
 		wokeWithPWRBTN = 0;
 	}
-	if(sim_module_version != 255 && simInserted && sim_module_version != 0)
+	if(sim_module_version != 255 && simInserted)
 	{
-		if(networkRegistered != 1 && millis() - networkDisconnectMillis > 30000 && networkDisconnectFlag && inLockScreen)
+		if(networkRegistered != 1 && millis() - networkDisconnectMillis > 30000 && networkDisconnectFlag && inLockScreen
+		&& sim_module_version != 0)
 		{
 			display.fillScreen(TFT_BLACK);
 			display.setTextColor(TFT_WHITE);
@@ -975,23 +1023,49 @@ bool MAKERphone::update() {
 			}
 			delay(2000);
 			checkSim();
-			Serial1.println("AT+CCALR?");
-			uint32_t cregMillis = millis();
-			String cregString = "";
-			while(networkRegistered == -1 && millis() - cregMillis < 1000)
+			if(sim_module_version == 1)
 			{
-				if(millis() - cregMillis > 500)
-					Serial1.println("AT+CCALR?");
-				if(cregString != "")
+				Serial1.println("AT+CCALR?");
+				uint32_t cregMillis = millis();
+				String cregString = "";
+				while(networkRegistered == -1 && millis() - cregMillis < 1000)
 				{
-					Serial.println(cregString);
-					if(cregString.indexOf("\n", cregString.indexOf("+CCALR:")) != -1)
+					if(millis() - cregMillis > 500)
+						Serial1.println("AT+CCALR?");
+					if(cregString != "")
 					{
-						uint16_t helper = cregString.indexOf(" ", cregString.indexOf("+CCALR:"));
-						networkRegistered = cregString.substring(helper + 1,  helper + 2).toInt();
+						// Serial.println(cregString);
+						if(cregString.indexOf("\n", cregString.indexOf("+CCALR:")) != -1)
+						{
+							uint16_t helper = cregString.indexOf(" ", cregString.indexOf("+CCALR:"));
+							networkRegistered = cregString.substring(helper + 1,  helper + 2).toInt();
+						}
 					}
+					cregString = waitForOK();
 				}
-				cregString = waitForOK();
+			}
+			else
+			{
+				Serial1.println("AT+CREG?");
+				uint32_t cregMillis = millis();
+				String cregString = "";
+				while(networkRegistered != 1 && networkRegistered != 5 && millis() - cregMillis < 1000)
+				{
+					if(cregString != "")
+					{
+						// Serial.println(cregString);
+						if(cregString.indexOf("\n", cregString.indexOf("+CREG:")) != -1)
+						{
+							uint16_t helper = cregString.indexOf(",", cregString.indexOf("+CREG:"));
+							networkRegistered = cregString.substring(helper + 1,  helper + 2).toInt();
+						}
+					}
+					if(cregString != "" && networkRegistered != -1)
+					{
+						Serial1.println("AT+CREG?");
+					}
+					cregString = waitForOK();
+				}
 			}
 			networkModuleInit();
 			networkDisconnectFlag = 0;
@@ -1102,6 +1176,7 @@ void MAKERphone::sleep() {
 	vTaskSuspend(Task1);
 	esp_light_sleep_start();
 	reason = esp_sleep_get_wakeup_cause();
+
 	while(reason == 4)
 	{
 		reason = esp_sleep_get_wakeup_cause();
@@ -1124,7 +1199,6 @@ void MAKERphone::sleep() {
 		voltageSample = 0;
 		Serial.println(batteryVoltage);
 		delay(50);
-		
 		if(simInserted && sim_module_version != 255)
 		{
 			digitalWrite(SIM800_DTR, 0);
@@ -1133,27 +1207,53 @@ void MAKERphone::sleep() {
 			
 			if(sim_module_version == 1)
 				Serial1.begin(9600, SERIAL_8N1, 17, 16);
+			else
+				Serial1.begin(115200, SERIAL_8N1, 17, 16);
 			while(Serial1.available())
-				Serial1.read();
+				Serial.print(Serial1.read());
 			uint32_t cregMillis = millis();
 			String cregString = "";
 			int8_t tempReg = -1;
-			Serial1.println("AT+CCALR?");
-			while(tempReg == -1 && millis() - cregMillis < 1000)
+			if(sim_module_version == 1)
 			{
-				cregString = waitForOK();
-				Serial.println(cregString);
-				if(cregString != "" && cregString.indexOf("+CCALR:") != -1)
+				Serial1.println("AT+CCALR?");
+				while(tempReg == -1 && millis() - cregMillis < 1000)
 				{
-					if(cregString.indexOf("\n", cregString.indexOf("+CCALR:")) != -1)
+					cregString = waitForOK();
+					// Serial.println(cregString);
+					if(cregString != "" && cregString.indexOf("+CCALR:") != -1)
 					{
-						uint16_t helper = cregString.indexOf(" ", cregString.indexOf("+CCALR:"));
-						tempReg = cregString.substring(helper + 1,  helper + 2).toInt();
+						if(cregString.indexOf("\n", cregString.indexOf("+CCALR:")) != -1)
+						{
+							uint16_t helper = cregString.indexOf(" ", cregString.indexOf("+CCALR:"));
+							tempReg = cregString.substring(helper + 1,  helper + 2).toInt();
+						}
+					}
+					if(cregString != "" && tempReg != 1 && tempReg != 5)
+					{
+						Serial1.println("AT+CCALR?");
 					}
 				}
-				if(cregString != "" && tempReg != 1 && tempReg != 5)
+			}
+			else
+			{
+				Serial1.println("AT+CREG?");
+				while(tempReg == -1 && millis() - cregMillis < 5000)
 				{
-					Serial1.println("AT+CCALR?");
+					cregString = waitForOK();
+					// Serial.println(cregString);
+					if(cregString != "" && cregString.indexOf("+CREG:") != -1)
+					{
+						if(cregString.indexOf("\n", cregString.indexOf("+CREG:")) != -1)
+						{
+							uint16_t helper = cregString.indexOf(",", cregString.indexOf("+CREG:"));
+							tempReg = cregString.substring(helper + 1,  helper + 2).toInt();
+						}
+					}
+					if(cregString != "" && tempReg != 1 && tempReg != 5)
+					{
+						Serial1.println("AT+CREG?");
+					}
 				}
 			}
 			Serial.print("call ready: ");
@@ -1187,56 +1287,86 @@ void MAKERphone::sleep() {
 				}
 				delay(2000);
 				checkSim();
-				Serial1.println("AT+CCALR?");
-				uint32_t cregMillis = millis();
-				String cregString = "";
-				int8_t tempReg = -1;
-				while(tempReg == -1 && millis() - cregMillis < 10000)
+				if(sim_module_version == 1)
 				{
-					if(millis() - cregMillis > 500)
-						Serial1.println("AT+CCALR?");
-					if(cregString != "")
+					Serial1.println("AT+CCALR?");
+					uint32_t cregMillis = millis();
+					String cregString = "";
+					int8_t tempReg = -1;
+					while(tempReg == -1 && millis() - cregMillis < 10000)
 					{
-						Serial.println(cregString);
-						if(cregString.indexOf("\n", cregString.indexOf("+CCALR:")) != -1)
+						if(millis() - cregMillis > 500)
+							Serial1.println("AT+CCALR?");
+						if(cregString != "")
 						{
-							uint16_t helper = cregString.indexOf(" ", cregString.indexOf("+CCALR:"));
-							tempReg = cregString.substring(helper + 1,  helper + 2).toInt();
+							// Serial.println(cregString);
+							if(cregString.indexOf("\n", cregString.indexOf("+CCALR:")) != -1)
+							{
+								uint16_t helper = cregString.indexOf(" ", cregString.indexOf("+CCALR:"));
+								tempReg = cregString.substring(helper + 1,  helper + 2).toInt();
+							}
+						}
+						cregString = waitForOK();
+					}
+				}
+				else
+				{
+					Serial1.println("AT+CREG?");
+					uint32_t cregMillis = millis();
+					String cregString = "";
+					int8_t tempReg = -1;
+					while(tempReg == -1 && millis() - cregMillis < 1000)
+					{
+						cregString = waitForOK();
+						// Serial.println(cregString);
+						if(cregString != "" && cregString.indexOf("+CREG:") != -1)
+						{
+							if(cregString.indexOf("\n", cregString.indexOf("+CREG:")) != -1)
+							{
+								uint16_t helper = cregString.indexOf(",", cregString.indexOf("+CREG:"));
+								tempReg = cregString.substring(helper + 1,  helper + 2).toInt();
+							}
+						}
+						if(cregString != "" && tempReg != 1 && tempReg != 5)
+						{
+							Serial1.println("AT+CREG?");
 						}
 					}
-					cregString = waitForOK();
 				}
 				networkModuleInit();
 				if(tempReg != -1)
 					networkRegistered = tempReg;
 			}
-			while(Serial1.available())
-				Serial1.read();
-			uint32_t voltMillis = millis();
-			String voltString = "";
-			uint16_t tempVolt = 0;
-			Serial1.println("AT+CBC");
-			while(tempVolt == 0 && millis() - voltMillis < 1000)
+			if(sim_module_version == 1)
 			{
-				voltString = waitForOK();
-				Serial.println(voltString);
-				if(voltString.indexOf("+CBC:") != -1)
+				while(Serial1.available())
+					Serial1.read();
+				uint32_t voltMillis = millis();
+				String voltString = "";
+				uint16_t tempVolt = 0;
+				Serial1.println("AT+CBC");
+				while(tempVolt == 0 && millis() - voltMillis < 1000)
 				{
-					uint16_t helper = voltString.indexOf(",", voltString.indexOf("+CBC:"));
-					helper = voltString.indexOf(",", helper + 1) + 1;
-					tempVolt = voltString.substring(helper, voltString.indexOf("\n", helper)).toInt();
+					voltString = waitForOK();
+					Serial.println(voltString);
+					if(voltString.indexOf("+CBC:") != -1)
+					{
+						uint16_t helper = voltString.indexOf(",", voltString.indexOf("+CBC:"));
+						helper = voltString.indexOf(",", helper + 1) + 1;
+						tempVolt = voltString.substring(helper, voltString.indexOf("\n", helper)).toInt();
+					}
+					if(tempVolt == 0)
+						Serial1.println("AT+CBC");
 				}
-				if(tempVolt == 0)
-					Serial1.println("AT+CBC");
+				Serial.print("voltage: ");
+				simVoltage = tempVolt;
+				Serial.println(tempVolt);
 			}
-			Serial.print("voltage: ");
-			Serial.println(tempVolt);
 			digitalWrite(SIM800_DTR, 1);
-			simVoltage = tempVolt;
 		}
-		if((((batteryVoltage <= 3580 || simVoltage <= 3600) && sim_module_version != 1)
-		|| (batteryVoltage <= 3580 && simVoltage <= 3600 && sim_module_version == 1))
-		&& digitalRead(CHRG_INT))
+		
+		if(digitalRead(CHRG_INT) && ((sim_module_version != 1 && batteryVoltage <= 3580) || 
+		(sim_module_version == 1 && simVoltage <= 3580)))
 		{
 			//Serial1.println("AT+CFUN=4");
 			//Serial1.println("AT+CSCLK=2");
@@ -1263,6 +1393,7 @@ void MAKERphone::sleep() {
 		buttons.activateInterrupt();
 		esp_light_sleep_start();
 	}
+	
 	networkDisconnectMillis = millis();
 	sleepTimer = millis();
 	Serial.println("buttons wakuep");
@@ -1723,7 +1854,7 @@ void MAKERphone::incomingCall(String _serialData)
 	uint16_t tmp_time = 0;
 	String localBuffer = _serialData;
 	String buffer = "";
-	uint16_t foo = localBuffer.indexOf("\"+", localBuffer.indexOf("1,4,0,0,")) + 1;
+	uint16_t foo = localBuffer.indexOf("\"+", localBuffer.indexOf(",1,4,0,0")) + 1;
 	number = localBuffer.substring(foo, localBuffer.indexOf("\"", foo));
 	localBuffer = "";
 	bool played = 0;
@@ -1750,6 +1881,11 @@ void MAKERphone::incomingCall(String _serialData)
 	Serial.print(ringtone_path);
 	Serial.println(SD.exists(ringtone_path));
 	MPTrack *tempTrack = nullptr;
+	uint8_t callIdNumber = 0;
+	uint16_t helper = _serialData.indexOf("+CLCC: ") + 7;
+	callIdNumber = _serialData.substring(helper, helper + 1).toInt();
+	Serial.print("call id: ");
+	Serial.println(callIdNumber);
 	while(1)
 	{
 		if (Serial1.available())
@@ -1759,14 +1895,15 @@ void MAKERphone::incomingCall(String _serialData)
 				buffer += c;
 			// Serial.println(buffer);
 		}
-		if(buffer.indexOf("CLCC: 1") != -1 && buffer.indexOf("\r", buffer.indexOf("CLCC: 1")) != -1)
+		if(buffer.indexOf(String("CLCC: " + String(callIdNumber))) != -1 &&
+		buffer.indexOf("\r", buffer.indexOf(String("CLCC: " + String(callIdNumber)))) != -1)
 		{
 			localBuffer = buffer;
 			buffer = "";
 		}
 		if(buttons.released(BTN_FUN_LEFT))
 			break;
-		if(buttons.released(BTN_FUN_RIGHT) || localBuffer.indexOf("1,1,6,0,0") != -1)
+		if(buttons.released(BTN_FUN_RIGHT) || localBuffer.indexOf(String(String(callIdNumber) + ",1,6,0,0")) != -1)
 		{
 			if(SDinsertedFlag && SD.exists(ringtone_path))
 			{
@@ -1784,7 +1921,7 @@ void MAKERphone::incomingCall(String _serialData)
 			tft.setCursor(10, 110);
 			tft.print("Call ended");
 			Serial.println("ENDED");
-			if(localBuffer.indexOf("1,1,6,0,0") == -1)
+			if(localBuffer.indexOf(String(String(callIdNumber) + ",1,6,0,0")) == -1)
 			{
 				uint32_t curr_millis = millis();
 				buffer = "";
@@ -1806,7 +1943,7 @@ void MAKERphone::incomingCall(String _serialData)
 			updateTimeRTC();
 			if(SDinsertedFlag)
 				addCall(number, checkContact(number), RTC.now().unixtime(), tmp_time, 0);
-			if(localBuffer.indexOf("1,1,6,0,0") != -1)
+			if(localBuffer.indexOf(String(String(callIdNumber) + ",1,6,0,0")) != -1)
 			{
 				String temp = checkContact(number);
 				if(temp == "")
@@ -1864,10 +2001,13 @@ void MAKERphone::incomingCall(String _serialData)
 
 
 	Serial1.println("ATA");
+	localBuffer = waitForOK();
 	long long curr_millis = millis();
-	while (localBuffer.indexOf("1,1,0,0,0") == -1 && millis() - curr_millis < 2000){
+	while (localBuffer.indexOf(String(String(callIdNumber) + ",1,0,0,0")) == -1 && millis() - curr_millis < 2000){
 		Serial1.println("ATA");
-		localBuffer = Serial1.readString();
+		localBuffer = waitForOK();
+		Serial.println(localBuffer);
+		delay(200);
 	}
 	tft.setTextColor(TFT_BLACK);
 	bool firstPass = 1;
@@ -1904,10 +2044,10 @@ void MAKERphone::incomingCall(String _serialData)
 		if (Serial1.available())
 		{
 			c = Serial1.read();
-			if((uint8_t)c != 255)
-				buffer += c;
+			buffer += c;
 		}
-		if(buffer.indexOf("CLCC: 1") != -1 && buffer.indexOf("\r", buffer.indexOf("CLCC: 1")) != -1)
+		if(buffer.indexOf(String("CLCC: " + String(callIdNumber))) != -1 &&
+		buffer.indexOf("\r", buffer.indexOf(String("CLCC: " + String(callIdNumber)))) != -1)
 		{
 			localBuffer = buffer;
 			buffer = "";
@@ -1916,12 +2056,13 @@ void MAKERphone::incomingCall(String _serialData)
 			buffer = "";
 		if(buffer.indexOf("\r") != -1)
 			buffer = "";
-		Serial.println("----------");
-		Serial.println(buffer);
-		delay(1);
-		if (localBuffer.indexOf("CLCC: 1") != -1 || localBuffer.indexOf("AT+CMIC") != -1)
+		// Serial.println("----------");
+		// Serial.println(localBuffer);
+		// delay(1);
+		if (localBuffer.indexOf(String("CLCC: " + String(callIdNumber))) != -1 || localBuffer.indexOf("AT+CMIC") != -1)
 		{
-			if ((localBuffer.indexOf("1,1,0,0,0") != -1 || localBuffer.indexOf("AT+CMIC") != -1 ) && (written != 0 || prevTime != tmp_time))
+			if((localBuffer.indexOf(String(String(callIdNumber) + ",1,0,0,0")) != -1 
+			|| localBuffer.indexOf("AT+CMIC") != -1 ) && (written != 0 || prevTime != tmp_time))
 			{
 				if (firstPass == 1)
 				{
@@ -1950,7 +2091,7 @@ void MAKERphone::incomingCall(String _serialData)
 				prevTime = tmp_time;
 				written = 0;
 			}
-			else if (localBuffer.indexOf("1,1,6,0,0") != -1)
+			else if(localBuffer.indexOf(String(String(callIdNumber) + ",1,6,0,0")) != -1)
 			{
 				
 				tft.fillRect(0,0,160,128,TFT_WHITE);
@@ -1996,12 +2137,9 @@ void MAKERphone::incomingCall(String _serialData)
 				delay(1000);
 				break;
 			}
-				
-			
-
 		}
 
-		else if (localBuffer.indexOf("CLCC: 1") == -1)
+		else if(localBuffer.indexOf(String("CLCC: " + String(callIdNumber))) == -1)
 		{
 			if (localBuffer.indexOf("ERROR") != -1)
 			{
@@ -2138,7 +2276,7 @@ void MAKERphone::incomingMessage(String _serialData)
 {
 	Serial.println("incoming message");
 	Serial.println(_serialData);
-	uint16_t helper = 0;
+	int32_t helper = 0;
 	// helper = _serialData.indexOf("\"", _serialData.indexOf("+CMT:"));
 	// String number = _serialData.substring(helper + 1, _serialData.indexOf("\"", helper+1));
 	// helper+=number.length() + 1;
@@ -2153,7 +2291,8 @@ void MAKERphone::incomingMessage(String _serialData)
 		masterTextLength = 160;
 	char masterText[masterTextLength] = "";
 	// memset(masterText, 0, sizeof(masterText));
-	Serial.print("current SMS index: "); Serial.println(_currentConcatSMS);
+	Serial.print("current SMS index: ");
+	Serial.println(_currentConcatSMS);
 	Serial.println("sms text: ");
 	Serial.println(_smsText);
 	if(_concatSMSCounter > 1)
@@ -2188,39 +2327,41 @@ void MAKERphone::incomingMessage(String _serialData)
 			tft.fillRect(50,80,50,30,TFT_BLACK);
 			tft.setCursor(68, 83);
 			tft.printf("%d/%d", lengthOfSMS - _concatSMSCounter + 1, lengthOfSMS);
+			String temp = "";
+			long long curr_millis = millis();
 
-			while(digitalRead(SIM_INT) )
+			while((temp.indexOf("\r", temp.indexOf("\r", helper + 1) + 1) == -1
+			|| temp.indexOf("\r", helper + 1) == -1 || helper == -1)
+			&& millis() - curr_millis < 25000)
 			{
-				String temp = "";
-				long long curr_millis = millis();
-
-				while(((helper == -1) || (helper != -1 && temp.indexOf("\r", temp.indexOf("\r", helper) + 1) == -1))
-				&& millis() - curr_millis < 25000)
-				{ 
-					if(Serial1.available())
-					{
-						curr_millis = millis();
-						char c = Serial1.read();
-						temp += c;
-						helper = temp.indexOf("+CMT:");
-					}
-				}
-				if(temp.indexOf("+CMT:") != -1)
+				if(Serial1.available())
 				{
-					helper = temp.indexOf("\r", temp.indexOf("+CMT")) + 1;
-					const char *pdu_text = temp.substring(helper + 1, temp.indexOf("\r", helper + 2)).c_str();
-					pduDecode(pdu_text);
-					Serial.print("current SMS index: "); Serial.println(_currentConcatSMS);
-					// strncat(masterText, _smsText, _concatSMSCounter*160);
-					if(_concatSMSCodingScheme)
-						strcpy(&masterText[(_currentConcatSMS - 1)*67], _smsText);
-					else
-						strcpy(&masterText[(_currentConcatSMS - 1)*153], _smsText);
-					// for(int i = 0; i < sizeof(masterText); i++)
-					// 	Serial.println((uint8_t)masterText[i]);
-					break;
+					curr_millis = millis();
+					char c = Serial1.read();
+					temp += c;
+					helper = temp.indexOf("+CMT:");
+					if(helper > 0)
+						temp = "+CMT:";
 				}
 			}
+			if(temp.indexOf("+CMT:") != -1)
+			{
+				helper = temp.indexOf("\r", temp.indexOf("+CMT")) + 1;
+				const char *pdu_text = temp.substring(helper + 1, temp.indexOf("\r", helper + 2)).c_str();
+				pduDecode(pdu_text);
+				Serial.print("current SMS index: "); Serial.println(_currentConcatSMS);
+				Serial.println("sms text: ");
+				Serial.println(_smsText);
+				// strncat(masterText, _smsText, _concatSMSCounter*160);
+				if(_concatSMSCodingScheme)
+					strcpy(&masterText[(_currentConcatSMS - 1)*67], _smsText);
+				else
+					strcpy(&masterText[(_currentConcatSMS - 1)*153], _smsText);
+				// for(int i = 0; i < sizeof(masterText); i++)
+				// 	Serial.println((uint8_t)masterText[i]);
+			}
+			Serial.println("minus");
+			delay(5);
 			_concatSMSCounter--;
 		}
 	}
@@ -2323,22 +2464,27 @@ void MAKERphone::incomingMessage(String _serialData)
 		if(!digitalRead(SIM_INT) && !inCall)
 		{
 			String temp = "";
-			long long curr_millis = millis();
-
+			uint32_t curr_millis = millis();
+			helper = -1;
 			while((temp.indexOf("\r", temp.indexOf("\r", helper + 1) + 1) == -1
 			|| temp.indexOf("\r", helper + 1) == -1 || helper == -1)
 			&& temp.indexOf("\r", temp.indexOf("1,4,0,0,")) == -1
-			&& millis() - curr_millis < 500)
-			{ 
+			&& temp.indexOf("RING") == -1 && millis() - curr_millis < 500)
+			{
 				if(Serial1.available())
 				{
 					curr_millis = millis();
 					char c = Serial1.read();
 					temp += c;
+					// Serial.println(temp);
+					// Serial.println("-----------------");
 					helper = temp.indexOf("+CMT:");
+					if(helper > 0)
+						temp = "+CMT:";
+					// Serial.println(helper);
 				}
 			}
-			if(temp.indexOf("\r", temp.indexOf("1,4,0,0,")) != -1)
+			if(temp.indexOf("\r", temp.indexOf("1,4,0,0,")) != -1 || temp.indexOf("RING") != -1)
 			{
 				inCall = 1;
 				incomingCall(temp);
@@ -2349,6 +2495,21 @@ void MAKERphone::incomingMessage(String _serialData)
 			{
 				playNotificationSound(notification);
 				incomingMessage(temp);
+				break;
+			}
+			else if(!inAlarmPopup && !alarmCleared && currentAlarm != 99)
+			{
+				inAlarmPopup = 1;
+				alarmPopup();
+				if(alarmRepeat[currentAlarm] == 0)
+					alarmEnabled[currentAlarm] = 0;
+				saveAlarms();
+				if(ringtone->isPlaying())
+					ringtone->stop();
+
+				alarmCleared = 1;
+				alarmMillis = millis();
+				inAlarmPopup = 0;
 				break;
 			}
 		}
@@ -2379,25 +2540,27 @@ void MAKERphone::incomingMessage(String _serialData)
 					if(!digitalRead(SIM_INT) && !inCall)
 					{
 						String temp = "";
-						long long curr_millis = millis();
-
+						uint32_t curr_millis = millis();
+						helper = -1;
 						while((temp.indexOf("\r", temp.indexOf("\r", helper + 1) + 1) == -1
 						|| temp.indexOf("\r", helper + 1) == -1 || helper == -1)
 						&& temp.indexOf("\r", temp.indexOf("1,4,0,0,")) == -1
-						&& millis() - curr_millis < 500)
-						{ 
+						&& temp.indexOf("RING") == -1 && millis() - curr_millis < 500)
+						{
 							if(Serial1.available())
 							{
 								curr_millis = millis();
 								char c = Serial1.read();
 								temp += c;
-								Serial.println(temp);
-								Serial.println("-----------------");
+								// Serial.println(temp);
+								// Serial.println("-----------------");
 								helper = temp.indexOf("+CMT:");
-								Serial.println(helper);
+								if(helper > 0)
+									temp = "+CMT:";
+								// Serial.println(helper);
 							}
 						}
-						if(temp.indexOf("\r", temp.indexOf("1,4,0,0,")) != -1)
+						if(temp.indexOf("\r", temp.indexOf("1,4,0,0,")) != -1 || temp.indexOf("RING") != -1)
 						{
 							inCall = 1;
 							incomingCall(temp);
@@ -2408,6 +2571,21 @@ void MAKERphone::incomingMessage(String _serialData)
 						{
 							playNotificationSound(notification);
 							incomingMessage(temp);
+							break;
+						}
+						else if(!inAlarmPopup && !alarmCleared && currentAlarm != 99)
+						{
+							inAlarmPopup = 1;
+							alarmPopup();
+							if(alarmRepeat[currentAlarm] == 0)
+								alarmEnabled[currentAlarm] = 0;
+							saveAlarms();
+							if(ringtone->isPlaying())
+								ringtone->stop();
+
+							alarmCleared = 1;
+							alarmMillis = millis();
+							inAlarmPopup = 0;
 							break;
 						}
 					}
@@ -2521,14 +2699,14 @@ void MAKERphone::saveMessage(char* text, String contact, String number, bool isR
 }
 void MAKERphone::checkSim()
 {
+	Serial.println("checking sim");
 	String input = "";
 	Serial1.println(F("AT+CPIN?"));
 	input = waitForOK();
 	Serial.println(input);
 	uint32_t timeoutMillis = millis();
-
-	while (input.indexOf("+CPIN:") == -1 && input.indexOf("NOT INSERTED") == -1
-	&& input.indexOf("not inserted") == -1 && input.indexOf("ERROR") == -1) {
+	while (input.indexOf("READY", input.indexOf("+CPIN:")) == -1)
+	{
 		if(millis() - timeoutMillis >= 2500)
 		{
 			simInserted = 0;
@@ -2539,6 +2717,9 @@ void MAKERphone::checkSim()
 		Serial.println("printed at+cpin?");
 		input = waitForOK();
 		Serial.println(input);
+		// if(input.indexOf("busy") != -1)
+		// 	break;
+
 	}
 	if(input.indexOf("busy") != -1 && simBusyCounter < 5)
 	{
@@ -2548,8 +2729,8 @@ void MAKERphone::checkSim()
 		return;
 	}
 	if (input.indexOf("NOT READY", input.indexOf("+CPIN:")) != -1 || (input.indexOf("ERROR") != -1 && input.indexOf("+CPIN:") == -1)
-		|| input.indexOf("NOT INSERTED") != -1 || input.indexOf("not inserted", input.indexOf("+CPIN")) != -1
-		|| input.indexOf("failure") != -1)
+	|| input.indexOf("NOT INSERTED") != -1 || input.indexOf("not inserted", input.indexOf("+CPIN")) != -1
+	|| input.indexOf("failure") != -1)
 		simInserted = 0;
 	else
 	{
@@ -3323,15 +3504,18 @@ void MAKERphone::networkModuleInit()
 		waitForOK();
 		Serial1.println("AT+CNMP=2");
 		waitForOK();
+		Serial1.println("AT+CGATT=0");
+		waitForOK();
+		// Serial1.println("AT+CPMVT=1,0,5000");
+		// waitForOK();
 	}
-	waitForOK();
 	Serial1.println(F("AT+CMGF=0"));
 	waitForOK();
 	Serial1.println(F("AT+CNMI=1,2,0,0,0"));
 	waitForOK();
-	waitForOK();
-	Serial1.println(F("AT+CPMS=\"SM\",\"SM\",\"SM\""));
-	waitForOK();
+	// waitForOK();
+	// Serial1.println(F("AT+CPMS=\"SM\",\"SM\",\"SM\""));
+	// waitForOK();
 	Serial1.println(F("AT+CLCC=1"));
 	waitForOK();
 	Serial1.println(F("AT+CSCLK=1"));
