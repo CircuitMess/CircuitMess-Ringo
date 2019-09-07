@@ -396,6 +396,7 @@ void MAKERphone::begin(bool splash) {
 	}
 	if(sim_module_version != 255)
 	{
+		Serial1.setRxBufferSize(1024);
 		Serial1.println("ATI");
 		String temp = waitForOK();
 		Serial.println(temp);
@@ -891,25 +892,28 @@ bool MAKERphone::update() {
 		alarmCleared = 0;
 	if(!digitalRead(SIM_INT) && !inCall && networkInitialized)
 	{
-		Serial.println("CALL");
 		String temp = "";
 		uint32_t curr_millis = millis();
 		int32_t helper = -1;
-		while((helper == -1 || temp.indexOf("\r", helper) == -1) && (temp.indexOf(",1,4,0,0") == -1
-		|| temp.indexOf("\r", temp.indexOf(",1,4,0,0")) == -1) && millis() - curr_millis < 1500)
+		while((temp.indexOf("\r", temp.indexOf("\r", helper + 1) + 1) == -1
+		|| temp.indexOf("\r", helper + 1) == -1 || helper == -1)
+		&& temp.indexOf("\r", temp.indexOf("1,4,0,0,")) == -1
+		&& temp.indexOf("RING") == -1 && millis() - curr_millis < 2500)
 		{
 			if(Serial1.available())
 			{
 				curr_millis = millis();
 				char c = Serial1.read();
 				temp += c;
-				Serial.println(temp);
-				Serial.println(".........");
+				// Serial.println(temp);
+				// Serial.println("-----------------");
 				helper = temp.indexOf("+CMT:");
+				if(helper > 0)
+					temp = "+CMT:";
 				// Serial.println(helper);
 			}
 		}
-		if(temp.indexOf("\r", temp.indexOf(",1,4,0,0")) != -1)
+		if(temp.indexOf("\r", temp.indexOf("1,4,0,0,")) != -1 || temp.indexOf("RING") != -1)
 		{
 			inCall = 1;
 			incomingCall(temp);
@@ -2264,7 +2268,7 @@ void MAKERphone::incomingMessage(String _serialData)
 {
 	Serial.println("incoming message");
 	Serial.println(_serialData);
-	uint16_t helper = 0;
+	int32_t helper = 0;
 	// helper = _serialData.indexOf("\"", _serialData.indexOf("+CMT:"));
 	// String number = _serialData.substring(helper + 1, _serialData.indexOf("\"", helper+1));
 	// helper+=number.length() + 1;
@@ -2279,7 +2283,8 @@ void MAKERphone::incomingMessage(String _serialData)
 		masterTextLength = 160;
 	char masterText[masterTextLength] = "";
 	// memset(masterText, 0, sizeof(masterText));
-	Serial.print("current SMS index: "); Serial.println(_currentConcatSMS);
+	Serial.print("current SMS index: ");
+	Serial.println(_currentConcatSMS);
 	Serial.println("sms text: ");
 	Serial.println(_smsText);
 	if(_concatSMSCounter > 1)
@@ -2314,39 +2319,41 @@ void MAKERphone::incomingMessage(String _serialData)
 			tft.fillRect(50,80,50,30,TFT_BLACK);
 			tft.setCursor(68, 83);
 			tft.printf("%d/%d", lengthOfSMS - _concatSMSCounter + 1, lengthOfSMS);
+			String temp = "";
+			long long curr_millis = millis();
 
-			while(digitalRead(SIM_INT) )
+			while((temp.indexOf("\r", temp.indexOf("\r", helper + 1) + 1) == -1
+			|| temp.indexOf("\r", helper + 1) == -1 || helper == -1)
+			&& millis() - curr_millis < 25000)
 			{
-				String temp = "";
-				long long curr_millis = millis();
-
-				while(((helper == -1) || (helper != -1 && temp.indexOf("\r", temp.indexOf("\r", helper) + 1) == -1))
-				&& millis() - curr_millis < 25000)
-				{ 
-					if(Serial1.available())
-					{
-						curr_millis = millis();
-						char c = Serial1.read();
-						temp += c;
-						helper = temp.indexOf("+CMT:");
-					}
-				}
-				if(temp.indexOf("+CMT:") != -1)
+				if(Serial1.available())
 				{
-					helper = temp.indexOf("\r", temp.indexOf("+CMT")) + 1;
-					const char *pdu_text = temp.substring(helper + 1, temp.indexOf("\r", helper + 2)).c_str();
-					pduDecode(pdu_text);
-					Serial.print("current SMS index: "); Serial.println(_currentConcatSMS);
-					// strncat(masterText, _smsText, _concatSMSCounter*160);
-					if(_concatSMSCodingScheme)
-						strcpy(&masterText[(_currentConcatSMS - 1)*67], _smsText);
-					else
-						strcpy(&masterText[(_currentConcatSMS - 1)*153], _smsText);
-					// for(int i = 0; i < sizeof(masterText); i++)
-					// 	Serial.println((uint8_t)masterText[i]);
-					break;
+					curr_millis = millis();
+					char c = Serial1.read();
+					temp += c;
+					helper = temp.indexOf("+CMT:");
+					if(helper > 0)
+						temp = "+CMT:";
 				}
 			}
+			if(temp.indexOf("+CMT:") != -1)
+			{
+				helper = temp.indexOf("\r", temp.indexOf("+CMT")) + 1;
+				const char *pdu_text = temp.substring(helper + 1, temp.indexOf("\r", helper + 2)).c_str();
+				pduDecode(pdu_text);
+				Serial.print("current SMS index: "); Serial.println(_currentConcatSMS);
+				Serial.println("sms text: ");
+				Serial.println(_smsText);
+				// strncat(masterText, _smsText, _concatSMSCounter*160);
+				if(_concatSMSCodingScheme)
+					strcpy(&masterText[(_currentConcatSMS - 1)*67], _smsText);
+				else
+					strcpy(&masterText[(_currentConcatSMS - 1)*153], _smsText);
+				// for(int i = 0; i < sizeof(masterText); i++)
+				// 	Serial.println((uint8_t)masterText[i]);
+			}
+			Serial.println("minus");
+			delay(5);
 			_concatSMSCounter--;
 		}
 	}
@@ -2449,21 +2456,27 @@ void MAKERphone::incomingMessage(String _serialData)
 		if(!digitalRead(SIM_INT) && !inCall)
 		{
 			String temp = "";
-			long long curr_millis = millis();
-			int16_t helper2 = -1;
-			while((helper2 == -1 || temp.indexOf("\r", helper2) == -1) && (temp.indexOf(",1,4,0,0") == -1
-			|| temp.indexOf("\r", temp.indexOf(",1,4,0,0")) == -1) && millis() - curr_millis < 1500)
-			{ 
+			uint32_t curr_millis = millis();
+			helper = -1;
+			while((temp.indexOf("\r", temp.indexOf("\r", helper + 1) + 1) == -1
+			|| temp.indexOf("\r", helper + 1) == -1 || helper == -1)
+			&& temp.indexOf("\r", temp.indexOf("1,4,0,0,")) == -1
+			&& temp.indexOf("RING") == -1 && millis() - curr_millis < 500)
+			{
 				if(Serial1.available())
 				{
 					curr_millis = millis();
 					char c = Serial1.read();
 					temp += c;
-					helper2 = temp.indexOf("+CMT:");
-					Serial.println(temp);
+					// Serial.println(temp);
+					// Serial.println("-----------------");
+					helper = temp.indexOf("+CMT:");
+					if(helper > 0)
+						temp = "+CMT:";
+					// Serial.println(helper);
 				}
 			}
-			if(temp.indexOf("\r", temp.indexOf("+CLCC: ")) != -1)
+			if(temp.indexOf("\r", temp.indexOf("1,4,0,0,")) != -1 || temp.indexOf("RING") != -1)
 			{
 				inCall = 1;
 				incomingCall(temp);
@@ -2474,6 +2487,21 @@ void MAKERphone::incomingMessage(String _serialData)
 			{
 				playNotificationSound(notification);
 				incomingMessage(temp);
+				break;
+			}
+			else if(!inAlarmPopup && !alarmCleared && currentAlarm != 99)
+			{
+				inAlarmPopup = 1;
+				alarmPopup();
+				if(alarmRepeat[currentAlarm] == 0)
+					alarmEnabled[currentAlarm] = 0;
+				saveAlarms();
+				if(ringtone->isPlaying())
+					ringtone->stop();
+
+				alarmCleared = 1;
+				alarmMillis = millis();
+				inAlarmPopup = 0;
 				break;
 			}
 		}
@@ -2504,10 +2532,12 @@ void MAKERphone::incomingMessage(String _serialData)
 					if(!digitalRead(SIM_INT) && !inCall)
 					{
 						String temp = "";
-						long long curr_millis = millis();
-						int16_t helper2 = -1;
-						while((helper2 == -1 || temp.indexOf("\r", helper2) == -1) && (temp.indexOf(",1,4,0,0") == -1
-						|| temp.indexOf("\r", temp.indexOf(",1,4,0,0")) == -1)	&& millis() - curr_millis < 1500)
+						uint32_t curr_millis = millis();
+						helper = -1;
+						while((temp.indexOf("\r", temp.indexOf("\r", helper + 1) + 1) == -1
+						|| temp.indexOf("\r", helper + 1) == -1 || helper == -1)
+						&& temp.indexOf("\r", temp.indexOf("1,4,0,0,")) == -1
+						&& temp.indexOf("RING") == -1 && millis() - curr_millis < 500)
 						{
 							if(Serial1.available())
 							{
@@ -2516,11 +2546,13 @@ void MAKERphone::incomingMessage(String _serialData)
 								temp += c;
 								// Serial.println(temp);
 								// Serial.println("-----------------");
-								helper2 = temp.indexOf("+CMT:");
+								helper = temp.indexOf("+CMT:");
+								if(helper > 0)
+									temp = "+CMT:";
 								// Serial.println(helper);
 							}
 						}
-						if(temp.indexOf("\r", temp.indexOf("+CLCC: ")) != -1)
+						if(temp.indexOf("\r", temp.indexOf("1,4,0,0,")) != -1 || temp.indexOf("RING") != -1)
 						{
 							inCall = 1;
 							incomingCall(temp);
@@ -2531,6 +2563,21 @@ void MAKERphone::incomingMessage(String _serialData)
 						{
 							playNotificationSound(notification);
 							incomingMessage(temp);
+							break;
+						}
+						else if(!inAlarmPopup && !alarmCleared && currentAlarm != 99)
+						{
+							inAlarmPopup = 1;
+							alarmPopup();
+							if(alarmRepeat[currentAlarm] == 0)
+								alarmEnabled[currentAlarm] = 0;
+							saveAlarms();
+							if(ringtone->isPlaying())
+								ringtone->stop();
+
+							alarmCleared = 1;
+							alarmMillis = millis();
+							inAlarmPopup = 0;
 							break;
 						}
 					}
