@@ -820,19 +820,13 @@ bool MAKERphone::update() {
 			}
 			if (updateBuffer.indexOf("\n", updateBuffer.indexOf("+CBC:")) != -1)
 			{
-				if(sim_module_version == 1)
-				{
-					uint16_t helper = updateBuffer.indexOf(",", updateBuffer.indexOf("+CBC:"));
-					helper = updateBuffer.indexOf(",", helper + 1) + 1;
-					uint16_t tempVoltage = updateBuffer.substring(helper, updateBuffer.indexOf("\n", helper)).toInt();
-					if(tempVoltage > 3000 && tempVoltage < 5000)
-						simVoltage = tempVoltage;
-				}
-				else if(sim_module_version == 0)
-				{
-					uint16_t helper = updateBuffer.indexOf("+CBC: ") + 6;
-					simVoltage = updateBuffer.substring(helper, updateBuffer.indexOf("V", helper)).toDouble() * 1000;
-				}
+		
+				uint16_t helper = updateBuffer.indexOf(",", updateBuffer.indexOf("+CBC:"));
+				helper = updateBuffer.indexOf(",", helper + 1) + 1;
+				uint16_t tempVoltage = updateBuffer.substring(helper, updateBuffer.indexOf("\n", helper)).toInt();
+				if(tempVoltage > 3000 && tempVoltage < 5000)
+					simVoltage = tempVoltage;
+
 			}
 			if(updateBuffer.indexOf("\n", updateBuffer.indexOf("+CCALR:")) != -1 && sim_module_version == 1)
 			{
@@ -3844,9 +3838,16 @@ void MAKERphone::applySettings()
 		}
 
 		Serial1.println("AT+CFUN?");
-		String readOutput = "";
-		while(readOutput.indexOf("+CFUN:") == -1)
+		Serial.println("CFUN checking");
+		String readOutput = waitForOK();
+		Serial.println(readOutput);
+		uint32_t timeoutMillis = millis();
+		while(readOutput.indexOf("+CFUN:") == -1 && millis() - timeoutMillis < 2000)
+		{
+			Serial1.println("AT+CFUN?");
 			readOutput = waitForOK();
+			Serial.println(readOutput);
+		}
 		if(airplaneMode && readOutput.indexOf("+CFUN: 4") == -1)
 			Serial1.println("AT+CFUN=4");
 		else if(!airplaneMode && readOutput.indexOf("+CFUN: 1") == -1)
