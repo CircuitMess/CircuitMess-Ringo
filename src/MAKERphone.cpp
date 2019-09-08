@@ -1869,7 +1869,14 @@ void MAKERphone::incomingCall(String _serialData)
 	MPTrack *tempTrack = nullptr;
 	uint8_t callIdNumber = 0;
 	uint16_t helper = _serialData.indexOf("+CLCC: ") + 7;
-	callIdNumber = _serialData.substring(helper, helper + 1).toInt();
+	if(helper > 6)
+		callIdNumber = _serialData.substring(helper, helper + 1).toInt();
+	else
+	{
+		helper = _serialData.indexOf(",1,4,0,0");
+		callIdNumber = _serialData.substring(helper - 1, helper).toInt();
+	}
+	
 	Serial.print("call id: ");
 	Serial.println(callIdNumber);
 	while(1)
@@ -1877,9 +1884,8 @@ void MAKERphone::incomingCall(String _serialData)
 		if (Serial1.available())
 		{
 			c = (char)Serial1.read();
-			if((uint8_t)c != 255)
-				buffer += c;
-			// Serial.println(buffer);
+			buffer+=c;
+			Serial.println(buffer);
 		}
 		if(buffer.indexOf(String("CLCC: " + String(callIdNumber))) != -1 &&
 		buffer.indexOf("\r", buffer.indexOf(String("CLCC: " + String(callIdNumber)))) != -1)
