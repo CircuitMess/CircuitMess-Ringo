@@ -23,15 +23,15 @@ extern MAKERphone mp;
 //audio refresh task
 TaskHandle_t Task1;
 TaskHandle_t MeasuringTask;
-uint32_t voltageSum = 0;
-uint32_t voltageSample = 0;
+volatile uint32_t voltageSum = 0;
+volatile uint32_t voltageSample = 0;
 volatile double voltage = 3700;
 boolean btnHeld;
 boolean btnHeldField[10];
-uint32_t measuringCounter = 0;
-uint32_t _timesMeasured = 0;
+volatile uint32_t measuringCounter = 0;
+volatile uint32_t _timesMeasured = 0;
 bool clockFallback = 1;
-bool chargeDuringADCRead = 0;
+volatile bool chargeDuringADCRead = 0;
 uint32_t simBusyCounter = 0;
 static esp_adc_cal_characteristics_t *adc_chars;
 void Task1code( void * pvParameters ){
@@ -488,30 +488,22 @@ void MAKERphone::begin(bool splash) {
 				&Task1,
 				0);				/* Task handle to keep track of created task */
 	addOscillator(osc);
+
+	analogRead(VOLTAGE_PIN);
 	voltageSum = 0;
 	voltageSample = 0;
-	for(int i = 0; i < 2000; i++)
+	for(measuringCounter = 0; measuringCounter < 6000; measuringCounter++)
 	{
 		delayMicroseconds(1);
-		voltageSum += analogRead(VOLTAGE_PIN);
+		voltageSum += esp_adc_cal_raw_to_voltage(adc1_get_raw(ADC1_CHANNEL_7), adc_chars)*2;
 		voltageSample++;
 	}
-	batteryVoltage = ((voltageSum )/1150.0);
+	voltage = ((voltageSum )/(6000.0) + 158.0235417);
 	voltageSum = 0;
 	voltageSample = 0;
-	voltage = batteryVoltage;
-	// voltageSum = 0;
-	// voltageSample = 0;
-	// for(int i = 0; i < 6000; i++)
-	// {
-	// 	delayMicroseconds(1);
-	// 	voltageSum += esp_adc_cal_raw_to_voltage(adc1_get_raw(ADC1_CHANNEL_7), adc_chars)*2;
-	// 	voltageSample++;
-	// }
-	// voltage = ((voltageSum )/(6000.0) + 158.0235417);
-	// voltageSum = 0;
-	// voltageSample = 0;
-	// batteryVoltage = voltage;
+	Serial.println(voltage);
+	delay(5);
+
 	xTaskCreatePinnedToCore(
 				ADCmeasuring,				/* Task function. */
 				"MeasuringTask",				/* name of task. */
@@ -1192,7 +1184,7 @@ void MAKERphone::sleep() {
 		voltageSum = 0;
 		voltageSample = 0;
 		Serial.println(batteryVoltage);
-		delay(50);
+		delay(5);
 		if(simInserted && sim_module_version != 255)
 		{
 			digitalWrite(SIM800_DTR, 0);
