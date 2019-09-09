@@ -1114,7 +1114,6 @@ void MAKERphone::ledcAnalogWrite(uint8_t channel, uint32_t value, uint32_t value
 void MAKERphone::sleep() {
 	// if(sim_module_version != 255)
 	digitalWrite(SIM800_DTR, 1);
-
 	FastLED.clear(1);
 	ledcAnalogWrite(LEDC_CHANNEL, 255);
 	for (uint8_t i = actualBrightness; i < 255; i++) {
@@ -1125,16 +1124,13 @@ void MAKERphone::sleep() {
 	ledcDetachPin(LCD_BL_PIN);
 	pinMode(LCD_BL_PIN, OUTPUT);
 	digitalWrite(LCD_BL_PIN, 1);
-	tft.writecommand(16);//send 16 for sleep in, 17 for sleep out
-	esp_sleep_enable_timer_wakeup(SLEEP_WAKEUP_TIME * 1000000);
-
+	
 	buttons.activateInterrupt();
 	uint8_t reason = 4;
 	vTaskSuspend(MeasuringTask);
-	
-	MPTrack *currTracks[4] = {nullptr,nullptr,nullptr,nullptr};
+	for(uint8_t i = 0; i < 4; i++)
+		currTracks[i] = NULL;
 	bool pausedTracks[4] = {0,0,0,0};
-	Serial.println("HERE");
 	for(int i = 0; i < 4; i++)
 	{
 		if(tracks[i] != nullptr)
@@ -1158,8 +1154,9 @@ void MAKERphone::sleep() {
 		}
 	}
 	updateWav();
-	
 	vTaskSuspend(Task1);
+	tft.writecommand(16);//send 16 for sleep in, 17 for sleep out
+	esp_sleep_enable_timer_wakeup(SLEEP_WAKEUP_TIME * 1000000);
 	esp_light_sleep_start();
 	reason = esp_sleep_get_wakeup_cause();
 
@@ -1879,6 +1876,33 @@ void MAKERphone::incomingCall(String _serialData)
 	
 	Serial.print("call id: ");
 	Serial.println(callIdNumber);
+	if(!inHomePopup)
+	{
+		for(int i = 0; i < 4; i++)
+		{
+			if(tracks[i] != nullptr)
+			{
+				Serial.printf("%d track is playing: %d\n", i, tracks[i]->isPlaying());
+				if(tracks[i]->isPlaying())
+				{
+					currTracks[i] = tracks[i];
+					currTracks[i]->seek(tracks[i]->getSamplePos());
+					Serial.print("PLAYING:");
+					Serial.println(i);
+					pausedTracks[i] = 1;
+					tracks[i]->pause();
+					removeTrack(tracks[i]);
+				}
+				else
+				{
+					currTracks[i] = tracks[i];
+					currTracks[i]->seek(tracks[i]->getSamplePos());
+					removeTrack(tracks[i]);
+				}
+			}
+		}
+	}
+	bool goOut = 0;
 	while(1)
 	{
 		if (Serial1.available())
@@ -1944,7 +1968,8 @@ void MAKERphone::incomingCall(String _serialData)
 					addNotification(1, temp, RTC.now());
 			}
 			// delay(1000);
-			return;
+			goOut = 1;
+			break;
 		}
 
 		if(!SDinsertedFlag || (SDinsertedFlag && !SD.exists(ringtone_path)))
@@ -1989,7 +2014,25 @@ void MAKERphone::incomingCall(String _serialData)
 		if(tempTrack != nullptr)
 			addTrack(tempTrack);
 	}
-	// while(!update());
+	if(goOut)
+	{
+		if(!inHomePopup)
+		{
+			for(int i = 0; i < 4; i++)
+			{
+				if(currTracks[i] != nullptr)
+				{
+					addTrack(currTracks[i]);
+					if(pausedTracks[i])
+						currTracks[i]->play();
+				}
+				currTracks[i] = nullptr;
+				pausedTracks[i] = 0;
+			}
+		}
+		buttons.update();
+		return;
+	}
 
 
 	Serial1.println("ATA");
@@ -2263,6 +2306,21 @@ void MAKERphone::incomingCall(String _serialData)
 	}
 	digitalWrite(soundSwitchPin, 0);
 	osc->setVolume(oscillatorVolumeList[ringVolume]);
+	if(!inHomePopup)
+	{
+		for(int i = 0; i < 4; i++)
+		{
+			if(currTracks[i] != nullptr)
+			{
+				addTrack(currTracks[i]);
+				if(pausedTracks[i])
+					currTracks[i]->play();
+			}
+			currTracks[i] = nullptr;
+			pausedTracks[i] = 0;
+		}
+	}
+	buttons.update();
 }
 void MAKERphone::incomingMessage(String _serialData)
 {
@@ -3845,6 +3903,7 @@ void MAKERphone::applySettings()
 			Serial1.println("AT+CFUN?");
 			readOutput = waitForOK();
 			Serial.println(readOutput);
+			delay(100);
 		}
 		if(airplaneMode && readOutput.indexOf("+CFUN: 4") == -1)
 			Serial1.println("AT+CFUN=4");
@@ -4223,7 +4282,6 @@ void MAKERphone::updatePopup() {
 }
 void MAKERphone::homePopup(bool animation)
 {
-	bool tempArray[4];
 	Serial.println("HERE");
 	for(int i = 0; i < 4; i++)
 	{
@@ -4273,8 +4331,8 @@ void MAKERphone::homePopup(bool animation)
 		for (int i = 0; i < display.height(); i++)
 		{
 			display.drawFastHLine(0, i, display.width(), TFT_WHITE);
-			if(i % 4 == 0)
-				update();
+			if(i % 5 == 0)
+				display.pushSprite(0,0);
 			// delayMicroseconds(750);
 		}
 	}
@@ -4306,36 +4364,58 @@ void MAKERphone::homePopup(bool animation)
 
 		//drawing the top icons
 		uint8_t helper = 11;
-		if (simInserted && !airplaneMode && (networkRegistered == 1 || networkRegistered == 5))
+		if(sim_module_version == 255)
+			helper = 1;
+		if (simInserted && !airplaneMode && sim_module_version != 255 )
 		{
-			if (signalStrength <= 3)
-				display.drawBitmap(1*scale, 1*scale, noSignalIcon, TFT_BLACK, scale);
-			else if (signalStrength > 3 && signalStrength <= 10)
-				display.drawBitmap(1*scale, 1*scale, signalLowIcon, TFT_BLACK, scale);
-			else if (signalStrength > 10 && signalStrength <= 20)
-				display.drawBitmap(1*scale, 1*scale, signalHighIcon, TFT_BLACK, scale);
-			else if (signalStrength > 20 && signalStrength <= 31)
-				display.drawBitmap(1*scale, 1*scale, signalFullIcon, TFT_BLACK, scale);
-			else if (signalStrength == 99)
-				display.drawBitmap(1*scale, 1*scale, signalErrorIcon, TFT_BLACK, scale);
+			if(networkRegistered == 1 || networkRegistered == 5)
+			{
+
+				if (signalStrength <= 3)
+					display.drawBitmap(2, 2, noSignalIcon, TFT_BLACK, 2);
+				else if (signalStrength > 3 && signalStrength <= 10)
+					display.drawBitmap(2, 2, signalLowIcon, TFT_BLACK, 2);
+				else if (signalStrength > 10 && signalStrength <= 20)
+					display.drawBitmap(2, 2, signalHighIcon, TFT_BLACK, 2);
+				else if (signalStrength > 20 && signalStrength <= 31)
+					display.drawBitmap(2, 2, signalFullIcon, TFT_BLACK, 2);
+				else if (signalStrength == 99)
+					display.drawBitmap(2, 2, signalErrorIcon, TFT_BLACK, 2);
+			}
+			else
+				display.drawBitmap(2, 2, signalErrorIcon, TFT_BLACK, 2);
 		}
-		else if(!simInserted && !airplaneMode)
-			display.drawBitmap(1*scale, 1*scale, noSimIcon, TFT_BLACK, scale);
-		if(airplaneMode)
+		else if(!simInserted && !airplaneMode && sim_module_version != 255)
+			display.drawBitmap(2, 2, noSimIcon, TFT_BLACK, 2);
+		else if(airplaneMode)
 		{
-			display.drawBitmap(scale, scale, airplaneModeIcon, TFT_BLACK, scale);
-			helper += 10;
+			display.drawBitmap(2, 2, airplaneModeIcon, TFT_BLACK, 2);
 		}
 		if (ringVolume == 0)
 		{
-			display.drawBitmap(helper*scale, 1*scale, silentModeIcon, TFT_BLACK, scale);
+			display.drawBitmap(helper*2, 2, silentModeIcon, TFT_BLACK, 2);
 			helper += 10;
 		}
+		//display.drawBitmap(31, 1, missedcall);
+		//display.drawBitmap(41, 1, newtext);
+		// if (!airplaneMode)
+		// {
+		// 	if (wifi == 1)
+		// 		display.drawBitmap(helper * 2, 2, wifiOnIcon, TFT_BLACK, 2);
+		// 	else
+		// 		display.drawBitmap(helper * 2, 2, wifiOffIcon, TFT_BLACK, 2);
+		// 	helper += 10;
+		// 	if (bt)
+		// 		display.drawBitmap(helper * 2, 2, BTonIcon, TFT_BLACK, 2);
+		// 	else
+		// 		display.drawBitmap(helper * 2, 2, BToffIcon, TFT_BLACK, 2);
+		// 	helper += 10;
+		// }
+		
 
-	
 		if(!SDinsertedFlag)
 		{
-			display.drawBitmap(helper*scale, 1*scale, noSDIcon, TFT_BLACK, scale);
+			display.drawBitmap(helper * 2, 2, noSDIcon, TFT_BLACK, 2);
 			helper+=10;
 		}
 		display.setTextFont(2);
@@ -4351,29 +4431,38 @@ void MAKERphone::homePopup(bool animation)
 			
 			display.print(carrierName);
 		}
-		else if((carrierName == "" && simInserted && !airplaneMode) || !(networkRegistered == 1 || networkRegistered == 5))
+		else if(simInserted && !airplaneMode && (carrierName == "" || !(networkRegistered == 1 || networkRegistered == 5)))
 			display.print("loading...");
 		else if(carrierName == "" && !simInserted && sim_module_version == 255)
 			display.print("No module");	
-
+		// display.setCursor(60, 2);
+		// display.println(simVoltage);
 		if(!digitalRead(CHRG_INT))
 			display.drawBitmap(148, 2, batteryChargingIcon, TFT_BLACK, 2);
 		else
 		{
+			//y = -316139 + 250.3763*x - 0.06612874*x^2 + 0.000005825959*x^3
+			//y - percentage(%), x - voltage(V)
+			double percentage = -316139 + (250.3763*batteryVoltage) - (0.06612874*batteryVoltage*batteryVoltage) + (0.000005825959*batteryVoltage*batteryVoltage*batteryVoltage);
+			
+			if(percentage > 100)
+			{
+				// Serial.print("Voltage: ");
+				
+				percentage = 100;
+			}
+			if(percentage < 0)
+				percentage = 0;
 			display.setTextFont(2);
 			display.setTextSize(1);
 			display.setTextColor(TFT_BLACK);
 			display.setCursor(120, 2);
-			//y = -316139 + 250.3763*x - 0.06612874*x^2 + 0.000005825959*x^3
-			//y - percentage(%), x - voltage(V)
-			double percentage = -316139 + (250.3763*batteryVoltage) - (0.06612874*batteryVoltage*batteryVoltage) + (0.000005825959*batteryVoltage*batteryVoltage*batteryVoltage);
-			if(percentage < 101)
-			{
-				display.printf("%d", (int)percentage);
-				display.print("%");
-			}
-			if(percentage < 0)
-				percentage = 0;
+			percentage = round(percentage/10);
+			if(percentage == 10)
+				display.setCursor(110, 2);
+
+			display.printf("%d", (int)percentage * 10);
+			display.print("%");
 			// if (batteryVoltage > 4100)
 			// 	display.drawBitmap(148, 2, batteryChargingIcon, TFT_BLACK, 2);
 			if (batteryVoltage >= 3850)
@@ -4403,9 +4492,7 @@ void MAKERphone::homePopup(bool animation)
 		}
 		else
 			display.printCenter(popupHomeItems[cursor]);
-		display.drawRect(12 + cursor % 3 * 48 - 1, 25 + 45 * (int)(cursor / 3) - 1, 42, 42, cursorState ? TFT_RED : TFT_WHITE);
-		display.drawRect(12 + cursor % 3 * 48 - 2, 25 + 45 * (int)(cursor / 3) - 2, 44, 44, cursorState ? TFT_RED : TFT_WHITE);
-
+		
 		// date and time
 		updateTimeRTC();
 		display.fillRect(60,70,40,40,0x963F);
@@ -4448,7 +4535,7 @@ void MAKERphone::homePopup(bool animation)
 			else
 				cursor -= 3;
 			notificationMillis = millis();
-			while(!update());
+			buttons.update();
 		}
 		if(buttons.released(BTN_DOWN))
 		{
@@ -4466,7 +4553,7 @@ void MAKERphone::homePopup(bool animation)
 			}
 			notificationMillis = millis();
 
-			while(!update());
+			buttons.update();
 		}
 		if(buttons.released(BTN_LEFT))
 		{
@@ -4481,7 +4568,7 @@ void MAKERphone::homePopup(bool animation)
 			else
 				cursor -= 1;
 			notificationMillis = millis();
-			while(!update());
+			buttons.update();
 		}
 		if(buttons.released(BTN_RIGHT))
 		{
@@ -4496,11 +4583,11 @@ void MAKERphone::homePopup(bool animation)
 			else
 				cursor += 1;
 			notificationMillis = millis();
-			while(!update());
+			buttons.update();
 		}
 		if(buttons.released(BTN_A))
 		{
-			while(!update());
+			buttons.update();
 			switch (cursor)
 			{
 				case 0: //volume
@@ -4535,7 +4622,7 @@ void MAKERphone::homePopup(bool animation)
 							osc->setVolume(oscillatorVolumeList[mediaVolume]);
 							osc->note(75, 0.05);
 							osc->play();
-							while(!update());
+							buttons.update();
 						}
 						if(buttons.released(BTN_RIGHT) && mediaVolume < 14)
 						{
@@ -4558,7 +4645,7 @@ void MAKERphone::homePopup(bool animation)
 							// osc->setVolume(oscillatorVolumeList[mediaVolume]);
 							osc->note(75, 0.05);
 							osc->play();
-							while(!update());
+							buttons.update();
 							
 						}
 						update();
@@ -4585,14 +4672,14 @@ void MAKERphone::homePopup(bool animation)
 							brightness--;
 							osc->note(75, 0.05);
 							osc->play();
-							while(!update());
+							buttons.update();
 						}
 						if(buttons.released(BTN_RIGHT) && brightness < 5)
 						{
 							brightness++;
 							osc->note(75, 0.05);
 							osc->play();
-							while(!update());
+							buttons.update();
 						}
 						if (brightness == 0)
 							ledcAnalogWrite(LEDC_CHANNEL, 230);
@@ -4691,21 +4778,21 @@ void MAKERphone::homePopup(bool animation)
 							pixelsBrightness--;
 							osc->note(75, 0.05);
 							osc->play();
-							while(!update());
+							buttons.update();
 						}
 						if(buttons.released(BTN_RIGHT) && pixelsBrightness < 5)
 						{
 							pixelsBrightness++;
 							osc->note(75, 0.05);
 							osc->play();
-							while(!update());
+							buttons.update();
 						}
 						update();
 					}
 				}
 				break;
 			}
-			while(!update());
+			buttons.update();
 			display.fillScreen(TFT_WHITE);
 			display.drawIcon(popupVolume,12,25,20,20,2);
 			display.drawIcon(popupExit,60,25,20,20,2);
@@ -4713,9 +4800,11 @@ void MAKERphone::homePopup(bool animation)
 			display.drawIcon(popupScreenshot,12,70,20,20,2);
 			display.drawIcon(popupPixelBrightness,108,70,20,20,2);
 		}
+		display.drawRect(12 + cursor % 3 * 48 - 1, 25 + 45 * (int)(cursor / 3) - 1, 42, 42, cursorState ? TFT_RED : TFT_WHITE);
+		display.drawRect(12 + cursor % 3 * 48 - 2, 25 + 45 * (int)(cursor / 3) - 2, 44, 44, cursorState ? TFT_RED : TFT_WHITE);
 		update();
 	}
-	while(!update());
+	buttons.update();
 	if(SDinsertedFlag)
 		saveSettings();
 	for(int i = 0; i < 4; i++)
@@ -4729,6 +4818,14 @@ void MAKERphone::homePopup(bool animation)
 		currTracks[i] = nullptr;
 		pausedTracks[i] = 0;
 	}
+	display.fillScreen(TFT_BLACK);
+	display.setTextColor(TFT_WHITE);
+	display.setTextFont(2);
+	display.setCursor(0, display.height()/2 - 22);
+	display.printCenter("Applying settings...");
+	display.setCursor(0, display.height()/2 - 2);
+	display.printCenter("Please wait");
+	while(!update());
 	applySettings();
 	// for(uint8_t i = 0 ; i < 4;i++)
 	// {
