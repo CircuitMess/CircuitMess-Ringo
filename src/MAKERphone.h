@@ -175,6 +175,11 @@ class MAKERphone:public Buttons, public DateTime
 	void updateFromFS(String FilePath);
   	void performUpdate(Stream &updateSource, size_t updateSize);
 
+    //Emergency calls
+    void emergencyCall();
+    void callNumberEmergency(String number);
+	void emergencyCallDrawCursor(uint8_t i, int32_t y);
+
 	//NeoPixels...
 	int numberOfColors = 19;
 	uint8_t pixelState;
