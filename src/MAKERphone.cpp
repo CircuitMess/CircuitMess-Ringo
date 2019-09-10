@@ -939,7 +939,8 @@ bool MAKERphone::update() {
 	
 	if(buttons.released(13) && !inShutdownPopup)
 	{
-		if(HOME_POPUP_ENABLE && !inHomePopup)
+		buttons.update();
+		if (HOME_POPUP_ENABLE && !inHomePopup)
 		{
 			inHomePopup = 1;
 			homePopup();
@@ -1096,9 +1097,10 @@ void MAKERphone::splashScreen() {
 	delay(2000);
 
 }
-void MAKERphone::setResolution(bool res){
-	mp.resolutionMode=res;
-	mp.spriteCreated=0;
+void MAKERphone::setResolution(bool res)
+{
+	resolutionMode = res;
+	spriteCreated = 0;
 }
 void MAKERphone::tone2(int pin, int freq, int duration) {
 	ledcWriteTone(0, freq);
@@ -2061,9 +2063,9 @@ void MAKERphone::incomingCall(String _serialData)
 	tft.setCursor(100, 109);
 	tft.print("Hang up");
 	tft.setCursor(5, 109);
-	tft.print("Mic gain: ");
-	tft.setCursor(62, 109);
-	tft.print(micGain);
+	tft.print("Volume: ");
+	tft.setCursor(59, 109);
+	tft.print(mediaVolume);
 	digitalWrite(soundSwitchPin, 1);
 	int8_t written = -1;
 	uint16_t prevTime = 0;
@@ -2247,6 +2249,7 @@ void MAKERphone::incomingCall(String _serialData)
 			delay(1000);
 			break;
 		}
+		/*
 		if(buttons.released(BTN_UP) && ((micGain < 15 && sim_module_version == 1) || (micGain < 8 && sim_module_version == 0))
 		&& callState == 2)
 		{
@@ -2281,6 +2284,22 @@ void MAKERphone::incomingCall(String _serialData)
 			tft.fillRect(61, 111, 20, 15, TFT_RED); 
 			tft.setCursor(62, 109);
 			tft.print(micGain);
+		}
+		*/
+
+		if(buttons.released(BTN_UP) && mediaVolume < 14)
+		{
+			mp.mediaVolume++;
+			tft.fillRect(57, 111, 20, 15, TFT_RED);
+			tft.setCursor(58, 109);
+			tft.print(mp.mediaVolume);
+		}
+		if(buttons.released(BTN_DOWN) && mediaVolume > 0)
+		{
+			mediaVolume--;
+			tft.fillRect(57, 111, 20, 15, TFT_RED);
+			tft.setCursor(58, 109);
+			tft.print(mediaVolume);
 		}
 		tmp_time = int((millis() - timeOffset) / 1000);
 		for(int i = 0; i < 12;i++)
@@ -2438,7 +2457,7 @@ void MAKERphone::incomingMessage(String _serialData)
 			file = SD.open("/.core/messages.json", "r");
 			while(!file)
 				Serial.println("Messages ERROR");
-			jb.clear();
+			// jb.clear();
 		}
 		jb.clear();
 		JsonArray& jarr = jb.parseArray(file);
@@ -3726,10 +3745,6 @@ void MAKERphone::saveSettings(bool debug)
 	jb.clear();
 	JsonObject& settings = jb.createObject();
 	Serial.print("MIC GAIN: ");
-	Serial.println(micGain);
-	if (settings.success()) {
-		if(debug){
-			// Serial.print("wifi: ");
 			// Serial.println(settings["wifi"].as<bool>());
 			// Serial.print("bluetooth: ");
 			// Serial.println(settings["bluetooth"].as<bool>());
@@ -3922,27 +3937,6 @@ void MAKERphone::applySettings()
 		if(oscs[i] != nullptr)
 			oscs[i]->setVolume(oscillatorVolumeList[mediaVolume]);
 	}
-}
-
-//save manipulation
-JsonArray& MAKERphone::getJSONfromSAV(const char *path)
-{
-	String temp = readFile(path);
-	jb.clear();
-	JsonArray& json = jb.parseArray(temp);
-	return json;
-}
-void MAKERphone::saveJSONtoSAV(const char *path, JsonArray& json)
-{
-	while(!SD.begin(5, SPI, 8000000))
-        Serial.println("SD ERROR");
-	File file = SD.open(path, "w");
-	if(file)
-		json.prettyPrintTo(file);
-	else
-		Serial.println("SD ERROR");
-
-	file.close();
 }
 
 //Collision
@@ -4613,51 +4607,74 @@ void MAKERphone::homePopup(bool animation)
 									else
 										tracks[i]->setVolume(map(mediaVolume, 0, 14, 100, 300));
 								}
+								osc->setVolume(oscillatorVolumeList[mediaVolume]);
+								osc->note(75, 0.05);
+								osc->play();
+								buttons.update();
 							}
-							for(uint8_t i = 0 ; i < 4;i++)
+							for (uint8_t i = 0; i < 4; i++)
 							{
-								if(oscs[i] != nullptr)
-									oscs[i]->setVolume(oscillatorVolumeList[mediaVolume]);
+								mediaVolume++;
+								for(uint8_t i = 0 ; i < 4;i++)
+								{
+									if(tracks[i] != nullptr)
+									{
+										if(mediaVolume == 0)
+											tracks[i]->setVolume(0);
+										else
+											tracks[i]->setVolume(map(mediaVolume, 0, 14, 100, 300));
+									}
+								}
+								for(uint8_t i = 0 ; i < 4;i++)
+								{
+									if(oscs[i] != nullptr)
+										oscs[i]->setVolume(oscillatorVolumeList[mediaVolume]);
+								}
+								// osc->setVolume(oscillatorVolumeList[mediaVolume]);
+								osc->note(75, 0.05);
+								osc->play();
+								buttons.update();
+								
 							}
 							osc->setVolume(oscillatorVolumeList[mediaVolume]);
 							osc->note(75, 0.05);
 							osc->play();
-							buttons.update();
+							while (!update())
+								;
 						}
 						if(buttons.released(BTN_RIGHT) && mediaVolume < 14)
 						{
 							mediaVolume++;
-							for(uint8_t i = 0 ; i < 4;i++)
+							for (uint8_t i = 0; i < 4; i++)
 							{
-								if(tracks[i] != nullptr)
-								{
-									if(mediaVolume == 0)
-										tracks[i]->setVolume(0);
-									else
-										tracks[i]->setVolume(map(mediaVolume, 0, 14, 100, 300));
-								}
+								brightness--;
+								osc->note(75, 0.05);
+								osc->play();
+								buttons.update();
 							}
-							for(uint8_t i = 0 ; i < 4;i++)
+							if(buttons.released(BTN_RIGHT) && brightness < 5)
 							{
-								if(oscs[i] != nullptr)
-									oscs[i]->setVolume(oscillatorVolumeList[mediaVolume]);
+								brightness++;
+								osc->note(75, 0.05);
+								osc->play();
+								buttons.update();
 							}
 							// osc->setVolume(oscillatorVolumeList[mediaVolume]);
 							osc->note(75, 0.05);
 							osc->play();
-							buttons.update();
-							
+							while (!update())
+								;
 						}
 						update();
 					}
-				break;
+					break;
 
 				case 1: //exit
 					loader();
-				break;
+					break;
 
 				case 2: //screen brightness
-					while(!buttons.released(BTN_B) && !buttons.released(BTN_A))
+					while (!buttons.released(BTN_B) && !buttons.released(BTN_A))
 					{
 						display.drawRect(13, 49, 136, 30, TFT_BLACK);
 						display.drawRect(14, 50, 134, 28, TFT_BLACK);
@@ -4672,14 +4689,16 @@ void MAKERphone::homePopup(bool animation)
 							brightness--;
 							osc->note(75, 0.05);
 							osc->play();
-							buttons.update();
+							while (!update())
+								;
 						}
-						if(buttons.released(BTN_RIGHT) && brightness < 5)
+						if (buttons.released(BTN_RIGHT) && brightness < 5)
 						{
 							brightness++;
 							osc->note(75, 0.05);
 							osc->play();
-							buttons.update();
+							while (!update())
+								;
 						}
 						if (brightness == 0)
 							ledcAnalogWrite(LEDC_CHANNEL, 230);
@@ -4773,19 +4792,41 @@ void MAKERphone::homePopup(bool animation)
 						display.fillRect(35, 60, pixelsBrightness * 17, 8, TFT_BLACK);
 						display.drawBitmap(18, 59, noBrightness, TFT_BLACK, 2);
 						display.drawBitmap(125, 53, fullBrightness, TFT_BLACK, 2);
-						if(buttons.released(BTN_LEFT) && pixelsBrightness > 0)
+						if (buttons.released(BTN_LEFT) && pixelsBrightness > 0)
 						{
-							pixelsBrightness--;
-							osc->note(75, 0.05);
-							osc->play();
-							buttons.update();
+							for (int i = 0; i < 8; i++)
+								leds[i] = CRGB::Red;
+							display.drawRect(13, 49, 136, 30, TFT_BLACK);
+							display.drawRect(14, 50, 134, 28, TFT_BLACK);
+							display.fillRect(15, 51, 132, 26, 0xA794);
+							display.drawRect(33, 58, 89, 12, TFT_BLACK);
+							display.drawRect(34, 59, 87, 10, TFT_BLACK);
+							display.fillRect(35, 60, pixelsBrightness * 17, 8, TFT_BLACK);
+							display.drawBitmap(18, 59, noBrightness, TFT_BLACK, 2);
+							display.drawBitmap(125, 53, fullBrightness, TFT_BLACK, 2);
+							if(buttons.released(BTN_LEFT) && pixelsBrightness > 0)
+							{
+								pixelsBrightness--;
+								osc->note(75, 0.05);
+								osc->play();
+								buttons.update();
+							}
+							if(buttons.released(BTN_RIGHT) && pixelsBrightness < 5)
+							{
+								pixelsBrightness++;
+								osc->note(75, 0.05);
+								osc->play();
+								buttons.update();
+							}
+							update();
 						}
-						if(buttons.released(BTN_RIGHT) && pixelsBrightness < 5)
+						if (buttons.released(BTN_RIGHT) && pixelsBrightness < 5)
 						{
 							pixelsBrightness++;
 							osc->note(75, 0.05);
 							osc->play();
-							buttons.update();
+							while (!update())
+								;
 						}
 						update();
 					}
@@ -5537,10 +5578,6 @@ String MAKERphone::checkContact(String contactNumber)
 	jb.clear();
 	JsonArray& jarr = jb.parseArray(file);
 	file.close();
-
-	if(!jarr.success())
-		Serial.println("Error loading contacts");
-	else
 	{
 		for (JsonObject& elem : jarr) {
 			char * tempNumber = (char*)elem["number"].as<char*>();
@@ -5548,6 +5585,7 @@ String MAKERphone::checkContact(String contactNumber)
 				return String(elem["name"].as<char*>());
 		}
 	}
+	
 	return "";
 }
 void MAKERphone::pduDecode(const char* PDU)
@@ -5765,4 +5803,694 @@ void MAKERphone::pduDecode(const char* PDU)
 	// Serial.println(timeZone);
 	// Serial.println(_smsNumber);
 	// free(content);
+}
+
+void MAKERphone::emergencyCall()
+{
+	int8_t nSelector = 0;
+	bool freshLine = false;
+	String callBuffer = "";
+	char key = NO_KEY;
+	display.setTextWrap(0);
+	display.setTextFont(2);
+	bool plusSign = 0;
+	uint32_t blinkMillis = millis();
+	bool blinkState = 1;
+	while (1)
+	{
+		if (millis() - blinkMillis >= 350)
+		{
+			blinkMillis = millis();
+			blinkState = !blinkState;
+		}
+		display.fillScreen(TFT_BLACK);
+		display.setTextColor(TFT_WHITE);
+		display.setTextSize(1);
+		display.fillRect(0, 79, display.width(), 26, TFT_DARKGREY);
+		display.drawRect(61, 110, 98, 17, TFT_WHITE);
+		display.setCursor(63, 110);
+		display.setTextFont(2);
+		display.setTextColor(TFT_WHITE);
+		display.print("Press A to dial");
+		display.setCursor(60, -1);
+		display.setCursor(4, 110);
+		display.print("Erase");
+		display.setCursor(2, -1);
+		display.setTextColor(TFT_LIGHTGREY);
+		display.print("Emergency calls only!");
+		display.setTextColor(TFT_WHITE);
+		display.setCursor(2, 28);
+		display.print("112");
+		display.setCursor(2, 55);
+		display.print("911");
+		key = NO_KEY;
+		for (int i = 0; i < 12; i++)
+		{
+			if (buttons.released(i))
+			{
+				if (i == 10)
+					key = '0';
+				else if (i == 9)
+					key = '*';
+				else if (i == 11)
+					key = '#';
+				else
+					key = '0' + i + 1;
+				break;
+			}
+		}
+		if (buttons.pressed(BTN_DOWN) && nSelector >= 0)
+		{
+			if (nSelector < 2 && nSelector >= 0)
+			{
+				nSelector++;
+			}
+			else
+			{
+				nSelector = 0;
+			}
+		}
+		if (buttons.pressed(BTN_UP) && nSelector <= 2)
+		{
+			if (nSelector > 0 && nSelector <= 2)
+			{
+				nSelector--;
+			}
+			else
+			{
+				nSelector = 2;
+			}
+		}
+		if (blinkState)
+			emergencyCallDrawCursor(nSelector, 1);
+
+		if (buttons.released(BTN_HOME))
+		{
+			exitedLockscreen = true;
+			lockscreen();
+		}
+		if (buttons.held(BTN_0, 20))
+		{
+			callBuffer += "+";
+			plusSign = 1;
+		}
+		if (key == '0' && plusSign)
+			key = NO_KEY;
+		if (plusSign && buttons.released(BTN_0))
+			plusSign = 0;
+		if (buttons.released(BTN_FUN_LEFT))
+		{
+			callBuffer.remove(callBuffer.length() - 1);
+			buttons.update();
+		}
+		if (key != NO_KEY)
+		{
+			switch (key)
+			{
+			case '1':
+				osc->note(C5, 0.05);
+				osc->play();
+				break;
+			case '2':
+				osc->note(D5, 0.05);
+				osc->play();
+				break;
+			case '3':
+				osc->note(E5, 0.05);
+				osc->play();
+				break;
+			case '4':
+				osc->note(F5, 0.05);
+				osc->play();
+				break;
+			case '5':
+				osc->note(G5, 0.05);
+				osc->play();
+				break;
+			case '6':
+				osc->note(A5, 0.05);
+				osc->play();
+				break;
+			case '7':
+				osc->note(B5, 0.05);
+				osc->play();
+				break;
+			case '8':
+				osc->note(C6, 0.05);
+				osc->play();
+				break;
+			case '9':
+				osc->note(D6, 0.05);
+				osc->play();
+				break;
+			case '*':
+				osc->note(E6, 0.05);
+				osc->play();
+				break;
+			case '0':
+				osc->note(F6, 0.05);
+				osc->play();
+				break;
+			case '#':
+				osc->note(G6, 0.05);
+				osc->play();
+				break;
+			default:
+				break;
+			}
+			callBuffer += key;
+		}
+		if (callBuffer == "*" && !freshLine)
+		{
+			callBuffer = "";  //delete stuck asterisk
+			freshLine = true; //don't delete more than once...
+		}
+		display.setCursor(0, 76);
+		display.setTextSize(2);
+		display.print(callBuffer);
+		if (display.cursor_x + 4 >= display.width())
+		{
+			display.fillRect(0, 79, display.width(), 26, TFT_DARKGREY);
+			display.setCursor(display.width() - display.cursor_x - 14, 76);
+			display.print(callBuffer);
+		}
+		if (blinkState)
+		{
+			display.drawFastVLine(display.getCursorX() + 1, display.getCursorY() + 6, 20, TFT_WHITE);
+			display.drawFastVLine(display.getCursorX() + 2, display.getCursorY() + 6, 20, TFT_WHITE);
+		}
+		//Call may still be valid if callBuffer=null if nSelector is on one of the two options
+		if ((buttons.released(BTN_A) && callBuffer != "") || (buttons.released(BTN_A) && nSelector != 2)) //initate call
+		{
+			while (!update());
+			if (sim_module_version == 255)
+			{
+				display.fillScreen(TFT_BLACK);
+				display.setTextColor(TFT_WHITE);
+				display.setTextSize(1);
+				display.setCursor(0, display.height() / 2 - 20);
+				display.setTextFont(2);
+				display.printCenter(F("No network board!"));
+				display.setCursor(0, display.height() / 2);
+				display.printCenter(F("Insert board and reset"));
+				uint32_t tempMillis = millis();
+				while (millis() < tempMillis + 2000 && !buttons.released(BTN_A) && !buttons.released(BTN_B))
+					update();
+				while (!update());
+			}
+			else if (airplaneMode)
+			{
+				display.fillScreen(TFT_BLACK);
+				display.setTextColor(TFT_WHITE);
+				display.setTextSize(1);
+				display.setCursor(0, display.height() / 2 - 20);
+				display.setTextFont(2);
+				display.printCenter(F("Can't make calls"));
+				display.setCursor(0, display.height() / 2);
+				display.printCenter(F("Turn off airplane mode"));
+				uint32_t tempMillis = millis();
+				while (millis() < tempMillis + 2000 && !buttons.released(BTN_A) && !buttons.released(BTN_B))
+					update();
+				while (!update());
+			}
+			else
+			{
+				uint32_t timeoutMillis = millis();
+				while (Serial1.available())
+					Serial1.read();
+				Serial1.println("AT+CCALR?"); //No sim - returns 0 - not ready, that's okay for emergency call
+				String input = waitForOK();
+				Serial.println(input);
+				if (signalStrength == 99)
+				{
+					Serial1.println("AT+CSQ");
+					String buffer = "";
+					uint32_t current = millis();
+					while (buffer.indexOf("+CSQ:") == -1 && millis() - current >= 2000)
+						buffer = Serial1.readString();
+					if (buffer.indexOf("+CSQ:") != -1)
+						signalStrength = buffer.substring(buffer.indexOf(" ", buffer.indexOf("+CSQ:")) + 1, buffer.indexOf(",", buffer.indexOf(" ", buffer.indexOf("+CSQ:")))).toInt();
+					if (signalStrength == 99)
+					{
+						display.fillScreen(TFT_BLACK);
+						display.setTextColor(TFT_WHITE);
+						display.setTextSize(1);
+						display.setCursor(0, display.height() / 2 - 20);
+						display.setTextFont(2);
+						display.printCenter(F("No signal!"));
+						display.setCursor(0, display.height() / 2);
+						display.printCenter(F("Check your antenna"));
+						uint32_t tempMillis = millis();
+						while (millis() < tempMillis + 2000 && !buttons.released(BTN_A) && !buttons.released(BTN_B))
+							update();
+						while (!update());
+					}
+					else
+					{
+						if (nSelector == 0)
+						{
+							callBuffer = "112";
+						}
+						else if (nSelector == 1)
+						{
+							callBuffer = "911";
+						}
+						callNumberEmergency(callBuffer);
+						while (!update());
+						callBuffer = "";
+					}
+				}
+				else
+				{   //Check if number obviously ins't an emergency number, some countries use something other than 112/911
+				    //Later we will check with the operator if they allow the call to go through or not
+					if (callBuffer.length() > 4)
+					{
+						display.fillScreen(TFT_BLACK);
+						display.setTextColor(TFT_WHITE);
+						display.setTextSize(1);
+						display.setCursor(0, display.height() / 2 - 20);
+						display.setTextFont(2);
+						display.printCenter(F("No SIM card!"));
+						display.setCursor(0, display.height() / 2);
+						display.printCenter(F("Emergency calls only!"));
+						uint32_t tempMillis = millis();
+						while (millis() < tempMillis + 2000 && !buttons.released(BTN_A) && !buttons.released(BTN_B))
+							update();
+						while (!update());
+					}
+					else
+					{   //Assign number to buffer if there's a selection other than input box
+						if (nSelector == 0)
+						{
+							callBuffer = "112";
+						}
+						else if (nSelector == 1)
+						{
+							callBuffer = "911";
+						}
+						//Make call
+						callNumberEmergency(callBuffer);
+						while (!update());
+					}
+					callBuffer = "";
+				}
+			}
+		}
+		if (buttons.released(BTN_B)) //BACK BUTTON
+			break;
+
+		update();
+	}
+	while (!update());
+}
+
+void MAKERphone::callNumberEmergency(String number)
+{
+	String contact = checkContact(number);
+	inCall = 1;
+	dataRefreshFlag = 0;
+	char c;
+	String localBuffer = "";
+	String buffer = "";
+	Serial1.print(F("ATD"));
+	Serial1.print(number);
+	Serial1.print(";\r\n");
+	display.setFreeFont(TT1);
+	display.setTextColor(TFT_BLACK);
+	bool firstPass = 1;
+	uint32_t timeOffset = 0;
+	uint8_t scale;
+	String temp;
+	unsigned int tmp_time = 0;
+	if (resolutionMode)
+	{
+		scale = 1;
+		display.setFreeFont(TT1);
+	}
+	else
+	{
+		scale = 2;
+		display.setTextFont(2);
+	}
+	display.setTextSize(1);
+	digitalWrite(soundSwitchPin, 1);
+	if (contact == "")
+		display.printCenter(number);
+	else
+		display.printCenter(contact);
+	uint8_t callState = 1;
+	while (1)
+	{
+		display.fillScreen(TFT_WHITE);
+		if (Serial1.available())
+		{
+			c = Serial1.read();
+			buffer += c;
+		}
+		//Check if the operator allows the call to go through; check if it's an emergency number
+		//If the response contains "ERROR" selected/entered number is invalid, we print a msg to let the user know
+		if (buffer.indexOf("ERROR") > 1)
+		{
+			display.fillScreen(TFT_BLACK);
+			display.setTextColor(TFT_WHITE);
+			display.setTextSize(1);
+			display.setCursor(0, display.height() / 2 - 20);
+			display.setTextFont(2);
+			display.printCenter(F("Invalid number!"));
+			display.setCursor(0, display.height() / 2);
+			display.printCenter(F("Emergency calls only!"));
+			uint32_t tempMillis = millis();
+			while (millis() < tempMillis + 2000 && !buttons.released(BTN_A) && !buttons.released(BTN_B))
+				update();
+			while (!update());
+			if (SDinsertedFlag)
+				saveSettings();
+			digitalWrite(soundSwitchPin, 0);
+			inCall = 0;
+			return;
+		}
+		if (buffer.indexOf("CLCC:") != -1 && buffer.indexOf("\r", buffer.indexOf("CLCC:")) != -1)
+		{
+			localBuffer = buffer;
+			buffer = "";
+		}
+		if (buffer.indexOf("\r") != -1)
+			buffer = "";
+		Serial.println("---------------");
+		Serial.println(buffer);
+		delay(5);
+		if (buffer.indexOf("OK", buffer.indexOf("AT+CMIC=")) != -1)
+			buffer = "";
+		if (localBuffer.indexOf("+CLCC: 1") != -1 || localBuffer.indexOf("AT+CMIC") != -1)
+		{
+			if (localBuffer.indexOf("1,0,0,0,0") != -1 || localBuffer.indexOf("AT+CMIC") != -1)
+			{
+				callState = 2;
+			}
+
+			else if (localBuffer.indexOf("1,0,3,0,0") != -1)
+			{
+				callState = 0;
+			}
+
+			else if (localBuffer.indexOf("1,0,2,0,0") != -1)
+			{
+				callState = 1;
+			}
+
+			else if (localBuffer.indexOf("1,0,6,0,0") != -1)
+			{
+				display.fillScreen(TFT_WHITE);
+				display.setCursor(32, 9);
+				if (timeOffset == 0)
+					display.printCenter("00:00");
+				else
+				{
+					temp = "";
+					if ((int((millis() - timeOffset) / 1000) / 60) > 9)
+						temp += (int((millis() - timeOffset) / 1000) / 60);
+					else
+					{
+						temp += "0";
+						temp += (int((millis() - timeOffset) / 1000) / 60);
+					}
+					temp += ":";
+					if (int((millis() - timeOffset) / 1000) % 60 > 9)
+						temp += (int((millis() - timeOffset) / 1000) % 60);
+					else
+					{
+						temp += "0";
+						temp += (int((millis() - timeOffset) / 1000) % 60);
+					}
+					display.setCursor(9, 9);
+					display.printCenter(temp);
+				}
+				display.drawBitmap(29 * scale, 24 * scale, call_icon, TFT_RED, scale);
+				if (resolutionMode)
+					display.setCursor(11, 20);
+				else
+					display.setCursor(11, 28);
+				if (contact == "")
+					display.printCenter(number);
+				else
+					display.printCenter(contact);
+				display.fillRect(0, 51 * scale, 80 * scale, 13 * scale, TFT_RED);
+				if (resolutionMode)
+					display.setCursor(2, 62);
+				else
+					display.setCursor(2, 112);
+				display.print("Call ended");
+				Serial.println("ENDED");
+				while (!update());
+
+				updateTimeRTC();
+				if (SDinsertedFlag)
+					addCall(number, checkContact(number), RTC.now().unixtime(), tmp_time, 1);
+
+				delay(1000);
+				break;
+			}
+		}
+
+		else if (localBuffer.indexOf("CLCC:") == -1)
+		{
+			if (localBuffer.indexOf("ERROR") != -1)
+			{
+
+				display.setCursor(3, 9);
+				display.printCenter("Couldn't dial number!");
+				display.drawBitmap(29 * scale, 24 * scale, call_icon, TFT_RED, scale);
+				if (resolutionMode)
+					display.setCursor(11, 20);
+				else
+					display.setCursor(11, 28);
+				if (contact == "")
+					display.printCenter(number);
+				else
+					display.printCenter(contact);
+				display.fillRect(0, 51 * scale, 80 * scale, 13 * scale, TFT_RED);
+				if (resolutionMode)
+				{
+					display.setCursor(2, 57);
+					display.print("Invalid number or");
+					display.setCursor(2, 63);
+					display.print("SIM card missing!");
+				}
+				else
+				{
+					display.setCursor(2, 100);
+					display.print("Invalid number or");
+					display.setCursor(2, 112);
+					display.print("SIM card missing!");
+				}
+				while (!buttons.released(BTN_B))
+					update();
+				break;
+			}
+			else
+			{
+				callState = 1;
+			}
+		}
+		if (buttons.pressed(BTN_FUN_RIGHT)) // hanging up
+		{
+
+			display.fillScreen(TFT_WHITE);
+			display.setCursor(32, 9);
+			if (timeOffset == 0)
+				display.printCenter("00:00");
+			else
+			{
+				temp = "";
+				if ((int((millis() - timeOffset) / 1000) / 60) > 9)
+					temp += (int((millis() - timeOffset) / 1000) / 60);
+				else
+				{
+					temp += "0";
+					temp += (int((millis() - timeOffset) / 1000) / 60);
+				}
+				temp += ":";
+				if (int((millis() - timeOffset) / 1000) % 60 > 9)
+					temp += (int((millis() - timeOffset) / 1000) % 60);
+				else
+				{
+					temp += "0";
+					temp += (int((millis() - timeOffset) / 1000) % 60);
+				}
+				display.setCursor(9, 9);
+				display.printCenter(temp);
+			}
+			display.drawBitmap(29 * scale, 24 * scale, call_icon, TFT_RED, scale);
+			display.setCursor(11, 28);
+			if (contact == "")
+				display.printCenter(number);
+			else
+				display.printCenter(contact);
+			display.fillRect(0, 51 * scale, 80 * scale, 13 * scale, TFT_RED);
+			display.setCursor(2, 112);
+			display.print("Call ended");
+			Serial.println("ENDED");
+			while (!update())
+				;
+			updateTimeRTC();
+			Serial.println("B PRESSED");
+			Serial1.println("ATH");
+			uint32_t curr_millis = millis();
+			while (Serial1.readString().indexOf("1,0,6,0,0") == -1 && millis() - curr_millis < 2000)
+			{
+				Serial1.println("ATH");
+			}
+			if (SDinsertedFlag)
+				addCall(number, checkContact(number), RTC.now().unixtime(), tmp_time, 1);
+			delay(1000);
+			break;
+		}
+		/*
+		if (buttons.released(BTN_UP) && ((micGain < 15 && sim_module_version == 1) || (micGain < 8 && sim_module_version == 0)) && callState == 2)
+		{
+			micGain++;
+			if (sim_module_version == 1)
+				Serial1.printf("AT+CMIC=0,%d\r", micGain);
+			else if (sim_module_version == 0)
+			{
+				String foo = "AT+CMICGAIN=";
+				foo += micGain;
+				Serial1.println(foo);
+				delay(10);
+			}
+		}
+		if (buttons.released(BTN_DOWN) && micGain > 0 && callState == 2)
+		{
+			micGain--;
+			if (sim_module_version == 1)
+				Serial1.printf("AT+CMIC=0,%d\r", micGain);
+			else if (sim_module_version == 0)
+			{
+				String foo = "AT+CMICGAIN=";
+				foo += micGain;
+				Serial1.println(foo);
+				delay(10);
+			}
+		}
+		*/
+		if(buttons.released(BTN_UP) && mediaVolume < 14)
+		{
+			mediaVolume++;
+			tft.fillRect(57, 111, 20, 15, TFT_RED);
+			tft.setCursor(58, 109);
+			tft.print(mediaVolume);
+		}
+		if(buttons.released(BTN_DOWN) && mediaVolume > 0)
+		{
+			mediaVolume--;
+			tft.fillRect(57, 111, 20, 15, TFT_RED);
+			tft.setCursor(58, 109);
+			tft.print(mediaVolume);
+		}
+		switch (callState)
+		{
+		case 0:
+			display.setCursor(25, 9);
+			display.printCenter("Ringing...");
+			display.drawBitmap(29 * scale, 24 * scale, call_icon, TFT_DARKGREY, scale);
+			display.setCursor(11, 28);
+			if (contact == "")
+				display.printCenter(number);
+			else
+				display.printCenter(contact);
+			display.fillRect(0, 51 * scale, 80 * scale, 13 * scale, TFT_RED);
+			display.setCursor(5, 109);
+			display.print("Volume: ");
+			display.print(mediaVolume);
+			display.setCursor(100, 109);
+			display.print("Hang up");
+			break;
+		case 1:
+			display.setCursor(25, 9);
+			display.printCenter("Calling...");
+			display.drawBitmap(29 * scale, 24 * scale, call_icon, TFT_DARKGREY, scale);
+			display.setCursor(11, 28);
+			if (contact == "")
+				display.printCenter(number);
+			else
+				display.printCenter(contact);
+			display.fillRect(0, 51 * scale, 80 * scale, 13 * scale, TFT_RED);
+			display.setCursor(5, 109);
+			display.print("Volume: ");
+			display.print(mediaVolume);
+			display.setCursor(100, 109);
+			display.print("Hang up");
+			break;
+		case 2:
+			if (firstPass == 1)
+			{
+				timeOffset = millis();
+				firstPass = 0;
+			}
+			String temp = "";
+			if ((int((millis() - timeOffset) / 1000) / 60) > 9)
+				temp += (int((millis() - timeOffset) / 1000) / 60);
+			else
+			{
+				temp += "0";
+				temp += (int((millis() - timeOffset) / 1000) / 60);
+			}
+			temp += ":";
+			if (int((millis() - timeOffset) / 1000) % 60 > 9)
+				temp += (int((millis() - timeOffset) / 1000) % 60);
+			else
+			{
+				temp += "0";
+				temp += (int((millis() - timeOffset) / 1000) % 60);
+			}
+			display.setCursor(9, 9);
+			display.printCenter(temp);
+			display.drawBitmap(29 * scale, 24 * scale, call_icon, TFT_GREEN, scale);
+			display.setCursor(11, 28);
+			if (contact == "")
+				display.printCenter(number);
+			else
+				display.printCenter(contact);
+			display.fillRect(0, 51 * scale, 80 * scale, 13 * scale, TFT_RED);
+			display.setCursor(5, 109);
+			display.print("Volume: ");
+			display.print(mediaVolume);
+			display.setCursor(100, 109);
+			display.print("Hang up");
+			break;
+		}
+		for (int i = 0; i < 12; i++)
+		{
+
+			if (buttons.released(i))
+			{
+				if (i == 9)
+					Serial1.println("AT+VTS=*");
+				else if (i == 10)
+					Serial1.println("AT+VTS=0");
+				else if (i == 11)
+					Serial1.println("AT+VTS=#");
+				else
+				{
+					Serial1.print("AT+VTS=");
+					Serial1.println(i + 1);
+				}
+				break;
+			}
+		}
+		tmp_time = int((millis() - timeOffset) / 1000);
+		update();
+	}
+	if (SDinsertedFlag)
+		saveSettings();
+	digitalWrite(soundSwitchPin, 0);
+	inCall = 0;
+}
+
+void MAKERphone::emergencyCallDrawCursor(uint8_t i, int32_t y)
+{
+	uint8_t offset = 20;
+	uint8_t boxHeight = 28;
+	y += i * boxHeight + offset;
+	display.drawRect(0, y, display.width(), boxHeight + 1, TFT_RED);
 }
