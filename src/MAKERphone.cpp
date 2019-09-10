@@ -5063,6 +5063,7 @@ void MAKERphone::homePopup(bool animation)
 	// 		oscs[i]->play();
 	// }
 	dataRefreshFlag = 0;
+	}
 }
 void MAKERphone::drawNotificationWindow(uint8_t y, uint8_t index)
 {
