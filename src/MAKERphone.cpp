@@ -1420,6 +1420,7 @@ void MAKERphone::sleep()
 			display.setCursor(120, 2);
 			//y = -316139 + 250.3763*x - 0.06612874*x^2 + 0.000005825959*x^3
 			//y - percentage(%), x - voltage(V)
+			/*
 			double percentage = -316139 + (250.3763 * batteryVoltage) - (0.06612874 * batteryVoltage * batteryVoltage) + (0.000005825959 * batteryVoltage * batteryVoltage * batteryVoltage);
 			if (percentage < 101)
 			{
@@ -1428,6 +1429,7 @@ void MAKERphone::sleep()
 			}
 			if (percentage < 0)
 				percentage = 0;
+			*/
 			// if (batteryVoltage > 4100)
 			// 	display.drawBitmap(148, 2, batteryChargingIcon, TFT_BLACK, 2);
 			if (batteryVoltage >= 3850)
@@ -1897,9 +1899,9 @@ void MAKERphone::incomingCall(String _serialData)
 	tft.setCursor(100, 109);
 	tft.print("Hang up");
 	tft.setCursor(5, 109);
-	tft.print("Mic gain: ");
-	tft.setCursor(62, 109);
-	tft.print(micGain);
+	tft.print("Volume: ");
+	tft.setCursor(59, 109);
+	tft.print(mp.mediaVolume);
 	digitalWrite(soundSwitchPin, 1);
 	int8_t written = -1;
 	uint16_t prevTime = 0;
@@ -2082,6 +2084,7 @@ void MAKERphone::incomingCall(String _serialData)
 			delay(1000);
 			break;
 		}
+		/*
 		if (buttons.released(BTN_UP) && ((micGain < 15 && sim_module_version == 1) || (micGain < 8 && sim_module_version == 0)) && callState == 2)
 		{
 			micGain++;
@@ -2115,6 +2118,22 @@ void MAKERphone::incomingCall(String _serialData)
 			tft.fillRect(61, 111, 20, 15, TFT_RED);
 			tft.setCursor(62, 109);
 			tft.print(micGain);
+		}
+		*/
+
+		if(buttons.released(BTN_UP) && mp.mediaVolume < 14)
+		{
+			mp.mediaVolume++;
+			tft.fillRect(57, 111, 20, 15, TFT_RED);
+			tft.setCursor(58, 109);
+			tft.print(mp.mediaVolume);
+		}
+		if(buttons.released(BTN_DOWN) && mp.mediaVolume > 0)
+		{
+			mp.mediaVolume--;
+			tft.fillRect(57, 111, 20, 15, TFT_RED);
+			tft.setCursor(58, 109);
+			tft.print(mp.mediaVolume);
 		}
 		tmp_time = int((millis() - timeOffset) / 1000);
 		for (int i = 0; i < 12; i++)
@@ -2240,10 +2259,10 @@ void MAKERphone::incomingMessage(String _serialData)
 	tft.setCursor(40, 7);
 	tft.print("NEW MESSAGE!");
 	tft.drawBitmap(10, 5, incomingMessageIcon, TFT_BLUE, 2); //+CMT: "+385953776154","","19/08/25,19:18:49+08"
-	tft.setCursor(10, 40);									 // +CMT: "+385953776154","","19/08/25,19:19:21+08"
+	tft.setCursor(10, 26);									 // +CMT: "+385953776154","","19/08/25,19:19:21+08"
 	tft.print("From: ");
 	tft.print(number);
-	tft.setCursor(10, 70);
+	tft.setCursor(10, 45);
 	tft.setTextWrap(1);
 	for (int i = 0; i < text.length(); i++)
 	{
@@ -2304,6 +2323,7 @@ void MAKERphone::incomingMessage(String _serialData)
 	}
 	if (fullStack)
 	{
+		/*
 		tft.setTextColor(TFT_BLACK);
 		tft.fillRect(0, 0, 160, 128, TFT_WHITE);
 		tft.setTextFont(2);
@@ -2314,6 +2334,7 @@ void MAKERphone::incomingMessage(String _serialData)
 		tft.print("No more space");
 		tft.setCursor(10, 70);
 		tft.print("Deleting oldest SMS...");
+		*/
 		uint32_t tempMillis = millis();
 		while (millis() < tempMillis + 2000)
 		{
@@ -3050,6 +3071,7 @@ void MAKERphone::lockscreen()
 		{
 			//y = -316139 + 250.3763*x - 0.06612874*x^2 + 0.000005825959*x^3
 			//y - percentage(%), x - voltage(V)
+			/*
 			double percentage = -316139 + (250.3763 * batteryVoltage) - (0.06612874 * batteryVoltage * batteryVoltage) + (0.000005825959 * batteryVoltage * batteryVoltage * batteryVoltage);
 
 			if (percentage > 100)
@@ -3070,6 +3092,7 @@ void MAKERphone::lockscreen()
 
 			display.printf("%d", (int)percentage * 10);
 			display.print("%");
+			*/
 			// if (batteryVoltage > 4100)
 			// 	display.drawBitmap(148, 2, batteryChargingIcon, TFT_BLACK, 2);
 			if (batteryVoltage >= 3850)
@@ -4204,6 +4227,7 @@ void MAKERphone::homePopup(bool animation)
 			display.drawBitmap(148, 2, batteryChargingIcon, TFT_BLACK, 2);
 		else
 		{
+			/*
 			display.setTextFont(2);
 			display.setTextSize(1);
 			display.setTextColor(TFT_BLACK);
@@ -4218,6 +4242,7 @@ void MAKERphone::homePopup(bool animation)
 			}
 			if (percentage < 0)
 				percentage = 0;
+				*/
 			// if (batteryVoltage > 4100)
 			// 	display.drawBitmap(148, 2, batteryChargingIcon, TFT_BLACK, 2);
 			if (batteryVoltage >= 3850)
@@ -5875,6 +5900,7 @@ void MAKERphone::callNumberEmergency(String number)
 			delay(1000);
 			break;
 		}
+		/*
 		if (mp.buttons.released(BTN_UP) && ((mp.micGain < 15 && mp.sim_module_version == 1) || (mp.micGain < 8 && mp.sim_module_version == 0)) && callState == 2)
 		{
 			mp.micGain++;
@@ -5901,6 +5927,21 @@ void MAKERphone::callNumberEmergency(String number)
 				delay(10);
 			}
 		}
+		*/
+		if(buttons.released(BTN_UP) && mp.mediaVolume < 14)
+		{
+			mp.mediaVolume++;
+			tft.fillRect(57, 111, 20, 15, TFT_RED);
+			tft.setCursor(58, 109);
+			tft.print(mp.mediaVolume);
+		}
+		if(buttons.released(BTN_DOWN) && mp.mediaVolume > 0)
+		{
+			mp.mediaVolume--;
+			tft.fillRect(57, 111, 20, 15, TFT_RED);
+			tft.setCursor(58, 109);
+			tft.print(mp.mediaVolume);
+		}
 		switch (callState)
 		{
 		case 0:
@@ -5914,8 +5955,8 @@ void MAKERphone::callNumberEmergency(String number)
 				mp.display.printCenter(contact);
 			mp.display.fillRect(0, 51 * scale, 80 * scale, 13 * scale, TFT_RED);
 			mp.display.setCursor(5, 109);
-			mp.display.print("Mic gain: ");
-			mp.display.print(mp.micGain);
+			mp.display.print("Volume: ");
+			mp.display.print(mp.mediaVolume);
 			mp.display.setCursor(100, 109);
 			mp.display.print("Hang up");
 			break;
@@ -5930,8 +5971,8 @@ void MAKERphone::callNumberEmergency(String number)
 				mp.display.printCenter(contact);
 			mp.display.fillRect(0, 51 * scale, 80 * scale, 13 * scale, TFT_RED);
 			mp.display.setCursor(5, 109);
-			mp.display.print("Mic gain: ");
-			mp.display.print(mp.micGain);
+			mp.display.print("Volume: ");
+			mp.display.print(mp.mediaVolume);
 			mp.display.setCursor(100, 109);
 			mp.display.print("Hang up");
 			break;
@@ -5967,8 +6008,8 @@ void MAKERphone::callNumberEmergency(String number)
 				mp.display.printCenter(contact);
 			mp.display.fillRect(0, 51 * scale, 80 * scale, 13 * scale, TFT_RED);
 			mp.display.setCursor(5, 109);
-			mp.display.print("Mic gain: ");
-			mp.display.print(mp.micGain);
+			mp.display.print("Volume: ");
+			mp.display.print(mp.mediaVolume);
 			mp.display.setCursor(100, 109);
 			mp.display.print("Hang up");
 			break;
