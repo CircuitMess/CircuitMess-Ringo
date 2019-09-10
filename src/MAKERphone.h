@@ -265,9 +265,6 @@ class MAKERphone:public Buttons, public DateTime
 	bool dataRefreshFlag = 0;
 	bool receivedFlag = 1;
 	bool SDinsertedFlag = 0;
-	//SAVE manipulation
-	JsonArray &getJSONfromSAV(const char *path);
-	void saveJSONtoSAV(const char *path, JsonArray &json);
 
 	//COLLISION
 	bool collideRectRect(int16_t x1, int16_t y1, int16_t w1, int16_t h1, int16_t x2, int16_t y2, int16_t w2, int16_t h2);  // Returns TRUE if the 2 rects overlap
