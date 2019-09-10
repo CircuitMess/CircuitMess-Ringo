@@ -4017,7 +4017,7 @@ void MAKERphone::homePopup(bool animation)
 		{
 			display.drawFastHLine(0, i, display.width(), TFT_WHITE);
 			if(i % 4 == 0)
-				update();
+				update(0);
 			// delayMicroseconds(750);
 		}
 	}
@@ -4191,7 +4191,7 @@ void MAKERphone::homePopup(bool animation)
 			else
 				cursor -= 3;
 			notificationMillis = millis();
-			while(!update());
+			while(!update(0));
 		}
 		if(buttons.released(BTN_DOWN))
 		{
@@ -4239,11 +4239,11 @@ void MAKERphone::homePopup(bool animation)
 			else
 				cursor += 1;
 			notificationMillis = millis();
-			while(!update());
+			while(!update(0));
 		}
 		if(buttons.released(BTN_A))
 		{
-			while(!update());
+			while(!update(0));
 			switch (cursor)
 			{
 				case 0: //volume
@@ -4278,7 +4278,7 @@ void MAKERphone::homePopup(bool animation)
 							osc->setVolume(oscillatorVolumeList[mediaVolume]);
 							osc->note(75, 0.05);
 							osc->play();
-							while(!update());
+							while(!update(0));
 						}
 						if(buttons.released(BTN_RIGHT) && mediaVolume < 14)
 						{
@@ -4301,10 +4301,10 @@ void MAKERphone::homePopup(bool animation)
 							// osc->setVolume(oscillatorVolumeList[mediaVolume]);
 							osc->note(75, 0.05);
 							osc->play();
-							while(!update());
+							while(!update(0));
 							
 						}
-						update();
+						update(0);
 					}
 				break;
 
@@ -4328,21 +4328,21 @@ void MAKERphone::homePopup(bool animation)
 							brightness--;
 							osc->note(75, 0.05);
 							osc->play();
-							while(!update());
+							while(!update(0));
 						}
 						if(buttons.released(BTN_RIGHT) && brightness < 5)
 						{
 							brightness++;
 							osc->note(75, 0.05);
 							osc->play();
-							while(!update());
+							while(!update(0));
 						}
 						if (brightness == 0)
 							ledcAnalogWrite(LEDC_CHANNEL, 230);
 						else
 							ledcAnalogWrite(LEDC_CHANNEL, (5 - brightness) * 51);
 
-						update();
+						update(0);
 					}
 				break;
 
@@ -4409,7 +4409,7 @@ void MAKERphone::homePopup(bool animation)
 							blinkState = !blinkState;
 							timer = millis();
 						}
-						update();
+						update(0);
 
 					}
 				}
@@ -4434,21 +4434,21 @@ void MAKERphone::homePopup(bool animation)
 							pixelsBrightness--;
 							osc->note(75, 0.05);
 							osc->play();
-							while(!update());
+							while(!update(0));
 						}
 						if(buttons.released(BTN_RIGHT) && pixelsBrightness < 5)
 						{
 							pixelsBrightness++;
 							osc->note(75, 0.05);
 							osc->play();
-							while(!update());
+							while(!update(0));
 						}
-						update();
+						update(0);
 					}
 				}
 				break;
 			}
-			while(!update());
+			while(!update(0));
 			display.fillScreen(TFT_WHITE);
 			display.drawIcon(popupVolume,12,25,20,20,2);
 			display.drawIcon(popupExit,60,25,20,20,2);
@@ -4456,9 +4456,9 @@ void MAKERphone::homePopup(bool animation)
 			display.drawIcon(popupScreenshot,12,70,20,20,2);
 			display.drawIcon(popupPixelBrightness,108,70,20,20,2);
 		}
-		update();
+		update(0);
 	}
-	while(!update());
+	while(!update(0));
 	if(SDinsertedFlag)
 		saveSettings();
 	for(int i = 0; i < 4; i++)
