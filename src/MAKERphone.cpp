@@ -3827,7 +3827,6 @@ void MAKERphone::takeScreenshot()
 	bmpInfoHeader[ 9] = (unsigned char)(       h>> 8);
 	bmpInfoHeader[10] = (unsigned char)(       h>>16);
 	bmpInfoHeader[11] = (unsigned char)(       h>>24);
-
 	// write the file (thanks forum!)
 	file.write(bmpFileHeader, sizeof(bmpFileHeader));    // write file header
 	file.write(bmpInfoHeader, sizeof(bmpInfoHeader));    // " info header
