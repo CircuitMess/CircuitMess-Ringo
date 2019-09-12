@@ -33,6 +33,7 @@ volatile uint32_t _timesMeasured = 0;
 bool clockFallback = 1;
 volatile bool chargeDuringADCRead = 0;
 uint32_t simBusyCounter = 0;
+uint8_t callSpeakerVolume = 100;
 static esp_adc_cal_characteristics_t *adc_chars;
 void Task1code( void * pvParameters ){
 	while (true)
@@ -2065,7 +2066,7 @@ void MAKERphone::incomingCall(String _serialData)
 	tft.setCursor(5, 109);
 	tft.print("Volume: ");
 	tft.setCursor(59, 109);
-	tft.print(mediaVolume);
+	tft.print(callSpeakerVolume / 10);
 	digitalWrite(soundSwitchPin, 1);
 	int8_t written = -1;
 	uint16_t prevTime = 0;
@@ -2286,21 +2287,37 @@ void MAKERphone::incomingCall(String _serialData)
 			tft.print(micGain);
 		}
 		*/
+		if(buttons.released(BTN_UP) && (callSpeakerVolume + 10) <= 100)
+		{
+			
+			if(mp.setCallVolume(callSpeakerVolume + 10))
+			{
+				callSpeakerVolume += 10;
+				tft.fillRect(57, 111, 28, 15, TFT_RED);
+				tft.setCursor(58, 109);
+				if(callSpeakerVolume != 0)
+					tft.print(callSpeakerVolume / 10);
+				else
+					tft.print(callSpeakerVolume);
 
-		if(buttons.released(BTN_UP) && mediaVolume < 14)
-		{
-			mp.mediaVolume++;
-			tft.fillRect(57, 111, 20, 15, TFT_RED);
-			tft.setCursor(58, 109);
-			tft.print(mp.mediaVolume);
+				
+			}
 		}
-		if(buttons.released(BTN_DOWN) && mediaVolume > 0)
+		if(buttons.released(BTN_DOWN) && (callSpeakerVolume - 10) >= 0)
 		{
-			mediaVolume--;
-			tft.fillRect(57, 111, 20, 15, TFT_RED);
-			tft.setCursor(58, 109);
-			tft.print(mediaVolume);
+			
+			if(mp.setCallVolume(callSpeakerVolume - 10))
+			{
+				tft.fillRect(57, 111, 28, 15, TFT_RED);
+				tft.setCursor(58, 109);
+				callSpeakerVolume -= 10;
+				if(callSpeakerVolume != 0)
+					tft.print(callSpeakerVolume / 10);
+				else
+					tft.print(callSpeakerVolume);
+			}
 		}
+
 		tmp_time = int((millis() - timeOffset) / 1000);
 		for(int i = 0; i < 12;i++)
 		{
@@ -6379,19 +6396,35 @@ void MAKERphone::callNumberEmergency(String number)
 			}
 		}
 		*/
-		if(buttons.released(BTN_UP) && mediaVolume < 14)
+		if(buttons.released(BTN_UP) && (callSpeakerVolume + 10) <= 100)
 		{
-			mediaVolume++;
-			tft.fillRect(57, 111, 20, 15, TFT_RED);
-			tft.setCursor(58, 109);
-			tft.print(mediaVolume);
+			
+			if(mp.setCallVolume(callSpeakerVolume + 10))
+			{
+				callSpeakerVolume += 10;
+				tft.fillRect(57, 111, 28, 15, TFT_RED);
+				tft.setCursor(58, 109);
+				if(callSpeakerVolume != 0)
+					tft.print(callSpeakerVolume / 10);
+				else
+					tft.print(callSpeakerVolume);
+
+				
+			}
 		}
-		if(buttons.released(BTN_DOWN) && mediaVolume > 0)
+		if(buttons.released(BTN_DOWN) && (callSpeakerVolume - 10) >= 0)
 		{
-			mediaVolume--;
-			tft.fillRect(57, 111, 20, 15, TFT_RED);
-			tft.setCursor(58, 109);
-			tft.print(mediaVolume);
+			
+			if(mp.setCallVolume(callSpeakerVolume - 10))
+			{
+				tft.fillRect(57, 111, 28, 15, TFT_RED);
+				tft.setCursor(58, 109);
+				callSpeakerVolume -= 10;
+				if(callSpeakerVolume != 0)
+					tft.print(callSpeakerVolume / 10);
+				else
+					tft.print(callSpeakerVolume);
+			}
 		}
 		switch (callState)
 		{
@@ -6407,7 +6440,7 @@ void MAKERphone::callNumberEmergency(String number)
 			display.fillRect(0, 51 * scale, 80 * scale, 13 * scale, TFT_RED);
 			display.setCursor(5, 109);
 			display.print("Volume: ");
-			display.print(mediaVolume);
+			display.print(callSpeakerVolume / 10);
 			display.setCursor(100, 109);
 			display.print("Hang up");
 			break;
@@ -6423,7 +6456,7 @@ void MAKERphone::callNumberEmergency(String number)
 			display.fillRect(0, 51 * scale, 80 * scale, 13 * scale, TFT_RED);
 			display.setCursor(5, 109);
 			display.print("Volume: ");
-			display.print(mediaVolume);
+			display.print(callSpeakerVolume / 10);
 			display.setCursor(100, 109);
 			display.print("Hang up");
 			break;
@@ -6460,7 +6493,7 @@ void MAKERphone::callNumberEmergency(String number)
 			display.fillRect(0, 51 * scale, 80 * scale, 13 * scale, TFT_RED);
 			display.setCursor(5, 109);
 			display.print("Volume: ");
-			display.print(mediaVolume);
+			display.print(callSpeakerVolume / 10);
 			display.setCursor(100, 109);
 			display.print("Hang up");
 			break;
@@ -6499,4 +6532,23 @@ void MAKERphone::emergencyCallDrawCursor(uint8_t i, int32_t y)
 	uint8_t boxHeight = 28;
 	y += i * boxHeight + offset;
 	display.drawRect(0, y, display.width(), boxHeight + 1, TFT_RED);
+}
+
+bool MAKERphone::setCallVolume(uint8_t volume) //0-100
+{
+	bool ret = false;
+	String command = "";
+	if(volume <= 100 && volume >= 0)
+	{
+		command = "AT+CLVL=" + String(volume);
+		Serial.println(command);
+		Serial1.println(command); //send command
+		Serial.println("WAIT=1"); //wait a bit
+		while (!Serial1.available()); //wait for response
+		if (!Serial1.readString().indexOf("OK") == -1)
+			ret = false;
+		else
+			ret = true;
+	}
+	return ret;
 }
