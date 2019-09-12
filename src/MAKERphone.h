@@ -175,6 +175,9 @@ class MAKERphone:public Buttons, public DateTime
 	void updateFromFS(String FilePath);
   	void performUpdate(Stream &updateSource, size_t updateSize);
 
+	//In call speaker volume
+	bool setCallVolume(uint8_t volume);
+
     //Emergency calls
     void emergencyCall();
     void callNumberEmergency(String number);
