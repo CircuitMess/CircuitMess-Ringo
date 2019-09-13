@@ -2474,10 +2474,10 @@ void MAKERphone::incomingMessage(String _serialData)
 			file = SD.open("/.core/messages.json", "r");
 			while(!file)
 				Serial.println("Messages ERROR");
-			// jb.clear();
+			jb.clear();
 		}
 		jb.clear();
-		JsonArray& jarr = jb.parseArray(file);
+		JsonArray &jarr = jb.parseArray(file);
 		updateTimeRTC();
 		file.close();
 
@@ -2698,8 +2698,8 @@ void MAKERphone::addCall(String number, String contact, uint32_t dateTime, int d
 	Serial.print("Direction of call: "); Serial.println(direction);
 	if(file.size() < 2){
 		file.close();
-		// jb.clear();
-		JsonArray& jarr = jb.createArray();
+		jb.clear();
+		JsonArray &jarr = jb.createArray();
 		delay(10);
 		File file1 = SD.open("/.core/call_log.json", "w");
 		jarr.prettyPrintTo(file1);
@@ -2711,8 +2711,8 @@ void MAKERphone::addCall(String number, String contact, uint32_t dateTime, int d
 		}
 	}
 
-	// jb.clear();
-	JsonArray& jarr = jb.parseArray(file);
+	jb.clear();
+	JsonArray &jarr = jb.parseArray(file);
 	file.close();
 	if(jarr.size() > 39)
 	{
@@ -3766,7 +3766,7 @@ void MAKERphone::saveSettings(bool debug)
 	Serial.println("");
 	SD.remove(path);
 	jb.clear();
-	JsonObject& settings = jb.createObject();
+	JsonObject &settings = jb.createObject();
 	Serial.print("MIC GAIN: ");
 			// Serial.println(settings["wifi"].as<bool>());
 			// Serial.print("bluetooth: ");
@@ -3817,7 +3817,7 @@ void MAKERphone::loadSettings(bool debug)
 	Serial.println("");
 	File file = SD.open(path);
 	jb.clear();
-	JsonObject& settings = jb.parseObject(file);
+	JsonObject &settings = jb.parseObject(file);
 	file.close();
 
 	if (settings.success()) {
@@ -5012,11 +5012,9 @@ void MAKERphone::loadNotifications(bool debug)
 	const char * path = "/.core/notifications.json";
 	File file = SD.open(path);
 	jb.clear();
-	JsonArray& notifications = jb.parseArray(file);
+	JsonArray &notifications = jb.parseArray(file);
 	file.close();
-
 	if (notifications.success()) {
-		int i = 0;
 		// notifications.prettyPrintTo(Serial);
 		for(JsonObject& tempNotification:notifications)
 		{
@@ -5039,10 +5037,11 @@ void MAKERphone::saveNotifications(bool debug)
 	Serial.println("");
 	SD.remove(path);
 	jb.clear();
-	JsonArray& notifications = jb.createArray();
-	
-	if (notifications.success()) {
-		for(int i = 0; i<sizeof(notificationTypeList);i++)
+	JsonArray &notifications = jb.createArray();
+
+	if (notifications.success())
+	{
+		for (int i = 0; i < sizeof(notificationTypeList); i++)
 		{
 			JsonObject& tempNotification = jb.createObject();
 			tempNotification["Type"] = notificationTypeList[i];
@@ -5389,7 +5388,7 @@ void MAKERphone::loadAlarms()
 	const char * path = "/.core/alarms.json";
 	File file = SD.open(path);
 	jb.clear();
-	JsonArray& alarms = jb.parseArray(file);
+	JsonArray &alarms = jb.parseArray(file);
 	file.close();
 
 	if (alarms.success()) {
@@ -5420,7 +5419,7 @@ void MAKERphone::saveAlarms()
 	Serial.println("");
 	SD.remove(path);
 	jb.clear();
-	JsonArray& alarms = jb.createArray();
+	JsonArray &alarms = jb.createArray();
 
 	if (alarms.success()) {
 		for(int i = 0; i<5;i++)
@@ -5589,7 +5588,7 @@ String MAKERphone::checkContact(String contactNumber)
 		Serial.println("Override");
 		file.close();
 		jb.clear();
-		JsonArray& jarr = jb.createArray();
+		JsonArray &jarr = jb.createArray();
 		delay(10);
 		File file1 = SD.open("/.core/contacts.json", "w");
 		jarr.prettyPrintTo(file1);
@@ -5599,7 +5598,7 @@ String MAKERphone::checkContact(String contactNumber)
 			Serial.println("CONTACTS ERROR");
 	}
 	jb.clear();
-	JsonArray& jarr = jb.parseArray(file);
+	JsonArray &jarr = jb.parseArray(file);
 	file.close();
 	{
 		for (JsonObject& elem : jarr) {
