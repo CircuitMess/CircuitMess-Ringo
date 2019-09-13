@@ -32,6 +32,8 @@ volatile uint32_t measuringCounter = 0;
 volatile uint32_t _timesMeasured = 0;
 bool clockFallback = 1;
 volatile bool chargeDuringADCRead = 0;
+//DynamicJsonBuffer jb(12000);
+//StaticJsonBuffer<capacity> jb;
 uint32_t simBusyCounter = 0;
 uint8_t callSpeakerVolume = 100;
 static esp_adc_cal_characteristics_t *adc_chars;
@@ -2496,14 +2498,13 @@ void MAKERphone::incomingMessage(String _serialData)
 		}
 		// jb.clear();
 		JsonArray &jarr = jb.parseArray(file);
-		updateTimeRTC();
+		updateTimeRTC();	
 		file.close();
-
 		if (!jarr.success())
 		{
 			Serial.println("MESSAGE NOT SAVED");
-			// Serial.println(readFile("/.core/messages.json"));
-		}
+			//Serial.println(readFile("/.core/messages.json"));
+			}
 		else
 		{
 			// jarr.prettyPrintTo(Serial);
