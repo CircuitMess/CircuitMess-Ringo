@@ -601,15 +601,15 @@ bool MAKERphone::update() {
 	// }
 	//buf2.invertDisplay(1);
 	buttonsPressed = 0;
-	for (uint8_t i = 16; i < 22; i++)
+	for(uint8_t i = 16; i < 22; i++)
 	{
-		if (buttons.pressed(i))
+		if(buttons.pressed(i))
 		{
 			buttonsPressed = 1;
 			break;
 		}
 	}
-	if (!buttonsPressed && digitalRead(BTN_INT) && sleepTime != 0 && !inCall && !inAlarmPopup)
+	if(!buttonsPressed && digitalRead(BTN_INT) && sleepTime != 0 && !inCall && !inAlarmPopup)
 	{
 		if (millis() - sleepTimer >= sleepTimeActual * 1000)
 		{
@@ -623,7 +623,7 @@ bool MAKERphone::update() {
 			}
 		}
 	}
-	else if ((buttonsPressed || !digitalRead(BTN_INT) || inCall || inAlarmPopup) && sleepTime)
+	else if((buttonsPressed || !digitalRead(BTN_INT) || inCall || inAlarmPopup) && sleepTime)
 		sleepTimer = millis();
 
 	if (millis() > 7000)
@@ -1959,6 +1959,7 @@ void MAKERphone::incomingCall(String _serialData)
 			Serial.println("ENDED");
 			if(localBuffer.indexOf(String(String(callIdNumber) + ",1,6,0,0")) == -1)
 			{
+				Serial1.println("ATH");
 				buffer = waitForOK();
 				Serial.println(buffer);
 				while (!digitalRead(SIM_INT))
@@ -4803,8 +4804,7 @@ void MAKERphone::homePopup(bool animation)
 							osc->setVolume(oscillatorVolumeList[mediaVolume]);
 							osc->note(75, 0.05);
 							osc->play();
-							while (!update())
-								;
+							buttons.update();
 						}
 						if (buttons.released(BTN_RIGHT) && mediaVolume < 14)
 						{
@@ -4827,8 +4827,7 @@ void MAKERphone::homePopup(bool animation)
 							// osc->setVolume(oscillatorVolumeList[mediaVolume]);
 							osc->note(75, 0.05);
 							osc->play();
-							while (!update())
-								;
+							buttons.update();
 						}
 						update();
 					}
@@ -4854,16 +4853,14 @@ void MAKERphone::homePopup(bool animation)
 							brightness--;
 							osc->note(75, 0.05);
 							osc->play();
-							while (!update())
-								;
+							buttons.update();
 						}
 						if (buttons.released(BTN_RIGHT) && brightness < 5)
 						{
 							brightness++;
 							osc->note(75, 0.05);
 							osc->play();
-							while (!update())
-								;
+							buttons.update();
 						}
 						if (brightness == 0)
 							ledcAnalogWrite(LEDC_CHANNEL, 230);
@@ -4960,20 +4957,17 @@ void MAKERphone::homePopup(bool animation)
 							pixelsBrightness--;
 							osc->note(75, 0.05);
 							osc->play();
-							while (!update())
-								;
+							buttons.update();
 						}
 						if (buttons.released(BTN_RIGHT) && pixelsBrightness < 5)
 						{
 							pixelsBrightness++;
 							osc->note(75, 0.05);
 							osc->play();
-							while (!update())
-								;
+							buttons.update();
 						}
 						update();
 					}
-					buttons.update();
 				}
 				break;
 			}
