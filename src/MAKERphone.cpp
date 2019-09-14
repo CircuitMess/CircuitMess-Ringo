@@ -4769,68 +4769,116 @@ void MAKERphone::homePopup(bool animation)
 		}
 		if (buttons.released(BTN_A))
 		{
+			uint8_t blinkStateSound = 0;
+			uint8_t soundCursor = 0;
 			buttons.update();
 			switch (cursor)
 			{
 				case 0: //volume
 					while (!buttons.released(BTN_B) && !buttons.released(BTN_A))
 					{
-						display.drawRect(14, 50, 134, 28, TFT_BLACK);
-						display.drawRect(13, 49, 136, 30, TFT_BLACK);
-						display.fillRect(15, 51, 132, 26, 0x9FFE);
-						display.drawRect(37, 59, 86, 10, TFT_BLACK);
-						display.drawRect(36, 58, 88, 12, TFT_BLACK);
-						display.fillRect(38, 60, mediaVolume * 6, 8, TFT_BLACK);
-						display.drawBitmap(18, 56, noSound, TFT_BLACK, 2);
-						display.drawBitmap(126, 56, fullSound, TFT_BLACK, 2);
-						if (buttons.released(BTN_LEFT) && mediaVolume > 0)
-						{
-							mediaVolume--;
-							for (uint8_t i = 0; i < 4; i++)
+						if(buttons.released(BTN_DOWN)) soundCursor = 1;
+						if(buttons.released(BTN_UP)) soundCursor = 0;
+						if (millis() - blinkMillis >= 350)
 							{
-								if (tracks[i] != nullptr)
-								{
-									if (mediaVolume == 0)
-										tracks[i]->setVolume(0);
-									else
-										tracks[i]->setVolume(map(mediaVolume, 0, 14, 100, 300));
-								}
-							}
-							for (uint8_t i = 0; i < 4; i++)
-							{
-								if (oscs[i] != nullptr)
-									oscs[i]->setVolume(oscillatorVolumeList[mediaVolume]);
-							}
-							osc->setVolume(oscillatorVolumeList[mediaVolume]);
-							osc->note(75, 0.05);
-							osc->play();
-							buttons.update();
+							blinkMillis = millis();
+							blinkStateSound = !blinkStateSound;
 						}
-						if (buttons.released(BTN_RIGHT) && mediaVolume < 14)
+						display.drawRect(14, 30, 134, 70, TFT_BLACK);
+						display.drawRect(13, 29, 136, 72, TFT_BLACK);
+						display.fillRect(15, 31, 132, 68, 0x9FFE);
+						display.drawRect(37, 79, 86, 10, TFT_BLACK);
+						display.drawRect(36, 78, 88, 12, TFT_BLACK);
+						display.fillRect(38, 80, ringVolume * 6, 8, TFT_BLACK);
+/* 						display.drawBitmap(18, 76, noSound, TFT_BLACK, 2);
+						display.drawBitmap(126, 76, fullSound, TFT_BLACK, 2); */
+						if(soundCursor){
+							mp.display.drawBitmap(18, 44, noSound,TFT_BLACK, 2);
+							mp.display.drawBitmap(126, 44, fullSound, TFT_BLACK, 2);
+							mp.display.drawBitmap(18, 76, noSound, blinkStateSound ? TFT_BLACK : 0x9FFE, 2);
+							mp.display.drawBitmap(126, 76, fullSound, blinkStateSound ? TFT_BLACK : 0x9FFE, 2);
+						}
+						else{
+							mp.display.drawBitmap(18, 76, noSound,TFT_BLACK, 2);
+							mp.display.drawBitmap(126, 76, fullSound,TFT_BLACK, 2);
+							mp.display.drawBitmap(18, 44, noSound, blinkStateSound ? TFT_BLACK : 0x9FFE, 2);
+							mp.display.drawBitmap(126, 44, fullSound, blinkStateSound ? TFT_BLACK : 0x9FFE, 2);
+						}
+						display.drawRect(37, 47, 86, 10, TFT_BLACK);
+						display.drawRect(36, 46, 88, 12, TFT_BLACK);
+						display.fillRect(38, 48, mediaVolume * 6, 8, TFT_BLACK);
+/* 						display.drawBitmap(18, 44, noSound, TFT_BLACK, 2);
+						display.drawBitmap(126, 44, fullSound, TFT_BLACK, 2); */
+						mp.display.setCursor(30, 32,2);
+						mp.display.printCenter("Media volume");
+						mp.display.setCursor(30, 61,2);
+						mp.display.printCenter("Ring volume");
+						//osc->setVolume(oscillatorVolumeList[mediaVolume]);	
+						if (buttons.repeat(BTN_LEFT,7) && (mediaVolume > 0 || ringVolume > 0))
 						{
-							mediaVolume++;
-							for (uint8_t i = 0; i < 4; i++)
-							{
-								if (tracks[i] != nullptr)
+							if(!soundCursor){
+								if(mediaVolume > 0)mediaVolume--;
+								for (uint8_t i = 0; i < 4; i++)
 								{
-									if (mediaVolume == 0)
+									if (tracks[i] != nullptr)
+									{
+										if (mediaVolume == 0)
 										tracks[i]->setVolume(0);
-									else
+										else
 										tracks[i]->setVolume(map(mediaVolume, 0, 14, 100, 300));
+									}
 								}
+								for(uint8_t i = 0 ; i < 4;i++)
+								{
+									if(oscs[i] != nullptr)
+										oscs[i]->setVolume(oscillatorVolumeList[mediaVolume]);
+								}
+								osc->setVolume(oscillatorVolumeList[mediaVolume]);
 							}
-							for (uint8_t i = 0; i < 4; i++)
-							{
-								if (oscs[i] != nullptr)
-									oscs[i]->setVolume(oscillatorVolumeList[mediaVolume]);
+							if(soundCursor) {
+								if(ringVolume > 0)ringVolume--;
+								osc->setVolume(oscillatorVolumeList[ringVolume]);	
 							}
-							// osc->setVolume(oscillatorVolumeList[mediaVolume]);
 							osc->note(75, 0.05);
 							osc->play();
-							buttons.update();
+							if (mediaVolume < 0) mediaVolume = 0;
+							if (ringVolume < 0) ringVolume = 0;
+							//update();
+							//while (!update());
+						}
+						if (buttons.repeat(BTN_RIGHT, 7) && (mediaVolume < 14 || ringVolume < 14))
+						{
+							if(!soundCursor){
+								if(mediaVolume < 14)mediaVolume++;
+								for (uint8_t i = 0; i < 4; i++)
+								{
+									if (tracks[i] != nullptr)
+									{
+										if (mediaVolume == 0)
+											tracks[i]->setVolume(0);
+										else
+											tracks[i]->setVolume(map(mediaVolume, 0, 14, 100, 300));
+									}
+								}
+								for(uint8_t i = 0 ; i < 4;i++)
+								{
+									if(oscs[i] != nullptr)
+										oscs[i]->setVolume(oscillatorVolumeList[mediaVolume]);
+								}
+								osc->setVolume(oscillatorVolumeList[mediaVolume]);
+							}
+							if(soundCursor) {
+								if(ringVolume < 14)ringVolume++;
+								osc->setVolume(oscillatorVolumeList[ringVolume]);	
+							}
+						osc->note(75, 0.05);
+						osc->play();
+						if (mediaVolume > 14) mediaVolume = 14;
+						if (ringVolume > 14) ringVolume = 14;
 						}
 						update();
 					}
+					osc->setVolume(oscillatorVolumeList[mediaVolume]);
 					break;
 
 				case 1: //exit
