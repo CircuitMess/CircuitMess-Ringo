@@ -404,5 +404,6 @@ class MAKERphone:public Buttons, public DateTime
 		uint8_t _concatSMSCounter = 0;
 		uint8_t _currentConcatSMS = 0;
 		bool _concatSMSCodingScheme = 0;
+		bool _SDinterruptError = 0;
 };
 #endif

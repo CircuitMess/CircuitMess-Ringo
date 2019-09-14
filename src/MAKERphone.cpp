@@ -192,19 +192,18 @@ void MAKERphone::begin(bool splash)
 
 	//SD startup
 	uint32_t tempMillis = millis();
-	if (!digitalRead(SD_INT))
+	SDinsertedFlag = 1;
+	while (!SD.begin(5, SPI, 8000000))
 	{
-		SDinsertedFlag = 1;
-		while (!SD.begin(5, SPI, 8000000))
+		Serial.println("SD ERROR");
+		if (millis() - tempMillis > 10)
 		{
-			Serial.println("SD ERROR");
-			if (millis() - tempMillis > 5)
-			{
-				SDinsertedFlag = 0;
-				break;
-			}
+			SDinsertedFlag = 0;
+			break;
 		}
 	}
+	if (digitalRead(SD_INT) && SDinsertedFlag)
+		_SDinterruptError = 1;
 
 	if (splash == 1)
 		splashScreen(); //Show the main splash screen
@@ -530,7 +529,7 @@ void MAKERphone::begin(bool splash)
 bool MAKERphone::update() {
 	newMessage = 0;
 	exitedLockscreen = 0;
-	if (digitalRead(SD_INT) && (SDinsertedFlag || (!SDinsertedFlag && SDerror)))
+	if (digitalRead(SD_INT) && (SDinsertedFlag || (!SDinsertedFlag && SDerror)) && !_SDinterruptError)
 	{
 		SDinsertedFlag = 0;
 		SDerror = 0;
@@ -552,7 +551,7 @@ bool MAKERphone::update() {
 		SDremovedPopup();
 		// initWavLib();
 	}
-	else if (!digitalRead(SD_INT) && !SDinsertedFlag && !SDerror)
+	else if (!digitalRead(SD_INT) && !SDinsertedFlag && !SDerror  && !_SDinterruptError)
 	{
 		SDinsertedFlag = 1;
 		SDinsertedPopup();
