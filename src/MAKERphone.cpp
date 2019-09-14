@@ -1923,8 +1923,18 @@ void MAKERphone::incomingCall(String _serialData)
 		}
 	}
 	bool goOut = 0;
+	uint32_t checkMillis = millis();
 	while(1)
 	{
+		if(millis() - checkMillis >= 8000 && !Serial1.available())
+		{
+			checkMillis = millis();
+			Serial1.println("AT+CLCC");
+			buffer = waitForOK();
+			Serial.println(buffer);
+			if(buffer.indexOf("+CLCC") == -1)
+				localBuffer = String(String(callIdNumber) + ",1,6,0,0");
+		}
 		if (Serial1.available())
 		{
 			c = (char)Serial1.read();
