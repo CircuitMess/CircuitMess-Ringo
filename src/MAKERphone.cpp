@@ -3603,6 +3603,7 @@ void MAKERphone::lockscreen()
 		else if (buttons.timeHeld(BTN_HASHTAG) >= 30)
 		{
 			// while(!update());
+			dataRefreshFlag = 0;
 			buttons.holdForUnlock = 1;
 			inLockScreen = 0;
 			display.setTextSize(1);
@@ -3675,6 +3676,7 @@ void MAKERphone::lockscreen()
 		else if (buttons.timeHeld(BTN_ASTERISK) >= 30)
 		{
 			// while(!update());
+			dataRefreshFlag = 0;
 			buttons.holdForUnlock = 1;
 			inLockScreen = 0;
 			emergencyCall();
