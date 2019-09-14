@@ -1896,7 +1896,7 @@ void MAKERphone::incomingCall(String _serialData)
 	
 	Serial.print("call id: ");
 	Serial.println(callIdNumber);
-	if(!inHomePopup)
+	if(!inHomePopup && !tracksSaved)
 	{
 		for(int i = 0; i < 4; i++)
 		{
@@ -1921,6 +1921,7 @@ void MAKERphone::incomingCall(String _serialData)
 				}
 			}
 		}
+		tracksSaved = 1;
 	}
 	bool goOut = 0;
 	uint32_t checkMillis = millis();
@@ -2057,7 +2058,9 @@ void MAKERphone::incomingCall(String _serialData)
 				currTracks[i] = nullptr;
 				pausedTracks[i] = 0;
 			}
+			tracksSaved = 0;
 		}
+
 		buttons.update();
 		return;
 	}
@@ -2379,6 +2382,7 @@ void MAKERphone::incomingCall(String _serialData)
 			currTracks[i] = nullptr;
 			pausedTracks[i] = 0;
 		}
+		tracksSaved = 0;
 	}
 	buttons.update();
 }
@@ -2422,6 +2426,33 @@ void MAKERphone::incomingMessage(String _serialData)
 	if(lengthOfSMS == 0)
 		lengthOfSMS = 1;
 	// 	Serial.println((uint8_t)masterText[i]);
+	if(!inHomePopup && !tracksSaved)
+	{
+		for(int i = 0; i < 4; i++)
+		{
+			if(tracks[i] != nullptr)
+			{
+				Serial.printf("%d track is playing: %d\n", i, tracks[i]->isPlaying());
+				if(tracks[i]->isPlaying())
+				{
+					currTracks[i] = tracks[i];
+					currTracks[i]->seek(tracks[i]->getSamplePos());
+					Serial.print("PLAYING:");
+					Serial.println(i);
+					pausedTracks[i] = 1;
+					tracks[i]->pause();
+					removeTrack(tracks[i]);
+				}
+				else
+				{
+					currTracks[i] = tracks[i];
+					currTracks[i]->seek(tracks[i]->getSamplePos());
+					removeTrack(tracks[i]);
+				}
+			}
+		}
+		tracksSaved = 1;
+	}
 	if(_concatSMSCounter > 1)
 	{
 		tft.setTextColor(TFT_WHITE);
@@ -2713,7 +2744,21 @@ void MAKERphone::incomingMessage(String _serialData)
 	}
 	newMessage = 1;
 	osc->setVolume(oscillatorVolumeList[mediaVolume]);
-
+	if(!inHomePopup)
+	{
+		for(int i = 0; i < 4; i++)
+		{
+			if(currTracks[i] != nullptr)
+			{
+				addTrack(currTracks[i]);
+				if(pausedTracks[i])
+					currTracks[i]->play();
+			}
+			currTracks[i] = nullptr;
+			pausedTracks[i] = 0;
+		}
+		tracksSaved = 0;
+	}
 	// +CMT: "+385921488476","","19/06/03,20:14:58+08"
 	// Wjd
 }
