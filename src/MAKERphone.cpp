@@ -4543,6 +4543,10 @@ void MAKERphone::homePopup(bool animation)
 			}
 		}
 	}
+	uint8_t _tempFont = display.getTextFont();
+	uint16_t _tempColor = display.getTextColor();
+	uint8_t _tempSize = display.getTextSize();
+	
 	// for(uint8_t i = 0 ; i < 4;i++)
 	// {
 	// 	if(tracks[i] != nullptr)
@@ -4973,6 +4977,9 @@ void MAKERphone::homePopup(bool animation)
 
 				case 3: //screenshot
 					screenshotFlag = 1;
+					display.setTextColor(_tempColor);
+					display.setTextFont(_tempFont);
+					display.setTextSize(_tempSize);
 					return;
 					break;
 
@@ -5116,6 +5123,9 @@ void MAKERphone::homePopup(bool animation)
 	// 	if(oscs[i] != nullptr)
 	// 		oscs[i]->play();
 	// }
+	display.setTextColor(_tempColor);
+	display.setTextFont(_tempFont);
+	display.setTextSize(_tempSize);
 	dataRefreshFlag = 0;
 }
 void MAKERphone::drawNotificationWindow(uint8_t y, uint8_t index)
