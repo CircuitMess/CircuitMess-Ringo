@@ -4790,8 +4790,6 @@ void MAKERphone::homePopup(bool animation)
 						display.drawRect(37, 79, 86, 10, TFT_BLACK);
 						display.drawRect(36, 78, 88, 12, TFT_BLACK);
 						display.fillRect(38, 80, ringVolume * 6, 8, TFT_BLACK);
-/* 						display.drawBitmap(18, 76, noSound, TFT_BLACK, 2);
-						display.drawBitmap(126, 76, fullSound, TFT_BLACK, 2); */
 						if(soundCursor){
 							mp.display.drawBitmap(18, 44, noSound,TFT_BLACK, 2);
 							mp.display.drawBitmap(126, 44, fullSound, TFT_BLACK, 2);
@@ -4807,9 +4805,8 @@ void MAKERphone::homePopup(bool animation)
 						display.drawRect(37, 47, 86, 10, TFT_BLACK);
 						display.drawRect(36, 46, 88, 12, TFT_BLACK);
 						display.fillRect(38, 48, mediaVolume * 6, 8, TFT_BLACK);
-/* 						display.drawBitmap(18, 44, noSound, TFT_BLACK, 2);
-						display.drawBitmap(126, 44, fullSound, TFT_BLACK, 2); */
-						mp.display.setCursor(30, 32,2);
+
+						mp.display.setCursor(30, 31,2);
 						mp.display.printCenter("Media volume");
 						mp.display.setCursor(30, 61,2);
 						mp.display.printCenter("Ring volume");
