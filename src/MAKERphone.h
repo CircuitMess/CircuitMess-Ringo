@@ -235,6 +235,7 @@ class MAKERphone:public Buttons, public DateTime
 	uint8_t ringVolume = 10; //volume 0-14
 	uint8_t mediaVolume = 10; //volume 0-14
 	uint8_t pixelsBrightness = 5; //0-5
+	uint8_t callSpeakerVolume = 5;
 	bool pinLock;
 	uint16_t pinNumber = 1234;
 	bool simInserted = 0;
@@ -405,5 +406,6 @@ class MAKERphone:public Buttons, public DateTime
 		uint8_t _concatSMSCounter = 0;
 		uint8_t _currentConcatSMS = 0;
 		bool _concatSMSCodingScheme = 0;
+
 };
 #endif

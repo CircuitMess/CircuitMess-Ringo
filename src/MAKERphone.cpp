@@ -33,7 +33,6 @@ volatile uint32_t _timesMeasured = 0;
 bool clockFallback = 1;
 volatile bool chargeDuringADCRead = 0;
 uint32_t simBusyCounter = 0;
-uint8_t callSpeakerVolume = 100;
 static esp_adc_cal_characteristics_t *adc_chars;
 void Task1code(void *pvParameters)
 {
@@ -2093,7 +2092,7 @@ void MAKERphone::incomingCall(String _serialData)
 	tft.setCursor(5, 109);
 	tft.print("Volume: ");
 	tft.setCursor(59, 109);
-	tft.print(callSpeakerVolume / 10);
+	tft.print(callSpeakerVolume);
 	digitalWrite(soundSwitchPin, 1);
 	int8_t written = -1;
 	uint16_t prevTime = 0;
@@ -2103,13 +2102,14 @@ void MAKERphone::incomingCall(String _serialData)
 		Serial1.println("AT+CECH=0x0000");
 		Serial.println(waitForOK());
 	}
-	uint8_t callState = 2;
 	while (1)
 	{
 		if (Serial1.available())
 		{
 			c = Serial1.read();
 			buffer += c;
+			Serial.println("----------");
+			Serial.println(buffer);
 		}
 		if(buffer.indexOf(String("CLCC: " + String(callIdNumber))) != -1 &&
 		buffer.indexOf("\r", buffer.indexOf(String("CLCC: " + String(callIdNumber)))) != -1)
@@ -2117,17 +2117,16 @@ void MAKERphone::incomingCall(String _serialData)
 			localBuffer = buffer;
 			buffer = "";
 		}
-		if (buffer.indexOf("OK", buffer.indexOf("AT+CMIC=")) != -1)
+		if (buffer.indexOf("OK", buffer.indexOf("AT+CLVL=")) != -1)
 			buffer = "";
 		if (buffer.indexOf("\r") != -1)
 			buffer = "";
-		// Serial.println("----------");
-		// Serial.println(localBuffer);
+		
 		// delay(1);
-		if (localBuffer.indexOf(String("CLCC: " + String(callIdNumber))) != -1 || localBuffer.indexOf("AT+CMIC") != -1)
+		if (localBuffer.indexOf(String("CLCC: " + String(callIdNumber))) != -1 || localBuffer.indexOf("AT+CLVL") != -1)
 		{
 			if((localBuffer.indexOf(String(String(callIdNumber) + ",1,0,0,0")) != -1 
-			|| localBuffer.indexOf("AT+CMIC") != -1 ) && (written != 0 || prevTime != tmp_time))
+			|| localBuffer.indexOf("AT+CLVL") != -1 ) && (written != 0 || prevTime != tmp_time))
 			{
 				if (firstPass == 1)
 				{
@@ -2277,72 +2276,29 @@ void MAKERphone::incomingCall(String _serialData)
 			delay(1000);
 			break;
 		}
-		/*
-		if(buttons.released(BTN_UP) && ((micGain < 15 && sim_module_version == 1) || (micGain < 8 && sim_module_version == 0))
-		&& callState == 2)
+		if(buttons.released(BTN_UP) && callSpeakerVolume < 5)
 		{
-			micGain++;
+			callSpeakerVolume++;
 			if (sim_module_version == 1)
-				Serial1.printf("AT+CMIC=0,%d\r", micGain);
+				Serial1.printf("AT+CLVL=%d\r", callSpeakerVolume*20);
 			else if (sim_module_version == 0)
-			{
-				String foo = "AT+CMICGAIN=";
-				foo += micGain;
-				Serial1.println(foo);
-				delay(10);
-			}
+				Serial1.printf("AT+CLVL=%d\r", callSpeakerVolume);
 			written = -1;
-			tft.fillRect(61, 111, 20, 15, TFT_RED);
-			tft.setCursor(62, 109);
-			tft.print(micGain);
+			tft.fillRect(56, 111, 20, 15, TFT_RED);
+			tft.setCursor(59, 109);
+			tft.print(callSpeakerVolume);
 		}
-		if (buttons.released(BTN_DOWN) && micGain > 0 && callState == 2)
+		if(buttons.released(BTN_DOWN) && callSpeakerVolume > 0)
 		{
-			micGain--;
+			callSpeakerVolume--;
 			if (sim_module_version == 1)
-				Serial1.printf("AT+CMIC=0,%d\r", micGain);
+				Serial1.printf("AT+CLVL=%d\r", callSpeakerVolume*20);
 			else if (sim_module_version == 0)
-			{
-				String foo = "AT+CMICGAIN=";
-				foo += micGain;
-				Serial1.println(foo);
-				delay(10);
-			}
+				Serial1.printf("AT+CLVL=%d\r", callSpeakerVolume);
 			written = -1;
-			tft.fillRect(61, 111, 20, 15, TFT_RED);
-			tft.setCursor(62, 109);
-			tft.print(micGain);
-		}
-		*/
-		if(buttons.released(BTN_UP) && (callSpeakerVolume + 10) <= 100)
-		{
-			
-			if(setCallVolume(callSpeakerVolume + 10))
-			{
-				callSpeakerVolume += 10;
-				tft.fillRect(57, 111, 28, 15, TFT_RED);
-				tft.setCursor(58, 109);
-				if(callSpeakerVolume != 0)
-					tft.print(callSpeakerVolume / 10);
-				else
-					tft.print(callSpeakerVolume);
-
-				
-			}
-		}
-		if(buttons.released(BTN_DOWN) && (callSpeakerVolume - 10) >= 0)
-		{
-			
-			if(setCallVolume(callSpeakerVolume - 10))
-			{
-				tft.fillRect(57, 111, 28, 15, TFT_RED);
-				tft.setCursor(58, 109);
-				callSpeakerVolume -= 10;
-				if(callSpeakerVolume != 0)
-					tft.print(callSpeakerVolume / 10);
-				else
-					tft.print(callSpeakerVolume);
-			}
+			tft.fillRect(56, 111, 20, 15, TFT_RED);
+			tft.setCursor(59, 109);
+			tft.print(callSpeakerVolume);
 		}
 
 		tmp_time = int((millis() - timeOffset) / 1000);
@@ -6648,35 +6604,27 @@ void MAKERphone::callNumberEmergency(String number)
 			}
 		}
 		*/
-		if(buttons.released(BTN_UP) && (callSpeakerVolume + 10) <= 100)
+		if(buttons.released(BTN_UP) && callSpeakerVolume < 5)
 		{
-			
-			if(setCallVolume(callSpeakerVolume + 10))
-			{
-				callSpeakerVolume += 10;
-				tft.fillRect(57, 111, 28, 15, TFT_RED);
-				tft.setCursor(58, 109);
-				if(callSpeakerVolume != 0)
-					tft.print(callSpeakerVolume / 10);
-				else
-					tft.print(callSpeakerVolume);
-
-				
-			}
+			callSpeakerVolume++;
+			if (sim_module_version == 1)
+				Serial1.printf("AT+CLVL=%d\r", callSpeakerVolume*20);
+			else if (sim_module_version == 0)
+				Serial1.printf("AT+CLVL=%d\r", callSpeakerVolume);
+			tft.fillRect(61, 111, 20, 15, TFT_RED);
+			tft.setCursor(62, 109);
+			tft.print(micGain);
 		}
-		if(buttons.released(BTN_DOWN) && (callSpeakerVolume - 10) >= 0)
+		if(buttons.released(BTN_DOWN) && callSpeakerVolume > 0)
 		{
-			
-			if(setCallVolume(callSpeakerVolume - 10))
-			{
-				tft.fillRect(57, 111, 28, 15, TFT_RED);
-				tft.setCursor(58, 109);
-				callSpeakerVolume -= 10;
-				if(callSpeakerVolume != 0)
-					tft.print(callSpeakerVolume / 10);
-				else
-					tft.print(callSpeakerVolume);
-			}
+			callSpeakerVolume--;
+			if (sim_module_version == 1)
+				Serial1.printf("AT+CLVL=%d\r", callSpeakerVolume*20);
+			else if (sim_module_version == 0)
+				Serial1.printf("AT+CLVL=%d\r", callSpeakerVolume);
+			tft.fillRect(61, 111, 20, 15, TFT_RED);
+			tft.setCursor(62, 109);
+			tft.print(micGain);
 		}
 		switch (callState)
 		{
@@ -6692,7 +6640,7 @@ void MAKERphone::callNumberEmergency(String number)
 			display.fillRect(0, 51 * scale, 80 * scale, 13 * scale, TFT_RED);
 			display.setCursor(5, 109);
 			display.print("Volume: ");
-			display.print(callSpeakerVolume / 10);
+			display.print(callSpeakerVolume);
 			display.setCursor(100, 109);
 			display.print("Hang up");
 			break;
@@ -6708,7 +6656,7 @@ void MAKERphone::callNumberEmergency(String number)
 			display.fillRect(0, 51 * scale, 80 * scale, 13 * scale, TFT_RED);
 			display.setCursor(5, 109);
 			display.print("Volume: ");
-			display.print(callSpeakerVolume / 10);
+			display.print(callSpeakerVolume);
 			display.setCursor(100, 109);
 			display.print("Hang up");
 			break;
@@ -6745,7 +6693,7 @@ void MAKERphone::callNumberEmergency(String number)
 			display.fillRect(0, 51 * scale, 80 * scale, 13 * scale, TFT_RED);
 			display.setCursor(5, 109);
 			display.print("Volume: ");
-			display.print(callSpeakerVolume / 10);
+			display.print(callSpeakerVolume);
 			display.setCursor(100, 109);
 			display.print("Hang up");
 			break;
