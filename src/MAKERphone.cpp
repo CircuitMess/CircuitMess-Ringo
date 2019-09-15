@@ -204,6 +204,8 @@ void MAKERphone::begin(bool splash)
 	}
 	if (digitalRead(SD_INT) && SDinsertedFlag)
 		_SDinterruptError = 1;
+	Serial.print("SD interrupt error: ");
+	Serial.println(_SDinterruptError);
 
 	if (splash == 1)
 		splashScreen(); //Show the main splash screen
