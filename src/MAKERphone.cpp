@@ -2542,21 +2542,23 @@ void MAKERphone::incomingMessage(String _serialData)
 		tft.print(tempCname);
 	else
 		tft.print(_smsNumber);
-	tft.setCursor(10, 70);
+	tft.setCursor(10, 43);
 	tft.setTextWrap(1);
 	for(int i = 0; i < strlen(masterText);i++)
 	{
-		tft.print(masterText[i]);
-		if(tft.getCursorY() > 80 && tft.getCursorX() > 130)
+		//if(tft.getCursorY() > 75) break;
+		if(tft.getCursorX() < 10) tft.setCursor(10, tft.getCursorY());
+		if(tft.getCursorX() > 136){
+			if(masterText[i] != ' ' && masterText[i-1] != ' ') tft.print('-');
+			tft.println();
+			tft.setCursor(10, tft.getCursorY());
+		}
+		if(tft.getCursorX() == 10 && masterText[i] == ' ') continue;
+ 		tft.print(masterText[i]);
+		if((tft.getCursorY() > 78 && tft.getCursorX() > 125)|| (masterText[i+1] == '\n' && tft.getCursorY() > 78))
 		{
 			tft.print("...");
 			break;
-		}
-		if (tft.getCursorX() > 150)
-		{
-
-			tft.print("\n");
-			tft.setCursor(10, tft.getCursorY());
 		}
 	}
 	// tft.print(text);
@@ -2705,7 +2707,7 @@ void MAKERphone::incomingMessage(String _serialData)
 	osc->setVolume(oscillatorVolumeList[mediaVolume]);
 
 	// +CMT: "+385921488476","","19/06/03,20:14:58+08"
-	// Wjd
+	// Wjd	
 }
 void MAKERphone::addCall(String number, String contact, uint32_t dateTime, int duration, uint8_t direction)
 {
