@@ -885,8 +885,7 @@ bool MAKERphone::update() {
 		int32_t helper = -1;
 		while((temp.indexOf("\r", temp.indexOf("\r", helper + 1) + 1) == -1
 		|| temp.indexOf("\r", helper + 1) == -1 || helper == -1)
-		&& temp.indexOf("\r", temp.indexOf("1,4,0,0,")) == -1
-		&& temp.indexOf("RING") == -1 && millis() - curr_millis < 2500)
+		&& temp.indexOf("\r", temp.indexOf("1,4,0,0,")) == -1 && millis() - curr_millis < 2500)
 		{
 			if (Serial1.available())
 			{
@@ -901,7 +900,7 @@ bool MAKERphone::update() {
 				// Serial.println(helper);
 			}
 		}
-		if (temp.indexOf("\r", temp.indexOf("1,4,0,0,")) != -1 || temp.indexOf("RING") != -1)
+		if (temp.indexOf("\r", temp.indexOf("1,4,0,0,")) != -1)
 		{
 			inCall = 1;
 			incomingCall(temp);
@@ -2572,8 +2571,7 @@ void MAKERphone::incomingMessage(String _serialData)
 			helper = -1;
 			while((temp.indexOf("\r", temp.indexOf("\r", helper + 1) + 1) == -1
 			|| temp.indexOf("\r", helper + 1) == -1 || helper == -1)
-			&& temp.indexOf("\r", temp.indexOf("1,4,0,0,")) == -1
-			&& temp.indexOf("RING") == -1 && millis() - curr_millis < 500)
+			&& temp.indexOf("\r", temp.indexOf("1,4,0,0,")) == -1 && millis() - curr_millis < 500)
 			{
 				if(Serial1.available())
 				{
@@ -2588,7 +2586,7 @@ void MAKERphone::incomingMessage(String _serialData)
 					// Serial.println(helper);
 				}
 			}
-			if(temp.indexOf("\r", temp.indexOf("1,4,0,0,")) != -1 || temp.indexOf("RING") != -1)
+			if(temp.indexOf("\r", temp.indexOf("1,4,0,0,")) != -1)
 			{
 				inCall = 1;
 				incomingCall(temp);
@@ -2650,8 +2648,7 @@ void MAKERphone::incomingMessage(String _serialData)
 						helper = -1;
 						while((temp.indexOf("\r", temp.indexOf("\r", helper + 1) + 1) == -1
 						|| temp.indexOf("\r", helper + 1) == -1 || helper == -1)
-						&& temp.indexOf("\r", temp.indexOf("1,4,0,0,")) == -1
-						&& temp.indexOf("RING") == -1 && millis() - curr_millis < 500)
+						&& temp.indexOf("\r", temp.indexOf("1,4,0,0,")) == -1 && millis() - curr_millis < 500)
 						{
 							if(Serial1.available())
 							{
@@ -2666,7 +2663,7 @@ void MAKERphone::incomingMessage(String _serialData)
 								// Serial.println(helper);
 							}
 						}
-						if(temp.indexOf("\r", temp.indexOf("1,4,0,0,")) != -1 || temp.indexOf("RING") != -1)
+						if(temp.indexOf("\r", temp.indexOf("1,4,0,0,")) != -1)
 						{
 							inCall = 1;
 							incomingCall(temp);
