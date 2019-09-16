@@ -15,6 +15,7 @@ short adcbuf[1600]={0};
 short adcWr=0, adcRd=800;
 uint8_t reloadCo = 0;
 hw_timer_t * timert = NULL;
+bool _SDinterruptError = 0;
 
 
 void IRAM_ATTR onTimer() {

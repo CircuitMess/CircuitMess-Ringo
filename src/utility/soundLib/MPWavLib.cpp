@@ -148,7 +148,7 @@ int MPTrack::loadSample(unsigned short i)
 
 int MPTrack::fetchSample()
 {
-    if(digitalRead(33))
+    if(digitalRead(33) && !_SDinterruptError)
         return 0;
     int p, sample;
     if(!playing)
@@ -187,7 +187,7 @@ bool MPTrack::loadSamples()
 
     if(trackFile.position()>this->size||reload==0)
     {
-        if(digitalRead(33))
+        if(digitalRead(33) && !_SDinterruptError)
             return 0;
         while(reloadCo)
             vTaskDelay(100);
@@ -204,7 +204,7 @@ bool MPTrack::loadSamples()
                 vTaskDelay(10);
                 do
                 {
-                    if(digitalRead(33))
+                    if(digitalRead(33) && !_SDinterruptError)
                         return 0;
                     vTaskDelay(10);
                     Serial.println("errorb");
