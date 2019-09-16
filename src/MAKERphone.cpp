@@ -3916,8 +3916,8 @@ void MAKERphone::saveSettings(bool debug)
 	SD.remove(path);
 	jb.clear();
 	JsonObject &settings = jb.createObject();
-	Serial.print("MIC GAIN: ");
-	Serial.println(micGain);
+	// Serial.print("MIC GAIN: ");
+	// Serial.println(micGain);
 	if (settings.success())
 	{
 		if (debug)
@@ -3947,6 +3947,7 @@ void MAKERphone::saveSettings(bool debug)
 		settings["ringVolume"] = ringVolume;
 		settings["mediaVolume"] = mediaVolume;
 		settings["micGain"] = micGain;
+		settings["callVolume"] = callSpeakerVolume;
 		File file1 = SD.open(path, "w");
 		settings.prettyPrintTo(file1);
 		file1.close();
@@ -4008,6 +4009,7 @@ void MAKERphone::loadSettings(bool debug)
 		ringVolume = settings["ringVolume"];
 		mediaVolume = settings["mediaVolume"];
 		micGain = settings["micGain"];
+		callSpeakerVolume = settings["callVolume"];
 	}
 	else
 	{
@@ -4082,6 +4084,7 @@ void MAKERphone::applySettings()
 		{
 			Serial1.print(F("AT+CMIC=0,"));
 			Serial1.println(micGain);
+			Serial1.printf("AT+CLVL=%d\r", mp.callSpeakerVolume*20);
 		}
 		else if (sim_module_version == 0)
 		{
@@ -4089,6 +4092,8 @@ void MAKERphone::applySettings()
 				micGain = 8;
 			Serial1.print(F("AT+CMICGAIN="));
 			Serial1.println(micGain);
+			waitForOK();
+			Serial1.printf("AT+CLVL=%d\r", mp.callSpeakerVolume);
 			waitForOK();
 		}
 
