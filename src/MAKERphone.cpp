@@ -2539,18 +2539,18 @@ void MAKERphone::incomingMessage(String _serialData)
 		tft.print(tempCname);
 	else
 		tft.print(_smsNumber);
-	tft.setCursor(10, 43);
+	tft.setCursor(5, 43);
 	tft.setTextWrap(1);
 	for(int i = 0; i < strlen(masterText);i++)
 	{
 		//if(tft.getCursorY() > 75) break;
-		if(tft.getCursorX() < 10) tft.setCursor(10, tft.getCursorY());
-		if(tft.getCursorX() > 136){
+		if(tft.getCursorX() < 5) tft.setCursor(5, tft.getCursorY());
+		if(tft.getCursorX() > 146){
 			if(masterText[i] != ' ' && masterText[i-1] != ' ') tft.print('-');
 			tft.println();
-			tft.setCursor(10, tft.getCursorY());
+			tft.setCursor(5, tft.getCursorY());
 		}
-		if(tft.getCursorX() == 10 && masterText[i] == ' ') continue;
+		if(tft.getCursorX() == 5 && masterText[i] == ' ') continue;
  		tft.print(masterText[i]);
 		if((tft.getCursorY() > 78 && tft.getCursorX() > 125)|| (masterText[i+1] == '\n' && tft.getCursorY() > 78))
 		{
