@@ -1858,6 +1858,8 @@ void MAKERphone::incomingCall(String _serialData)
 	String buffer = "";
 	uint16_t foo = localBuffer.indexOf("\"+", localBuffer.indexOf(",1,4,0,0")) + 1;
 	number = localBuffer.substring(foo, localBuffer.indexOf("\"", foo));
+	String contact = checkContact(number);
+	int32_t centerCursor = 0;
 	localBuffer = "";
 	bool played = 0;
 	char c;
@@ -1869,8 +1871,35 @@ void MAKERphone::incomingCall(String _serialData)
 	Serial.println("ringing");
 	tft.print("Incoming call");
 	tft.drawBitmap(29 * 2, 24 * 2, call_icon, TFT_DARKGREY, 2);
-	tft.setCursor(28, 28);
-	tft.print(number);
+	if(contact == "")
+	{
+		display.setCursor(0, -10);
+		centerCursor = display.getCursorX();
+		display.print(number);
+		centerCursor = (160 - tft.textWidth(number, 2)) / 2;
+		Serial.println(centerCursor);
+		tft.setCursor(centerCursor, 28);
+		tft.print(number);
+	}
+	else
+	{
+		display.setCursor(0, -10);
+		Serial.print("before: ");
+		Serial.println(display.getCursorX());
+		// display.setTextWrap(0);
+		
+		// for(int i = 0; i < contact.length(); i++)
+		// {
+		// 	display.print(contact[i]);
+		// 	Serial.print("after: ");
+		// 	Serial.println(display.getCursorX());
+		// }
+		centerCursor = (160 - tft.textWidth(contact, 2)) / 2;
+		Serial.println(centerCursor);
+		tft.setCursor(centerCursor, 28);
+		tft.print(contact);
+	}
+
 	tft.fillRect(90, 51 * 2, 70, 13 * 2, TFT_RED);
 	tft.setCursor(105, 109);
 	tft.print("Hang up");
@@ -1961,8 +1990,11 @@ void MAKERphone::incomingCall(String _serialData)
 			tft.print("00:00");
 
 			tft.drawBitmap(29 * 2, 24 * 2, call_icon, TFT_RED, 2);
-			tft.setCursor(28, 28);
-			tft.print(number);
+			tft.setCursor(centerCursor, 28);
+			if(contact == "")
+				tft.print(number);
+			else
+				tft.print(contact);
 			tft.fillRect(0, 51 * 2, 80 * 2, 13 * 2, TFT_RED);
 			tft.setCursor(10, 110);
 			tft.print("Call ended");
@@ -2084,8 +2116,11 @@ void MAKERphone::incomingCall(String _serialData)
 	tft.setTextSize(1);
 	tft.fillRect(0, 0, 160, 128, TFT_WHITE);
 	tft.drawBitmap(29 * scale, 24 * scale, call_icon, TFT_GREEN, scale);
-	tft.setCursor(28, 28);
-	tft.print(number);
+	tft.setCursor(centerCursor, 28);
+	if(contact == "")
+		tft.print(number);
+	else
+		tft.print(contact);
 	tft.fillRect(0, 51 * scale, 80 * scale, 13 * scale, TFT_RED);
 	tft.setCursor(100, 109);
 	tft.print("Hang up");
@@ -2183,8 +2218,11 @@ void MAKERphone::incomingCall(String _serialData)
 					tft.print(temp);
 				}
 				tft.drawBitmap(29 * scale, 24 * scale, call_icon, TFT_RED, scale);
-				tft.setCursor(28, 28);
-				tft.print(number);
+				tft.setCursor(centerCursor, 28);
+				if(contact == "")
+					tft.print(number);
+				else
+					tft.print(contact);
 				tft.fillRect(0, 51 * scale, 80 * scale, 13 * scale, TFT_RED);
 				tft.setCursor(10, 110);
 				tft.print("Call ended");
@@ -2211,8 +2249,11 @@ void MAKERphone::incomingCall(String _serialData)
 				tft.setCursor(10, 9);
 				tft.print("Error");
 				tft.drawBitmap(29 * scale, 24 * scale, call_icon, TFT_RED, scale);
-				tft.setCursor(28, 28);
-				tft.print(number);
+				tft.setCursor(centerCursor, 28);
+				if(contact == "")
+					tft.print(number);
+				else
+					tft.print(contact);
 				tft.fillRect(0, 51 * scale, 80 * scale, 13 * scale, TFT_RED);
 				tft.setCursor(2, 100);
 				tft.print("Invalid number or");
@@ -2258,8 +2299,11 @@ void MAKERphone::incomingCall(String _serialData)
 				tft.print(temp);
 			}
 			tft.drawBitmap(29 * scale, 24 * scale, call_icon, TFT_RED, scale);
-			tft.setCursor(28, 28);
-			tft.print(number);
+			tft.setCursor(centerCursor, 28);
+			if(contact == "")
+				tft.print(number);
+			else
+				tft.print(contact);
 			tft.fillRect(0, 51 * scale, 80 * scale, 13 * scale, TFT_RED);
 			tft.setCursor(10, 110);
 			tft.print("Call ended");
@@ -3911,6 +3955,13 @@ void MAKERphone::saveSettings(bool debug)
 {
 	const char *path = "/.core/settings.json";
 	Serial.println("");
+	if(!SD.exists(path))
+	{
+		if(sim_module_version == 0)
+			micGain = 1;
+		else
+			micGain = 14;
+	}
 	SD.remove(path);
 	jb.clear();
 	JsonObject &settings = jb.createObject();
@@ -6583,34 +6634,6 @@ void MAKERphone::callNumberEmergency(String number)
 			delay(1000);
 			break;
 		}
-		/*
-		if (buttons.released(BTN_UP) && ((micGain < 15 && sim_module_version == 1) || (micGain < 8 && sim_module_version == 0)) && callState == 2)
-		{
-			micGain++;
-			if (sim_module_version == 1)
-				Serial1.printf("AT+CMIC=0,%d\r", micGain);
-			else if (sim_module_version == 0)
-			{
-				String foo = "AT+CMICGAIN=";
-				foo += micGain;
-				Serial1.println(foo);
-				delay(10);
-			}
-		}
-		if (buttons.released(BTN_DOWN) && micGain > 0 && callState == 2)
-		{
-			micGain--;
-			if (sim_module_version == 1)
-				Serial1.printf("AT+CMIC=0,%d\r", micGain);
-			else if (sim_module_version == 0)
-			{
-				String foo = "AT+CMICGAIN=";
-				foo += micGain;
-				Serial1.println(foo);
-				delay(10);
-			}
-		}
-		*/
 		if(buttons.released(BTN_UP) && callSpeakerVolume < 5)
 		{
 			callSpeakerVolume++;
@@ -6618,9 +6641,9 @@ void MAKERphone::callNumberEmergency(String number)
 				Serial1.printf("AT+CLVL=%d\r", callSpeakerVolume*20);
 			else if (sim_module_version == 0)
 				Serial1.printf("AT+CLVL=%d\r", callSpeakerVolume);
-			tft.fillRect(61, 111, 20, 15, TFT_RED);
-			tft.setCursor(62, 109);
-			tft.print(micGain);
+			display.fillRect(56, 111, 20, 15, TFT_RED);
+			display.setCursor(59, 109);
+			display.print(callSpeakerVolume);
 		}
 		if(buttons.released(BTN_DOWN) && callSpeakerVolume > 0)
 		{
@@ -6629,9 +6652,9 @@ void MAKERphone::callNumberEmergency(String number)
 				Serial1.printf("AT+CLVL=%d\r", callSpeakerVolume*20);
 			else if (sim_module_version == 0)
 				Serial1.printf("AT+CLVL=%d\r", callSpeakerVolume);
-			tft.fillRect(61, 111, 20, 15, TFT_RED);
-			tft.setCursor(62, 109);
-			tft.print(micGain);
+			display.fillRect(56, 111, 20, 15, TFT_RED);
+			display.setCursor(59, 109);
+			display.print(callSpeakerVolume);
 		}
 		switch (callState)
 		{
