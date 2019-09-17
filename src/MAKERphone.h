@@ -338,6 +338,7 @@ class MAKERphone:public Buttons, public DateTime
 	bool homeButtonPressed = 0;
 	String checkContact(String contactNumber);
 	void pduDecode(const char* PDU);
+	unsigned long prevKeyMillis = 0;
 
 	int8_t networkRegistered = -1;
 	void networkModuleInit();

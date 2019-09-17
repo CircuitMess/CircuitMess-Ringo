@@ -3117,7 +3117,7 @@ String MAKERphone::textInput(String buffer, int16_t length)
 {
 	int ret = 0;
 	byte key = buttons.getKey(); // Get a key press from the keypad
-
+	
 	if (buttons.released(BTN_FUN_LEFT) && buffer != "")
 	{
 		if (textPointer == buffer.length()){
@@ -3205,7 +3205,6 @@ int MAKERphone::multi_tap(byte key)
 {
 	static boolean upperCase = true;
 	static byte prevKeyPress = NO_KEY, cyclicPtr = 0;
-	static unsigned long prevKeyMillis = 0;
 	static const char multi_tap_mapping[10][map_width] = {
 		{'0', '#', '$', '.', '?', '"', '&'},
 		{'1', '+', '-', '*', '/', '\'', ':'},
@@ -3227,7 +3226,7 @@ int MAKERphone::multi_tap(byte key)
 
 	if (key != NO_KEY) // A key is pressed at this iteration.
 	{
-
+		buttons.update();
 		if (key == 'D' || key == 'A')
 		{
 			prevKeyPress = NO_KEY;
