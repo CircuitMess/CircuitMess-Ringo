@@ -17,7 +17,7 @@ void Buttons::begin() {
 void Buttons::update() {
 	buttonsData = 0;
 	// delay(1);
-	// delayMicroseconds(1000);
+	 delayMicroseconds(1100);
 	// delay(1);
 	ads.readADC_SingleEnded(0);
 /* 	 ads.readADC_SingleEnded(0);
@@ -30,10 +30,10 @@ void Buttons::update() {
 	// delayMicroseconds(1000);
 	joystick_x = ads.readADC_SingleEnded(1);
 	// delay(1);
-	// delayMicroseconds(1000);
+	 delayMicroseconds(1100);
 	joystick_y = ads.readADC_SingleEnded(0);
 	// delay(1);
-	// delayMicroseconds(1000);
+	 delayMicroseconds(1100);
 	button_b = ads.readADC_SingleEnded(2);
 
 	button_a = ads.readADC_SingleEnded(3);
