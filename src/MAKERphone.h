@@ -162,7 +162,7 @@ class MAKERphone:public Buttons, public DateTime
 	void addCall(String number, String contact, uint32_t dateTime, int duration, uint8_t direction);
 	void incomingMessage(String _serialData);
 	bool newMessage = 0;
-	void saveMessage(char* text, String contact, String number, bool isRead, bool direction);
+	void saveMessage(char* text, String contact, String number, bool isRead, bool direction, DateTime time);
 	void checkSim();
 	void enterPin();
 	void enterPUK();

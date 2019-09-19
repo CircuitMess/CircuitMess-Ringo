@@ -2473,7 +2473,7 @@ void MAKERphone::incomingMessage(String _serialData)
 
 			while((temp.indexOf("\r", temp.indexOf("\r", helper + 1) + 1) == -1
 			|| temp.indexOf("\r", helper + 1) == -1 || helper == -1)
-			&& millis() - curr_millis < 25000)
+			&& millis() - curr_millis < 60000)
 			{
 				if(Serial1.available())
 				{
@@ -2555,15 +2555,16 @@ void MAKERphone::incomingMessage(String _serialData)
 			if(messagesSize > 35 - lengthOfSMS)
 				fullStack = 1;
 			String temp = checkContact(_smsNumber);
+			DateTime now = RTC.now();
 			if(temp == "")
 			{
-				saveMessage(masterText, "", _smsNumber, 0, 1);
-				addNotification(2, _smsNumber, RTC.now());
+				saveMessage(masterText, "", _smsNumber, 0, 1, now);
+				addNotification(2, _smsNumber, now);
 			}
 			else
 			{
-				saveMessage(masterText, temp, _smsNumber, 0, 1);
-				addNotification(2, temp, RTC.now());
+				saveMessage(masterText, temp, _smsNumber, 0, 1, now);
+				addNotification(2, temp, now);
 			}
 		}
 	}
@@ -2807,7 +2808,7 @@ void MAKERphone::addCall(String number, String contact, uint32_t dateTime, int d
 	jarr.prettyPrintTo(file1);
 	file1.close();
 }
-void MAKERphone::saveMessage(char* text, String contact, String number, bool isRead, bool direction)
+void MAKERphone::saveMessage(char* text, String contact, String number, bool isRead, bool direction, DateTime time)
 {
 	File file = SD.open("/.core/messages.json", "r");
 	while (!file)
@@ -2849,7 +2850,7 @@ void MAKERphone::saveMessage(char* text, String contact, String number, bool isR
 	new_item["number"] = number;
 	new_item["contact"] = contact;
 	new_item["text"] = text;
-	new_item["dateTime"] = RTC.now().unixtime();
+	new_item["dateTime"] = time.unixtime();
 	new_item["read"] = isRead;
 	new_item["direction"] = direction; //0 - outgoing, 1 - incoming
 
@@ -5887,7 +5888,7 @@ void MAKERphone::pduDecode(const char* PDU)
 		07 - length of SMSC info in octets
 		91 - type of address (91 international)
 		next 6 octets are the service center number
-		04 - first octet of SMS-deliver part
+		04 - PDU type (further parsing needed)
 		0C - address (phone number) length in digits (not octets!)
 		91 - type of address
 		next 12 digits are the phone number
@@ -5907,13 +5908,14 @@ void MAKERphone::pduDecode(const char* PDU)
 
 		06 - number of characters in message
 	 */
+	//07 91 839515001000 60 09 D0 D432BB2C03 00F191909151116080A00500033C03019C61502CE782E55C32582C07AA8362341D0C06AABBEBF4B01C440FCBD3E6324898D43A9353507199843A83A0743B4C2F83DCE5F7591E76A7C7657719D44EBB4169D0B43905C1DFF2FABA0CA2974131986CE6C2819A421708B47CCBD373777A9C6E874173103CBC2ED3DF6D90B0A8154A9F4AD0510882CBD3EBB0BEAE2E83E66510D95DB6BBC3
 	char subcharBuffer[3];
 	memset(subcharBuffer, 0, 3);
 	subchar(PDU, cursor, 2, subcharBuffer);
 	uint8_t SMSC_length = strtol(subcharBuffer, nullptr, 16);
 	cursor+=4; //one octet for SMSC length, one for type-of-address
-	// Serial.print("SMSC length: ");
-	// Serial.println(SMSC_length);
+	Serial.print("SMSC length: ");
+	Serial.println(SMSC_length);
 	if(SMSC_length > 1)
 		SMSC_length--;
 	char serviceNumber[16];
@@ -5928,32 +5930,47 @@ void MAKERphone::pduDecode(const char* PDU)
 		cursor+=2;
 	}
 	subchar(PDU, cursor, 2, subcharBuffer);
-	bool dataHeaderIndicator = bitRead(strtol(subcharBuffer, nullptr, 16), 6);
+	uint8_t PDUType = strtol(subcharBuffer, nullptr, 16);
+	bool dataHeaderIndicator = bitRead(PDUType, 6);
 	cursor+=2; //skip first octet of SMS-DELIVER
 	subchar(PDU, cursor,2, subcharBuffer);
 	uint8_t addressLength = strtol(subcharBuffer, nullptr, 16);
 	if(addressLength % 2 == 1)
 		addressLength++;
-	cursor+=4; //address length and type-of-address
-	// Serial.print("cursor: ");
-	// Serial.println(cursor);
-
+	cursor+=2; //address length and type-of-address
+	subchar(PDU, cursor, 2, subcharBuffer);
+	uint8_t typeOfAddress = strtol(subcharBuffer, nullptr, 16);
+	typeOfAddress = (typeOfAddress >> 4) & 0b00000111;
+	cursor+=2;
 	memset(_smsNumber, 0, 20);
-	strncat(_smsNumber, "+", 1);
-	for(int i = 0; i < addressLength/2; i++)
+
+	if(typeOfAddress != 0b00000101)
 	{
-		subchar(PDU, cursor, 2, subcharBuffer);
-		if(charReverse(subcharBuffer)[1] == 'F') //remove trailing F in case number can't be split in even octets
-			strncat(_smsNumber, &subcharBuffer[0], 1);
-		else
-			strncat(_smsNumber, subcharBuffer, 2);
-		cursor+=2;
+		
+		strncat(_smsNumber, "+", 1);
+		for(int i = 0; i < addressLength/2; i++)
+		{
+			subchar(PDU, cursor, 2, subcharBuffer);
+			if(charReverse(subcharBuffer)[1] == 'F') //remove trailing F in case number can't be split in even octets
+				strncat(_smsNumber, &subcharBuffer[0], 1);
+			else
+				strncat(_smsNumber, subcharBuffer, 2);
+			cursor+=2;
+		}
+	}
+	else
+	{
+		char buffer[(addressLength) + 1];
+		memset(buffer, 0, (addressLength) + 1);
+		subchar(PDU, cursor, (addressLength), buffer);
+		myDecode(buffer, addressLength/2, _smsNumber, 0);
+		cursor+=addressLength;
 	}
 	cursor+=2;//PID
 
 	bool codingScheme = 0; // 0 - GSM 7 bit, 1 - UCS2
 	subchar(PDU, cursor, 2, subcharBuffer);
-	if(strtol(subcharBuffer, nullptr, 16) != 0)
+	if(strtol(subcharBuffer, nullptr, 16) != 0 && strtol(subcharBuffer, nullptr, 16) != 0xF1)
 		codingScheme = 1;
 	cursor+=2;
 	subchar(PDU, cursor, 2, subcharBuffer);
