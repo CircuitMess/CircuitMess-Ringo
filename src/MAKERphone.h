@@ -129,7 +129,7 @@ extern HardwareSerial Serial1;
 
 #define FIRMWARE_VERSION_ADDRESS 0
 #define GSM_MODULE_ADDRESS 200
-#define smsNumber 22
+#define SMS_LIMIT 30
 
 
 class MAKERphone:public Buttons, public DateTime

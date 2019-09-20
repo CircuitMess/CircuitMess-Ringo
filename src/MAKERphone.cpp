@@ -2018,7 +2018,7 @@ void MAKERphone::incomingCall(String _serialData)
 			// update();
 			updateTimeRTC();
 			if (SDinsertedFlag)
-				addCall(number, checkContact(number), RTC.now().unixtime(), tmp_time, 0);
+				addCall(number, checkContact(number), RTC.now().unixtime(), 0, 0);
 			if(localBuffer.indexOf(String(String(callIdNumber) + ",1,6,0,0")) != -1)
 			{
 				String temp = checkContact(number);
@@ -2196,7 +2196,10 @@ void MAKERphone::incomingCall(String _serialData)
 				tft.fillRect(0, 0, 160, 128, TFT_WHITE);
 				tft.setCursor(55, 9);
 				if (timeOffset == 0)
+				{
 					tft.print("00:00");
+					tmp_time = 0;
+				}
 				else
 				{
 					temp = "";
@@ -2277,7 +2280,10 @@ void MAKERphone::incomingCall(String _serialData)
 			tft.fillRect(0, 0, 160, 128, TFT_WHITE);
 			tft.setCursor(55, 9);
 			if (timeOffset == 0)
+			{
 				tft.print("00:00");
+				tmp_time = 0;
+			}
 			else
 			{
 				temp = "";
@@ -2552,7 +2558,7 @@ void MAKERphone::incomingMessage(String _serialData)
 					messagesSize+=strlen(jarr[i]["text"].as<char*>())/160;
 			}
 			Serial.println(messagesSize);
-			if(messagesSize > 35 - lengthOfSMS)
+			if(messagesSize > SMS_LIMIT - lengthOfSMS)
 				fullStack = 1;
 			String temp = checkContact(_smsNumber);
 			DateTime now = RTC.now();
@@ -2825,10 +2831,10 @@ void MAKERphone::saveMessage(char* text, String contact, String number, bool isR
 	uint8_t thisMessageSize = 1;
 	if(strlen(text) > 160)
 		thisMessageSize+=strlen(text)/160;
-	if(messagesSize > 35 - thisMessageSize)
+	if(messagesSize > SMS_LIMIT - thisMessageSize)
 	{
 		Serial.println("SMS limit reached");
-		while(messagesSize > 35 - thisMessageSize)
+		while(messagesSize > SMS_LIMIT - thisMessageSize)
 		{
 			messages.remove(0);
 			messagesSize = messages.size();
@@ -3225,9 +3231,9 @@ int MAKERphone::multi_tap(byte key)
 		return 0;
 	}
 
-	if (key != NO_KEY) // A key is pressed at this iteration.
+	if (key != NO_KEY && key != 'B' && key != 'C') // A key is pressed at this iteration.
 	{
-		buttons.update();
+		// buttons.update();
 		if (key == 'D' || key == 'A')
 		{
 			prevKeyPress = NO_KEY;
@@ -6509,7 +6515,10 @@ void MAKERphone::callNumberEmergency(String number)
 				display.fillScreen(TFT_WHITE);
 				display.setCursor(32, 9);
 				if (timeOffset == 0)
+				{
 					display.printCenter("00:00");
+					tmp_time = 0;
+				}
 				else
 				{
 					temp = "";
@@ -6604,7 +6613,10 @@ void MAKERphone::callNumberEmergency(String number)
 			display.fillScreen(TFT_WHITE);
 			display.setCursor(32, 9);
 			if (timeOffset == 0)
+			{
 				display.printCenter("00:00");
+				tmp_time = 0;
+			}
 			else
 			{
 				temp = "";
