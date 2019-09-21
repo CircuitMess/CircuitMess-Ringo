@@ -4564,6 +4564,7 @@ void MAKERphone::homePopup(bool animation)
 		}
 	}
 	uint8_t _tempFont = display.getTextFont();
+	GFXfont *_tempFreeFont = display.getFreeFont();
 	uint16_t _tempColor = display.getTextColor();
 	uint8_t _tempSize = display.getTextSize();
 	
@@ -5144,7 +5145,10 @@ void MAKERphone::homePopup(bool animation)
 	// 		oscs[i]->play();
 	// }
 	display.setTextColor(_tempColor);
-	display.setTextFont(_tempFont);
+	if(_tempFreeFont != NULL)
+		display.setFreeFont(_tempFreeFont);
+	else
+		display.setTextFont(_tempFont);
 	display.setTextSize(_tempSize);
 	dataRefreshFlag = 0;
 }

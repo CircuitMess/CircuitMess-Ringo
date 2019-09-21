@@ -663,6 +663,7 @@ class TFT_eSPI : public Print {
   void printCenter(float text);
   void printCenter(char text);
   uint8_t getTextFont() { return textfont;}
+  GFXfont *getFreeFont() {return gfxFont;}
   uint16_t getTextColor() { return textcolor;}
   uint8_t getTextSize() { return textsize;}
 
