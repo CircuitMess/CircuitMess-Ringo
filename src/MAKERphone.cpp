@@ -30,6 +30,8 @@ boolean btnHeld;
 boolean btnHeldField[10];
 volatile uint32_t measuringCounter = 0;
 volatile uint32_t _timesMeasured = 0;
+int16_t offset1Value;
+int16_t offset2Value;
 bool clockFallback = 1;
 volatile bool chargeDuringADCRead = 0;
 uint32_t simBusyCounter = 0;
@@ -88,6 +90,7 @@ void ADCmeasuring(void *parameters)
 			if (!chargeDuringADCRead)
 			{
 				voltage = ((voltageSum) / (6000.0) + 158.0235417);
+				voltage = (voltage - offset2Value)*400/(offset1Value - offset2Value) + 3600; //2-point ADC correction
 				voltageSum = 0;
 				voltageSample = 0;
 				_timesMeasured++;
@@ -134,6 +137,37 @@ void MAKERphone::begin(bool splash)
 	Serial.println(vRef);
 	esp_adc_cal_characterize(ADC_UNIT_1, ADC_ATTEN_11db, ADC_WIDTH_BIT_12, vRef, adc_chars);
 
+	if(REG_GET_FIELD(EFUSE_BLK0_RDATA3_REG, EFUSE_RD_BLK3_PART_RESERVE) == 1) //calibrated?
+	{
+		Serial.println("Calibrated!");
+		int offset1 = REG_GET_FIELD(EFUSE_BLK3_RDATA3_REG, EFUSE_RD_ADC1_TP_HIGH);
+		Serial.print("Reading from efuse ADC1HIGH: ");
+		Serial.println(offset1, BIN);
+		int offset2 = REG_GET_FIELD(EFUSE_BLK3_RDATA3_REG, EFUSE_RD_ADC2_TP_HIGH);
+		Serial.print("Reading from efuse ADC1LOW: ");
+		Serial.println(offset2, BIN);
+
+		uint16_t offset1PlusMinus = offset1 & 0x100;
+		Serial.println(offset1PlusMinus);
+		uint16_t offset2PlusMinus = offset2 & 0x100;
+		Serial.println(offset2PlusMinus);
+		offset1Value = offset1 & 0xFF;
+		if(offset1PlusMinus == 0)
+			offset1Value = 4000 + offset1Value*3;
+		else
+			offset1Value = 4000 - offset1Value*3;
+		offset2Value = offset2 & 0xFF;
+		if(offset2PlusMinus == 0)
+			offset2Value = 3600 + offset2Value*3;
+		else
+			offset2Value = 3600 - offset2Value*3;
+		Serial.print("offset value 1:");
+		Serial.println(offset1Value);
+		Serial.print("offset value 2:");
+		Serial.println(offset2Value);
+	}
+	else
+		Serial.println("Not calibrated!");
 	//Serial1.println(F("AT+CFUN=1,1"));
 	//Serial1.println("AT+CMEE=2");
 	//Serial1.println(F("AT+CPIN?"));
@@ -495,6 +529,7 @@ void MAKERphone::begin(bool splash)
 		voltageSample++;
 	}
 	voltage = ((voltageSum )/(6000.0) + 158.0235417);
+	voltage = (voltage - offset2Value)*400/(offset1Value - offset2Value) + 3600; //2-point ADC correction
 	voltageSum = 0;
 	voltageSample = 0;
 	Serial.println(voltage);
@@ -1187,6 +1222,7 @@ void MAKERphone::sleep()
 			voltageSample++;
 		}
 		voltage = ((voltageSum) / (6000.0) + 158.0235417);
+		voltage = (voltage - offset2Value)*400/(offset1Value - offset2Value) + 3600; //2-point ADC correction
 		voltageSum = 0;
 		voltageSample = 0;
 		Serial.println(batteryVoltage);
