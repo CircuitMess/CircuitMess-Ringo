@@ -329,7 +329,7 @@ class MAKERphone:public Buttons, public DateTime
 	void deallocateAudio();
 	void reallocateAudio();
 	bool inCall = 0;
-	uint8_t micGain = 15;
+	uint8_t micGain = 14;
 	uint16_t simVoltage = 3900;
 	uint8_t sim_module_version = 255; // 0 - SIM7600, 1 - SIM800, 255 - no module
 	uint8_t oscillatorVolumeList[15] = {0,33,37,47,57,62,65,69,72,75,79,84,90,95,100};

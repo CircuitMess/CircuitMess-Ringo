@@ -390,7 +390,7 @@ void MAKERphone::begin(bool splash)
 	{
 		Serial1.begin(9600, SERIAL_8N1, 17, 16);
 		pinMode(17, INPUT_PULLUP);
-		micGain = 15;
+		micGain = 14;
 	}
 	else if (sim_module_version == 0)
 	{
@@ -517,6 +517,17 @@ void MAKERphone::begin(bool splash)
 		loadNotifications();
 		ringtone = new MPTrack((char *)ringtone_path.c_str());
 	}
+	else
+	{
+		if(sim_module_version == 0)
+			micGain = 1;
+		else
+		{
+			micGain = 14;
+		}
+		
+	}
+	
 	applySettings();
 	checkAlarms();
 
@@ -2506,13 +2517,19 @@ void MAKERphone::incomingMessage(String _serialData)
 					strcpy(&masterText[(_currentConcatSMS - 1)*153], _smsText);
 				// for(int i = 0; i < sizeof(masterText); i++)
 				// 	Serial.println((uint8_t)masterText[i]);
+				_concatSMSCounter--;
 			}
-			Serial.println("minus");
-			delay(5);
-			_concatSMSCounter--;
+			else
+				break;
+			
 		}
 	}
-	
+	if(_concatSMSCounter > 1)
+	{
+		_currentConcatSMS = 0;
+		_concatSMSCounter = 0;
+		return;
+	}
 	Serial.print("final text: ");
 	Serial.println(masterText);
 	_currentConcatSMS = 0;
@@ -4027,47 +4044,55 @@ void MAKERphone::loadSettings(bool debug)
 		SD.mkdir("/.core");
 	const char *path = "/.core/settings.json";
 	Serial.println("");
-	File file = SD.open(path);
-	jb.clear();
-	JsonObject &settings = jb.parseObject(file);
-	file.close();
-
-	if (settings.success())
+	if(SD.exists(path))
 	{
-		if (debug)
+		File file = SD.open(path);
+		jb.clear();
+		JsonObject &settings = jb.parseObject(file);
+		file.close();
+
+		if (settings.success())
 		{
-			// Serial.print("wifi: ");
-			// Serial.println(settings["wifi"].as<bool>());
-			// Serial.print("bluetooth: ");
-			// Serial.println(settings["bluetooth"].as<bool>());
-			Serial.print("airplane_mode: ");
-			Serial.println(settings["airplane_mode"].as<bool>());
-			Serial.print("brightness: ");
-			Serial.println(settings["brightness"].as<int>());
-			Serial.print("sleep_time: ");
-			Serial.println(settings["sleep_time"].as<int>());
-			Serial.print("background_color: ");
-			Serial.println(settings["background_color"].as<int>());
-			Serial.print("notification: ");
-			Serial.println(settings["notification"].as<int>());
-			Serial.print("ringtone: ");
-			Serial.println(settings["ringtone"].as<char *>());
+			if (debug)
+			{
+				// Serial.print("wifi: ");
+				// Serial.println(settings["wifi"].as<bool>());
+				// Serial.print("bluetooth: ");
+				// Serial.println(settings["bluetooth"].as<bool>());
+				Serial.print("airplane_mode: ");
+				Serial.println(settings["airplane_mode"].as<bool>());
+				Serial.print("brightness: ");
+				Serial.println(settings["brightness"].as<int>());
+				Serial.print("sleep_time: ");
+				Serial.println(settings["sleep_time"].as<int>());
+				Serial.print("background_color: ");
+				Serial.println(settings["background_color"].as<int>());
+				Serial.print("notification: ");
+				Serial.println(settings["notification"].as<int>());
+				Serial.print("ringtone: ");
+				Serial.println(settings["ringtone"].as<char *>());
+			}
+			// wifi = settings["wifi"];
+			// bt = settings["bluetooth"];
+			airplaneMode = settings["airplane_mode"];
+			brightness = settings["brightness"];
+			sleepTime = settings["sleep_time"];
+			backgroundIndex = settings["background_color"];
+			notification = settings["notification"];
+			ringtone_path = String(settings["ringtone"].as<char *>());
+			ringVolume = settings["ringVolume"];
+			mediaVolume = settings["mediaVolume"];
+			micGain = settings["micGain"];
+			callSpeakerVolume = settings["callVolume"];
 		}
-		// wifi = settings["wifi"];
-		// bt = settings["bluetooth"];
-		airplaneMode = settings["airplane_mode"];
-		brightness = settings["brightness"];
-		sleepTime = settings["sleep_time"];
-		backgroundIndex = settings["background_color"];
-		notification = settings["notification"];
-		ringtone_path = String(settings["ringtone"].as<char *>());
-		ringVolume = settings["ringVolume"];
-		mediaVolume = settings["mediaVolume"];
-		micGain = settings["micGain"];
-		callSpeakerVolume = settings["callVolume"];
 	}
 	else
 	{
+		if(sim_module_version == 1)
+			micGain = 14;
+		else
+			micGain = 1;
+		
 		Serial.println("Error loading new settings");
 		saveSettings();
 	}
