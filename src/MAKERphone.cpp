@@ -41,12 +41,12 @@ void Task1code(void *pvParameters)
 }
 String MAKERphone::waitForOK()
 {
-	char buffer[200];
+	char buffer[400];
 	memset(buffer, 0, sizeof(buffer));
 	char c;
 	uint32_t temp = millis();
 	while (strstr(buffer, "OK") == nullptr && millis() - temp < 10000)
-		if (Serial1.available())
+		if (Serial1.available() && strlen(buffer) < 400)
 		{
 			c = Serial1.read();
 			strncat(buffer, &c, 1);
@@ -1196,16 +1196,24 @@ void MAKERphone::sleep()
 			digitalWrite(SIM800_DTR, 0);
 			delay(100);
 			Serial1.end();
-
+			delay(100);
+			// Serial.println("HERE");
+			// delay(5);
 			if (sim_module_version == 1)
 				Serial1.begin(9600, SERIAL_8N1, 17, 16);
 			else
 				Serial1.begin(115200, SERIAL_8N1, 17, 16);
+			// Serial.println("HERE");
+			// delay(5);
 			while(Serial1.available())
 				Serial.print(Serial1.read());
+
+			// Serial.println("HERE");
+			// delay(5);
 			uint32_t cregMillis = millis();
 			String cregString = "";
 			int8_t tempReg = -1;
+			
 			if(sim_module_version == 1)
 			{
 				Serial1.println("AT+CCALR?");
@@ -1979,7 +1987,7 @@ void MAKERphone::incomingCall(String _serialData)
 		{
 			c = (char)Serial1.read();
 			buffer+=c;
-			Serial.println(buffer);
+			// Serial.println(buffer);
 		}
 		if(buffer.indexOf(String("CLCC: " + String(callIdNumber))) != -1 &&
 		buffer.indexOf("\r", buffer.indexOf(String("CLCC: " + String(callIdNumber)))) != -1)
@@ -1989,7 +1997,8 @@ void MAKERphone::incomingCall(String _serialData)
 		}
 		if (buttons.released(BTN_FUN_LEFT))
 			break;
-		if(buttons.released(BTN_FUN_RIGHT) || localBuffer.indexOf(String(String(callIdNumber) + ",1,6,0,0")) != -1)
+		if(buttons.released(BTN_FUN_RIGHT) || localBuffer.indexOf(String(String(callIdNumber) + ",1,6,0,0")) != -1
+		|| digitalRead(SIM_INT))
 		{
 			if (SDinsertedFlag && SD.exists(ringtone_path))
 			{
@@ -2013,11 +2022,19 @@ void MAKERphone::incomingCall(String _serialData)
 			if(localBuffer.indexOf(String(String(callIdNumber) + ",1,6,0,0")) == -1)
 			{
 				Serial1.println("ATH");
-				buffer = waitForOK();
-				Serial.println(buffer);
+				// buffer = waitForOK();
+				// Serial.println(buffer);
 				while (!digitalRead(SIM_INT))
-					if (Serial1.available())
+				{
+					while(Serial1.available())
+					{
+						if(digitalRead(SIM_INT))
+							break;
 						Serial1.read();
+					}
+					Serial1.println("ATH");
+					delay(200);
+				}
 				// while (buffer.indexOf(",1,6,") == -1 && millis() - curr_millis < 2000){
 				// 	Serial1.println("ATH");
 				// 	buffer = waitForOK();
@@ -2030,14 +2047,11 @@ void MAKERphone::incomingCall(String _serialData)
 			updateTimeRTC();
 			if (SDinsertedFlag)
 				addCall(number, checkContact(number), RTC.now().unixtime(), 0, 0);
-			if(localBuffer.indexOf(String(String(callIdNumber) + ",1,6,0,0")) != -1)
-			{
-				String temp = checkContact(number);
-				if (temp == "")
-					addNotification(1, number, RTC.now());
-				else
-					addNotification(1, temp, RTC.now());
-			}
+			String temp = checkContact(number);
+			if (temp == "")
+				addNotification(1, number, RTC.now());
+			else
+				addNotification(1, temp, RTC.now());
 			// delay(1000);
 			goOut = 1;
 			break;
@@ -2057,7 +2071,7 @@ void MAKERphone::incomingCall(String _serialData)
 			}
 			notification = tempNotification;
 		}
-
+	
 		else if (!played)
 		{
 			if (!addTrack(ringtone))
@@ -2106,16 +2120,27 @@ void MAKERphone::incomingCall(String _serialData)
 		buttons.update();
 		return;
 	}
-
+	Serial.print("interrupt: ");
+	Serial.println(digitalRead(SIM_INT));
 	Serial1.println("ATA");
-	localBuffer = waitForOK();
 	long long curr_millis = millis();
-	while (localBuffer.indexOf(String(String(callIdNumber) + ",1,0,0,0")) == -1 && millis() - curr_millis < 2000){
+	while (!digitalRead(SIM_INT) && millis() - curr_millis < 2000){
 		Serial1.println("ATA");
-		localBuffer = waitForOK();
-		Serial.println(localBuffer);
+		// localBuffer = waitForOK();
+		// Serial.println(localBuffer);
 		delay(200);
 	}
+	delay(1000);
+	// while (!digitalRead(SIM_INT))
+	// {
+	// 	if (Serial1.available())
+	// 		Serial1.read();
+	// 	Serial1.println("ATA");
+	// 	delay(100);
+	// }
+	Serial.print("interrupt: ");
+	Serial.println(digitalRead(SIM_INT));
+	// delay(2000);
 	tft.setTextColor(TFT_BLACK);
 	bool firstPass = 1;
 	uint32_t timeOffset = 0;
@@ -2143,20 +2168,33 @@ void MAKERphone::incomingCall(String _serialData)
 	int8_t written = -1;
 	uint16_t prevTime = 0;
 	// localBuffer = "";
+	while(Serial1.available())
+		Serial1.read();
 	if (sim_module_version == 0)
 	{
 		Serial1.println("AT+CECH=0x0000");
 		Serial.println(waitForOK());
 	}
+	Serial1.println("AT+CLCC");
+	buffer = waitForOK();
+	// uint32_t statusCheckMillis = millis();
 	while (1)
 	{
 		if (Serial1.available())
 		{
 			c = Serial1.read();
 			buffer += c;
-			Serial.println("----------");
-			Serial.println(buffer);
+			// Serial.println("----------");
+			// Serial.println(buffer);
 		}
+		// else
+		// {
+		// 	if(millis() - statusCheckMillis >= 2000)
+		// 	{
+		// 		statusCheckMillis = millis();
+		// 		Serial1.println("AT+CLCC");
+		// 	}
+		// }
 		if(buffer.indexOf(String("CLCC: " + String(callIdNumber))) != -1 &&
 		buffer.indexOf("\r", buffer.indexOf(String("CLCC: " + String(callIdNumber)))) != -1)
 		{
@@ -2254,7 +2292,7 @@ void MAKERphone::incomingCall(String _serialData)
 				break;
 			}
 		}
-
+		
 		else if(localBuffer.indexOf(String("CLCC: " + String(callIdNumber))) == -1)
 		{
 			if (localBuffer.indexOf("ERROR") != -1)
@@ -2282,8 +2320,19 @@ void MAKERphone::incomingCall(String _serialData)
 		{
 			Serial.println("B PRESSED");
 			Serial1.println("ATH");
-			buffer = waitForOK();
-			Serial.println(buffer);
+			// buffer = waitForOK();
+			// Serial.println(buffer);
+			while (!digitalRead(SIM_INT))
+			{
+				while(Serial1.available())
+				{
+					if(digitalRead(SIM_INT))
+						break;
+					Serial1.read();
+				}
+				Serial1.println("ATH");
+				delay(200);
+			}
 			// long long curr_millis = millis();
 			// while (Serial1.readString().indexOf(",1,6,") == -1 && millis() - curr_millis < 2000){
 			// 	Serial1.println("ATH");
@@ -2361,7 +2410,6 @@ void MAKERphone::incomingCall(String _serialData)
 			tft.setCursor(59, 109);
 			tft.print(callSpeakerVolume);
 		}
-
 		tmp_time = int((millis() - timeOffset) / 1000);
 		for (int i = 0; i < 12; i++)
 		{
@@ -2386,6 +2434,7 @@ void MAKERphone::incomingCall(String _serialData)
 	}
 	digitalWrite(soundSwitchPin, 0);
 	osc->setVolume(oscillatorVolumeList[ringVolume]);
+	sleepTimer = millis();
 	if(!inHomePopup)
 	{
 		for(int i = 0; i < 4; i++)
@@ -2629,6 +2678,7 @@ void MAKERphone::incomingMessage(String _serialData)
 	// tft.print(text);
 	tft.setCursor(3, 110);
 	tft.print("Press \"A\" to continue");
+	sleepTimer = millis();
 	while (!buttons.released(BTN_A))
 	{
 		updateNotificationSound();
