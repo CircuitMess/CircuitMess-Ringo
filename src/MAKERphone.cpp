@@ -1926,11 +1926,9 @@ void MAKERphone::incomingCall(String _serialData)
 	Serial.println("ringing");
 	tft.print("Incoming call");
 	tft.drawBitmap(29 * 2, 24 * 2, call_icon, TFT_DARKGREY, 2);
+	FastLED.clear(1);
 	if(contact == "")
 	{
-		display.setCursor(0, -10);
-		centerCursor = display.getCursorX();
-		display.print(number);
 		centerCursor = (160 - tft.textWidth(number, 2)) / 2;
 		Serial.println(centerCursor);
 		tft.setCursor(centerCursor, 28);
@@ -2492,6 +2490,8 @@ void MAKERphone::incomingMessage(String _serialData)
 {
 	Serial.println("incoming message");
 	Serial.println(_serialData);
+	FastLED.clear(1);
+
 	int32_t helper = 0;
 	// helper = _serialData.indexOf("\"", _serialData.indexOf("+CMT:"));
 	// String number = _serialData.substring(helper + 1, _serialData.indexOf("\"", helper+1));
@@ -2978,7 +2978,9 @@ void MAKERphone::checkSim()
 	input = waitForOK();
 	Serial.println(input);
 	uint32_t timeoutMillis = millis();
-	while (input.indexOf("READY", input.indexOf("+CPIN:")) == -1)
+	while (input.indexOf("READY", input.indexOf("+CPIN:")) == -1
+	&& input.indexOf("SIM PIN", input.indexOf("+CPIN:")) == -1
+	&& input.indexOf("SIM PUK", input.indexOf("+CPIN:")) == -1)
 	{
 		if(millis() - timeoutMillis >= 2500)
 		{
@@ -3017,6 +3019,7 @@ void MAKERphone::checkSim()
 }
 void MAKERphone::enterPin()
 {
+	shutdownPopupEnable(1);
 	char key = NO_KEY;
 	String pinBuffer = "";
 	String reply = "";
@@ -3095,13 +3098,14 @@ void MAKERphone::enterPin()
 				}
 			}
 		}
-		if (buttons.released(BTN_B)) //sleeps
-			sleep();
+		sleepTimer = millis();
 		update();
 	}
+	shutdownPopupEnable(0);
 }
 void MAKERphone::enterPUK()
 {
+	shutdownPopupEnable(1);
 	char key = NO_KEY;
 	String pukBuffer = "";
 	String reply = "";
@@ -3113,8 +3117,17 @@ void MAKERphone::enterPUK()
 		Serial1.println("AT+SPIC");
 		reply = Serial1.readString();
 	}
-	uint8_t foo = reply.indexOf(",", reply.indexOf("+SPIC:")) + 3;
-	timesRemaining = reply.substring(foo, reply.indexOf(",", foo + 1)).toInt();
+	uint8_t foo = 0;
+	if(sim_module_version == 1)
+	{
+		foo = reply.indexOf(",", reply.indexOf("+SPIC:")) + 3;
+		timesRemaining = reply.substring(foo, reply.indexOf(",", foo + 1)).toInt();
+	}
+	else if(sim_module_version == 0)
+	{
+		foo = reply.indexOf(",", reply.indexOf("+SPIC:")) + 1;
+		timesRemaining = reply.substring(foo, reply.indexOf(",", foo)).toInt();
+	}
 	Serial.println(reply);
 	Serial.println(reply.substring(foo));
 	delay(5);
@@ -3152,16 +3165,28 @@ void MAKERphone::enterPUK()
 			Serial1.print(F("AT+CPIN=\""));
 			Serial1.print(pukBuffer);
 			Serial1.println("\", \"0000\"");
-			while (!Serial1.available())
-				;
-			while (reply.indexOf("+CPIN: READY") == -1 && reply.indexOf("ERROR") == -1)
-				reply = Serial1.readString();
-			Serial.println(reply);
-			delay(5);
+			uint32_t timeoutMillis = millis();
+			bool goOut = 0;
+			while(!goOut)
+			{
+				while (reply.indexOf("+CPIN: READY") == -1 && reply.indexOf("ERROR") == -1
+				&& reply.indexOf("AT+CPIN=") == -1 && reply.indexOf("OK", reply.indexOf("AT+CPIN")) == -1
+				&& millis() - timeoutMillis < 3000)
+				{
+					reply = Serial1.readString();
+					Serial.println(reply);
+				}
+				if(reply.indexOf("+CPIN: READY") != -1 || reply.indexOf("ERROR") != -1
+				|| (reply.indexOf("AT+CPIN=") != -1 && reply.indexOf("OK", reply.indexOf("AT+CPIN")) != -1))
+					goOut = 1;
+				else
+					timeoutMillis = millis();
+			}
 			display.fillScreen(backgroundColors[backgroundIndex]);
 			display.setCursor(28, 52);
 			display.setTextFont(2);
-			if (reply.indexOf("+CPIN: READY") != -1)
+			if (reply.indexOf("+CPIN: READY") != -1
+			|| (reply.indexOf("AT+CPIN=") != -1 && reply.indexOf("OK", reply.indexOf("AT+CPIN")) != -1))
 			{
 				display.printCenter("PUK OK :)");
 				while (!update())
@@ -3218,10 +3243,11 @@ void MAKERphone::enterPUK()
 				delay(2000);
 			}
 		}
-		if (buttons.released(BTN_B)) //sleeps
-			sleep();
+		sleepTimer = millis();
 		update();
 	}
+	shutdownPopupEnable(0);
+
 }
 String MAKERphone::textInput(String buffer, int16_t length)
 {
@@ -5439,7 +5465,7 @@ void MAKERphone::notificationView()
 
 		uint8_t temp = 0;
 		bool anyNotifications = 0;
-		for (int i = 0; i < sizeof(notificationTypeList); i++)
+		for (int i = sizeof(notificationTypeList); i > -1; i--)
 		{
 			if (notificationTypeList[i] != 0)
 			{
