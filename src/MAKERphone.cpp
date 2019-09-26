@@ -30,8 +30,8 @@ boolean btnHeld;
 boolean btnHeldField[10];
 volatile uint32_t measuringCounter = 0;
 volatile uint32_t _timesMeasured = 0;
-int16_t offset1Value;
-int16_t offset2Value;
+int16_t offset1Value = 4000;
+int16_t offset2Value = 3600;
 bool clockFallback = 1;
 volatile bool chargeDuringADCRead = 0;
 uint32_t simBusyCounter = 0;
@@ -454,6 +454,8 @@ void MAKERphone::begin(bool splash)
 		checkSim();
 		if(sim_module_version == 1)
 		{
+			offset1Value = 4000;
+			offset2Value = 3600;
 			Serial1.println("AT+CCALR?");
 			uint32_t cregMillis = millis();
 			String cregString = "";
