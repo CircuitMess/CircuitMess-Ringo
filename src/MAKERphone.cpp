@@ -23,16 +23,12 @@ extern MAKERphone mp;
 //audio refresh task
 TaskHandle_t Task1;
 TaskHandle_t MeasuringTask;
-volatile uint32_t voltageSum = 0;
 volatile uint32_t voltageSample = 0;
 volatile double voltage = 3700;
 boolean btnHeld;
 boolean btnHeldField[10];
-volatile uint32_t measuringCounter = 0;
 volatile uint32_t _timesMeasured = 0;
-int16_t offset1Value = 4000;
-int16_t offset2Value = 3600;
-bool clockFallback = 1;
+uint16_t offset1Value = 1900;
 volatile bool chargeDuringADCRead = 0;
 uint32_t simBusyCounter = 0;
 static esp_adc_cal_characteristics_t *adc_chars;
@@ -67,36 +63,15 @@ void ADCmeasuring(void *parameters)
 	{
 		if (digitalRead(CHRG_INT)) //not charging
 		{
-			for (measuringCounter = 0; measuringCounter < 6000; measuringCounter++)
+			
+			voltage = ADCrawRead();
+			if(digitalRead(CHRG_INT))
 			{
-				if (!digitalRead(CHRG_INT)) //charging
-				{
-					voltageSum = 0;
-					voltageSample = 0;
-					chargeDuringADCRead = 1;
-					break;
-				}
-				else
-				{
-					chargeDuringADCRead = 0;
-					vTaskDelay(1);
-					voltageSum += esp_adc_cal_raw_to_voltage(adc1_get_raw(ADC1_CHANNEL_7), adc_chars) * 2;
-					// uint32_t reading =  adc1_get_raw(ADC1_CHANNEL_7)*2;
-					// uint32_t tempVoltage = esp_adc_cal_raw_to_voltage(reading, adc_chars);
-					// voltageSum += tempVoltage;
-					voltageSample++;
-				}
-			}
-			if (!chargeDuringADCRead)
-			{
-				voltage = ((voltageSum) / (6000.0) + 158.0235417);
-				voltage = (voltage - offset2Value)*400/(offset1Value - offset2Value) + 3600; //2-point ADC correction
-				voltageSum = 0;
-				voltageSample = 0;
-				_timesMeasured++;
+				voltage*=(float)(3600.0/offset1Value);
+				vTaskDelay(1000);
 			}
 			else
-				chargeDuringADCRead = 0;
+				vTaskDelay(1);
 		}
 		else
 		{
@@ -105,7 +80,32 @@ void ADCmeasuring(void *parameters)
 		}
 	}
 }
-
+uint32_t ADCrawRead(void)
+{
+	uint32_t voltagesum = 0;
+	for (uint32_t measuringCounter = 0; measuringCounter < 100; measuringCounter++)
+	{
+		vTaskDelay(10);
+		voltagesum += (adc1_get_raw(ADC1_CHANNEL_7));
+		if (!digitalRead(CHRG_INT)) //charging
+		{
+			voltageSample = 0;
+			chargeDuringADCRead = 1;
+			break;
+		}
+		voltageSample++;
+	}
+	if(digitalRead(CHRG_INT)) //not charging
+	{
+		double _voltage = ((voltagesum) / 100);
+		voltageSample = 0;
+		_timesMeasured++;
+		
+		return _voltage;
+	}
+	else
+		return voltage;
+}
 //core
 void MAKERphone::begin(bool splash)
 {
@@ -125,52 +125,39 @@ void MAKERphone::begin(bool splash)
 	FastLED.addLeds<NEOPIXEL, PIXELPIN>(leds, 8);
 
 	adc_chars = (esp_adc_cal_characteristics_t *)calloc(1, sizeof(esp_adc_cal_characteristics_t));
-	int vRef = REG_GET_FIELD(EFUSE_BLK0_RDATA4_REG, EFUSE_RD_ADC_VREF);
+	// int vRef = REG_GET_FIELD(EFUSE_BLK0_RDATA4_REG, EFUSE_RD_ADC_VREF);
 
-	if (vRef & 0x10)
-		vRef = -(vRef & 0x0F);
-	else
-		vRef = (vRef & 0x0F);
-	vRef *= 7;
-	vRef += 1100;
-	Serial.print("Vref: ");
-	Serial.println(vRef);
-	esp_adc_cal_characterize(ADC_UNIT_1, ADC_ATTEN_11db, ADC_WIDTH_BIT_12, vRef, adc_chars);
+	// if (vRef & 0x10)
+	// 	vRef = -(vRef & 0x0F);
+	// else
+	// 	vRef = (vRef & 0x0F);
+	// vRef *= 7;
+	// vRef += 1100;
+	// Serial.print("Vref: ");
+	// Serial.println(vRef);
+	// esp_adc_cal_characterize(ADC_UNIT_1, ADC_ATTEN_11db, ADC_WIDTH_BIT_12, 1100, adc_chars);
+	adc1_config_channel_atten(ADC1_CHANNEL_7, ADC_ATTEN_11db);
+	adc1_config_width(ADC_WIDTH_BIT_12);
 
 	if(REG_GET_FIELD(EFUSE_BLK0_RDATA3_REG, EFUSE_RD_BLK3_PART_RESERVE) == 1) //calibrated?
 	{
 		Serial.println("Calibrated!");
-		int offset1 = REG_GET_FIELD(EFUSE_BLK3_RDATA3_REG, EFUSE_RD_ADC1_TP_HIGH);
-		Serial.print("Reading from efuse ADC1HIGH: ");
-		Serial.println(offset1, BIN);
-		int offset2 = REG_GET_FIELD(EFUSE_BLK3_RDATA3_REG, EFUSE_RD_ADC2_TP_HIGH);
-		Serial.print("Reading from efuse ADC1LOW: ");
-		Serial.println(offset2, BIN);
-
-		uint16_t offset1PlusMinus = offset1 & 0x100;
-		Serial.println(offset1PlusMinus);
-		uint16_t offset2PlusMinus = offset2 & 0x100;
-		Serial.println(offset2PlusMinus);
-		offset1Value = offset1 & 0xFF;
-		if(offset1PlusMinus == 0)
-			offset1Value = 4000 + offset1Value*3;
+		isCalibrated = 1;
+		if(REG_GET_FIELD(EFUSE_BLK3_RDATA3_REG, EFUSE_RD_ADC2_TP_HIGH) == 0)
+		{
+			offset1Value = REG_GET_FIELD(EFUSE_BLK3_RDATA3_REG, EFUSE_RD_ADC1_TP_HIGH) << 7;
+			offset1Value = offset1Value | REG_GET_FIELD(EFUSE_BLK3_RDATA3_REG, EFUSE_RD_ADC1_TP_LOW);
+			Serial.print("offset: ");
+			Serial.println(offset1Value);
+		}
 		else
-			offset1Value = 4000 - offset1Value*3;
-		offset2Value = offset2 & 0xFF;
-		if(offset2PlusMinus == 0)
-			offset2Value = 3600 + offset2Value*3;
-		else
-			offset2Value = 3600 - offset2Value*3;
-		Serial.print("offset value 1:");
-		Serial.println(offset1Value);
-		Serial.print("offset value 2:");
-		Serial.println(offset2Value);
+			Serial.println("Bad calibration!");
 	}
 	else
+	{
 		Serial.println("Not calibrated!");
-	//Serial1.println(F("AT+CFUN=1,1"));
-	//Serial1.println("AT+CMEE=2");
-	//Serial1.println(F("AT+CPIN?"));
+		isCalibrated = 0;
+	}
 	// if (splash == 1) {
 	// 	for (uint8_t i = 0; i < NUMPIXELS; i++) {
 	// 		for (uint8_t x = 0; x <= 128; x += 2) {
@@ -454,8 +441,8 @@ void MAKERphone::begin(bool splash)
 		checkSim();
 		if(sim_module_version == 1)
 		{
-			offset1Value = 4000;
-			offset2Value = 3600;
+			// offset1Value = 4000;
+			// offset2Value = 3600;
 			Serial1.println("AT+CCALR?");
 			uint32_t cregMillis = millis();
 			String cregString = "";
@@ -521,21 +508,8 @@ void MAKERphone::begin(bool splash)
 		0); /* Task handle to keep track of created task */
 	addOscillator(osc);
 
-	analogRead(VOLTAGE_PIN);
-	voltageSum = 0;
-	voltageSample = 0;
-	for(measuringCounter = 0; measuringCounter < 6000; measuringCounter++)
-	{
-		delayMicroseconds(1);
-		voltageSum += esp_adc_cal_raw_to_voltage(adc1_get_raw(ADC1_CHANNEL_7), adc_chars)*2;
-		voltageSample++;
-	}
-	voltage = ((voltageSum )/(6000.0) + 158.0235417);
-	voltage = (voltage - offset2Value)*400/(offset1Value - offset2Value) + 3600; //2-point ADC correction
-	voltageSum = 0;
-	voltageSample = 0;
-	Serial.println(voltage);
-	delay(5);
+	if(digitalRead(CHRG_INT))
+		voltage = ADCrawRead() * (3600.0/offset1Value);
 
 	xTaskCreatePinnedToCore(
 		ADCmeasuring,	/* Task function. */
@@ -544,7 +518,7 @@ void MAKERphone::begin(bool splash)
 		NULL,			 /* parameter of the task */
 		1,				 /* priority of the task */
 		&MeasuringTask,
-		0); /* Task handle to keep track of created task */
+		1); /* Task handle to keep track of created task */
 
 	ringtone = nullptr;
 	if (SDinsertedFlag)
@@ -627,6 +601,8 @@ bool MAKERphone::update() {
 		takeScreenshot();
 		homePopup(0);
 	}
+	// Serial.print(map(adc1_get_raw(ADC1_CHANNEL_7)*2, 0, 4095, 0, 3903));
+	// Serial.println("mV");
 	// if(!spriteCreated)
 	// {
 	// 	display.deleteSprite();
@@ -848,7 +824,7 @@ bool MAKERphone::update() {
 							clockHour < 25 && clockMinute < 60)
 						{
 							// Serial1.println("AT+CNMP=2");
-							clockFallback = 1;
+							// clockFallback = 1;
 						}
 						Serial.println(F("\nRTC TIME UPDATE OVER GSM DONE!"));
 					}
@@ -877,8 +853,8 @@ bool MAKERphone::update() {
 	}
 	batteryVoltage = voltage;
 
-	if(digitalRead(CHRG_INT) && ((sim_module_version != 1 && batteryVoltage <= 3580) || 
-	(sim_module_version == 1 && simVoltage <= 3580)))
+	if(digitalRead(CHRG_INT) && ((sim_module_version != 1 && batteryVoltage <= 3600) || 
+	(sim_module_version == 1 && simVoltage <= 3580)) && isCalibrated)
 	{
 		if (timesMeasured != _timesMeasured)
 			shutdownCounter++;
@@ -1212,23 +1188,14 @@ void MAKERphone::sleep()
 		if (reason != 4)
 			break;
 		Serial.println("Timer wakeup");
-		voltageSum = 0;
-		voltageSample = 0;
-		for (measuringCounter = 0; measuringCounter < 6000; measuringCounter++)
+		if(digitalRead(CHRG_INT))
 		{
-			chargeDuringADCRead = 0;
-			voltageSum += esp_adc_cal_raw_to_voltage(adc1_get_raw(ADC1_CHANNEL_7), adc_chars) * 2;
-			// uint32_t reading =  adc1_get_raw(ADC1_CHANNEL_7)*2;
-			// uint32_t tempVoltage = esp_adc_cal_raw_to_voltage(reading, adc_chars);
-			// voltageSum += tempVoltage;
-			voltageSample++;
+			adc1_config_channel_atten(ADC1_CHANNEL_7, ADC_ATTEN_11db);
+			adc1_config_width(ADC_WIDTH_BIT_12);
+			voltage = ADCrawRead() * (3600.0/offset1Value);
+			Serial.println(voltage);
+			batteryVoltage = voltage;
 		}
-		voltage = ((voltageSum) / (6000.0) + 158.0235417);
-		voltage = (voltage - offset2Value)*400/(offset1Value - offset2Value) + 3600; //2-point ADC correction
-		voltageSum = 0;
-		voltageSample = 0;
-		Serial.println(batteryVoltage);
-		delay(5);
 		if(simInserted && sim_module_version != 255)
 		{
 			digitalWrite(SIM800_DTR, 0);
@@ -1437,8 +1404,6 @@ void MAKERphone::sleep()
 	// if(sim_module_version != 255)
 	digitalWrite(SIM800_DTR, 0);
 	voltage = batteryVoltage;
-	measuringCounter = 0;
-	voltageSum = 0;
 	voltageSample = 0;
 	vTaskResume(MeasuringTask);
 	vTaskResume(Task1);
@@ -3504,12 +3469,94 @@ void MAKERphone::lockscreen()
 	dataRefreshFlag = 1;
 	bool blinkState = 0;
 	uint8_t altBlinkState = 0; //emergency call/hold to unlock switcher
-							   // bool goOut = 0;
 	uint32_t elapsedMillis = millis();
 	// FastLED.clear();
 	inLockScreen = 1;
+	uint32_t measure = _timesMeasured;
+	uint8_t measureCounter = 0;
+	uint32_t meanMeasure = 0;
+	uint32_t measureSum = 0;
+	if(!isCalibrated)
+	{
+		display.fillScreen(TFT_BLACK);
+		display.setTextColor(TFT_WHITE);
+		display.setTextSize(1);
+		display.setTextFont(2);
+		display.setCursor(30,50);
+		display.printCenter("Calibration start");
+		while(!mp.update());
+		delay(2000);
+	}
 	while (1)
 	{
+		if(!isCalibrated)
+		{
+			if(_timesMeasured > measure)
+			{
+				measure = _timesMeasured;
+				measureSum+=ADCrawRead();
+				measureCounter++;
+				if(measureCounter == 5)
+				{
+					meanMeasure = measureSum / 5;
+					if(digitalRead(CHRG_INT) && abs(1889 - meanMeasure) < 150
+					&& buttons.timeHeld(BTN_1) > 0 && buttons.timeHeld(BTN_3) > 0
+					&& buttons.timeHeld(BTN_5) > 0 && buttons.timeHeld(BTN_7) > 0
+					&& buttons.timeHeld(BTN_9) > 0 && buttons.timeHeld(BTN_0) > 0) //safety checks before calibrating
+					{
+						uint16_t adc1low = 0;
+						uint16_t adc1high = 0;
+						adc1low = meanMeasure & 0b01111111;
+						adc1high = meanMeasure >> 7;
+						// while (!SD.begin(5, SPI, 8000000))
+						// 	Serial.println("SD error");
+						// Serial.println("SD OK");
+						// SD.remove("/kalibracija.cal");
+						// File file = SD.open("/kalibracija.cal", "w");
+						// file.print("ADC high reg: ");
+						// file.println(adc1high, BIN);
+						// file.print("ADC low reg: ");
+						// file.println(adc1low, BIN);
+						// file.print("value: ");
+						// file.println(meanMeasure);
+						// file.close();
+						REG_SET_FIELD(EFUSE_BLK0_WDATA3_REG, EFUSE_BLK3_PART_RESERVE, 1);
+						REG_SET_FIELD(EFUSE_BLK3_WDATA3_REG, EFUSE_ADC1_TP_LOW, adc1low);
+						REG_SET_FIELD(EFUSE_BLK3_WDATA3_REG, EFUSE_ADC1_TP_HIGH, adc1high);
+						esp_efuse_burn_new_values();
+						esp_efuse_reset();
+
+						display.fillScreen(TFT_BLACK);
+						display.setTextColor(TFT_WHITE);
+						display.setTextSize(1);
+						display.setTextFont(2);
+						display.setCursor(30,50);
+						display.printCenter("Calibration OK");
+						while(!mp.update());
+						delay(2000);
+						while(1);
+					}
+					else
+					{
+						measure = _timesMeasured;
+						measureCounter = 0;
+						meanMeasure = 0;
+						measureSum = 0;
+						display.fillScreen(TFT_BLACK);
+						display.setTextColor(TFT_WHITE);
+						display.setTextSize(1);
+						display.setTextFont(2);
+						display.setCursor(30,50);
+						display.printCenter("Calibration error");
+						while(!mp.update());
+						delay(2000);
+						while(1);
+					}
+				}
+			}
+		}
+
+
 		// drawJpeg("/Images/box1.jpg", 0, 0);
 		// display.drawBmp("/Images/screenshot_02.bmp", 0,0);
 		display.fillScreen(backgroundColors[backgroundIndex]);
@@ -3674,11 +3721,13 @@ void MAKERphone::lockscreen()
 				display.drawBitmap(148, 2, batteryHighIcon, TFT_BLACK, 2);
 			else if (batteryVoltage < 3750 && batteryVoltage >= 3650)
 				display.drawBitmap(148, 2, batteryMidIcon, TFT_BLACK, 2);
-			else if (batteryVoltage < 3650 && batteryVoltage >= 3600)
+			else if (batteryVoltage < 3650 && batteryVoltage >= 3625)
 				display.drawBitmap(148, 2, batteryLowIcon, TFT_BLACK, 2);
-			else if (batteryVoltage < 3600)
+			else if (batteryVoltage < 3625)
 				display.drawBitmap(148, 2, batteryEmptyIcon, TFT_BLACK, 2);
 		}
+		display.setCursor(90, 2);
+		display.print(batteryVoltage);
 
 		uint8_t temp = sizeof(notificationTypeList);
 		for (int i = 0; i < sizeof(notificationTypeList); i++)

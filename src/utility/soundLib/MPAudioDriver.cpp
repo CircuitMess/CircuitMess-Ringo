@@ -3,28 +3,28 @@
 #include <Arduino.h>
 #include <SPI.h>
 #include "driver/i2s.h"
-#include "driver/adc.h"
-#include "esp_adc_cal.h"
+// #include "driver/adc.h"
+// #include "esp_adc_cal.h"
 
 float masterVolume;
 MPTrack *tracks[MAX_TRACKS] = {NULL, NULL, NULL, NULL};
 Oscillator *oscs[MAX_TRACKS] = {NULL, NULL, NULL, NULL};
 unsigned char trackCount;
 char dout[1600];
-short adcbuf[1600]={0};
-short adcWr=0, adcRd=800;
+// short adcbuf[1600]={0};
+// short adcWr=0, adcRd=800;
 uint8_t reloadCo = 0;
 hw_timer_t * timert = NULL;
 bool _SDinterruptError = 0;
 
 
-void IRAM_ATTR onTimer() {
-  adc1_get_raw(ADC1_CHANNEL_5); 
-}
+// void IRAM_ATTR onTimer() {
+//   adc1_get_raw(ADC1_CHANNEL_5); 
+// }
 
 void I2S_Init() {
   i2s_config_t i2s_config = {
-    .mode = (i2s_mode_t)(I2S_MODE_MASTER | I2S_MODE_TX | I2S_MODE_RX ),//| I2S_MODE_RX | I2S_MODE_ADC_BUILT_IN
+    .mode = (i2s_mode_t)(I2S_MODE_MASTER | I2S_MODE_TX),//| I2S_MODE_RX | I2S_MODE_ADC_BUILT_IN
     .sample_rate = SAMPLE_RATE,
     .bits_per_sample = I2S_BITS_PER_SAMPLE_32BIT,
     .channel_format = I2S_CHANNEL_FMT_RIGHT_LEFT,
@@ -54,15 +54,15 @@ void I2S_Write(char* data, int numData) {
     i2s_write_bytes((i2s_port_t)0, (const char *)data, numData, portMAX_DELAY);
 }
 
-#define ADC1_TEST_CHANNEL (ADC1_CHANNEL_5)
-char i2s_read_buff[1600];
-void adc_read_task(void* arg)
-{
-   size_t bytes_read, bytes_written;
+// #define ADC1_TEST_CHANNEL (ADC1_CHANNEL_5)
+// char i2s_read_buff[1600];
+// void adc_read_task(void* arg)
+// {
+//    size_t bytes_read, bytes_written;
    
-   while (1)
-    i2s_read((i2s_port_t)0, (void*) i2s_read_buff, 1600, &bytes_read, portMAX_DELAY);
-}
+//    while (1)
+//     i2s_read((i2s_port_t)0, (void*) i2s_read_buff, 1600, &bytes_read, portMAX_DELAY);
+// }
 
 void initWavLib()
 {
