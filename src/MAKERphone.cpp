@@ -232,13 +232,7 @@ void MAKERphone::begin(bool splash)
 	else
 		delay(500);
 	//EEPROM setup for firmware_version
-	EEPROM.begin(256);
-	if (EEPROM.readUInt(FIRMWARE_VERSION_ADDRESS) > 999)
-	{
-		EEPROM.writeUInt(FIRMWARE_VERSION_ADDRESS, firmware_version);
-		EEPROM.commit();
-	}
-	firmware_version = EEPROM.readUInt(FIRMWARE_VERSION_ADDRESS);
+	EEPROM.begin(300);
 	sim_module_version = EEPROM.readByte(GSM_MODULE_ADDRESS);
 	Serial.print("Read sim value: ");
 	Serial.println(sim_module_version);
