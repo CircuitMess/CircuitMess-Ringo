@@ -3726,9 +3726,6 @@ void MAKERphone::lockscreen()
 			else if (batteryVoltage < 3625)
 				display.drawBitmap(148, 2, batteryEmptyIcon, TFT_BLACK, 2);
 		}
-		display.setCursor(90, 2);
-		display.print(batteryVoltage);
-
 		uint8_t temp = sizeof(notificationTypeList);
 		for (int i = 0; i < sizeof(notificationTypeList); i++)
 		{
