@@ -3711,8 +3711,6 @@ void MAKERphone::lockscreen()
 			display.print("loading...");
 		else if (carrierName == "" && !simInserted && sim_module_version == 255)
 			display.print("No module");
-		display.setCursor(60, 2);
-		display.println(batteryVoltage);
 		if (!digitalRead(CHRG_INT))
 			display.drawBitmap(148, 2, batteryChargingIcon, TFT_BLACK, 2);
 		else
