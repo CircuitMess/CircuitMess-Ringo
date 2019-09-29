@@ -135,7 +135,7 @@ void MAKERphone::begin(bool splash)
 	// vRef += 1100;
 	// Serial.print("Vref: ");
 	// Serial.println(vRef);
-	// esp_adc_cal_characterize(ADC_UNIT_1, ADC_ATTEN_11db, ADC_WIDTH_BIT_12, 1100, adc_chars);
+	esp_adc_cal_characterize(ADC_UNIT_2, ADC_ATTEN_0db, ADC_WIDTH_BIT_12, 1100, adc_chars);
 	adc1_config_channel_atten(ADC1_CHANNEL_7, ADC_ATTEN_11db);
 	adc1_config_width(ADC_WIDTH_BIT_12);
 
@@ -1999,8 +1999,10 @@ void MAKERphone::incomingCall(String _serialData)
 		if (buttons.released(BTN_FUN_LEFT))
 			break;
 		if(buttons.released(BTN_FUN_RIGHT) || localBuffer.indexOf(String(String(callIdNumber) + ",1,6,0,0")) != -1
-		|| digitalRead(SIM_INT))
+		|| (digitalRead(SIM_INT) && sim_module_version == 1))
 		{
+			Serial.print("Interrupt: ");
+			Serial.println(digitalRead(SIM_INT));
 			if (SDinsertedFlag && SD.exists(ringtone_path))
 			{
 				ringtone->stop();
@@ -2020,28 +2022,35 @@ void MAKERphone::incomingCall(String _serialData)
 			tft.setCursor(10, 110);
 			tft.print("Call ended");
 			Serial.println("ENDED");
-			if(localBuffer.indexOf(String(String(callIdNumber) + ",1,6,0,0")) == -1)
+			if(localBuffer.indexOf(String(String(callIdNumber) + ",1,6,0,0")) == -1
+			&& ((!digitalRead(SIM_INT) && sim_module_version == 1) || sim_module_version != 1))
 			{
 				Serial1.println("ATH");
-				// buffer = waitForOK();
-				// Serial.println(buffer);
-				while (!digitalRead(SIM_INT))
+				if(sim_module_version == 1)
 				{
-					while(Serial1.available())
+					while (!digitalRead(SIM_INT))
 					{
-						if(digitalRead(SIM_INT))
-							break;
-						Serial1.read();
+						while(Serial1.available())
+						{
+							if(digitalRead(SIM_INT))
+								break;
+							Serial1.read();
+						}
+						Serial1.println("ATH");
+						delay(200);
 					}
-					Serial1.println("ATH");
-					delay(200);
 				}
-				// while (buffer.indexOf(",1,6,") == -1 && millis() - curr_millis < 2000){
-				// 	Serial1.println("ATH");
-				// 	buffer = waitForOK();
-				// 	Serial.println(buffer);
-				// 	// buffer+=(char)Serial.read();
-				// }
+				else
+				{
+					uint32_t curr_millis = millis();
+					while (buffer.indexOf(",1,6,") == -1 && millis() - curr_millis < 2000){
+						Serial1.println("ATH");
+						buffer = waitForOK();
+						Serial.println(buffer);
+						// buffer+=(char)Serial.read();
+					}
+				}
+				
 			}
 
 			// update();
@@ -2125,13 +2134,27 @@ void MAKERphone::incomingCall(String _serialData)
 	Serial.println(digitalRead(SIM_INT));
 	Serial1.println("ATA");
 	long long curr_millis = millis();
-	while (!digitalRead(SIM_INT) && millis() - curr_millis < 2000){
-		Serial1.println("ATA");
-		// localBuffer = waitForOK();
-		// Serial.println(localBuffer);
-		delay(200);
+	if(sim_module_version == 1)
+	{
+		while (!digitalRead(SIM_INT) && millis() - curr_millis < 2000){
+			Serial1.println("ATA");
+			// localBuffer = waitForOK();
+			// Serial.println(localBuffer);
+			delay(200);
+		}
+		delay(1000);
 	}
-	delay(1000);
+	else
+	{
+		localBuffer = waitForOK();
+		long long curr_millis = millis();
+		while (localBuffer.indexOf(String(String(callIdNumber) + ",1,0,0,0")) == -1 && millis() - curr_millis < 2000){
+			Serial1.println("ATA");
+			localBuffer = waitForOK();
+			Serial.println(localBuffer);
+			delay(200);
+		}
+	}
 	// while (!digitalRead(SIM_INT))
 	// {
 	// 	if (Serial1.available())
@@ -2320,24 +2343,29 @@ void MAKERphone::incomingCall(String _serialData)
 		if (buttons.pressed(BTN_FUN_RIGHT)) // hanging up
 		{
 			Serial.println("B PRESSED");
-			Serial1.println("ATH");
-			// buffer = waitForOK();
-			// Serial.println(buffer);
-			while (!digitalRead(SIM_INT))
+			if(sim_module_version == 1)
 			{
-				while(Serial1.available())
-				{
-					if(digitalRead(SIM_INT))
-						break;
-					Serial1.read();
-				}
 				Serial1.println("ATH");
-				delay(200);
+				while (!digitalRead(SIM_INT))
+				{
+					while(Serial1.available())
+					{
+						if(digitalRead(SIM_INT))
+							break;
+						Serial1.read();
+					}
+					Serial1.println("ATH");
+					delay(200);
+				}
 			}
-			// long long curr_millis = millis();
-			// while (Serial1.readString().indexOf(",1,6,") == -1 && millis() - curr_millis < 2000){
-			// 	Serial1.println("ATH");
-			// }
+			else
+			{
+				long long curr_millis = millis();
+				while (Serial1.readString().indexOf(",1,6,") == -1 && millis() - curr_millis < 2000){
+					Serial1.println("ATH");
+				}
+			}
+			
 			tft.fillRect(0, 0, 160, 128, TFT_WHITE);
 			tft.setCursor(55, 9);
 			if (timeOffset == 0)
@@ -3683,8 +3711,8 @@ void MAKERphone::lockscreen()
 			display.print("loading...");
 		else if (carrierName == "" && !simInserted && sim_module_version == 255)
 			display.print("No module");
-		// display.setCursor(60, 2);
-		// display.println(simVoltage);
+		display.setCursor(60, 2);
+		display.println(batteryVoltage);
 		if (!digitalRead(CHRG_INT))
 			display.drawBitmap(148, 2, batteryChargingIcon, TFT_BLACK, 2);
 		else
