@@ -31,7 +31,42 @@ volatile uint32_t _timesMeasured = 0;
 uint16_t offset1Value = 1900;
 volatile bool chargeDuringADCRead = 0;
 uint32_t simBusyCounter = 0;
+uint8_t _SDcounter = 0;
 static esp_adc_cal_characteristics_t *adc_chars;
+void listDir(fs::FS &fs, const char * dirname, uint8_t levels){
+    Serial.printf("Listing directory: %s\n", dirname);
+
+    File root = fs.open(dirname);
+    if(!root){
+        Serial.println("Failed to open directory");
+        return;
+    }
+    if(!root.isDirectory()){
+        Serial.println("Not a directory");
+        return;
+    }
+
+    File file = root.openNextFile();
+    while(file){
+      if(strcmp(file.name(),"/.core") != 0 && strcmp(file.name(),"/System Volume Information") != 0)
+		{
+			if(file.isDirectory()){
+				Serial.print("  DIR : ");
+				Serial.println(file.name());
+				if(levels){
+					listDir(fs, file.name(), levels -1);
+				}
+			} else{
+				Serial.print("  FILE: ");
+				Serial.print(file.name());
+				Serial.print("  SIZE: ");
+				Serial.println(file.size());
+				_SDcounter++;
+			}
+		}
+        file = root.openNextFile();
+    }
+}
 void Task1code(void *pvParameters)
 {
 	while (true)
@@ -411,7 +446,7 @@ void MAKERphone::begin(bool splash)
 	{
 		Serial1.begin(115200, SERIAL_8N1, 17, 16);
 		pinMode(17, INPUT_PULLUP);
-		micGain = 8;
+		micGain = 1;
 	}
 	if (sim_module_version != 255)
 	{
@@ -3511,74 +3546,141 @@ void MAKERphone::lockscreen()
 	}
 	while (1)
 	{
-		if(!isCalibrated)
+		if(!isCalibrated && _timesMeasured > measure)
 		{
-			if(_timesMeasured > measure)
+			measure = _timesMeasured;
+			measureSum+=ADCrawRead();
+			measureCounter++;
+			if(measureCounter == 5)
 			{
-				measure = _timesMeasured;
-				measureSum+=ADCrawRead();
-				measureCounter++;
-				if(measureCounter == 5)
+				meanMeasure = measureSum / 5;
+				if(digitalRead(CHRG_INT) && abs(1889 - meanMeasure) < 150
+				&& buttons.timeHeld(BTN_1) > 0 && buttons.timeHeld(BTN_3) > 0
+				&& buttons.timeHeld(BTN_5) > 0 && buttons.timeHeld(BTN_7) > 0
+				&& buttons.timeHeld(BTN_9) > 0 && buttons.timeHeld(BTN_0) > 0) //safety checks before calibrating
 				{
-					meanMeasure = measureSum / 5;
-					if(digitalRead(CHRG_INT) && abs(1889 - meanMeasure) < 150
-					&& buttons.timeHeld(BTN_1) > 0 && buttons.timeHeld(BTN_3) > 0
-					&& buttons.timeHeld(BTN_5) > 0 && buttons.timeHeld(BTN_7) > 0
-					&& buttons.timeHeld(BTN_9) > 0 && buttons.timeHeld(BTN_0) > 0) //safety checks before calibrating
+					//SD startup
+					uint32_t tempMillis = millis();
+					SDinsertedFlag = 1;
+					while (!SD.begin(5, SPI, 8000000))
 					{
-						uint16_t adc1low = 0;
-						uint16_t adc1high = 0;
-						adc1low = meanMeasure & 0b01111111;
-						adc1high = meanMeasure >> 7;
-						// while (!SD.begin(5, SPI, 8000000))
-						// 	Serial.println("SD error");
-						// Serial.println("SD OK");
-						// SD.remove("/kalibracija.cal");
-						// File file = SD.open("/kalibracija.cal", "w");
-						// file.print("ADC high reg: ");
-						// file.println(adc1high, BIN);
-						// file.print("ADC low reg: ");
-						// file.println(adc1low, BIN);
-						// file.print("value: ");
-						// file.println(meanMeasure);
-						// file.close();
-						REG_SET_FIELD(EFUSE_BLK0_WDATA3_REG, EFUSE_BLK3_PART_RESERVE, 1);
-						REG_SET_FIELD(EFUSE_BLK3_WDATA3_REG, EFUSE_ADC1_TP_LOW, adc1low);
-						REG_SET_FIELD(EFUSE_BLK3_WDATA3_REG, EFUSE_ADC1_TP_HIGH, adc1high);
-						esp_efuse_burn_new_values();
-						esp_efuse_reset();
+						Serial.println("SD ERROR");
+						if (millis() - tempMillis > 10)
+						{
+							SDinsertedFlag = 0;
+							break;
+						}
+					}
+					if(!SDinsertedFlag)
+					{
+						_SDinterruptError = 1;display.fillScreen(TFT_BLACK);
+						display.setTextColor(TFT_WHITE);
+						display.setTextSize(1);
+						display.setTextFont(2);
+						display.setCursor(30,50);
+						display.printCenter("SD missing!");
+						while(!mp.update());
+						for(int i = 0; i < NUMPIXELS; i++)
+							leds[i] = CRGB(50,0,0);
+						FastLED.show();
+						delay(2000);
+						while(1);
+					}
+					if (digitalRead(SD_INT) && SDinsertedFlag)
+					{
+						_SDinterruptError = 1;display.fillScreen(TFT_BLACK);
+						display.setTextColor(TFT_WHITE);
+						display.setTextSize(1);
+						display.setTextFont(2);
+						display.setCursor(30,50);
+						display.printCenter("SD socket");
+						display.setCursor(30,69);
+						display.printCenter("interrupt error");
+						while(!mp.update());
+						for(int i = 0; i < NUMPIXELS; i++)
+							leds[i] = CRGB(50,0,0);
+						FastLED.show();
+						delay(2000);
+						while(1);
+					}
 
-						display.fillScreen(TFT_BLACK);
-						display.setTextColor(TFT_WHITE);
-						display.setTextSize(1);
-						display.setTextFont(2);
-						display.setCursor(30,50);
-						display.printCenter("Calibration OK");
-						while(!mp.update());
-						delay(2000);
-						while(1);
-					}
-					else
+					listDir(SD, "/", 3);
+					if(_SDcounter != 29)
 					{
-						measure = _timesMeasured;
-						measureCounter = 0;
-						meanMeasure = 0;
-						measureSum = 0;
 						display.fillScreen(TFT_BLACK);
 						display.setTextColor(TFT_WHITE);
 						display.setTextSize(1);
 						display.setTextFont(2);
 						display.setCursor(30,50);
-						display.printCenter("Calibration error");
+						display.printCenter("SD content error");
 						while(!mp.update());
+						for(int i = 0; i < NUMPIXELS; i++)
+							leds[i] = CRGB(50,0,0);
+						FastLED.show();
 						delay(2000);
 						while(1);
 					}
+
+
+					uint16_t adc1low = 0;
+					uint16_t adc1high = 0;
+					adc1low = meanMeasure & 0b01111111;
+					adc1high = meanMeasure >> 7;
+					// while (!SD.begin(5, SPI, 8000000))
+					// 	Serial.println("SD error");
+					// Serial.println("SD OK");
+					// SD.remove("/kalibracija.cal");
+					// File file = SD.open("/kalibracija.cal", "w");
+					// file.print("ADC high reg: ");
+					// file.println(adc1high, BIN);
+					// file.print("ADC low reg: ");
+					// file.println(adc1low, BIN);
+					// file.print("value: ");
+					// file.println(meanMeasure);
+					// file.close();
+					REG_SET_FIELD(EFUSE_BLK0_WDATA3_REG, EFUSE_BLK3_PART_RESERVE, 1);
+					REG_SET_FIELD(EFUSE_BLK3_WDATA3_REG, EFUSE_ADC1_TP_LOW, adc1low);
+					REG_SET_FIELD(EFUSE_BLK3_WDATA3_REG, EFUSE_ADC1_TP_HIGH, adc1high);
+					esp_efuse_burn_new_values();
+					esp_efuse_reset();
+
+					display.fillScreen(TFT_BLACK);
+					display.setTextColor(TFT_WHITE);
+					display.setTextSize(1);
+					display.setTextFont(2);
+					display.setCursor(30,50);
+					display.printCenter("Calibration OK");
+					while(!mp.update());
+					for(int i = 0; i < NUMPIXELS; i++)
+						leds[i] = CRGB(0,50,0);
+					FastLED.show();
+					SD.remove("/.core/settings.json");
+					
+					delay(2000);
+
+					while(1);
+				}
+				else
+				{
+					measure = _timesMeasured;
+					measureCounter = 0;
+					meanMeasure = 0;
+					measureSum = 0;
+					display.fillScreen(TFT_BLACK);
+					display.setTextColor(TFT_WHITE);
+					display.setTextSize(1);
+					display.setTextFont(2);
+					display.setCursor(30,50);
+					display.printCenter("Calibration error");
+					while(!mp.update());
+					for(int i = 0; i < NUMPIXELS; i++)
+						leds[i] = CRGB(50,0,0);
+					FastLED.show();
+					delay(2000);
+					while(1);
 				}
 			}
 		}
-
-
 		// drawJpeg("/Images/box1.jpg", 0, 0);
 		// display.drawBmp("/Images/screenshot_02.bmp", 0,0);
 		display.fillScreen(backgroundColors[backgroundIndex]);
