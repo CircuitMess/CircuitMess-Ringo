@@ -3535,6 +3535,73 @@ void MAKERphone::lockscreen()
 	uint32_t measureSum = 0;
 	if(!isCalibrated)
 	{
+		if(digitalRead(CHRG_INT)
+		&& buttons.timeHeld(BTN_1) > 0 && buttons.timeHeld(BTN_3) > 0
+		&& buttons.timeHeld(BTN_5) > 0 && buttons.timeHeld(BTN_7) > 0
+		&& buttons.timeHeld(BTN_9) > 0 && buttons.timeHeld(BTN_0) > 0) //safety checks before calibrating
+		{
+			//SD startup
+			uint32_t tempMillis = millis();
+			SDinsertedFlag = 1;
+			while (!SD.begin(5, SPI, 8000000))
+			{
+				Serial.println("SD ERROR");
+				if (millis() - tempMillis > 10)
+				{
+					SDinsertedFlag = 0;
+					break;
+				}
+			}
+			if(!SDinsertedFlag)
+			{
+				_SDinterruptError = 1;display.fillScreen(TFT_BLACK);
+				display.setTextColor(TFT_WHITE);
+				display.setTextSize(1);
+				display.setTextFont(2);
+				display.setCursor(30,50);
+				display.printCenter("SD missing!");
+				while(!mp.update());
+				for(int i = 0; i < NUMPIXELS; i++)
+					leds[i] = CRGB(50,0,0);
+				FastLED.show();
+				delay(2000);
+				while(1);
+			}
+			if (digitalRead(SD_INT) && SDinsertedFlag)
+			{
+				_SDinterruptError = 1;display.fillScreen(TFT_BLACK);
+				display.setTextColor(TFT_WHITE);
+				display.setTextSize(1);
+				display.setTextFont(2);
+				display.setCursor(30,50);
+				display.printCenter("SD socket");
+				display.setCursor(30,69);
+				display.printCenter("interrupt error");
+				while(!mp.update());
+				for(int i = 0; i < NUMPIXELS; i++)
+					leds[i] = CRGB(50,0,0);
+				FastLED.show();
+				delay(2000);
+				while(1);
+			}
+
+			listDir(SD, "/", 3);
+			if(_SDcounter != 29)
+			{
+				display.fillScreen(TFT_BLACK);
+				display.setTextColor(TFT_WHITE);
+				display.setTextSize(1);
+				display.setTextFont(2);
+				display.setCursor(30,50);
+				display.printCenter("SD content error");
+				while(!mp.update());
+				for(int i = 0; i < NUMPIXELS; i++)
+					leds[i] = CRGB(50,0,0);
+				FastLED.show();
+				delay(2000);
+				while(1);
+			}
+		}
 		display.fillScreen(TFT_BLACK);
 		display.setTextColor(TFT_WHITE);
 		display.setTextSize(1);
@@ -3554,72 +3621,12 @@ void MAKERphone::lockscreen()
 			if(measureCounter == 5)
 			{
 				meanMeasure = measureSum / 5;
-				if(digitalRead(CHRG_INT) && abs(1889 - meanMeasure) < 150
+				if(digitalRead(CHRG_INT) && abs(1889 - meanMeasure) < 200
 				&& buttons.timeHeld(BTN_1) > 0 && buttons.timeHeld(BTN_3) > 0
 				&& buttons.timeHeld(BTN_5) > 0 && buttons.timeHeld(BTN_7) > 0
 				&& buttons.timeHeld(BTN_9) > 0 && buttons.timeHeld(BTN_0) > 0) //safety checks before calibrating
 				{
-					//SD startup
-					uint32_t tempMillis = millis();
-					SDinsertedFlag = 1;
-					while (!SD.begin(5, SPI, 8000000))
-					{
-						Serial.println("SD ERROR");
-						if (millis() - tempMillis > 10)
-						{
-							SDinsertedFlag = 0;
-							break;
-						}
-					}
-					if(!SDinsertedFlag)
-					{
-						_SDinterruptError = 1;display.fillScreen(TFT_BLACK);
-						display.setTextColor(TFT_WHITE);
-						display.setTextSize(1);
-						display.setTextFont(2);
-						display.setCursor(30,50);
-						display.printCenter("SD missing!");
-						while(!mp.update());
-						for(int i = 0; i < NUMPIXELS; i++)
-							leds[i] = CRGB(50,0,0);
-						FastLED.show();
-						delay(2000);
-						while(1);
-					}
-					if (digitalRead(SD_INT) && SDinsertedFlag)
-					{
-						_SDinterruptError = 1;display.fillScreen(TFT_BLACK);
-						display.setTextColor(TFT_WHITE);
-						display.setTextSize(1);
-						display.setTextFont(2);
-						display.setCursor(30,50);
-						display.printCenter("SD socket");
-						display.setCursor(30,69);
-						display.printCenter("interrupt error");
-						while(!mp.update());
-						for(int i = 0; i < NUMPIXELS; i++)
-							leds[i] = CRGB(50,0,0);
-						FastLED.show();
-						delay(2000);
-						while(1);
-					}
-
-					listDir(SD, "/", 3);
-					if(_SDcounter != 29)
-					{
-						display.fillScreen(TFT_BLACK);
-						display.setTextColor(TFT_WHITE);
-						display.setTextSize(1);
-						display.setTextFont(2);
-						display.setCursor(30,50);
-						display.printCenter("SD content error");
-						while(!mp.update());
-						for(int i = 0; i < NUMPIXELS; i++)
-							leds[i] = CRGB(50,0,0);
-						FastLED.show();
-						delay(2000);
-						while(1);
-					}
+		
 
 
 					uint16_t adc1low = 0;
@@ -3662,21 +3669,24 @@ void MAKERphone::lockscreen()
 				}
 				else
 				{
-					measure = _timesMeasured;
-					measureCounter = 0;
-					meanMeasure = 0;
-					measureSum = 0;
+					
 					display.fillScreen(TFT_BLACK);
 					display.setTextColor(TFT_WHITE);
 					display.setTextSize(1);
 					display.setTextFont(2);
 					display.setCursor(30,50);
 					display.printCenter("Calibration error");
+					display.setCursor(30,69);
+					display.printCenter(meanMeasure);
 					while(!mp.update());
 					for(int i = 0; i < NUMPIXELS; i++)
 						leds[i] = CRGB(50,0,0);
 					FastLED.show();
 					delay(2000);
+					measure = _timesMeasured;
+					measureCounter = 0;
+					meanMeasure = 0;
+					measureSum = 0;
 					while(1);
 				}
 			}
