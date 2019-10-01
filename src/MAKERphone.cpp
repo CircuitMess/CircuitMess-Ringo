@@ -3535,6 +3535,13 @@ void MAKERphone::lockscreen()
 	uint32_t measureSum = 0;
 	if(!isCalibrated)
 	{
+		display.fillScreen(TFT_BLACK);
+		display.setTextColor(TFT_WHITE);
+		display.setTextSize(1);
+		display.setTextFont(2);
+		display.setCursor(30,50);
+		display.printCenter("SD checking");
+		while(!mp.update());
 		if(digitalRead(CHRG_INT)
 		&& buttons.timeHeld(BTN_1) > 0 && buttons.timeHeld(BTN_3) > 0
 		&& buttons.timeHeld(BTN_5) > 0 && buttons.timeHeld(BTN_7) > 0
@@ -3609,7 +3616,7 @@ void MAKERphone::lockscreen()
 		display.setCursor(30,50);
 		display.printCenter("Calibration start");
 		while(!mp.update());
-		delay(2000);
+		delay(500);
 	}
 	while (1)
 	{
