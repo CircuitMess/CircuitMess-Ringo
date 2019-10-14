@@ -4089,9 +4089,13 @@ void MAKERphone::networkModuleInit()
 	if (sim_module_version == 1)
 	{
 		Serial1.println(F("AT+CRSL=100"));
+		waitForOK();
 		Serial1.println(F("AT+CLVL=100"));
+		waitForOK();
 		Serial1.println(F("AT+CLTS=1")); //Enable local Timestamp mode (used for syncrhonising RTC with GSM time
+		waitForOK();
 		Serial1.println(F("AT+IPR=9600"));
+		waitForOK();
 	}
 	else if (sim_module_version == 0)
 	{
@@ -4473,7 +4477,9 @@ void MAKERphone::applySettings()
 		{
 			Serial1.print(F("AT+CMIC=0,"));
 			Serial1.println(micGain);
+			waitForOK();
 			Serial1.printf("AT+CLVL=%d\r", mp.callSpeakerVolume*20);
+			waitForOK();
 		}
 		else if (sim_module_version == 0)
 		{
@@ -4485,7 +4491,8 @@ void MAKERphone::applySettings()
 			Serial1.printf("AT+CLVL=%d\r", mp.callSpeakerVolume);
 			waitForOK();
 		}
-
+		while(Serial1.available())
+			Serial1.read();
 		Serial1.println("AT+CFUN?");
 		Serial.println("CFUN checking");
 		String readOutput = waitForOK();
@@ -4494,7 +4501,9 @@ void MAKERphone::applySettings()
 		while(readOutput.indexOf("+CFUN:") == -1 && millis() - timeoutMillis < 2000)
 		{
 			Serial1.println("AT+CFUN?");
+			Serial.println("printed AT+CFUN?");
 			readOutput = waitForOK();
+			
 			Serial.println(readOutput);
 			delay(100);
 		}
