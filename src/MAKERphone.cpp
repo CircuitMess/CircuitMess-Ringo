@@ -4499,9 +4499,15 @@ void MAKERphone::applySettings()
 			delay(100);
 		}
 		if(airplaneMode && readOutput.indexOf("+CFUN: 4") == -1)
+		{
 			Serial1.println("AT+CFUN=4");
+			waitForOK();
+		}
 		else if (!airplaneMode && readOutput.indexOf("+CFUN: 1") == -1)
+		{
 			Serial1.println("AT+CFUN=1");
+			waitForOK();
+		}
 	}
 	for (int i = 0; i < 4; i++)
 	{
