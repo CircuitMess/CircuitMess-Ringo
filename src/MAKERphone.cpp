@@ -552,6 +552,7 @@ void MAKERphone::begin(bool splash)
 	ringtone = nullptr;
 	if (SDinsertedFlag)
 	{
+		Serial.println("SD inserted");
 		loadSettings(1);
 		loadAlarms();
 		loadNotifications();
@@ -559,6 +560,8 @@ void MAKERphone::begin(bool splash)
 	}
 	else
 	{
+		Serial.println("SD missing");
+
 		if(sim_module_version == 0)
 			micGain = 1;
 		else
@@ -567,7 +570,6 @@ void MAKERphone::begin(bool splash)
 		}
 		
 	}
-	
 	applySettings();
 	checkAlarms();
 
@@ -576,6 +578,14 @@ void MAKERphone::begin(bool splash)
 	networkInitialized = 1;
 	sleepTimer = millis();
 	networkDisconnectMillis = millis();
+	if(digitalRead(CHRG_INT)
+	&& buttons.timeHeld(BTN_1) > 0 && buttons.timeHeld(BTN_3) > 0
+	&& buttons.timeHeld(BTN_5) > 0 && buttons.timeHeld(BTN_7) > 0
+	&& buttons.timeHeld(BTN_9) > 0 && buttons.timeHeld(BTN_0) > 0 && !isCalibrated)
+		Serial.println("Calibration will start"); //safety checks before calibrating
+	else
+		isCalibrated = 1;
+	
 }
 
 bool MAKERphone::update() {
