@@ -102,6 +102,15 @@ Now only thing left to do is to check if everything is working properly.
 
 <img src="https://www.circuitmess.com/wp-content/uploads/Pic16-1.png" alt="drawing" width="700"/>
 
+12. Whenever you want to re-upload 'Default Ringo Software' you have to go to **Tools** -> **Programmer** and select
+ **"Ringo Firmware"**.
+
+<img src="https://www.circuitmess.com/wp-content/uploads/Snip1-R2.png" alt="drawing" width="700"/>
+
+ Now go to **Tools** -> **Burn Bootloader** and you will have the default firmware on your Ringo in as soon as 
+ the upload is finished.
+
+<img src="https://www.circuitmess.com/wp-content/uploads/Snip2-R2.png" alt="drawing" width="700"/>
 
 **Congrats! You have successfully set up Ringo phone.  
  Now let's get to business and start creating some cool apps and games!**
