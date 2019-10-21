@@ -709,7 +709,10 @@ bool MAKERphone::update() {
 					if (networkRegistered == 5 || networkRegistered == 1)
 					{
 						if (carrierName == "")
+						{
+							carrierNameCounter++;
 							Serial1.println("AT+CSPN?");
+						}
 						Serial1.println("AT+CSQ");
 					}
 					Serial1.println("AT+CCALR?");
@@ -730,7 +733,10 @@ bool MAKERphone::update() {
 					if (simInserted && !airplaneMode && (networkRegistered == 5 || networkRegistered == 1))
 					{
 						if (carrierName == "")
+						{
+							carrierNameCounter++;
 							Serial1.println("AT+CSPN?");
+						}
 						else
 							refreshMillis = millis() + 2000;
 					}
@@ -3830,7 +3836,8 @@ void MAKERphone::lockscreen()
 
 			display.print(carrierName);
 		}
-		else if (simInserted && !airplaneMode && (carrierName == "" || !(networkRegistered == 1 || networkRegistered == 5)))
+		
+		else if (simInserted && !airplaneMode && ((carrierName == "" && carrierNameCounter < 7) || !(networkRegistered == 1 || networkRegistered == 5)))
 			display.print("loading...");
 		else if (carrierName == "" && !simInserted && sim_module_version == 255)
 			display.print("No module");

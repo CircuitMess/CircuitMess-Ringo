@@ -408,6 +408,7 @@ class MAKERphone:public Buttons, public DateTime
 		uint8_t _currentConcatSMS = 0;
 		bool _concatSMSCodingScheme = 0;
 		bool isCalibrated = 0;
+		uint32_t carrierNameCounter = 0;
 
 };
 uint32_t ADCrawRead(void);
