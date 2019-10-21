@@ -1,0 +1,23 @@
+#######################################
+# Syntax Coloring Map Ringo
+#######################################
+
+#######################################
+# Datatypes (KEYWORD1)
+#######################################
+# Methods and Functions (KEYWORD2)
+#######################################
+mp KEYWORD1
+MAKERphone KEYWORD1
+leds KEYWORD2
+FastLED KEYWORD2
+MPTrack KEYWORD2
+Oscillator KEYWORD2
+osc KEYWORD2
+buttons KEYWORD2
+display KEYWORD2
+millis	KEYWORD2
+
+#######################################
+# Constants (LITERAL1)
+#######################################
