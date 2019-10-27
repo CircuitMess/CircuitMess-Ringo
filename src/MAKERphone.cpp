@@ -888,6 +888,10 @@ bool MAKERphone::update() {
 			{
 				uint16_t helper = updateBuffer.indexOf(" ", updateBuffer.indexOf("+CCALR:"));
 				networkRegistered = updateBuffer.substring(helper + 1, helper + 2).toInt();
+				if(networkRegistered != 5 && networkRegistered != 1)
+					carrierNameCounter++;
+				updateBuffer = "";
+
 			}
 			if(updateBuffer.indexOf("\n", updateBuffer.indexOf("+CREG:")) != -1 && sim_module_version == 0)
 			{
@@ -1116,6 +1120,7 @@ bool MAKERphone::update() {
 			}
 			networkModuleInit();
 			networkDisconnectFlag = 0;
+			carrierNameCounter = 0;
 		}
 		else if (networkRegistered == 1 || !dataRefreshFlag)
 			networkDisconnectMillis = millis();
@@ -3836,8 +3841,7 @@ void MAKERphone::lockscreen()
 
 			display.print(carrierName);
 		}
-		
-		else if (simInserted && !airplaneMode && ((carrierName == "" && carrierNameCounter < 7) || !(networkRegistered == 1 || networkRegistered == 5)))
+		else if (simInserted && !airplaneMode && carrierNameCounter < 5 && (carrierName == ""  || (networkRegistered != 1 && networkRegistered != 5)))
 			display.print("loading...");
 		else if (carrierName == "" && !simInserted && sim_module_version == 255)
 			display.print("No module");
