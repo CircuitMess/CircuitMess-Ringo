@@ -10,6 +10,41 @@
         {
           "category": "CM", 
           "name": "Ringo", 
+          "url": "https://github.com/CircuitMess/MAKERphone/blob/boardArduino/Ringo-1.0.3.zip?raw=true", 
+          "checksum": "SHA-256:6ac71acd2ae86c03dbfb4cb6fefead7b2f447bd9cbd64530d5988b64f599f647", 
+          "help": {
+            "online": ""
+          }, 
+          "version": "1.0.3", 
+          "architecture": "esp32", 
+          "archiveFileName": "Ringo-1.0.3.zip", 
+          "boards": [
+            {
+              "name": "Ringo by CircuitMess"
+            }
+          ], 
+          "toolsDependencies": [
+            {
+              "packager": "cm", 
+              "version": "1.22.0-80-g6c4433a-5.2.0", 
+              "name": "xtensa-esp32-elf-gcc"
+            }, 
+            {
+              "packager": "cm", 
+              "version": "2.6.1", 
+              "name": "esptool_py"
+            }, 
+            {
+              "packager": "cm", 
+              "version": "0.2.3", 
+              "name": "mkspiffs"
+            }
+          ], 
+          "size": "32089261"
+        },
+        {
+          "category": "CM", 
+          "name": "Ringo", 
           "url": "https://github.com/CircuitMess/MAKERphone/blob/boardArduino/Ringo-1.0.2.zip?raw=true", 
           "checksum": "SHA-256:5b6b3f719fb5a44a4ef8504cb85b9939453699945196a9f672782bcb259139f9", 
           "help": {
