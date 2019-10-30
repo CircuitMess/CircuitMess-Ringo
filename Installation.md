@@ -115,7 +115,8 @@ Now only thing left to do is to check if everything is working properly.
 <img src="https://www.circuitmess.com/wp-content/uploads/Snip2-R2.png" alt="drawing" width="700"/>
 
 13. There is also a Ringo library in Arduino Library Manager that allows you to use all the important functions and libraries from the Ringo firmware when writing your own programs. Go to **Sketch**-> **Include Library** -> **Manage Libraries...**. Enter the keyword **'Ringo'** in the search bar and click the **'Install'** button to download and install the library.
-<img src="https://github.com/CircuitMess/CircuitMess-Ringo/blob/musicPlayer-volume-txtInput/Arduino_LM.jpg" alt="drawing" 
+
+![img](https://github.com/CircuitMess/CircuitMess-Ringo/blob/musicPlayer-volume-txtInput/Arduino_LM.jpg)
  
 
 **Congrats! You have successfully set up Ringo phone.  
