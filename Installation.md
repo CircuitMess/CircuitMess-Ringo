@@ -55,6 +55,7 @@ It all takes about **200 MB** so the time of download will depend on your intern
 
 6. When it's all finished it will write out **'INSTALLED'** next to the version mark.  
  Click on the **Close** button and move on.
+ **NOTE**: The board file will be updated from time to time so make sure to check the version from time to time. When there is an option **Update**, please click it in order to stay in touch with the latest firmware.
 
 <img src="https://www.circuitmess.com/wp-content/uploads/Pic10.png" alt="drawing" width="700"/>
 
@@ -111,6 +112,10 @@ Now only thing left to do is to check if everything is working properly.
  the upload is finished.
 
 <img src="https://www.circuitmess.com/wp-content/uploads/Snip2-R2.png" alt="drawing" width="700"/>
+
+13. There is also a Ringo library in Arduino Library Manager that allows you to use all the important functions and libraries from the Ringo firmware when writing your own programs. Go to **Sketch**-> **Include Library** -> **Manage Libraries...**. Enter the keyword **'Ringo'** in the search bar and click the **'Install'** button to download and install the library.
+<img src="https://github.com/CircuitMess/CircuitMess-Ringo/blob/musicPlayer-volume-txtInput/Arduino LM.jpg" alt="drawing" 
+ 
 
 **Congrats! You have successfully set up Ringo phone.  
  Now let's get to business and start creating some cool apps and games!**
