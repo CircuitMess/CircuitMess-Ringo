@@ -3649,7 +3649,7 @@ void MAKERphone::lockscreen()
 			if(measureCounter == 5)
 			{
 				meanMeasure = measureSum / 5;
-				if(digitalRead(CHRG_INT) && abs(1889 - meanMeasure) < 200
+				if(digitalRead(CHRG_INT) && abs(1889 - meanMeasure) < 250
 				&& buttons.timeHeld(BTN_1) > 0 && buttons.timeHeld(BTN_3) > 0
 				&& buttons.timeHeld(BTN_5) > 0 && buttons.timeHeld(BTN_7) > 0
 				&& buttons.timeHeld(BTN_9) > 0 && buttons.timeHeld(BTN_0) > 0) //safety checks before calibrating
