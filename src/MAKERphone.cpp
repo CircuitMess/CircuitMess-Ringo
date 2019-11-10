@@ -3568,6 +3568,7 @@ void MAKERphone::lockscreen()
 		&& buttons.timeHeld(BTN_5) > 0 && buttons.timeHeld(BTN_7) > 0
 		&& buttons.timeHeld(BTN_9) > 0 && buttons.timeHeld(BTN_0) > 0) //safety checks before calibrating
 		{
+			
 			//SD startup
 			uint32_t tempMillis = millis();
 			SDinsertedFlag = 1;
@@ -3622,6 +3623,66 @@ void MAKERphone::lockscreen()
 				display.setTextFont(2);
 				display.setCursor(30,50);
 				display.printCenter("SD content error");
+				while(!mp.update());
+				for(int i = 0; i < NUMPIXELS; i++)
+					leds[i] = CRGB(50,0,0);
+				FastLED.show();
+				delay(2000);
+				while(1);
+			}
+
+			display.fillScreen(TFT_BLACK);
+			display.setTextColor(TFT_WHITE);
+			display.setTextSize(1);
+			display.setTextFont(2);
+			display.setCursor(30,50);
+			display.printCenter("WiFi checking");
+			while(!mp.update());
+
+			// Set WiFi to station mode and disconnect from an AP if it was previously connected
+			WiFi.mode(WIFI_STA);
+			WiFi.disconnect();
+			delay(1000);
+			// WiFi.scanNetworks will return the number of networks found
+			int n = WiFi.scanNetworks();
+			if (n == 0) {
+				display.fillScreen(TFT_BLACK);
+				display.setTextColor(TFT_WHITE);
+				display.setTextSize(1);
+				display.setTextFont(2);
+				display.setCursor(30,50);
+				display.printCenter("WiFi error");
+				while(!mp.update());
+				for(int i = 0; i < NUMPIXELS; i++)
+					leds[i] = CRGB(50,0,0);
+				FastLED.show();
+				delay(2000);
+				while(1);
+			} 
+			display.fillScreen(TFT_BLACK);
+			display.setTextColor(TFT_WHITE);
+			display.setTextSize(1);
+			display.setTextFont(2);
+			display.setCursor(30,50);
+			display.printCenter("RTC checking");
+			while(!mp.update());
+			DateTime now = DateTime(2017, 4, 2, 23, 59, 0);
+			RTC.adjust(now);
+			delay(1000);
+			char buf[100];
+			strncpy(buf, "DD.MM.YYYY hh:mm:ss\0", 100);
+			Serial.println(RTC.now().format(buf));
+			if(RTC.now() != now)
+				Serial.println("RTC OK!");
+			else
+			{
+				Serial.println("RTC error");
+				display.fillScreen(TFT_BLACK);
+				display.setTextColor(TFT_WHITE);
+				display.setTextSize(1);
+				display.setTextFont(2);
+				display.setCursor(30,50);
+				display.printCenter("RTC error");
 				while(!mp.update());
 				for(int i = 0; i < NUMPIXELS; i++)
 					leds[i] = CRGB(50,0,0);
