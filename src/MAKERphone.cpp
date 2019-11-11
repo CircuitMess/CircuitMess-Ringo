@@ -173,7 +173,6 @@ void MAKERphone::begin(bool splash)
 	esp_adc_cal_characterize(ADC_UNIT_2, ADC_ATTEN_0db, ADC_WIDTH_BIT_12, 1100, adc_chars);
 	adc1_config_channel_atten(ADC1_CHANNEL_7, ADC_ATTEN_11db);
 	adc1_config_width(ADC_WIDTH_BIT_12);
-
 	if(REG_GET_FIELD(EFUSE_BLK0_RDATA3_REG, EFUSE_RD_BLK3_PART_RESERVE) == 1) //calibrated?
 	{
 		Serial.println("Calibrated!");
@@ -3707,6 +3706,7 @@ void MAKERphone::lockscreen()
 			measure = _timesMeasured;
 			measureSum+=ADCrawRead();
 			measureCounter++;
+			sleepTimer = millis();
 			if(measureCounter == 5)
 			{
 				meanMeasure = measureSum / 5;
@@ -3715,9 +3715,6 @@ void MAKERphone::lockscreen()
 				&& buttons.timeHeld(BTN_5) > 0 && buttons.timeHeld(BTN_7) > 0
 				&& buttons.timeHeld(BTN_9) > 0 && buttons.timeHeld(BTN_0) > 0) //safety checks before calibrating
 				{
-		
-
-
 					uint16_t adc1low = 0;
 					uint16_t adc1high = 0;
 					adc1low = meanMeasure & 0b01111111;
