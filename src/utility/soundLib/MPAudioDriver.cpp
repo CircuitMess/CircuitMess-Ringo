@@ -51,7 +51,8 @@ void I2S_Init() {
 }
 
 void I2S_Write(char* data, int numData) {
-    i2s_write_bytes((i2s_port_t)0, (const char *)data, numData, portMAX_DELAY);
+    size_t bytes_written;
+    (void)i2s_write((i2s_port_t)0, (const char *)data, numData, &bytes_written, portMAX_DELAY);
 }
 
 // #define ADC1_TEST_CHANNEL (ADC1_CHANNEL_5)
@@ -84,20 +85,20 @@ void initWavLib()
 
 void updateWav()
 {
-    size_t bytes_read, bytes_written;
+    //size_t bytes_read, bytes_written;
     for(unsigned short i=0;i<sizeof(dout)/2;i+=2)
     {
-        (*((int*)(&dout[i*2])))=0;
+        *((int*)(dout + i * 2)) = 0;
         //(*((int*)(&dout[i*2])))=((*((int*)(&i2s_read_buff[i*2])))*2)/3;
         for(unsigned char tr=0;tr<MAX_TRACKS;tr++)
         {
             if(tracks[tr] != nullptr)
                 if(tracks[tr]->isPlaying())
-                    (*((int*)(&dout[i*2])))+=(int)(tracks[tr]->fetchSample()*masterVolume);
+                    *((int*)(dout + i * 2)) += (int)(tracks[tr]->fetchSample()*masterVolume);
        
             if(oscs[tr] != nullptr)
                 if(oscs[tr]->isPlaying())
-                    (*((int*)(&dout[i*2])))+=(int)(oscs[tr]->fetchSample()*masterVolume)*65536;
+                    *((int*)(dout + i * 2)) += (int)(oscs[tr]->fetchSample()*masterVolume)*65536;
         }
     }
     I2S_Write(dout, sizeof(dout));

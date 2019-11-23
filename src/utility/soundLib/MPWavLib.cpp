@@ -141,7 +141,7 @@ unsigned int MPTrack::getSamplePos()
 int MPTrack::loadSample(unsigned short i)
 {
     int sample;
-    sample=(*((short*)(&data[i])));
+    sample = *((short*)(data + i));
     sample*=volume;
     return sample;
 }
@@ -158,7 +158,7 @@ int MPTrack::fetchSample()
         loadSamples();
     
     p=((int)pos)%(sizeof(data)>>1);
-    sample=(*((short*)(&data[p<<1])));
+    sample = *((short*)(data +(p << 1)));
     sample*=volume;
     pos+=speed;
     if(pos>=((size-0x2C)>>1))

@@ -78,7 +78,7 @@ int HttpClient::startRequest(const char* aServerName, uint16_t aServerPort, cons
     else
 #endif
     {
-        if (!iClient->connect(aServerName, aServerPort) > 0)
+        if (!(iClient->connect(aServerName, aServerPort) > 0))
         {
 #ifdef LOGGING
             Serial.println("Connection failed");
@@ -121,7 +121,7 @@ int HttpClient::startRequest(const IPAddress& aServerAddress, const char* aServe
     else
 #endif
     {
-        if (!iClient->connect(aServerAddress, aServerPort) > 0)
+        if (!(iClient->connect(aServerAddress, aServerPort) > 0))
         {
 #ifdef LOGGING
             Serial.println("Connection failed");
@@ -357,6 +357,8 @@ int HttpClient::responseStatusCode()
                         break;
                     case eStatusCodeRead:
                         // We're just waiting for the end of the line now
+                        break;
+                    default:
                         break;
                     };
                     // We read something, reset the timeout counter

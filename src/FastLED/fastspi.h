@@ -107,7 +107,7 @@ class SPIOutput<SPI_UART1_DATA, SPI_UART1_CLOCK, SPI_SPEED> : public AVRUSART1SP
 #else
 #  if !defined(FASTLED_INTERNAL) && !defined(FASTLED_ALL_PINS_HARDWARE_SPI)
 #    ifdef FASTLED_HAS_PRAGMA_MESSAGE
-#      pragma message "No hardware SPI pins defined.  All SPI access will default to bitbanged output"
+// (quiet build) //#      pragma message "No hardware SPI pins defined.  All SPI access will default to bitbanged output"
 #    else
 #      warning "No hardware SPI pins defined.  All SPI access will default to bitbanged output"
 #    endif

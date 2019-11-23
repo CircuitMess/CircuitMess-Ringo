@@ -511,7 +511,7 @@ uint8_t TFT_eSPI::readcommand8(uint8_t cmd_function, uint8_t index)
 ***************************************************************************************/
 uint16_t TFT_eSPI::readcommand16(uint8_t cmd_function, uint8_t index)
 {
-  uint32_t reg;
+  uint32_t reg = 0;
 
   reg |= (readcommand8(cmd_function, index + 0) <<  8);
   reg |= (readcommand8(cmd_function, index + 1) <<  0);
@@ -1093,7 +1093,6 @@ void TFT_eSPI::pushImage(int32_t x, int32_t y, uint32_t w, uint32_t h, uint8_t *
           //else     drawPixel((dw-len)+xp,h-dh,bitmap_bg);
           xp++;
         }
-        *ptr++;
         len -= 8;
       }
 
@@ -1151,7 +1150,6 @@ void TFT_eSPI::pushImage(int32_t x, int32_t y, uint32_t w, uint32_t h, uint8_t *
     uint8_t msbColor = 0;
     uint8_t lsbColor = 0;
 
-    int32_t spx = x, spy = y;
 
     while (dh--)
     {
@@ -1242,7 +1240,6 @@ void TFT_eSPI::pushImage(int32_t x, int32_t y, uint32_t w, uint32_t h, uint8_t *
           px++;
           xp++;
         }
-        *ptr++;
         len -= 8;
       }
       if (np) pushColor(bitmap_fg, np);
@@ -2253,8 +2250,7 @@ void TFT_eSPI::drawChar(int32_t x, int32_t y, unsigned char c, uint32_t color, u
 
       uint16_t bo = pgm_read_word(&glyph->bitmapOffset);
       uint8_t  w  = pgm_read_byte(&glyph->width),
-               h  = pgm_read_byte(&glyph->height),
-               xa = pgm_read_byte(&glyph->xAdvance);
+               h  = pgm_read_byte(&glyph->height);
       int8_t   xo = pgm_read_byte(&glyph->xOffset),
                yo = pgm_read_byte(&glyph->yOffset);
       uint8_t  xx, yy, bits, bit=0;
@@ -4891,11 +4887,11 @@ void TFT_eSprite::drawBmp(File bmpFS, int16_t x, int16_t y, uint8_t scale) {
   }
 
   uint32_t seekOffset;
-  uint16_t w, h, row, col;
+  uint16_t w, h, row;
   uint8_t  r, g, b;
   
 
-  uint32_t startTime = millis();
+  //uint32_t startTime = millis();
 
   if (read16(bmpFS) == 0x4D42)
   {
@@ -4961,11 +4957,11 @@ void TFT_eSprite::drawBmp(const char * path, int16_t x, int16_t y, uint8_t scale
   }
 
   uint32_t seekOffset;
-  uint16_t w, h, row, col;
+  uint16_t w, h, row;
   uint8_t  r, g, b;
   
 
-  uint32_t startTime = millis();
+  //uint32_t startTime = millis();
 
   if (read16(bmpFS) == 0x4D42)
   {
@@ -5031,11 +5027,11 @@ void TFT_eSprite::drawBmp(String path, int16_t x, int16_t y, uint8_t scale) {
   }
 
   uint32_t seekOffset;
-  uint16_t w, h, row, col;
+  uint16_t w, h, row;
   uint8_t  r, g, b;
   
 
-  uint32_t startTime = millis();
+  //uint32_t startTime = millis();
 
   if (read16(bmpFS) == 0x4D42)
   {
@@ -5642,7 +5638,7 @@ void TFT_eSprite::pushColor(uint32_t color, uint16_t len)
 {
 	if (!_created) return;
 
-	uint16_t pixelColor;
+	uint16_t pixelColor = 0;
 	if (_bpp == 16)
 		pixelColor = (uint16_t)(color >> 8) | (color << 8);
 
@@ -6341,8 +6337,7 @@ void TFT_eSprite::drawChar(int32_t x, int32_t y, unsigned char c, uint32_t color
 
 			uint16_t bo = pgm_read_word(&glyph->bitmapOffset);
 			uint8_t  w = pgm_read_byte(&glyph->width),
-				h = pgm_read_byte(&glyph->height),
-				xa = pgm_read_byte(&glyph->xAdvance);
+				h = pgm_read_byte(&glyph->height);
 			int8_t   xo = pgm_read_byte(&glyph->xOffset),
 				yo = pgm_read_byte(&glyph->yOffset);
 			uint8_t  xx, yy, bits, bit = 0;

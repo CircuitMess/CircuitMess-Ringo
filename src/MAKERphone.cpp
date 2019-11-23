@@ -2663,7 +2663,7 @@ void MAKERphone::incomingMessage(String _serialData)
 	Serial.println(masterText);
 	_currentConcatSMS = 0;
 	_concatSMSCounter = 0;
-	JsonArray& jarr = jb.createArray();
+	jb.createArray();
 	bool fullStack = 0;
 	if (SDinsertedFlag)
 	{
@@ -4618,7 +4618,7 @@ bool MAKERphone::collideCircleCircle(int16_t centerX1, int16_t centerY1, int16_t
 }
 bool MAKERphone::collidePointCircle(int16_t pointX, int16_t pointY, int16_t centerX, int16_t centerY, int16_t r)
 {
-	return (((pointX - centerX) * (pointX - centerX) + (pointY - centerY) * (pointY - centerY)) < abs(r) ^ 2);
+	return (((pointX - centerX) * (pointX - centerX) + (pointY - centerY) * (pointY - centerY)) < r*r);
 }
 
 //SD operations
@@ -4746,8 +4746,8 @@ void MAKERphone::takeScreenshot()
 
 	uint8_t w = 160;
 	uint8_t h = 128;
-	int px[] = {255, 0, 255, 0, 255, 0};
-	bool debugPrint = 1;
+	//int px[] = {255, 0, 255, 0, 255, 0};
+	//bool debugPrint = 1;
 	unsigned char *img = NULL; // image data
 	//  int filesize = 54 + 3 * w * h;      //  w is image width, h is image height
 	int filesize = 54 + 4 * w * h; //  w is image width, h is image height
@@ -4758,7 +4758,7 @@ void MAKERphone::takeScreenshot()
 	img = (unsigned char *)malloc(3 * w);
 	Serial.println(ESP.getFreeHeap());
 	delay(5);
-	memset(img, 0, sizeof(img)); // not sure if I really need this; runs fine without...
+	memset(img, 0, 3 * w); // not sure if I really need this; runs fine without...
 	Serial.println(ESP.getFreeHeap());
 	delay(5);
 	// for (int y=0; y<h; y++) {
@@ -4799,8 +4799,8 @@ void MAKERphone::takeScreenshot()
 		'B', 'M', 0, 0, 0, 0, 0, 0, 0, 0, 54, 0, 0, 0};
 	unsigned char bmpInfoHeader[40] = {
 		40, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 24, 0};
-	unsigned char bmpPad[3] = {
-		0, 0, 0};
+	//unsigned char bmpPad[3] = {
+	//	0, 0, 0};
 
 	bmpFileHeader[2] = (unsigned char)(filesize);
 	bmpFileHeader[3] = (unsigned char)(filesize >> 8);
@@ -4822,7 +4822,7 @@ void MAKERphone::takeScreenshot()
 
 	for (int i = h - 1; i >= 0; i--) // iterate image array
 	{
-		// memset(img,0,sizeof(img));        // not sure if I really need this; runs fine without...
+		// memset(img, 0, sizeof(3 * w));        // not sure if I really need this; runs fine without...
 		for (int x = 0; x < w; x++)
 		{
 			// uint8_t rgb[3];
@@ -5024,7 +5024,6 @@ void MAKERphone::homePopup(bool animation)
 	display.drawIcon(popupScreenshot, 12, 70, 20, 20, 2);
 	display.drawIcon(popupPixelBrightness, 108, 70, 20, 20, 2);
 	uint8_t cursor = 1;
-	uint8_t scale = 2;
 	uint32_t blinkMillis = millis();
 	uint32_t notificationMillis = millis();
 	uint8_t cursorState = 0;
@@ -6176,14 +6175,14 @@ void MAKERphone::checkAlarms()
 		DateTime tempAlarm = DateTime(clockYear, clockMonth, clockDay, alarmHours[x], alarmMins[x], 0);
 		DateTime nextAlarm;
 		if (next_alarm != 99)
-			DateTime nextAlarm = DateTime(clockYear, clockMonth, clockDay, alarmHours[next_alarm], alarmMins[next_alarm], 0);
+			nextAlarm = DateTime(clockYear, clockMonth, clockDay, alarmHours[next_alarm], alarmMins[next_alarm], 0);
 		if (alarmEnabled[x] == 1 && !alarmRepeat[x])
 		{
 			if (next_alarm == 99)
 				next_alarm = x;
-			else if (((!alarmRepeat[next_alarm] || (alarmRepeat[next_alarm] &&
+			else if ((((!alarmRepeat[next_alarm] || (alarmRepeat[next_alarm] &&
 													alarmRepeatDays[next_alarm][currentTime.dayOfWeek()])) &&
-						  (tempAlarm > RTC.now() && tempAlarm > nextAlarm) ||
+						  (tempAlarm > RTC.now() && tempAlarm > nextAlarm)) ||
 					  (tempAlarm < RTC.now() && nextAlarm < RTC.now() && tempAlarm < nextAlarm)) ||
 					 (alarmRepeat[next_alarm] && !alarmRepeatDays[next_alarm][currentTime.dayOfWeek()]))
 				next_alarm = x;
@@ -6210,7 +6209,7 @@ void MAKERphone::checkAlarms()
 					x = 0;
 			}
 		}
-		DateTime alarm = DateTime(clockYear, clockMonth, clockDay, alarmHours[next_alarm], alarmMins[next_alarm, 0]);
+		DateTime alarm = DateTime(clockYear, clockMonth, clockDay, alarmHours[next_alarm], alarmMins[next_alarm], 0);
 		alarm = DateTime(alarm.unixtime() + z * 3600 * 24);
 		alarm_flags flags;
 		flags.hour = 1;
@@ -6427,7 +6426,7 @@ void MAKERphone::pduDecode(const char* PDU)
 	// Serial.println(clockSecond);
 	subchar(PDU, cursor, 2, subcharBuffer);
 	uint16_t timeZone = strtol(subcharBuffer, nullptr, 16);
-	bool plusMinus = bitRead(timeZone, 3);
+	//bool plusMinus = bitRead(timeZone, 3);
 	timeZone = timeZone & 0b11110111;
 	char zoneHelper[3];
 	sprintf(zoneHelper, "%X", timeZone);
@@ -6642,51 +6641,51 @@ void MAKERphone::emergencyCall()
 			switch (key)
 			{
 			case '1':
-				osc->note(C5, 0.05);
+				osc->note(NOTE_C5, 0.05);
 				osc->play();
 				break;
 			case '2':
-				osc->note(D5, 0.05);
+				osc->note(NOTE_D5, 0.05);
 				osc->play();
 				break;
 			case '3':
-				osc->note(E5, 0.05);
+				osc->note(NOTE_E5, 0.05);
 				osc->play();
 				break;
 			case '4':
-				osc->note(F5, 0.05);
+				osc->note(NOTE_F5, 0.05);
 				osc->play();
 				break;
 			case '5':
-				osc->note(G5, 0.05);
+				osc->note(NOTE_G5, 0.05);
 				osc->play();
 				break;
 			case '6':
-				osc->note(A5, 0.05);
+				osc->note(NOTE_A5, 0.05);
 				osc->play();
 				break;
 			case '7':
-				osc->note(B5, 0.05);
+				osc->note(NOTE_B5, 0.05);
 				osc->play();
 				break;
 			case '8':
-				osc->note(C6, 0.05);
+				osc->note(NOTE_C6, 0.05);
 				osc->play();
 				break;
 			case '9':
-				osc->note(D6, 0.05);
+				osc->note(NOTE_D6, 0.05);
 				osc->play();
 				break;
 			case '*':
-				osc->note(E6, 0.05);
+				osc->note(NOTE_E6, 0.05);
 				osc->play();
 				break;
 			case '0':
-				osc->note(F6, 0.05);
+				osc->note(NOTE_F6, 0.05);
 				osc->play();
 				break;
 			case '#':
-				osc->note(G6, 0.05);
+				osc->note(NOTE_G6, 0.05);
 				osc->play();
 				break;
 			default:
@@ -6749,7 +6748,6 @@ void MAKERphone::emergencyCall()
 			}
 			else
 			{
-				uint32_t timeoutMillis = millis();
 				while (Serial1.available())
 					Serial1.read();
 				Serial1.println("AT+CCALR?"); //No sim - returns 0 - not ready, that's okay for emergency call
@@ -7225,7 +7223,7 @@ bool MAKERphone::setCallVolume(uint8_t volume) //0-100
 		Serial1.println(command); //send command
 		Serial.println("WAIT=1"); //wait a bit
 		while (!Serial1.available()); //wait for response
-		if (!Serial1.readString().indexOf("OK") == -1)
+		if (!(Serial1.readString().indexOf("OK") == -1))
 			ret = false;
 		else
 			ret = true;

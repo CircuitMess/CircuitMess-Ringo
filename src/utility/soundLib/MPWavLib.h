@@ -6,7 +6,7 @@
 
 #include "Notes.h"
 
-# define PI 3.14159265358979323846
+//#define PI 3.14159265358979323846
 
 #define SINE 0
 #define TRIANGLE 1
