@@ -29,7 +29,7 @@ So just follow these steps and you will be fine!
 
 <img src="https://www.circuitmess.com/wp-content/uploads/Pic2.png" alt="drawing" width="700"/>
 
-3. Enter the following adress in the **'Additional board Manager URLs'** : **https://raw.githubusercontent.com/CircuitMess/MAKERphone/boardArduino/package_CircuitMess_Ringo_index.json**. Then click **OK**.
+3. Enter the following adress in the **'Additional board Manager URLs'** : **https://raw.githubusercontent.com/CircuitMess/CircuitMess-Ringo-Arduino-packages/master/package_CircuitMess_Ringo_index.json**. Then click **OK**.
 
 
 <img src="https://www.circuitmess.com/wp-content/uploads/Pic3.png" alt="drawing" width="700"/>
