@@ -179,9 +179,9 @@ class MAKERphone:public Buttons, public DateTime
 	bool setCallVolume(uint8_t volume);
 
     //Emergency calls
-    void emergencyCall();
-    void callNumberEmergency(String number);
-	void emergencyCallDrawCursor(uint8_t i, int32_t y);
+    // void emergencyCall();
+    // void callNumberEmergency(String number);
+	// void emergencyCallDrawCursor(uint8_t i, int32_t y);
 
 	//NeoPixels...
 	int numberOfColors = 19;
@@ -248,7 +248,7 @@ class MAKERphone:public Buttons, public DateTime
 	String ringtone_path = "/Ringtones/Default ringtone.wav";
 	String alarm_path = "/Ringtones/Default ringtone.wav";
 	uint8_t notification = 0;
-	uint16_t firmware_version = 102;
+	uint16_t firmware_version = 103;
 	//Settings app
 
 	void applySettings();
