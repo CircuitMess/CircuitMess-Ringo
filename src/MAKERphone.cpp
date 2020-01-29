@@ -584,7 +584,7 @@ void MAKERphone::begin(bool splash)
 		Serial.println("Calibration will start"); //safety checks before calibrating
 	else
 		isCalibrated = 1;
-	
+
 }
 
 bool MAKERphone::update() {
@@ -3709,7 +3709,8 @@ void MAKERphone::lockscreen()
 			if(measureCounter == 5)
 			{
 				meanMeasure = measureSum / 5;
-				if(digitalRead(CHRG_INT) && abs(1889 - meanMeasure) < 250
+				int32_t temp = 1889 - meanMeasure;
+				if(digitalRead(CHRG_INT) && (abs(temp) < 250)
 				&& buttons.timeHeld(BTN_1) > 0 && buttons.timeHeld(BTN_3) > 0
 				&& buttons.timeHeld(BTN_5) > 0 && buttons.timeHeld(BTN_7) > 0
 				&& buttons.timeHeld(BTN_9) > 0 && buttons.timeHeld(BTN_0) > 0) //safety checks before calibrating
