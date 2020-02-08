@@ -414,3 +414,95 @@ class MAKERphone:public Buttons, public DateTime
 uint32_t ADCrawRead(void);
 
 #endif
+
+/*
+Huge thanks to all of our supporters on Kickstarter.
+It was a long way to go since the start of our Kickstarter campaign and we couldn't have done it without your help.
+We thank each and every one of you, most notably:
+
+	Niko Klansek
+	Hrvoje Hafner
+	Sandro Vrbanus
+	Marko
+	divit
+	Matija
+	Gabrijel Skoro
+	Manon Cortial
+	Barbara Kolarić
+	Alain Pannetrat
+	Paulo Pinto Adao
+	Matea Zukolo
+	Miroslav Rajter
+	Cavan Vannice
+	Echo Mae
+	Sven Maricic
+	Vela
+	Antriksh
+	Hoizichri
+	Ivan Palcic
+	Alen
+	PhonicBloom Limited
+	Justin Thurer
+	Foodin
+	Richard Hudspeth
+	Julien B
+	J.P.
+	Ivančica Gajšak
+	Markus Kruse
+	jiayitong
+	Joseph Migeed
+	Chris Shell
+	Daniel Crowley
+	Darren P
+	gordana podvezanec
+	n0kturnal
+	Travis Austin
+	Sandro Pansa
+	Mandy Savage
+	doomslace
+	Jeremy VanSchalkwyk
+	John "johnkzin" Rudd
+	Pierre Baillargeon
+	Chap Ambrose
+	Anthony
+	Thilo-W. Finger
+	Patrick Beaupré
+	NetDr
+	Anze Miklavec
+	Kirsten Browne
+	Beau Smith
+	Thomas Hutchinson
+	Daniel G.
+	Alexander Arce
+	Dimitris
+	Hugh Reynolds
+	Alexander River Gatensby
+	MONOLIT
+	Lee
+	Gerren McKnight
+	Qualified backer
+	Pengouin
+	Gifted Abilities Technical Institute
+	Martin B Walters
+	Candra N. Murphy
+	Marko Pavisic
+	Dino Vezos
+	Jeanne
+	Clay Cooper
+	Jeroen
+	Michael Hardin
+	Christopher Smith
+	E. H. Seale
+	Ed
+	Endre Czirbesz
+	Kean
+	Andreas Assmayr
+	Matth Werner
+	dikdust
+	Ezequiel Lasnier
+	Brian Dysart
+	Josip
+	Rasmus Berlin
+	Stefan D.
+	
+*/
