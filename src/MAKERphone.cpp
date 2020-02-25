@@ -25,9 +25,10 @@ Authors:
 
 #ifndef MPMINIMAL
 TaskHandle_t Task1;
-TaskHandle_t MeasuringTask;
+void Task1code(void *pvParameters);
 #endif
 
+TaskHandle_t MeasuringTask;
 extern MAKERphone mp;
 //audio refresh task
 volatile uint32_t voltageSample = 0;
@@ -73,11 +74,6 @@ void listDir(fs::FS &fs, const char * dirname, uint8_t levels){
 		}
         file = root.openNextFile();
     }
-}
-void Task1code(void *pvParameters)
-{
-	while (true)
-		updateWav();
 }
 String MAKERphone::waitForOK()
 {
@@ -1387,6 +1383,11 @@ void MAKERphone::updateTimeRTC()
 	//Serial.println(clockSecond);
 
 	//Serial.println(F("\nGLOBAL TIME UPDATE OVER RTC DONE!"));
+}
+void Task1code(void *pvParameters)
+{
+	while (true)
+		updateWav();
 }
 void MAKERphone::sleep()
 {
