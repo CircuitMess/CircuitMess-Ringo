@@ -19,10 +19,17 @@ Authors:
 
 #include "MAKERphone.h"
 
-extern MAKERphone mp;
-//audio refresh task
+#ifdef MPMINIMAL
+#pragma message(__FILE__ ": MPMINIMAL")
+#endif
+
+#ifndef MPMINIMAL
 TaskHandle_t Task1;
 TaskHandle_t MeasuringTask;
+#endif
+
+extern MAKERphone mp;
+//audio refresh task
 volatile uint32_t voltageSample = 0;
 volatile double voltage = 3700;
 boolean btnHeld;
@@ -210,7 +217,10 @@ void MAKERphone::begin(bool splash)
 	// }
 	FastLED.clear();
 	buttons.begin();
+
+#ifndef MPMINIMAL
 	RTC.begin();
+#endif
 
 	// Serial.println(batteryVoltage);
 	// delay(50);
@@ -244,6 +254,7 @@ void MAKERphone::begin(bool splash)
 
 	ledcAnalogWrite(LEDC_CHANNEL, 0);
 
+#ifndef MPMINIMAL
 	//SD startup
 	uint32_t tempMillis = millis();
 	SDinsertedFlag = 1;
@@ -260,11 +271,14 @@ void MAKERphone::begin(bool splash)
 		_SDinterruptError = 1;
 	Serial.print("SD interrupt error: ");
 	Serial.println(_SDinterruptError);
+#endif
 
 	if (splash == 1)
 		splashScreen(); //Show the main splash screen
 	else
 		delay(500);
+
+#ifndef MPMINIMAL
 	//EEPROM setup for firmware_version
 	EEPROM.begin(300);
 	sim_module_version = EEPROM.readByte(GSM_MODULE_ADDRESS);
@@ -535,6 +549,7 @@ void MAKERphone::begin(bool splash)
 		&Task1,
 		0); /* Task handle to keep track of created task */
 	addOscillator(osc);
+#endif
 
 	if(digitalRead(CHRG_INT))
 		voltage = ADCrawRead() * (3600.0/offset1Value);
@@ -548,6 +563,7 @@ void MAKERphone::begin(bool splash)
 		&MeasuringTask,
 		1); /* Task handle to keep track of created task */
 
+#ifndef MPMINIMAL
 	ringtone = nullptr;
 	if (SDinsertedFlag)
 	{
@@ -585,9 +601,11 @@ void MAKERphone::begin(bool splash)
 	else
 		isCalibrated = 1;
 
+#endif
 }
 
 bool MAKERphone::update() {
+#ifndef MPMINIMAL
 	newMessage = 0;
 	exitedLockscreen = 0;
 	if (digitalRead(SD_INT) && (SDinsertedFlag || (!SDinsertedFlag && SDerror)) && !_SDinterruptError)
@@ -662,6 +680,7 @@ bool MAKERphone::update() {
 	// 	}
 	// }
 	//buf2.invertDisplay(1);
+#endif
 	buttonsPressed = 0;
 	for(uint8_t i = 16; i < 22; i++)
 	{
@@ -671,6 +690,7 @@ bool MAKERphone::update() {
 			break;
 		}
 	}
+#ifndef MPMINIMAL
 	if(!buttonsPressed && digitalRead(BTN_INT) && sleepTime != 0 && !inCall && !inAlarmPopup)
 	{
 		if (millis() - sleepTimer >= sleepTimeActual * 1000)
@@ -899,10 +919,16 @@ bool MAKERphone::update() {
 			}
 		}
 	}
+
+#endif
 	batteryVoltage = voltage;
 
+#ifndef MPMINIMAL
 	if(digitalRead(CHRG_INT) && ((sim_module_version != 1 && batteryVoltage <= 3600) || 
 	(sim_module_version == 1 && simVoltage <= 3580)) && isCalibrated)
+#else
+	if(digitalRead(CHRG_INT) && batteryVoltage <= 3600 && isCalibrated)
+#endif
 	{
 		if (timesMeasured != _timesMeasured)
 			shutdownCounter++;
@@ -918,8 +944,10 @@ bool MAKERphone::update() {
 			tft.print("Turning off...");
 			Serial.print("battery: ");
 			Serial.println(batteryVoltage);
+#ifndef MPMINIMAL
 			Serial.print("SIM: ");
 			Serial.println(simVoltage);
+#endif
 			delay(1500);
 
 			//Serial1.println("AT+CFUN=4");
@@ -948,6 +976,8 @@ bool MAKERphone::update() {
 	}
 	else
 		shutdownCounter = 0;
+
+#ifndef MPMINIMAL
 	if (alarmCleared && millis() - alarmMillis > 60000)
 		alarmCleared = 0;
 	if (!digitalRead(SIM_INT) && !inCall && networkInitialized)
@@ -1014,13 +1044,17 @@ bool MAKERphone::update() {
 			homeButtonPressed = 1;
 		}
 	}
+
+#endif
 	buttons.update();
+#ifndef MPMINIMAL
 
 	if (SHUTDOWN_POPUP_ENABLE && buttons.released(14) && !wokeWithPWRBTN && !inCall)
 	{
 		buttons.update();
 		sleep();
 	}
+#endif
 	if (buttons.held(14, 40) && !inShutdownPopup && SHUTDOWN_POPUP_ENABLE && !wokeWithPWRBTN && !inCall)
 	{
 		inShutdownPopup = 1;
@@ -1032,6 +1066,8 @@ bool MAKERphone::update() {
 		buttons.update();
 		wokeWithPWRBTN = 0;
 	}
+
+#ifndef MPMINIMAL
 	if (sim_module_version != 255 && simInserted)
 	{
 		if(networkRegistered != 1 && millis() - networkDisconnectMillis > 30000 && networkDisconnectFlag && inLockScreen
@@ -1125,15 +1161,18 @@ bool MAKERphone::update() {
 			networkDisconnectMillis = millis();
 	}
 
+#endif
 	if (millis() - lastFrameCount >= frameSpeed || screenshotFlag)
 	{
 		lastFrameCount = millis();
 
 		if (resolutionMode == 0) //native res mode
 		{
+#ifndef MPMINIMAL
 			if (popupTimeLeft)
 				updatePopup(); // else//halved res mode
 			else
+#endif
 				display.pushSprite(0, 0);
 		}
 		FastLED.setBrightness(255/5 * pixelsBrightness);
@@ -1168,18 +1207,186 @@ void MAKERphone::setResolution(bool res)
 	resolutionMode = res;
 	spriteCreated = 0;
 }
-void MAKERphone::tone2(int pin, int freq, int duration)
-{
-	ledcWriteTone(0, freq);
-	delay(duration);
-	ledcWriteTone(0, 0);
-}
 void MAKERphone::ledcAnalogWrite(uint8_t channel, uint32_t value, uint32_t valueMax)
 {
 	// calculate duty, 8191 from 2 ^ 13 - 1
 	uint32_t duty = (8191 / 255) * _min(value, valueMax);
 	// write duty to LEDC
 	ledcWrite(channel, duty);
+}
+void MAKERphone::shutdownPopup(bool animation)
+{
+	if (animation)
+	{
+		for (int i = 2; i < 75; i++)
+		{
+			// tft.fillRect(tft.width()/2 - i, 34, i * 2 + 2, 60, TFT_BLACK);
+			tft.drawRect(tft.width() / 2 - i, 28, i * 2 + 2, 72, TFT_BLACK);
+			tft.drawRect(tft.width() / 2 - i + 1, 29, i * 2 + 1, 70, TFT_BLACK);
+			tft.fillRect(tft.width() / 2 - i + 2, 30, i * 2 - 2, 68, TFT_WHITE);
+			// update();
+			// delayMicroseconds(2000);
+		}
+	}
+	dataRefreshFlag = 1;
+	// tft.fillRect(10, 34, 142, 60, TFT_BLACK);
+	// tft.fillRect(12, 36, 138, 56, TFT_WHITE);
+
+	uint8_t cursor = 0;
+	uint32_t blinkMillis = millis();
+	bool blinkState = 0;
+	dataRefreshFlag = 1;
+	// tft.fillRect(12, 36, 138, 56, TFT_WHITE);
+	tft.setTextColor(TFT_BLACK);
+	tft.drawBitmap(38, 45, powerButton, TFT_RED);
+	tft.drawBitmap(107, 45, resetButton, TFT_GREEN);
+	tft.setTextFont(2);
+	tft.setTextSize(1);
+	// tft.setCursor(55, 44);
+	// tft.print("Turn off?");
+	// tft.print("YES");
+	// tft.setCursor(98, 61);
+	// tft.print("NO");
+	tft.setCursor(18, 68);
+	tft.print("Power off");
+	tft.setCursor(95, 68);
+	tft.print("Restart");
+	// tft.print("YES      NO");
+	while (!buttons.released(BTN_B))
+	{
+		if (millis() - blinkMillis > 350)
+		{
+			blinkMillis = millis();
+			blinkState = !blinkState;
+		}
+		switch (cursor)
+		{
+		case 0:
+			tft.drawRect(13, 37, 71, 54, blinkState ? TFT_RED : TFT_WHITE);
+			tft.drawRect(14, 38, 69, 52, blinkState ? TFT_RED : TFT_WHITE);
+			break;
+		case 1:
+			tft.drawRect(86, 37, 60, 54, blinkState ? TFT_RED : TFT_WHITE);
+			tft.drawRect(87, 38, 58, 52, blinkState ? TFT_RED : TFT_WHITE);
+			break;
+		}
+		if (buttons.released(BTN_LEFT) && cursor == 1)
+		{
+			cursor = 0;
+			blinkMillis = millis();
+			blinkState = 1;
+			tft.drawRect(86, 37, 60, 54, TFT_WHITE);
+			tft.drawRect(87, 38, 58, 52, TFT_WHITE);
+		}
+		if (buttons.released(BTN_RIGHT) && cursor == 0)
+		{
+			cursor = 1;
+			blinkMillis = millis();
+			blinkState = 1;
+			tft.drawRect(13, 37, 71, 54, TFT_WHITE);
+			tft.drawRect(14, 38, 69, 52, TFT_WHITE);
+		}
+		if (buttons.released(BTN_A))
+		{
+			if (cursor == 1)
+			{
+				tft.fillRect(12, 36, 138, 56, TFT_WHITE);
+				tft.setCursor(40, 51);
+				tft.print("Restarting...");
+#ifndef MPMINIMAL
+				if (sim_module_version == 255)
+					delay(1500);
+				else
+				{
+					while (Serial1.available())
+						Serial1.read();
+					Serial1.println("AT+CFUN=1,1");
+					char buffer[300];
+					bool found = 0;
+					memset(buffer, 0, sizeof(buffer));
+					Serial1.flush();
+					uint32_t timer = millis();
+					while (!found)
+					{
+						if (Serial1.available())
+						{
+
+							char test = (char)Serial1.read();
+							strncat(buffer, &test, 1);
+							Serial.println(buffer);
+						}
+
+						if (strstr(buffer, "RDY") != nullptr)
+							found = 1;
+						if ((millis() - timer > 8000 && sim_module_version == 1) ||
+							(millis() - timer > 28000 && sim_module_version == 0))
+							break;
+					}
+				}
+#endif
+				ESP.restart();
+			}
+			else
+			{
+				tft.fillRect(12, 36, 138, 56, TFT_WHITE);
+				tft.setCursor(40, 51);
+				tft.print("Turning off...");
+				// Serial1.println("AT+CFUN=1,1");
+				// Serial1.println("AT+CFUN=4");
+				// Serial1.println("AT+CSCLK=2");
+
+				delay(750);
+				Serial.println("TURN OFF");
+				digitalWrite(SIM800_DTR, 1);
+				FastLED.clear(1);
+				ledcDetachPin(LCD_BL_PIN);
+				pinMode(LCD_BL_PIN, OUTPUT);
+				digitalWrite(LCD_BL_PIN, 1);
+				// digitalWrite(OFF_PIN, 1);
+
+				rtc_gpio_isolate(GPIO_NUM_16);
+				rtc_gpio_isolate(GPIO_NUM_17);
+				rtc_gpio_isolate(GPIO_NUM_33);
+				rtc_gpio_isolate(GPIO_NUM_34);
+				rtc_gpio_isolate(GPIO_NUM_36);
+				rtc_gpio_isolate(GPIO_NUM_39);
+
+				digitalWrite(OFF_PIN, 1);
+				ESP.deepSleep(0);
+			}
+		}
+		buttons.update();
+	}
+	while (!update())
+		;
+}
+void MAKERphone::shutdownPopupEnable(bool enabled)
+{
+	SHUTDOWN_POPUP_ENABLE = enabled;
+}
+
+#ifndef MPMINIMAL
+
+void MAKERphone::updateTimeRTC()
+{
+	currentTime = RTC.now();
+	clockHour = currentTime.hour();
+	clockMinute = currentTime.minute();
+	clockSecond = currentTime.second();
+	clockDay = currentTime.day();
+	clockMonth = currentTime.month();
+	clockYear = currentTime.year();
+
+	//Serial.println(F("CLOCK HOUR:"));
+	//Serial.println(clockHour);
+
+	//Serial.println(F("CLOCK MINUTE:"));
+	//Serial.println(clockMinute);
+
+	//Serial.println(F("CLOCK SECOND:"));
+	//Serial.println(clockSecond);
+
+	//Serial.println(F("\nGLOBAL TIME UPDATE OVER RTC DONE!"));
 }
 void MAKERphone::sleep()
 {
@@ -1705,6 +1912,12 @@ void MAKERphone::sleep()
 		}
 	}
 }
+void MAKERphone::tone2(int pin, int freq, int duration)
+{
+	ledcWriteTone(0, freq);
+	delay(duration);
+	ledcWriteTone(0, 0);
+}
 void MAKERphone::loader()
 {
 	display.fillScreen(TFT_BLACK);
@@ -1825,27 +2038,7 @@ void MAKERphone::updateTimeGSM()
 	Serial.println(F("\nRTC TIME UPDATE OVER GSM DONE!"));
 	delay(5);
 }
-void MAKERphone::updateTimeRTC()
-{
-	currentTime = RTC.now();
-	clockHour = currentTime.hour();
-	clockMinute = currentTime.minute();
-	clockSecond = currentTime.second();
-	clockDay = currentTime.day();
-	clockMonth = currentTime.month();
-	clockYear = currentTime.year();
 
-	//Serial.println(F("CLOCK HOUR:"));
-	//Serial.println(clockHour);
-
-	//Serial.println(F("CLOCK MINUTE:"));
-	//Serial.println(clockMinute);
-
-	//Serial.println(F("CLOCK SECOND:"));
-	//Serial.println(clockSecond);
-
-	//Serial.println(F("\nGLOBAL TIME UPDATE OVER RTC DONE!"));
-}
 void MAKERphone::performUpdate(Stream &updateSource, size_t updateSize)
 {
 	if (Update.begin(updateSize))
@@ -5732,154 +5925,6 @@ String MAKERphone::currentDateTime()
 	return dateTime;
 }
 
-void MAKERphone::shutdownPopup(bool animation)
-{
-	if (animation)
-	{
-		for (int i = 2; i < 75; i++)
-		{
-			// tft.fillRect(tft.width()/2 - i, 34, i * 2 + 2, 60, TFT_BLACK);
-			tft.drawRect(tft.width() / 2 - i, 28, i * 2 + 2, 72, TFT_BLACK);
-			tft.drawRect(tft.width() / 2 - i + 1, 29, i * 2 + 1, 70, TFT_BLACK);
-			tft.fillRect(tft.width() / 2 - i + 2, 30, i * 2 - 2, 68, TFT_WHITE);
-			// update();
-			// delayMicroseconds(2000);
-		}
-	}
-	dataRefreshFlag = 1;
-	// tft.fillRect(10, 34, 142, 60, TFT_BLACK);
-	// tft.fillRect(12, 36, 138, 56, TFT_WHITE);
-
-	uint8_t cursor = 0;
-	uint32_t blinkMillis = millis();
-	bool blinkState = 0;
-	dataRefreshFlag = 1;
-	// tft.fillRect(12, 36, 138, 56, TFT_WHITE);
-	tft.setTextColor(TFT_BLACK);
-	tft.drawBitmap(38, 45, powerButton, TFT_RED);
-	tft.drawBitmap(107, 45, resetButton, TFT_GREEN);
-	tft.setTextFont(2);
-	tft.setTextSize(1);
-	// tft.setCursor(55, 44);
-	// tft.print("Turn off?");
-	// tft.print("YES");
-	// tft.setCursor(98, 61);
-	// tft.print("NO");
-	tft.setCursor(18, 68);
-	tft.print("Power off");
-	tft.setCursor(95, 68);
-	tft.print("Restart");
-	// tft.print("YES      NO");
-	while (!buttons.released(BTN_B))
-	{
-		if (millis() - blinkMillis > 350)
-		{
-			blinkMillis = millis();
-			blinkState = !blinkState;
-		}
-		switch (cursor)
-		{
-		case 0:
-			tft.drawRect(13, 37, 71, 54, blinkState ? TFT_RED : TFT_WHITE);
-			tft.drawRect(14, 38, 69, 52, blinkState ? TFT_RED : TFT_WHITE);
-			break;
-		case 1:
-			tft.drawRect(86, 37, 60, 54, blinkState ? TFT_RED : TFT_WHITE);
-			tft.drawRect(87, 38, 58, 52, blinkState ? TFT_RED : TFT_WHITE);
-			break;
-		}
-		if (buttons.released(BTN_LEFT) && cursor == 1)
-		{
-			cursor = 0;
-			blinkMillis = millis();
-			blinkState = 1;
-			tft.drawRect(86, 37, 60, 54, TFT_WHITE);
-			tft.drawRect(87, 38, 58, 52, TFT_WHITE);
-		}
-		if (buttons.released(BTN_RIGHT) && cursor == 0)
-		{
-			cursor = 1;
-			blinkMillis = millis();
-			blinkState = 1;
-			tft.drawRect(13, 37, 71, 54, TFT_WHITE);
-			tft.drawRect(14, 38, 69, 52, TFT_WHITE);
-		}
-		if (buttons.released(BTN_A))
-		{
-			if (cursor == 1)
-			{
-				tft.fillRect(12, 36, 138, 56, TFT_WHITE);
-				tft.setCursor(40, 51);
-				tft.print("Restarting...");
-				if (sim_module_version == 255)
-					delay(1500);
-				else
-				{
-					while (Serial1.available())
-						Serial1.read();
-					Serial1.println("AT+CFUN=1,1");
-					char buffer[300];
-					bool found = 0;
-					memset(buffer, 0, sizeof(buffer));
-					Serial1.flush();
-					uint32_t timer = millis();
-					while (!found)
-					{
-						if (Serial1.available())
-						{
-
-							char test = (char)Serial1.read();
-							strncat(buffer, &test, 1);
-							Serial.println(buffer);
-						}
-
-						if (strstr(buffer, "RDY") != nullptr)
-							found = 1;
-						if ((millis() - timer > 8000 && sim_module_version == 1) ||
-							(millis() - timer > 28000 && sim_module_version == 0))
-							break;
-					}
-				}
-				ESP.restart();
-			}
-			else
-			{
-				tft.fillRect(12, 36, 138, 56, TFT_WHITE);
-				tft.setCursor(40, 51);
-				tft.print("Turning off...");
-				// Serial1.println("AT+CFUN=1,1");
-				// Serial1.println("AT+CFUN=4");
-				// Serial1.println("AT+CSCLK=2");
-
-				delay(750);
-				Serial.println("TURN OFF");
-				digitalWrite(SIM800_DTR, 1);
-				FastLED.clear(1);
-				ledcDetachPin(LCD_BL_PIN);
-				pinMode(LCD_BL_PIN, OUTPUT);
-				digitalWrite(LCD_BL_PIN, 1);
-				// digitalWrite(OFF_PIN, 1);
-
-				rtc_gpio_isolate(GPIO_NUM_16);
-				rtc_gpio_isolate(GPIO_NUM_17);
-				rtc_gpio_isolate(GPIO_NUM_33);
-				rtc_gpio_isolate(GPIO_NUM_34);
-				rtc_gpio_isolate(GPIO_NUM_36);
-				rtc_gpio_isolate(GPIO_NUM_39);
-
-				digitalWrite(OFF_PIN, 1);
-				ESP.deepSleep(0);
-			}
-		}
-		buttons.update();
-	}
-	while (!update())
-		;
-}
-void MAKERphone::shutdownPopupEnable(bool enabled)
-{
-	SHUTDOWN_POPUP_ENABLE = enabled;
-}
 void MAKERphone::alarmPopup(bool animation)
 {
 	// if(animation)
@@ -6470,3 +6515,5 @@ bool MAKERphone::setCallVolume(uint8_t volume) //0-100
 	}
 	return ret;
 }
+
+#endif

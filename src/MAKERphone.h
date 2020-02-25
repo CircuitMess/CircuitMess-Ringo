@@ -19,31 +19,55 @@ Authors:
 
 #ifndef MAKERphone_h
 #define MAKERphone_h
+
+#ifdef MPMINIMAL
+#pragma message(__FILE__ ": MPMINIMAL")
+#endif
+
+
+#include "FastLED/FastLED.h"
+#include "TFT_eSPI/TFT_eSPI.h" // Graphics and font library for ST7735 driver chip
+#include <SPI.h>
+#include "utility/Buttons/Buttons.h"
+
+//Fonts and sprites to use
+#include "utility/Free_Fonts.h"
+#include "utility/sprites.c"
+
+#include <driver/rtc_io.h>
+#include <esp_efuse.h>
+#include <esp_adc_cal.h>
+#include <driver/adc.h>
+
+#ifndef MPMINIMAL
+
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
+#include <stdint.h>
+#include <ctype.h>
+
+#include <driver/gpio.h>
+
+#include "utility/ArduinoJson.h"
+#include "utility/RTCLib/RTClib.h"
+
+extern HardwareSerial Serial1;
+
+
 #include <SD.h>
 #include <FS.h>
 #include <WiFi.h>
 #include <esp32-hal-bt.h>
-#include <driver/rtc_io.h>
-#include <stdint.h>
+
 #include <EEPROM.h>
 #include "esp_ota_ops.h"
 
-#include "FastLED/FastLED.h"
-extern HardwareSerial Serial1;
-#include "TFT_eSPI/TFT_eSPI.h" // Graphics and font library for ST7735 driver chip
-#include <SPI.h>
-#include "utility/ArduinoJson.h"
-#include "utility/RTCLib/RTClib.h"
-#include "utility/Buttons/Buttons.h"
 #include <Update.h>
 #include <HTTPClient.h>
 #include <WiFiClientSecure.h>
 #include <EEPROM.h>
 #include "utility/arduino_pdu_decoder/pdu_decoder.h"
-
-//Fonts and sprites to use
-#include "utility/Free_Fonts.h"
-#include "utility/sprites.c"
 
 #include "utility/JPEGDecoder.h"
 #include "freertos/FreeRTOS.h"
@@ -53,15 +77,9 @@ extern HardwareSerial Serial1;
 #include "utility/soundLib/MPWavLib.h"
 #include "utility/arduino_pdu_decoder/pdu_decoder.h"
 
-#include <esp_efuse.h>
-#include <esp_adc_cal.h>
-#include <driver/adc.h>
-#include <driver/gpio.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
+#endif
 
-#include <ctype.h>
+
 #define BTN_1 0
 #define BTN_2 1
 #define BTN_3 2
@@ -132,9 +150,14 @@ extern HardwareSerial Serial1;
 #define SMS_LIMIT 30
 
 
-class MAKERphone:public Buttons, public DateTime
+class MAKERphone:public Buttons
+#ifndef MPMINIMAL
+	, public DateTime
+#endif
 {
   public:
+	uint16_t firmware_version = 103;
+
 	PCF8563 RTC;
 	Buttons buttons;
 
@@ -142,21 +165,60 @@ class MAKERphone:public Buttons, public DateTime
 	TFT_eSprite display = TFT_eSprite(&tft);
 	TFT_eSprite popupSprite = TFT_eSprite(&tft);
 	// TFT_eSprite buf = TFT_eSprite(&tft);
+
+	void begin(bool splash = 1);
+	
+
+	//NeoPixels...
+	int numberOfColors = 19;
+	uint8_t pixelState;
+	CRGB leds[NUMPIXELS];
+	void ledcAnalogWrite(uint8_t channel, uint32_t value, uint32_t valueMax = 255);
+	bool update();
+	void splashScreen();
+	void shutdownPopupEnable(bool enable);
+
+	//update() variables
+	int frameSpeed = 40;
+	int lastFrameCount = 0;
+	String updateBuffer;
+	uint32_t refreshMillis = millis();
+	uint32_t buttonsRefreshMillis = millis();
+	uint32_t joystickMillis = millis();
+
+	bool resolutionMode = 0; //0 is native, 1 is halved
+	void setResolution(bool res);
+	bool spriteCreated = 0;
+
+	String textInput(String buffer, int16_t length = -1);
+	uint8_t brightness = 5;  //brightness 0-5
+	uint8_t actualBrightness = 0; //value from 0 (brightest) to 255 (backlight off)
+
+	uint8_t sleepTime = 2;
+	volatile double batteryVoltage = 50000;
+	uint32_t sleepTimer = millis();
+
+	uint32_t textPointer = 0;
+	bool textLimitFlag = 0;
+
+	bool dataRefreshFlag = 0;
+	bool receivedFlag = 1;
+
+	uint8_t pixelsBrightness = 5; //0-5
+
+	bool screenshotFlag = 0;
+	bool inCall = 0;
+
+#ifndef MPMINIMAL
+
 	Oscillator* osc = new Oscillator();
 
 	const esp_partition_t* partition;
 	const esp_partition_t* partition2;
-	bool resolutionMode = 0; //0 is native, 1 is halved
 
-	void setResolution(bool res);
-	bool spriteCreated = 0;
-
-	void begin(bool splash = 1);
 	void tone2(int pin, int freq, int duration);
 	void vibration(int duration);
-	void ledcAnalogWrite(uint8_t channel, uint32_t value, uint32_t valueMax = 255);
-	bool update();
-	void splashScreen();
+	
 	void sleep();
 	void incomingCall(String _serialData);
 	void addCall(String number, String contact, uint32_t dateTime, int duration, uint8_t direction);
@@ -167,9 +229,6 @@ class MAKERphone:public Buttons, public DateTime
 	void enterPin();
 	void enterPUK();
 	String currentDateTime();
-	String textInput(String buffer, int16_t length = -1);
-	uint32_t textPointer = 0;
-	bool textLimitFlag = 0;
 	void loader();
 	void lockscreen();
 	void updateFromFS(String FilePath);
@@ -183,10 +242,6 @@ class MAKERphone:public Buttons, public DateTime
     // void callNumberEmergency(String number);
 	// void emergencyCallDrawCursor(uint8_t i, int32_t y);
 
-	//NeoPixels...
-	int numberOfColors = 19;
-	uint8_t pixelState;
-	CRGB leds[NUMPIXELS];
 
 	//Notification sounds
 	void playNotificationSound(uint8_t notification);
@@ -228,27 +283,20 @@ class MAKERphone:public Buttons, public DateTime
 	// bool wifi = 1;
 	// bool bt = 0;
 	bool airplaneMode = 0;
-	uint8_t brightness = 5;  //brightness 0-5
-	uint8_t actualBrightness = 0; //value from 0 (brightest) to 255 (backlight off)
 	uint16_t sleepTimeActual = 30; //in seconds
 	uint8_t backgroundIndex = 0;
 	uint8_t ringVolume = 10; //volume 0-14
 	uint8_t mediaVolume = 10; //volume 0-14
-	uint8_t pixelsBrightness = 5; //0-5
 	uint8_t callSpeakerVolume = 5;
 	bool pinLock;
 	uint16_t pinNumber = 1234;
 	bool simInserted = 0;
 	bool simReady = 0;
-	uint32_t sleepTimer = millis();
-	volatile double batteryVoltage = 50000;
 	uint16_t signalStrength = 0;
 	String carrierName = "";
-	uint8_t sleepTime = 2;
 	String ringtone_path = "/Ringtones/Default ringtone.wav";
 	String alarm_path = "/Ringtones/Default ringtone.wav";
 	uint8_t notification = 0;
-	uint16_t firmware_version = 103;
 	//Settings app
 
 	void applySettings();
@@ -256,18 +304,9 @@ class MAKERphone:public Buttons, public DateTime
 	void loadSettings(bool debug = false);
 
 
-	//update() variables
-	int frameSpeed = 40;
-	int lastFrameCount = 0;
-	String updateBuffer;
-	uint32_t refreshMillis = millis();
-	uint32_t buttonsRefreshMillis = millis();
-	uint32_t joystickMillis = millis();
 	// uint32_t voltageMillis = millis();
 	// uint32_t voltageSum = 0;
 	// uint16_t voltageSample = 0;
-	bool dataRefreshFlag = 0;
-	bool receivedFlag = 1;
 	bool SDinsertedFlag = 0;
 
 	//COLLISION
@@ -292,14 +331,12 @@ class MAKERphone:public Buttons, public DateTime
 	DateTime currentTime;
 	void updateTimeGSM();
 	void updateTimeRTC();
-	bool screenshotFlag = 0;
 
 
 	//on-screen popup
 	void popup(String text, uint16_t duration);
 	void updatePopup();
 	void homePopupEnable(bool enable);
-	void shutdownPopupEnable(bool enable);
 	void alarmPopup(bool animation = 1);
 	void loadAlarms();
 	void saveAlarms();
@@ -328,7 +365,6 @@ class MAKERphone:public Buttons, public DateTime
 	void saveNotifications(bool debug = 0);
 	void deallocateAudio();
 	void reallocateAudio();
-	bool inCall = 0;
 	uint8_t micGain = 14;
 	uint16_t simVoltage = 3900;
 	uint8_t sim_module_version = 255; // 0 - SIM7600, 1 - SIM800, 255 - no module
@@ -343,7 +379,22 @@ class MAKERphone:public Buttons, public DateTime
 	int8_t networkRegistered = -1;
 	void networkModuleInit();
 	static int DecodePDUMessage(const char* buffer, int buffer_length, char* output_sms_text, int sms_text_length);
+
+#endif
 	private:
+		bool inShutdownPopup = 0;
+		void shutdownPopup(bool animation = 1);
+		bool SHUTDOWN_POPUP_ENABLE = 1;
+		String popupText;		
+		char c;
+		int shutdownCounter = 0;
+		int timesMeasured = 0;
+		bool isCalibrated = 0;
+		bool buttonsPressed = 0;
+		bool wokeWithPWRBTN = 0;
+
+#ifndef MPMINIMAL
+
 		MPTrack* ringtone = nullptr;
 		int multi_tap(byte key);
 		uint8_t timesRemaining;
@@ -358,8 +409,6 @@ class MAKERphone:public Buttons, public DateTime
 		void checkAlarms();
 
 		bool HOME_POPUP_ENABLE = 1;
-		bool SHUTDOWN_POPUP_ENABLE = 1;
-		String popupText;
 		uint16_t popupTimeLeft = 0;
 		uint16_t popupTotalTime = 0;
 		const char *popupHomeItems[6] PROGMEM = {
@@ -372,8 +421,6 @@ class MAKERphone:public Buttons, public DateTime
 		};
 		String monthsList[12] PROGMEM = {"JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"};
 		bool inHomePopup = 0;
-		bool inShutdownPopup = 0;
-		void shutdownPopup(bool animation = 1);
 		void takeScreenshot();
 		int backgroundColors[7] PROGMEM = {
 			TFT_CYAN,
@@ -387,17 +434,13 @@ class MAKERphone:public Buttons, public DateTime
 		float notificationSoundDuration = 0;
 		uint8_t notificationSoundNote = 0;
 		bool SDerror = 0;
-		char c;
-		bool buttonsPressed = 0;
-		bool wokeWithPWRBTN = 0;
+
 		uint8_t alternatingRefresh = 1;
 		bool inLockScreen = 0;
 		MPTrack *currTracks[4] = {nullptr,nullptr,nullptr,nullptr};
 		bool pausedTracks[4] = {0,0,0,0};
 		bool tracksSaved = 0;
 		// uint8_t oscillatorVolumeList[14] = {0,10,15,20,35,50,60,80,100,120,150,200,220,255};
-		int shutdownCounter = 0;
-		int timesMeasured = 0;
 		uint32_t networkDisconnectMillis = millis();
 		bool networkDisconnectFlag = 1;
 		bool networkInitialized = 0;
@@ -407,8 +450,8 @@ class MAKERphone:public Buttons, public DateTime
 		uint8_t _concatSMSCounter = 0;
 		uint8_t _currentConcatSMS = 0;
 		bool _concatSMSCodingScheme = 0;
-		bool isCalibrated = 0;
 		uint32_t carrierNameCounter = 0;
+#endif
 
 };
 uint32_t ADCrawRead(void);
