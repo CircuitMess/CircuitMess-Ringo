@@ -65,7 +65,6 @@ extern HardwareSerial Serial1;
 #include <HTTPClient.h>
 #include <WiFiClientSecure.h>
 #include <EEPROM.h>
-#include "utility/arduino_pdu_decoder/pdu_decoder.h"
 
 #include "utility/JPEGDecoder.h"
 #include "freertos/FreeRTOS.h"

@@ -1,5 +1,3 @@
-//Implementation of a pdu decoder.
-
 #include "Arduino.h"
 #include "pdu_decoder.h"
 struct MapAsciiToGSM7bit
@@ -105,23 +103,7 @@ MapAsciiToGSM7bit my_map[93] ={
   {"1B29", '}'},
   {"1B3D", '~'},
 };
-/*
-069183950124F2040C918395121548670000918082812383801900546A83DAA436BC8DAFB7A16C7A1BE0E6E5E3B95827
-escape byte
-28
-escape byte
-1B
-escape byte
-3E
-escape byte
-14
-escape byte
-40
-escape byte
-2F
 
-069183950124F2040C91839512154867000091809271306080121BD486B7496D7C9BD706B8E96D28BD08
-*/
 void subchar(char* str, uint16_t start, uint16_t length, char* destination)
 {
     // char* ret = new char[length + 1];
