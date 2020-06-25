@@ -2,8 +2,7 @@
 #define buttons_h
 
 #include <Arduino.h>
-#include "../Keypad_I2Ca/Keypad_I2Ca.h"
-#include "../Keypad/src/Keypad.h"
+#include "../I2cExpander/I2cExpander.h"
 #include "../Adafruit_ADS1X15/Adafruit_ADS1015.h"
 
 
@@ -14,6 +13,7 @@
 #define COLS 4
 #define NUM_BTN 22
 #define I2CADDRESS 0x74
+#define NO_KEY '\0'
 
 class Buttons
 {
@@ -35,7 +35,7 @@ class Buttons
 		///////////////////
 		//Keypad variables
 		//////////////////
-		Keypad_I2Ca kpd = Keypad_I2Ca(makeKeymap(keys), rowPins, colPins, ROWS, COLS, I2CADDRESS, PCA9539);
+		I2cExpander kpd;
 		void begin();
 		void update();
 

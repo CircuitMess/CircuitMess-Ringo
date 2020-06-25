@@ -2,16 +2,12 @@
 
 void Buttons::begin() {
 	ads.begin();
-	kpd.begin();
-
-
-	// kpd.setDebounceTime(20);
-	// kpd.setHoldTime(0);
+	kpd.begin(I2CADDRESS, 14, 27);
 
 	for(int i = 0;i<16;i++) {
-		kpd.pin_mode(i, INPUT);
+		kpd.pinMode(i, INPUT);
 	}
-	kpd.pin_write(14, 1);
+	kpd.pinWrite(14, 1);
 }
 
 void Buttons::update() {
@@ -55,7 +51,7 @@ void Buttons::update() {
 	bitWrite(buttonsData, 16, !(button_a < 1));
 	bitWrite(buttonsData, 17, !(button_b < 1));
 
-	int tmp_value = kpd.port_read();
+	int tmp_value = kpd.portRead();
 
 	for (uint8_t i = 0; i < NUM_BTN; i++) {
 		bool pressed;
