@@ -88,9 +88,9 @@ We are currently working on creating as many examples as possible. Don't worry, 
 
 **YouTube** - https://www.youtube.com/channel/UCVUvt1CeoZpCSnwg3oBMsOQ
 
-Copyright © 2019 CircuitMess
+Copyright © 2020 CircuitMess
 
-Licensed under [GPL-3.0](https://www.gnu.org/licenses/gpl-3.0.html)
+Licensed under [MIT license](https://opensource.org/licenses/MIT)
 
 
 
