@@ -1,7 +1,7 @@
 ## MAKERphone library
-Copyright © 2019 [CircuitMess](http://circuitmess.com/)
+Copyright © 2020 [CircuitMess](http://circuitmess.com/)
 
-[GPL-3.0](https://github.com/CircuitMess/MAKERphone/blob/master/LICENSE)
+[MIT license](https://github.com/CircuitMess/MAKERphone/blob/master/LICENSE)
 
 ## ArduinoJson
 https://github.com/bblanchon/ArduinoJson
