@@ -65,7 +65,7 @@ uint8_t JPEGDecoder::pjpeg_callback(uint8_t* pBuf, uint8_t buf_size, uint8_t *pB
 uint8_t JPEGDecoder::pjpeg_need_bytes_callback(uint8_t* pBuf, uint8_t buf_size, uint8_t *pBytes_actually_read, void *pCallback_data) {
 	uint n;
 
-	(void)pCallback_data;
+	//pCallback_data;
 
 	n = jpg_min(g_nInFileSize - g_nInFileOfs, buf_size);
 
@@ -75,6 +75,10 @@ uint8_t JPEGDecoder::pjpeg_need_bytes_callback(uint8_t* pBuf, uint8_t buf_size, 
 			//Serial.println(pBuf[i],HEX);
 		}
 	}
+
+#ifdef LOAD_SPIFFS
+	if (jpg_source == JPEG_FS_FILE) g_pInFileFs.read(pBuf,n); // else we are handling a file
+#endif
 
 #if defined (LOAD_SD_LIBRARY) || defined (LOAD_SDFAT_LIBRARY)
 	if (jpg_source == JPEG_SD_FILE) g_pInFileSd.read(pBuf,n); // else we are handling a file
@@ -300,12 +304,53 @@ int JPEGDecoder::decodeFile(const String& pFilename){
 }
 
 
+#ifdef LOAD_SPIFFS
+
+// Call specific to SPIFFS
+int JPEGDecoder::decodeFsFile(const char *pFilename) {
+
+	fs::File pInFile = SPIFFS.open( pFilename, "r");
+
+	return decodeFsFile(pInFile);
+}
+
+int JPEGDecoder::decodeFsFile(const String& pFilename) {
+
+	fs::File pInFile = SPIFFS.open( pFilename, "r");
+
+	return decodeFsFile(pInFile);
+}
+
+int JPEGDecoder::decodeFsFile(fs::File jpgFile) { // This is for the SPIFFS library
+
+	g_pInFileFs = jpgFile;
+
+	jpg_source = JPEG_FS_FILE; // Flag to indicate a SPIFFS file
+
+	if (!g_pInFileFs) {
+		#ifdef DEBUG
+		Serial.println("ERROR: SPIFFS file not found!");
+		#endif
+
+		return -1;
+	}
+
+	g_nInFileOfs = 0;
+
+	g_nInFileSize = g_pInFileFs.size();
+
+	return decodeCommon();
+
+}
+#endif
+
+
 #if defined (LOAD_SD_LIBRARY) || defined (LOAD_SDFAT_LIBRARY)
 
 // Call specific to SD filing system in case leading / is used
 int JPEGDecoder::decodeSdFile(const char *pFilename) {
 
-	File pInFile = SD.open( pFilename);
+	File pInFile = SD.open( pFilename, FILE_READ);
 
 	return decodeSdFile(pInFile);
 }
@@ -313,7 +358,7 @@ int JPEGDecoder::decodeSdFile(const char *pFilename) {
 
 int JPEGDecoder::decodeSdFile(const String& pFilename) {
 #if !defined (ARDUINO_ARCH_SAM)
-	File pInFile = SD.open( pFilename);
+	File pInFile = SD.open( pFilename, FILE_READ);
 
 	return decodeSdFile(pInFile);
 #else
@@ -374,12 +419,14 @@ int JPEGDecoder::decodeCommon(void) {
 	status = pjpeg_decode_init(&image_info, pjpeg_callback, NULL, 0);
 
 	if (status) {
+		#ifdef DEBUG
 		Serial.print("pjpeg_decode_init() failed with status ");
 		Serial.println(status);
 
 		if (status == PJPG_UNSUPPORTED_MODE) {
 			Serial.println("Progressive JPEG files are not supported.");
 		}
+		#endif
 
 		return 0;
 	}
@@ -417,6 +464,10 @@ void JPEGDecoder::abort(void) {
 	if(pImage) delete[] pImage;
 	pImage = NULL;
 	
+#ifdef LOAD_SPIFFS
+	if (jpg_source == JPEG_FS_FILE) if (g_pInFileFs) g_pInFileFs.close();
+#endif
+
 #if defined (LOAD_SD_LIBRARY) || defined (LOAD_SDFAT_LIBRARY)
 	if (jpg_source == JPEG_SD_FILE) if (g_pInFileSd) g_pInFileSd.close();
 #endif

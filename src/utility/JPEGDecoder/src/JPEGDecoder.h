@@ -10,7 +10,7 @@ Latest version here:
 https://github.com/Bodmer/JPEGDecoder
 
 */
-#define LOAD_SDFAT_LIBRARY
+
 #ifndef JPEGDECODER_H
 	#define JPEGDECODER_H
 
@@ -38,19 +38,21 @@ https://github.com/Bodmer/JPEGDecoder
 
 		#define LOAD_SPIFFS
 		#define FS_NO_GLOBALS
+		#include <FS.h>
 
 		#ifdef ESP32
+			#include "SPIFFS.h" // ESP32 only
 		#endif
 
 	#endif
 
 	#if defined (LOAD_SD_LIBRARY) || defined (LOAD_SDFAT_LIBRARY)
 		#ifdef LOAD_SDFAT_LIBRARY
+			#include <SdFat.h> // Alternative where we might need to bit bash the SPI
 		#else
+			#include <SD.h>    // Default
 		#endif
 	#endif
-
-#include <SD.h> // Alternative where we might need to bit bash the SPI
 
 	
 #include "picojpeg.h"
@@ -80,27 +82,31 @@ typedef unsigned int uint;
 class JPEGDecoder {
 
 private:
-//   SdFat SD;
-  File g_pInFileSd;
-  pjpeg_scan_type_t scan_type;
-  pjpeg_image_info_t image_info;
-
-  int is_available;
-  int mcu_x;
-  int mcu_y;
-  uint g_nInFileSize;
-  uint g_nInFileOfs;
-  uint row_pitch;
-  uint decoded_width, decoded_height;
-  uint row_blocks_per_mcu, col_blocks_per_mcu;
-  uint8 status;
-  uint8 jpg_source = 0;
-  uint8_t *jpg_data;
-
-  static uint8 pjpeg_callback(unsigned char *pBuf, unsigned char buf_size, unsigned char *pBytes_actually_read, void *pCallback_data);
-  uint8 pjpeg_need_bytes_callback(unsigned char *pBuf, unsigned char buf_size, unsigned char *pBytes_actually_read, void *pCallback_data);
-  int decode_mcu(void);
-  int decodeCommon(void);
+#if defined (LOAD_SD_LIBRARY) || defined (LOAD_SDFAT_LIBRARY)
+	File g_pInFileSd;
+#endif
+#ifdef LOAD_SPIFFS
+	fs::File g_pInFileFs;
+#endif
+	pjpeg_scan_type_t scan_type;
+	pjpeg_image_info_t image_info;
+	
+	int is_available;
+	int mcu_x;
+	int mcu_y;
+	uint g_nInFileSize;
+	uint g_nInFileOfs;
+	uint row_pitch;
+	uint decoded_width, decoded_height;
+	uint row_blocks_per_mcu, col_blocks_per_mcu;
+	uint8 status;
+	uint8 jpg_source = 0;
+	uint8_t* jpg_data;
+	
+	static uint8 pjpeg_callback(unsigned char* pBuf, unsigned char buf_size, unsigned char *pBytes_actually_read, void *pCallback_data);
+	uint8 pjpeg_need_bytes_callback(unsigned char* pBuf, unsigned char buf_size, unsigned char *pBytes_actually_read, void *pCallback_data);
+	int decode_mcu(void);
+	int decodeCommon(void);
 public:
 
 	uint16_t *pImage;
@@ -136,7 +142,7 @@ public:
 #ifdef LOAD_SPIFFS
 	int decodeFsFile (const char *pFilename);
 	int decodeFsFile (const String& pFilename);
-	int decodeFsFile (File g_pInFile);
+	int decodeFsFile (fs::File g_pInFile);
 #endif
 
 	int decodeArray(const uint8_t array[], uint32_t  array_size);

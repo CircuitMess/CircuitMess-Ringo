@@ -716,11 +716,6 @@ static uint8 readSOSMarker(void)
    successive_high = (uint8)getBits1(4);
    successive_low  = (uint8)getBits1(4);
 
-   (void)spectral_start;
-   (void)spectral_end;
-   (void)successive_high;
-   (void)successive_low;
-
    left -= 3;
 
    while (left)                  
@@ -1027,7 +1022,6 @@ static uint8 processRestart(void)
    
    return 0;
 }
-/*
 //------------------------------------------------------------------------------
 // FIXME: findEOI() is not actually called at the end of the image 
 // (it's optional, and probably not needed on embedded devices)
@@ -1054,7 +1048,6 @@ static uint8 findEOI(void)
    
    return 0;
 }
-*/
 //------------------------------------------------------------------------------
 static uint8 checkHuffTables(void)
 {
