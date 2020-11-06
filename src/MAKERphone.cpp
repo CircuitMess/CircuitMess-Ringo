@@ -3112,8 +3112,6 @@ void MAKERphone::incomingMessage(String _serialData)
 		}
 		tracksSaved = 0;
 	}
-	// +CMT: "+385921488476","","19/06/03,20:14:58+08"
-	// Wjd
 }
 void MAKERphone::addCall(String number, String contact, uint32_t dateTime, int duration, uint8_t direction)
 {
