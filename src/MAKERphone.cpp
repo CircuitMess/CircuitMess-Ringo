@@ -2927,8 +2927,8 @@ void MAKERphone::incomingMessage(String _serialData)
 	tft.setTextSize(1);
 	tft.setCursor(40, 7);
 	tft.print("NEW MESSAGE!");
-	tft.drawBitmap(10, 5, incomingMessageIcon, TFT_BLUE, 2); //+CMT: "+385953776154","","19/08/25,19:18:49+08"
-	tft.setCursor(10, 26);									 // +CMT: "+385953776154","","19/08/25,19:19:21+08"
+	tft.drawBitmap(10, 5, incomingMessageIcon, TFT_BLUE, 2);
+	tft.setCursor(10, 26);
 	tft.print("From: ");
 	String tempCname = checkContact(_smsNumber);
 	if (tempCname != "")
