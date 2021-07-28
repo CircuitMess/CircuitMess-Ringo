@@ -29,6 +29,7 @@ SOFTWARE.
 #pragma message(__FILE__ ": MPMINIMAL")
 #endif
 
+#include <soc/efuse_reg.h>
 #include "FastLED/FastLED.h"
 #include "TFT_eSPI/TFT_eSPI.h" // Graphics and font library for ST7735 driver chip
 #include <SPI.h>
