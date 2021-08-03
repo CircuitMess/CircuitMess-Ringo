@@ -157,7 +157,7 @@ class MAKERphone : public Buttons
 #endif
 {
 public:
-	uint16_t firmware_version = 105;
+	uint16_t firmware_version = 106;
 
 	Buttons buttons;
 
