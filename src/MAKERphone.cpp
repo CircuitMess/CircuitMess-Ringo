@@ -4757,7 +4757,7 @@ void MAKERphone::writeFile(const char *path, const char *message)
 		;
 	Serial.printf("Writing file: %s\n", path);
 
-	File file = SD.open(path);
+	File file = SD.open(path, FILE_WRITE);
 	if (!file)
 	{
 		Serial.println("Failed to open file for writing");
@@ -4777,7 +4777,7 @@ void MAKERphone::appendFile(const char *path, const char *message)
 {
 	Serial.printf("Appending to file: %s\n", path);
 
-	File file = SD.open(path);
+	File file = SD.open(path, FILE_APPEND);
 	if (!file)
 	{
 		Serial.println("Failed to open file for appending");
@@ -4801,7 +4801,7 @@ String MAKERphone::readFile(const char *path)
 		;
 	Serial.printf("Reading file: %s\n", path);
 	String helper = "";
-	File file = SD.open(path);
+	File file = SD.open(path, FILE_READ);
 	if (!file)
 	{
 		Serial.println("Failed to open file for reading");
